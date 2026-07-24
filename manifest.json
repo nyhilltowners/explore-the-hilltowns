@@ -1,0 +1,23 @@
+{
+  "site_title": "Explore These Hills — Catskill & Beyond",
+  "categories": [
+    {
+      "key": "folklore",
+      "label": "Folklore & Legends",
+      "schema": "folklore",
+      "workbook": "data/folklore_legends.xlsx"
+    },
+    {
+      "key": "poi",
+      "label": "Points of Interest",
+      "schema": "poi",
+      "workbook": "data/points_of_interest.xlsx"
+    },
+    {
+      "key": "events",
+      "label": "Events",
+      "schema": "events",
+      "workbook": "data/events.xlsx"
+    }
+  ]
+}
