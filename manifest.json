@@ -1,0 +1,75 @@
+{
+  "site_title": "Explore These Hills \u2014 Catskill & Beyond",
+  "categories": [
+    {
+      "key": "folklore",
+      "label": "Folklore & Legends",
+      "schema": "folklore",
+      "workbook": "data/folklore_legends.xlsx",
+      "color": "#000080"
+    },
+    {
+      "key": "poi",
+      "label": "Points of Interest",
+      "schema": "poi",
+      "workbook": "data/points_of_interest.xlsx",
+      "sheet": "Points of Interest",
+      "color": "#fca315"
+    },
+    {
+      "key": "restaurants",
+      "label": "Restaurants",
+      "schema": "poi",
+      "workbook": "data/points_of_interest.xlsx",
+      "sheet": "Restaurants",
+      "color": "#e05252"
+    },
+    {
+      "key": "farmstands",
+      "label": "Farm Stands",
+      "schema": "poi",
+      "workbook": "data/points_of_interest.xlsx",
+      "sheet": "Farm Stands",
+      "color": "#4caf50"
+    },
+    {
+      "key": "lodging",
+      "label": "Lodging",
+      "schema": "poi",
+      "workbook": "data/points_of_interest.xlsx",
+      "sheet": "Lodging",
+      "color": "#8e6cf0"
+    },
+    {
+      "key": "antiques",
+      "label": "Antiques & Vintage",
+      "schema": "poi",
+      "workbook": "data/points_of_interest.xlsx",
+      "sheet": "Antiques & Vintage",
+      "color": "#b08968"
+    },
+    {
+      "key": "adventures",
+      "label": "Adventures",
+      "schema": "poi",
+      "workbook": "data/points_of_interest.xlsx",
+      "sheet": "Adventures",
+      "color": "#00a896"
+    },
+    {
+      "key": "mutualaid",
+      "label": "Mutual Aid",
+      "schema": "poi",
+      "workbook": "data/points_of_interest.xlsx",
+      "sheet": "Mutual Aid",
+      "color": "#d4519f"
+    },
+    {
+      "key": "events",
+      "label": "Events",
+      "schema": "events",
+      "workbook": "data/events.xlsx",
+      "color": "#39b7ff"
+    }
+  ]
+}
