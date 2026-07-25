@@ -1,0 +1,789 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Explore These Hills — Catskill &amp; Beyond</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/maplibre-gl/4.7.1/maplibre-gl.min.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lato:ital,wght@0,400;0,700;1,400&family=Montserrat:ital,wght@0,400;0,600;0,700;1,600&display=swap">
+<style>
+:root{
+  --ink:#1b211c; --ink2:#232b25; --ink3:#2d372f;
+  --lichen:#d9decf; --birch:#a8b096; --faint:#6f7a68;
+  --wampum:#39b7ff; --wampum-deep:#000080;
+  --precise:#000080; --fair:#39b7ff; --approx:#fca315; --unver:#b25b45;
+}
+*{box-sizing:border-box; margin:0; padding:0;}
+html,body{height:100%;}
+body{
+  font-family:'Lato',ui-sans-serif,system-ui,sans-serif;
+  background:var(--ink); color:var(--lichen); overflow:hidden;
+}
+.app{display:flex; height:100vh; width:100vw;}
+
+/* ---------- Sidebar ---------- */
+#sidebar{
+  width:392px; min-width:392px; height:100%; display:flex; flex-direction:column;
+  background:linear-gradient(180deg,var(--ink) 0%, var(--ink2) 100%);
+  border-right:1px solid #39443a; position:relative; z-index:1000;
+}
+.masthead{padding:20px 22px 14px; border-bottom:1px solid #39443a;}
+.eyebrow{
+  font-family:'Montserrat',ui-sans-serif,system-ui,sans-serif;
+  font-size:10px; letter-spacing:.22em; text-transform:uppercase; color:var(--birch);
+}
+.masthead h1{font-size:23px; font-weight:600; line-height:1.15; margin-top:4px; letter-spacing:.01em;}
+.masthead h1 em{font-style:italic; color:var(--wampum);}
+.epigraph{font-size:13px; font-style:italic; color:var(--birch); line-height:1.55;}
+
+.controls{padding:14px 22px 10px; border-bottom:1px solid #39443a;}
+.controls input[type=text]{
+  width:100%; background:var(--ink3); border:1px solid #46524a; color:var(--lichen);
+  border-radius:6px; padding:8px 11px; font-size:13.5px; font-family:inherit; outline:none;
+}
+.controls input[type=text]::placeholder{color:var(--faint);}
+.controls input[type=text]:focus{border-color:var(--wampum);}
+.cats{display:flex; flex-direction:column; gap:7px; margin-top:10px;}
+.catbox{display:flex; align-items:center; gap:9px; cursor:pointer; user-select:none;
+  font-family:'Montserrat',ui-sans-serif,system-ui,sans-serif; font-size:12px; color:var(--lichen);
+  padding:8px 11px; border:1px solid #46524a; border-radius:8px; transition:border-color .15s;}
+.catbox:hover{border-color:var(--birch);}
+.catbox input{accent-color:var(--approx); width:14px; height:14px;}
+.catmark{font-size:15px; line-height:1;}
+.catmark.ochre{color:#000080; background:#fff; border-radius:50%; width:20px; height:20px; display:inline-flex; align-items:center; justify-content:center;}
+.catmark.disc{background:#fff; border-radius:50%; width:20px; height:20px; display:inline-flex; align-items:center; justify-content:center; font-size:11px;}
+.catmark.discP{color:#fca315;}
+.catmark.discE{color:#39b7ff;}
+.catmark.poi{color:var(--wampum); font-size:12px;}
+
+#listwrap{flex:1; overflow-y:auto; scrollbar-width:thin; scrollbar-color:#46524a transparent;}
+.grouphead{
+  position:sticky; top:0; background:var(--ink2); z-index:2;
+  padding:9px 22px 7px; font-family:'Montserrat',ui-sans-serif,system-ui,sans-serif;
+  font-size:10px; letter-spacing:.2em; text-transform:uppercase; color:var(--faint);
+  border-bottom:1px solid #39443a;
+}
+.card{padding:12px 22px 13px; border-bottom:1px solid #2c352e; cursor:pointer; transition:background .12s;}
+.card:hover{background:#242c26;}
+.card.active{background:#2a3040; box-shadow:inset 3px 0 0 var(--wampum);}
+.card h3{font-size:13.5px; font-weight:600; line-height:1.3; font-family:'Montserrat',ui-sans-serif,system-ui,sans-serif;}
+.card .meta{
+  display:flex; align-items:baseline; gap:8px; margin-top:4px; flex-wrap:wrap;
+  font-family:'Montserrat',ui-sans-serif,system-ui,sans-serif; font-size:10.5px; color:var(--faint); letter-spacing:.03em;
+}
+.card .meta .nat{color:var(--birch);}
+.chip{
+  display:inline-block; padding:1px 7px; border-radius:9px; font-size:9.5px; letter-spacing:.06em;
+  text-transform:uppercase; font-weight:600;
+}
+.chip.precise{background:var(--precise); color:#ffffff;}
+.chip.fair{background:var(--fair); color:#0b2a40;}
+.chip.approx{background:var(--approx); color:#2b2410;}
+.chip.unver{background:transparent; color:var(--unver); border:1px dashed var(--unver);}
+.chip.none{background:transparent; color:var(--faint); border:1px solid #46524a;}
+.empty{padding:26px 22px; color:var(--faint); font-size:13px; font-style:italic; line-height:1.5;}
+
+.btn{
+  background:var(--ink3); border:1px solid #46524a; color:var(--lichen); border-radius:6px;
+  padding:6px 11px; font-size:11.5px; cursor:pointer; letter-spacing:.03em;
+  font-family:'Montserrat',ui-sans-serif,system-ui,sans-serif;
+  transition:border-color .15s;
+}
+.btn:hover{border-color:var(--wampum);}
+
+/* ---------- Detail panel ---------- */
+#detail{
+  position:absolute; inset:0; background:var(--ink2); z-index:1500;
+  transform:translateX(-102%); transition:transform .25s ease; display:flex; flex-direction:column;
+  border-right:1px solid #39443a;
+}
+#detail.open{transform:translateX(0);}
+.detail-head{padding:16px 22px 12px; border-bottom:1px solid #39443a;}
+.detail-head .backrow{display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;}
+.detail-body{flex:1; overflow-y:auto; padding:18px 22px 30px; scrollbar-width:thin;}
+.detail-body h2{font-size:18px; line-height:1.25; font-weight:600; margin-bottom:10px; font-family:'Montserrat',ui-sans-serif,system-ui,sans-serif;}
+.field{margin-bottom:14px;}
+.field .fl{
+  font-family:'Montserrat',ui-sans-serif,system-ui,sans-serif; font-size:9.5px; letter-spacing:.2em;
+  text-transform:uppercase; color:var(--faint); margin-bottom:3px;
+}
+.field .fv{font-size:13.5px; line-height:1.55;}
+.field .fv.story{font-size:14.5px; line-height:1.62;}
+.certline{display:flex; gap:8px; align-items:center; margin:8px 0 14px; flex-wrap:wrap;}
+.certnote{font-size:12px; color:var(--birch); font-style:italic; line-height:1.4;}
+.srcbox{background:var(--ink); border:1px solid #39443a; border-radius:8px; padding:12px 14px; margin-top:6px;}
+.srcbox .field{margin-bottom:9px;} .srcbox .field:last-child{margin-bottom:0;}
+table.hours{border-collapse:collapse; font-size:13px; margin-top:2px;}
+table.hours td{padding:2.5px 14px 2.5px 0; color:var(--lichen);}
+table.hours td:first-child{color:var(--birch); padding-right:22px;}
+table.hours tr.today td{color:#fff; font-weight:700;}
+table.hours tr.today td:first-child{color:var(--approx);}
+a.weblink{color:var(--wampum); text-decoration:none; word-break:break-all;}
+a.weblink:hover{text-decoration:underline;}
+.popimg{margin:-13px -16px 10px; height:118px; overflow:hidden; border-radius:8px 8px 0 0; background:#151a16;}
+.popimg img{width:100%; height:100%; object-fit:cover; display:block;}
+.dimg{margin-bottom:14px;}
+.dimg img{width:100%; max-height:260px; object-fit:cover; display:block; border-radius:10px; background:#151a16;}
+.dimg .cap{font-family:'Montserrat',ui-sans-serif,system-ui,sans-serif; font-size:10px; color:var(--faint); margin-top:5px; line-height:1.4;}
+
+/* ---------- Map ---------- */
+#mapwrap{flex:1; position:relative;}
+#map{position:absolute; inset:0; background:#dfe3da;}
+.maplibregl-popup-content{
+  background:var(--ink2); color:var(--lichen); border-radius:9px; border:1px solid #46524a;
+  box-shadow:0 6px 24px rgba(0,0,0,.45); padding:13px 16px; max-width:280px;
+  font-family:'Lato',ui-sans-serif,system-ui,sans-serif;
+}
+.maplibregl-popup-tip{border-top-color:var(--ink2) !important; border-bottom-color:var(--ink2) !important;}
+.maplibregl-popup-close-button{color:var(--birch); font-size:18px; right:4px; top:2px;}
+.pop h4{font-size:13.5px; font-weight:600; margin-bottom:3px; line-height:1.3; font-family:'Montserrat',ui-sans-serif,system-ui,sans-serif;}
+.pop .pm{font-family:'Montserrat',ui-sans-serif,system-ui,sans-serif; font-size:10.5px; color:var(--birch); margin-bottom:5px;}
+.pop .ps{font-size:12.5px; color:var(--lichen); margin:6px 0 9px; line-height:1.45;
+  display:-webkit-box; -webkit-line-clamp:4; -webkit-box-orient:vertical; overflow:hidden;}
+.pop .others{font-family:'Montserrat',ui-sans-serif,system-ui,sans-serif; font-size:10.5px; color:var(--faint); margin-top:8px; border-top:1px solid #39443a; padding-top:7px; line-height:1.6;}
+.pop .others a{color:var(--wampum); cursor:pointer; text-decoration:none;}
+.pop .others a:hover{text-decoration:underline;}
+
+/* layer switcher */
+#layers{
+  position:absolute; top:12px; right:12px; z-index:900;
+  background:rgba(27,33,28,.93); border:1px solid #46524a; border-radius:9px;
+  padding:11px 14px 12px; font-family:'Montserrat',ui-sans-serif,system-ui,sans-serif;
+  box-shadow:0 2px 10px rgba(0,0,0,.35); min-width:172px;
+}
+#layers .lh{font-size:9.5px; letter-spacing:.2em; text-transform:uppercase; color:var(--faint); margin-bottom:6px;}
+#layers label{display:flex; align-items:center; gap:7px; font-size:12px; color:var(--lichen); padding:3px 0; cursor:pointer;}
+#layers label:hover{color:#fff;}
+#layers hr{border:none; border-top:1px solid #39443a; margin:8px 0 7px;}
+#layers input{accent-color:var(--wampum);}
+#layers .note{font-size:9.5px; color:var(--faint); margin-top:2px; line-height:1.35;}
+#layersToggle{display:none;}
+
+.mapbar{
+  position:absolute; bottom:26px; right:12px; z-index:900; display:flex; flex-direction:column; gap:8px;
+}
+.mapbar .btn{box-shadow:0 2px 8px rgba(0,0,0,.35); background:rgba(27,33,28,.92);}
+
+@media (max-width:760px){
+  .app{flex-direction:column;}
+  #sidebar{width:100%; min-width:0; height:44vh; order:2; border-right:none; border-top:1px solid #39443a;}
+  #mapwrap{height:56vh; order:1;}
+  .masthead{padding:12px 16px 8px;} .masthead h1{font-size:17px;}
+  .controls,.card,.grouphead{padding-left:16px; padding-right:16px;}
+  #layers{top:auto; bottom:12px; right:auto; left:12px;}
+  #layersToggle{display:block; position:absolute; bottom:12px; left:12px; z-index:901;
+    background:rgba(27,33,28,.92); box-shadow:0 2px 8px rgba(0,0,0,.35);}
+  #layers.collapsed{display:none;}
+  .mapbar{bottom:12px;}
+}
+@media (prefers-reduced-motion: reduce){
+  #detail{transition:none;} .card,.catbox,.btn{transition:none;}
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <div id="sidebar">
+    <div class="masthead">
+      <div class="epigraph">People lived in these hills long before you, and will long after you.</div>
+      <h1>Explore <em>these</em> hills</h1>
+    </div>
+
+    <div class="controls">
+      <input type="text" id="q" placeholder="Search…" autocomplete="off">
+      <div class="cats" id="cats"></div>
+    </div>
+
+    <div id="listwrap"></div>
+
+    <div id="detail">
+      <div class="detail-head">
+        <div class="backrow">
+          <button class="btn" id="btnBack">&larr; Back to list</button>
+          <button class="btn" id="btnFly">View on map</button>
+        </div>
+        <div class="eyebrow" id="d_eyebrow"></div>
+      </div>
+      <div class="detail-body" id="d_body"></div>
+    </div>
+  </div>
+
+  <div id="mapwrap">
+    <div id="map"></div>
+    <button class="btn" id="layersToggle">Layers</button>
+    <div id="layers">
+      <div class="lh">Base map</div>
+      <label><input type="radio" name="base" value="usgs"> USGS Topo</label>
+      <label><input type="radio" name="base" value="worldtopo" checked> World Topo</label>
+      <label><input type="radio" name="base" value="sat"> Satellite</label>
+      <label><input type="radio" name="base" value="osm"> Streets</label>
+      <div class="note" id="basenote">Esri global topographic map; sharp to street level worldwide.</div>
+      <hr>
+      <div class="lh">Overlays</div>
+      <label><input type="checkbox" id="ovHillshade"> Hillshade</label>
+      <label><input type="checkbox" id="ovTerrain"> 3D terrain</label>
+      <div class="note">With 3D on, drag with right-click (or two fingers) to tilt.</div>
+    </div>
+    <div class="mapbar">
+      <button class="btn" id="btnNorth" title="Reset rotation and tilt">Reset view</button>
+    </div>
+  </div>
+</div>
+
+<script src="data.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/maplibre-gl/4.7.1/maplibre-gl.min.js" crossorigin="anonymous"></script>
+<script>
+/* ============ DATA ============ */
+/* Loaded from data.js, generated by build/build.py from the workbooks in data/.
+   Internal ids are never rendered; Notes columns are never shipped. */
+var ATLAS = window.ATLAS_DATA || {records:[], categories:[]};
+var CATEGORIES = ATLAS.categories || [];
+var HOME = [-74.1436, 42.5145]; /* Rensselaerville, NY (lng,lat) */
+function kmFromHome(lat,lng){
+  var R=6371, dLat=(lat-HOME[1])*Math.PI/180, dLng=(lng-HOME[0])*Math.PI/180;
+  var a=Math.sin(dLat/2)*Math.sin(dLat/2)
+      + Math.cos(HOME[1]*Math.PI/180)*Math.cos(lat*Math.PI/180)
+      * Math.sin(dLng/2)*Math.sin(dLng/2);
+  return 2*R*Math.asin(Math.sqrt(a));
+}
+var records = (ATLAS.records || []).map(function(d,i){
+  d._k='r'+i;
+  d.dist = (d.lat!=null && d.lng!=null) ? kmFromHome(d.lat, d.lng) : Infinity;
+  return d;
+});
+
+/* ============ HELPERS ============ */
+function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g, function(c){
+  return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
+
+var TIER_LABEL = {precise:'Precise', fair:'Fairly precise', approx:'Approximate', unver:'Unverified pin', none:'Unplaced'};
+var TIER_COLOR = {precise:'#000080', fair:'#39b7ff', approx:'#fca315', unver:'#b25b45'};
+var HALO_M = {precise:0, fair:2500, approx:9000, unver:18000};
+
+/* "today" pinned to the atlas's home timezone so events expire on Catskill time */
+var TODAY_E = (function(){
+  try{ return new Intl.DateTimeFormat('en-CA',{timeZone:'America/New_York'}).format(new Date()); }
+  catch(e){ return new Date().toISOString().slice(0,10); }
+})();
+var TODAY_DOW = (function(){
+  try{ return new Intl.DateTimeFormat('en-US',{timeZone:'America/New_York',weekday:'short'})
+        .format(new Date()).toLowerCase().slice(0,3); }
+  catch(e){ return ['sun','mon','tue','wed','thu','fri','sat'][new Date().getDay()]; }
+})();
+
+function isExpired(r){
+  if(r.ty!=='events') return false;
+  var end = r.d2 || r.d1;
+  if(!end) return false;
+  return end < TODAY_E;
+}
+function fmtDate(iso){
+  if(!iso) return '';
+  var d = new Date(iso+'T12:00:00');
+  return d.toLocaleDateString('en-US',{month:'short', day:'numeric', year:'numeric'});
+}
+function fmtRange(r){
+  if(!r.d1) return '';
+  if(!r.d2 || r.d2===r.d1) return fmtDate(r.d1);
+  return fmtDate(r.d1)+' – '+fmtDate(r.d2);
+}
+function searchText(r){
+  if(r.ty==='poi') return [r.t,r.tags,r.addr,r.s].join(' ');
+  if(r.ty==='events') return [r.t,r.ven,r.addr,r.s].join(' ');
+  return [r.t,r.b,r.n,r.p,r.s,r.rb].join(' ');
+}
+
+/* geodesic-ish circle polygon for uncertainty halos */
+function circlePoly(lat, lng, meters){
+  var pts=[], n=72;
+  var dLat = meters/111320;
+  var dLng = meters/(111320*Math.cos(lat*Math.PI/180));
+  for(var i=0;i<=n;i++){
+    var a = 2*Math.PI*i/n;
+    pts.push([lng + dLng*Math.cos(a), lat + dLat*Math.sin(a)]);
+  }
+  return {type:'Feature', properties:{}, geometry:{type:'Polygon', coordinates:[pts]}};
+}
+var EMPTY_FC = {type:'FeatureCollection', features:[]};
+
+/* ---- marker images (drawn to canvas so every OS renders identically) ---- */
+function charSupported(ch){
+  try{
+    function pix(chr){
+      var tc=document.createElement('canvas'); tc.width=tc.height=32;
+      var tx=tc.getContext('2d'); tx.font='24px sans-serif';
+      tx.textAlign='center'; tx.textBaseline='middle'; tx.fillStyle='#000';
+      tx.fillText(chr,16,16);
+      return tx.getImageData(0,0,32,32).data.join(',');
+    }
+    var blank=pix(' ');
+    return pix(ch)!==blank && pix(ch)!==pix('\u0378');
+  }catch(e){ return false; }
+}
+/* 𖦹 on a white disc; hand-drawn ring-and-rays replica if the font is missing */
+function glyphImageData(){
+  var size=88, c=document.createElement('canvas'); c.width=c.height=size;
+  var x=c.getContext('2d');
+  x.beginPath(); x.arc(size/2,size/2,size/2-3,0,Math.PI*2);
+  x.fillStyle='#ffffff'; x.fill();
+  x.lineWidth=2.5; x.strokeStyle='rgba(27,33,28,0.28)'; x.stroke();
+  var ch='𖦹';
+  x.fillStyle='#000080';
+  if(charSupported(ch)){
+    x.font='68px "Noto Sans Mende Kikakui",sans-serif';
+    x.textAlign='center'; x.textBaseline='middle';
+    x.fillText(ch, size/2, size/2+1);
+  } else {
+    var cx=size/2, cy=size/2;
+    x.strokeStyle='#000080'; x.lineCap='round';
+    x.lineWidth=6;
+    x.beginPath(); x.arc(cx,cy,17,0,Math.PI*2); x.stroke();
+    x.lineWidth=5.5;
+    for(var i=0;i<8;i++){
+      var a=i*Math.PI/4;
+      x.beginPath();
+      x.moveTo(cx+24*Math.cos(a), cy+24*Math.sin(a));
+      x.lineTo(cx+35*Math.cos(a), cy+35*Math.sin(a));
+      x.stroke();
+    }
+  }
+  return x.getImageData(0,0,size,size);
+}
+/* white disc bearing a colored per-row glyph (POIs, Events) */
+function discGlyph(fg, ch){
+  var size=88, c=document.createElement('canvas'); c.width=c.height=size;
+  var x=c.getContext('2d');
+  x.beginPath(); x.arc(size/2,size/2,size/2-3,0,Math.PI*2);
+  x.fillStyle='#ffffff'; x.fill();
+  x.lineWidth=2.5; x.strokeStyle='rgba(27,33,28,0.28)'; x.stroke();
+  ch = (ch && ch.trim()) ? ch.trim() : '●';
+  if(!charSupported(ch)) ch='●';
+  x.fillStyle=fg; x.textAlign='center'; x.textBaseline='middle';
+  x.font='58px "Montserrat","Noto Sans",sans-serif';
+  x.fillText(ch, size/2, size/2+2);
+  return x.getImageData(0,0,size,size);
+}
+
+/* ============ STATE ============ */
+var activeId=null, currentPopup=null;
+var catsOn = {};
+
+/* ============ MAP STYLE ============ */
+var ESRI_ATTR = 'Tiles &copy; Esri';
+var style = {
+  version: 8,
+  sources: {
+    'usgs':      {type:'raster', tiles:['https://basemap.nationalmap.gov/arcgis/rest/services/USGSTopo/MapServer/tile/{z}/{y}/{x}'], tileSize:256, maxzoom:16, attribution:'USGS The National Map'},
+    'worldtopo': {type:'raster', tiles:['https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}'], tileSize:256, maxzoom:19, attribution:ESRI_ATTR+' — World Topographic Map'},
+    'sat':       {type:'raster', tiles:['https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'], tileSize:256, maxzoom:19, attribution:ESRI_ATTR+' — World Imagery'},
+    'satlabels': {type:'raster', tiles:['https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}'], tileSize:256, maxzoom:19, attribution:ESRI_ATTR},
+    'osm':       {type:'raster', tiles:['https://tile.openstreetmap.org/{z}/{x}/{y}.png'], tileSize:256, maxzoom:19, attribution:'&copy; OpenStreetMap contributors'},
+    'hillshade': {type:'raster', tiles:['https://server.arcgisonline.com/ArcGIS/rest/services/Elevation/World_Hillshade/MapServer/tile/{z}/{y}/{x}'], tileSize:256, maxzoom:16, attribution:ESRI_ATTR+' — World Hillshade'},
+    'folk':  {type:'geojson', data:EMPTY_FC},
+    'halo':  {type:'geojson', data:EMPTY_FC}
+  },
+  layers: [
+    {id:'base-usgs',      type:'raster', source:'usgs',      layout:{visibility:'none'}},
+    {id:'base-worldtopo', type:'raster', source:'worldtopo', layout:{visibility:'visible'}},
+    {id:'base-sat',       type:'raster', source:'sat',       layout:{visibility:'none'}},
+    {id:'base-osm',       type:'raster', source:'osm',       layout:{visibility:'none'}},
+    {id:'ov-hillshade',   type:'raster', source:'hillshade', layout:{visibility:'none'}, paint:{'raster-opacity':0.45}},
+    {id:'base-satlabels', type:'raster', source:'satlabels', layout:{visibility:'none'}},
+    {id:'halo-fill', type:'fill', source:'halo', paint:{'fill-color':['coalesce',['get','col'],'#888'], 'fill-opacity':0.08}},
+    {id:'halo-line', type:'line', source:'halo', paint:{'line-color':['coalesce',['get','col'],'#888'], 'line-width':1.6, 'line-dasharray':[4,3]}},
+    {id:'pins', type:'circle', source:'folk',
+      filter:['==',['get','ty'],'other'],
+      paint:{
+        'circle-color':'#000080',
+        'circle-radius':['interpolate',['linear'],['zoom'], 4,3.5, 9,5.5, 13,7],
+        'circle-stroke-color':'#ffffff','circle-stroke-width':2
+      }},
+    {id:'folk-pins', type:'symbol', source:'folk',
+      filter:['==',['get','ty'],'folklore'],
+      layout:{'icon-image':'folkGlyph','icon-allow-overlap':true,'icon-ignore-placement':true,
+        'icon-size':['interpolate',['linear'],['zoom'], 4,0.16, 9,0.24, 13,0.32]}},
+    {id:'poi-pins', type:'symbol', source:'folk',
+      filter:['==',['get','ty'],'poi'],
+      layout:{'icon-image':['concat','g-poi-',['get','g']],'icon-allow-overlap':true,'icon-ignore-placement':true,
+        'icon-size':['interpolate',['linear'],['zoom'], 4,0.16, 9,0.24, 13,0.32]}},
+    {id:'evt-pins', type:'symbol', source:'folk',
+      filter:['==',['get','ty'],'events'],
+      layout:{'icon-image':['concat','g-evt-',['get','g']],'icon-allow-overlap':true,'icon-ignore-placement':true,
+        'icon-size':['interpolate',['linear'],['zoom'], 4,0.16, 9,0.24, 13,0.32]}},
+    {id:'pin-selected', type:'circle', source:'folk', filter:['==',['get','k'],'__none__'],
+      paint:{
+        'circle-color':'rgba(0,0,0,0)', 'circle-radius':13,
+        'circle-stroke-color':'#39b7ff', 'circle-stroke-width':2.5
+      }}
+  ]
+};
+
+/* ============ MAP INIT (guarded) ============ */
+function showMapNotice(title, body){
+  var w = document.getElementById('mapwrap');
+  var n = document.getElementById('mapnotice');
+  if(!n){
+    n = document.createElement('div');
+    n.id = 'mapnotice';
+    n.style.cssText = 'position:absolute;inset:0;z-index:2000;display:flex;align-items:center;justify-content:center;padding:30px;background:#dfe3da;';
+    w.appendChild(n);
+  }
+  n.innerHTML = '<div style="max-width:460px;background:#1b211c;color:#d9decf;border:1px solid #46524a;border-radius:12px;padding:22px 26px;box-shadow:0 8px 30px rgba(0,0,0,.35);line-height:1.55;">'
+    + '<div style="font-family:Montserrat,ui-sans-serif,system-ui,sans-serif;font-size:10px;letter-spacing:.22em;text-transform:uppercase;color:#a8b096;margin-bottom:6px;">Map cannot draw here</div>'
+    + '<div style="font-size:16px;font-weight:600;margin-bottom:8px;">'+title+'</div>'
+    + '<div style="font-size:13.5px;color:#c4c9b8;">'+body+'</div></div>';
+}
+var IN_SANDBOX = /claudeusercontent|claude\.ai/i.test(location.hostname);
+var map = null, tileErrors = 0, noticeShown = false;
+
+if(typeof maplibregl === 'undefined'){
+  showMapNotice('The map engine could not load.',
+    'The MapLibre library was blocked or unreachable. If you are viewing this inside a restricted preview, <b>open the published site or the file directly in your browser</b>. The catalog list is still fully browsable.');
+  noticeShown = true;
+} else {
+try{
+map = new maplibregl.Map({
+  container:'map', style:style, center:HOME, zoom:11.8,
+  maxZoom:19, minZoom:3, attributionControl:{compact:true}
+});
+map.addControl(new maplibregl.NavigationControl({visualizePitch:true}), 'top-left');
+map.addControl(new maplibregl.ScaleControl({unit:'imperial'}), 'bottom-left');
+map.on('styleimagemissing', function(e){
+  if(map.hasImage(e.id)) return;
+  if(e.id==='folkGlyph'){ map.addImage(e.id, glyphImageData()); return; }
+  var m = e.id.match(/^g-(poi|evt)-([\s\S]*)$/);
+  if(m) map.addImage(e.id, discGlyph(m[1]==='poi' ? '#fca315' : '#39b7ff', m[2]));
+});
+map.on('error', function(){
+  tileErrors++;
+  if(!noticeShown && (IN_SANDBOX || tileErrors > 6)){
+    noticeShown = true;
+    showMapNotice('Map tiles are being blocked.',
+      (IN_SANDBOX ? 'This preview sandbox blocks the USGS, Esri, and OpenStreetMap tile servers, so the map stays blank. '
+                  : 'Repeated tile requests are failing — check your connection or firewall. ')
+      + '<b>Open the published site (or this file) directly in your browser</b>; the full map works there. The catalog list remains browsable meanwhile.');
+  }
+});
+}catch(err){
+  showMapNotice('The map engine failed to start.',
+    'Error: '+esc(err.message||String(err))+'. If you are viewing this inside a restricted preview, open the published site directly in your browser.');
+  map = null; noticeShown = true;
+}
+}
+if(IN_SANDBOX && map && !noticeShown){
+  noticeShown = true;
+  showMapNotice('This preview cannot show the live map.',
+    'The preview sandbox blocks the map tile servers. <b>Open the published site (or this file) directly in your browser</b> — the full map, 3D terrain, and layers all work there. The catalog list is still browsable here.');
+}
+
+/* ============ GEOJSON BUILD ============ */
+function toFC(list){
+  return {type:'FeatureCollection', features:list
+    .filter(function(r){return r.tier!=='none';})
+    .map(function(r){ return {type:'Feature',
+      properties:{k:r._k, tier:r.tier, ty:r.ty, cat:r.cat, g:r.g||''},
+      geometry:{type:'Point', coordinates:[r.lng, r.lat]}};
+    })};
+}
+function refreshMapData(){
+  if(!map) return;
+  var src = map.getSource('folk');
+  if(src) src.setData(toFC(currentFilter()));
+}
+
+/* ============ FILTER / LIST ============ */
+function currentFilter(){
+  var q = document.getElementById('q').value.trim().toLowerCase();
+  return records.filter(function(r){
+    if(isExpired(r)) return false;
+    if(!catsOn[r.cat]) return false;
+    if(!q) return true;
+    return searchText(r).toLowerCase().indexOf(q)>=0;
+  });
+}
+
+function cardMeta(r){
+  if(r.ty==='poi'){
+    return '<span class="nat">'+esc(r.tags||'Point of interest')+'</span>'
+      + (r.addr?'<span>'+esc(r.addr)+'</span>':'');
+  }
+  if(r.ty==='events'){
+    return '<span class="nat">'+esc(fmtRange(r))+'</span>'
+      + (r.ven?'<span>'+esc(r.ven)+'</span>':'');
+  }
+  return '<span class="nat">'+esc(r.n||'—')+'</span>'
+    + (r.p?'<span>'+esc(r.p)+'</span>':'')
+    + '<span class="chip '+r.tier+'">'+TIER_LABEL[r.tier]+'</span>';
+}
+
+function renderList(){
+  var list = currentFilter();
+  var mapped = list.filter(function(r){return r.tier!=='none';})
+    .sort(function(a,b){return a.dist-b.dist;});
+  var unplaced = list.filter(function(r){return r.tier==='none';});
+  var w = document.getElementById('listwrap'); w.innerHTML='';
+
+  function head(txt){ var g=document.createElement('div'); g.className='grouphead'; g.innerHTML=txt; w.appendChild(g); }
+  function card(r, mappedFlag){
+    var c=document.createElement('div'); c.className='card'+(r._k===activeId?' active':'');
+    c.innerHTML = '<h3>'+esc(r.t)+'</h3>'
+      + '<div class="meta">'+cardMeta(r)+'</div>';
+    c.onclick=function(){ mappedFlag ? selectRecord(r._k,{pan:true,popup:true}) : openDetail(r._k); };
+    w.appendChild(c);
+  }
+  head('On the map');
+  if(!mapped.length){ var e=document.createElement('div'); e.className='empty';
+    e.textContent='Nothing on the map matches this search.'; w.appendChild(e); }
+  mapped.forEach(function(r){card(r,true);});
+  if(unplaced.length){
+    head('Unplaced — no locatable site in the source');
+    unplaced.forEach(function(r){card(r,false);});
+  }
+  refreshMapData();
+}
+
+/* ============ POPUPS / SELECTION ============ */
+function siblingsOf(rec){
+  return records.filter(function(x){
+    return x._k!==rec._k && x.tier!=='none' && !isExpired(x) && catsOn[x.cat]
+      && Math.abs(x.lat-rec.lat)<1e-5 && Math.abs(x.lng-rec.lng)<1e-5;
+  });
+}
+function popupBody(r){
+  if(r.ty==='poi'){
+    var today = r.hrs ? r.hrs[TODAY_DOW] : '';
+    return '<div class="pm">'+esc(r.tags||'Point of interest')+(r.addr?' · '+esc(r.addr):'')+'</div>'
+      + (today?'<div class="pm">Today: '+esc(today)+'</div>':'')
+      + '<div class="ps">'+esc(r.s||'')+'</div>';
+  }
+  if(r.ty==='events'){
+    return '<div class="pm">'+esc(fmtRange(r))+(r.tm?' · '+esc(r.tm):'')+'</div>'
+      + (r.ven?'<div class="pm">'+esc(r.ven)+'</div>':'')
+      + '<div class="ps">'+esc(r.s||'')+'</div>';
+  }
+  return '<div class="pm">'+esc(r.n||'—')+(r.p?' · '+esc(r.p):'')+'</div>'
+    + '<span class="chip '+r.tier+'">'+TIER_LABEL[r.tier]+'</span>'
+    + '<div class="ps">'+esc(r.s||r.b||'')+'</div>';
+}
+function imgTag(r, cls){
+  if(!r.img) return '';
+  return '<div class="'+cls+'"><img src="'+esc(r.img)+'" alt="" loading="lazy" '
+    + 'onerror="this.parentNode.style.display=\'none\'"></div>';
+}
+function popupHtml(rec){
+  var sibs = siblingsOf(rec).slice(0,5);
+  var h = '<div class="pop">'+imgTag(rec,'popimg')+'<h4>'+esc(rec.t)+'</h4>'
+    + popupBody(rec)
+    + '<button class="btn" onclick="openDetail(\''+rec._k+'\')">Full entry</button>';
+  if(sibs.length){
+    h += '<div class="others">Also here: ';
+    h += sibs.map(function(s){return '<a onclick="openDetail(\''+s._k+'\')">'+esc(s.t)+'</a>';}).join(' · ');
+    h += '</div>';
+  }
+  return h + '</div>';
+}
+function showPopup(rec){
+  if(!map) return;
+  if(currentPopup) currentPopup.remove();
+  currentPopup = new maplibregl.Popup({offset:14, maxWidth:'300px'})
+    .setLngLat([rec.lng, rec.lat]).setHTML(popupHtml(rec)).addTo(map);
+}
+
+function selectRecord(k, opts){
+  opts=opts||{};
+  activeId=k;
+  var r = records.find(function(x){return x._k===k;});
+  if(!r) return;
+  renderList();
+  var ac = document.querySelector('.card.active');
+  if(ac) ac.scrollIntoView({block:'nearest'});
+  if(!map){ if(opts.popup) openDetail(k); return; }
+  map.setFilter('pin-selected', ['==',['get','k'],k]);
+  var hs = map.getSource('halo');
+  if(r.ty==='folklore' && r.tier!=='none' && HALO_M[r.tier]>0){
+    var f = circlePoly(r.lat, r.lng, HALO_M[r.tier]);
+    f.properties.col = TIER_COLOR[r.tier];
+    hs.setData({type:'FeatureCollection', features:[f]});
+  } else hs.setData(EMPTY_FC);
+  if(r.tier!=='none' && opts.pan){
+    var z = r.ty!=='folklore' ? 15 : (r.tier==='precise'?15 : r.tier==='fair'?13 : 11);
+    map.flyTo({center:[r.lng,r.lat], zoom:Math.max(map.getZoom(), z), duration:900});
+    if(opts.popup) map.once('moveend', function(){ showPopup(r); });
+  } else if(opts.popup && r.tier!=='none'){
+    showPopup(r);
+  }
+}
+
+if(map){
+['pins','folk-pins','poi-pins','evt-pins'].forEach(function(ly){
+  map.on('click', ly, function(e){
+    var k = e.features[0].properties.k;
+    var r = records.find(function(x){return x._k===k;});
+    if(!r) return;
+    selectRecord(k,{pan:false});
+    showPopup(r);
+  });
+  map.on('mouseenter', ly, function(){ map.getCanvas().style.cursor='pointer'; });
+  map.on('mouseleave', ly, function(){ map.getCanvas().style.cursor=''; });
+});
+}
+
+/* ============ DETAIL ============ */
+function fieldHtml(label, val, cls){
+  if(!val) return '';
+  return '<div class="field"><div class="fl">'+label+'</div><div class="fv '+(cls||'')+'">'+esc(val)+'</div></div>';
+}
+function linkHtml(label, url){
+  if(!url) return '';
+  var href = /^https?:\/\//i.test(url) ? url : 'https://'+url;
+  return '<div class="field"><div class="fl">'+label+'</div><div class="fv">'
+    + '<a class="weblink" href="'+esc(href)+'" target="_blank" rel="noopener">'+esc(url)+'</a></div></div>';
+}
+function hoursTable(h){
+  if(!h) return '';
+  var days=[['mon','Monday'],['tue','Tuesday'],['wed','Wednesday'],['thu','Thursday'],
+            ['fri','Friday'],['sat','Saturday'],['sun','Sunday']];
+  if(!days.some(function(d){return h[d[0]];})) return '';
+  var rows = days.map(function(d){
+    var cls = d[0]===TODAY_DOW ? ' class="today"' : '';
+    return '<tr'+cls+'><td>'+d[1]+'</td><td>'+esc(h[d[0]]||'—')+'</td></tr>';
+  }).join('');
+  return '<div class="field"><div class="fl">Hours</div><table class="hours">'+rows+'</table></div>';
+}
+
+function detailBody(r){
+  var b = '<h2>'+esc(r.t)+'</h2>';
+  if(r.img){
+    b += '<div class="dimg"><img src="'+esc(r.img)+'" alt="" loading="lazy" '
+      + 'onerror="this.parentNode.style.display=\'none\'">'
+      + (r.cred?'<div class="cap">Image: '+esc(r.cred)+'</div>':'')
+      + '</div>';
+  }
+  if(r.ty==='poi'){
+    b += fieldHtml('What', r.tags);
+    b += fieldHtml('Address', r.addr);
+    b += fieldHtml('About', r.s, 'story');
+    b += hoursTable(r.hrs);
+    b += fieldHtml('Phone', r.ph);
+    b += linkHtml('Website', r.web);
+    return b;
+  }
+  if(r.ty==='events'){
+    b += fieldHtml('When', fmtRange(r) + (r.tm ? ' · '+r.tm : ''));
+    b += fieldHtml('Venue', r.ven);
+    b += fieldHtml('Address', r.addr);
+    b += fieldHtml('About', r.s, 'story');
+    b += linkHtml('Website', r.web);
+    return b;
+  }
+  b += '<div class="certline"><span class="chip '+r.tier+'">'+TIER_LABEL[r.tier]+'</span>'
+     + (r.c?'<span class="certnote">'+esc(r.c)+'</span>':'') + '</div>';
+  b += fieldHtml('Where', r.p);
+  if(r.b) b += fieldHtml('Tale / being', r.b);
+  b += fieldHtml('The story', r.s, 'story');
+  b += fieldHtml('In-story timeframe', r.tf);
+  b += '<div class="srcbox">'
+    + fieldHtml('Recorded by', r.rb)
+    + fieldHtml('Year recorded', r.yr)
+    + fieldHtml('Original publication', r.pub)
+    + fieldHtml('Source file', r.src)
+    + fieldHtml('Pages', r.pg)
+    + '</div>';
+  return b;
+}
+
+function openDetail(k){
+  var r = records.find(function(x){return x._k===k;});
+  if(!r) return;
+  activeId=k; renderList();
+  if(map) map.setFilter('pin-selected', ['==',['get','k'],k]);
+  var eyebrow = r.cat;
+  if(r.ty==='folklore') eyebrow += ' · ' + TIER_LABEL[r.tier];
+  if(r.ty==='events' && r.d1) eyebrow += ' · ' + fmtRange(r);
+  document.getElementById('d_eyebrow').textContent = eyebrow;
+  document.getElementById('d_body').innerHTML = detailBody(r);
+  document.getElementById('d_body').scrollTop = 0;
+  document.getElementById('btnFly').style.display = (r.tier==='none')?'none':'';
+  document.getElementById('btnFly').onclick = function(){
+    closeDetail(); selectRecord(k,{pan:true,popup:true});
+  };
+  document.getElementById('detail').classList.add('open');
+}
+function closeDetail(){ document.getElementById('detail').classList.remove('open'); }
+document.getElementById('btnBack').onclick = closeDetail;
+
+/* ============ CONTROLS ============ */
+document.getElementById('q').addEventListener('input', renderList);
+document.getElementById('btnNorth').onclick = function(){ if(map) map.easeTo({pitch:0, bearing:0, duration:500}); };
+
+function catMark(schema){
+  if(schema==='folklore') return '<span class="catmark ochre">𖦹</span>';
+  if(schema==='poi') return '<span class="catmark disc discP">●</span>';
+  if(schema==='events') return '<span class="catmark disc discE">✦</span>';
+  return '<span class="catmark poi">●</span>';
+}
+function buildCats(){
+  var wrap = document.getElementById('cats'); wrap.innerHTML='';
+  CATEGORIES.forEach(function(c){
+    if(!(c.label in catsOn)) catsOn[c.label] = true;
+    var lb = document.createElement('label'); lb.className='catbox';
+    lb.innerHTML = '<input type="checkbox"'+(catsOn[c.label]?' checked':'')+'>'
+      + catMark(c.schema) + '<span class="catname">'+esc(c.label)+'</span>';
+    var cb = lb.querySelector('input');
+    if(cb) cb.addEventListener('change', function(ev){ catsOn[c.label]=ev.target.checked; renderList(); });
+    wrap.appendChild(lb);
+  });
+}
+
+/* base switcher */
+var BASE_NOTES = {
+  usgs:'Official USGS cartography. Sharpest to zoom 16; US coverage only.',
+  worldtopo:'Esri global topographic map; sharp to street level worldwide.',
+  sat:'Esri World Imagery with place labels.',
+  osm:'OpenStreetMap standard; richest address-level street detail.'
+};
+Array.prototype.forEach.call(document.querySelectorAll('input[name=base]'), function(radio){
+  radio.addEventListener('change', function(){
+    document.getElementById('basenote').textContent = BASE_NOTES[radio.value];
+    if(!map) return;
+    ['usgs','worldtopo','sat','osm'].forEach(function(b){
+      map.setLayoutProperty('base-'+b, 'visibility', b===radio.value?'visible':'none');
+    });
+    map.setLayoutProperty('base-satlabels', 'visibility', radio.value==='sat'?'visible':'none');
+  });
+});
+document.getElementById('ovHillshade').addEventListener('change', function(e){
+  if(map) map.setLayoutProperty('ov-hillshade', 'visibility', e.target.checked?'visible':'none');
+});
+document.getElementById('ovTerrain').addEventListener('change', function(e){
+  if(!map) return;
+  if(e.target.checked){
+    if(!map.getSource('dem')){
+      map.addSource('dem', {type:'raster-dem',
+        tiles:['https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png'],
+        encoding:'terrarium', tileSize:256, maxzoom:15,
+        attribution:'Terrain: Mapzen/AWS Open Data'});
+    }
+    map.setTerrain({source:'dem', exaggeration:1.5});
+    if(map.getPitch()<10) map.easeTo({pitch:55, duration:700});
+  } else {
+    map.setTerrain(null);
+    map.easeTo({pitch:0, duration:500});
+  }
+});
+document.getElementById('layersToggle').onclick = function(){
+  document.getElementById('layers').classList.toggle('collapsed');
+};
+if(window.matchMedia('(max-width:760px)').matches){
+  document.getElementById('layers').classList.add('collapsed');
+}
+
+/* ============ INIT ============ */
+buildCats();
+if(map) map.on('load', function(){ renderList(); });
+renderList(); /* list renders immediately; map data attaches once loaded */
+</script>
+</body>
+</html>
