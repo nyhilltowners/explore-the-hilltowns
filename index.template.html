@@ -3,7 +3,16 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Explore These Hills — Catskill &amp; Beyond</title>
+<title>Explore These Hills… — NY Helderberg-Hudson Hilltowns</title>
+<meta name="description" content="An interactive atlas of folklore, history, and daily life in the NY Helderberg-Hudson Hilltowns — Berne, Knox, Rensselaerville, and Westerlo.">
+<meta property="og:title" content="Explore These Hills…">
+<meta property="og:description" content="Folklore, history &amp; daily life in the NY Helderberg-Hudson Hilltowns — mapped.">
+<meta property="og:image" content="https://nyhilltowners.github.io/explore-the-hilltowns/images/share-card.png">
+<meta property="og:url" content="https://nyhilltowners.github.io/explore-the-hilltowns/">
+<meta property="og:type" content="website">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="theme-color" content="#00004d">
+<link rel="icon" type="image/svg+xml" href="images/favicon.svg">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/maplibre-gl/4.7.1/maplibre-gl.min.css">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -36,6 +45,9 @@ body{
 }
 .masthead h1{font-family:'Montserrat',ui-sans-serif,system-ui,sans-serif; font-size:21px; font-weight:800; line-height:1.2; margin-top:2px; letter-spacing:.05em; text-transform:uppercase;}
 .epigraph{font-size:12px; font-style:italic; color:var(--birch); line-height:1.5; margin:13px 1px 3px;}
+.superhead{font-family:'Montserrat',ui-sans-serif,system-ui,sans-serif; font-size:9.5px;
+  letter-spacing:.18em; text-transform:uppercase; color:var(--birch); line-height:1.5; margin-bottom:6px;}
+.superhead .towns{display:block; color:var(--faint); letter-spacing:.14em; margin-top:2px;}
 
 .controls{padding:14px 22px 10px; border-bottom:1px solid #26268f;}
 .controls input[type=text]{
@@ -97,6 +109,10 @@ body{
   border-right:1px solid #26268f;
 }
 #detail.open{transform:translateX(0);}
+#about{position:absolute; inset:0; background:var(--ink2); z-index:1600;
+  transform:translateX(-102%); transition:transform .25s ease; display:flex; flex-direction:column;
+  border-right:1px solid #26268f;}
+#about.open{transform:translateX(0);}
 .detail-head{padding:16px 22px 12px; border-bottom:1px solid #26268f;}
 .detail-head .backrow{display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;}
 .detail-body{flex:1; overflow-y:auto; padding:18px 22px 30px; scrollbar-width:thin;}
@@ -119,6 +135,20 @@ table.hours tr.today td{color:#fff; font-weight:700;}
 table.hours tr.today td:first-child{color:var(--approx);}
 a.weblink{color:var(--wampum); text-decoration:none; word-break:break-all;}
 a.weblink:hover{text-decoration:underline;}
+.likebtn{background:none; border:1px solid #2e2ea8; border-radius:14px; color:#e0526e;
+  font-size:12px; padding:2px 10px; cursor:pointer; font-family:'Montserrat',ui-sans-serif,sans-serif;
+  transition:transform .1s, border-color .15s; vertical-align:middle;}
+.likebtn:hover{border-color:#e0526e;}
+.likebtn:active{transform:scale(1.25);}
+.likebtn .lc{color:var(--birch); margin-left:3px; font-size:11px;}
+#btnAbout{position:absolute; top:14px; right:14px; width:26px; height:26px; padding:0;
+  border-radius:50%; font-size:13px; line-height:1;}
+.masthead{position:relative;}
+#filtersToggle{display:none; width:100%; margin-top:8px;}
+@media (max-width:760px){
+  #filtersToggle{display:block;}
+  .controls.fcollapsed .cats, .controls.fcollapsed .epigraph{display:none;}
+}
 .tag{display:inline-block; padding:2px 9px; margin:0 4px 4px 0; border-radius:11px;
   border:1px solid #2e2ea8; color:var(--birch); font-size:9.5px; letter-spacing:.05em;
   text-transform:uppercase; font-family:'Montserrat',ui-sans-serif,system-ui,sans-serif;
@@ -189,13 +219,16 @@ a.weblink:hover{text-decoration:underline;}
 <div class="app">
   <div id="sidebar">
     <div class="masthead">
+      <button class="btn" id="btnAbout" title="About this atlas">&#9432;</button>
+      <div class="superhead">NY Helderberg-Hudson Hilltowns<span class="towns">Berne &middot; Knox &middot; Rensselaerville &middot; Westerlo</span></div>
       <h1>Explore these hills&#8230;</h1>
     </div>
 
     <div class="controls">
       <input type="text" id="q" placeholder="Search…" autocomplete="off">
+      <button class="btn" id="filtersToggle">Filters &#9662;</button>
       <div class="cats" id="catsMain"></div>
-      <div class="epigraph">People lived in these hills long before you, and will long after you.</div>
+      <div class="epigraph">People lived in these hills long before you, and will long after you&#8217;re gone. Discover their stories&#8230;</div>
       <div class="cats" id="catsStory"></div>
     </div>
 
@@ -205,11 +238,35 @@ a.weblink:hover{text-decoration:underline;}
       <div class="detail-head">
         <div class="backrow">
           <button class="btn" id="btnBack">&larr; Back to list</button>
-          <button class="btn" id="btnFly">View on map</button>
+          <span>
+            <button class="btn" id="btnCopyLink">Copy link</button>
+            <button class="btn" id="btnFly">View on map</button>
+          </span>
         </div>
         <div class="eyebrow" id="d_eyebrow"></div>
       </div>
       <div class="detail-body" id="d_body"></div>
+    </div>
+
+    <div id="about">
+      <div class="detail-head">
+        <div class="backrow">
+          <button class="btn" id="btnAboutBack">&larr; Back</button>
+        </div>
+        <div class="eyebrow">About this atlas</div>
+      </div>
+      <div class="detail-body">
+        <h2>Explore these hills&#8230;</h2>
+        <div class="field"><div class="fv story">A living atlas of the NY Helderberg-Hudson
+        Hilltowns &mdash; folklore and legends gathered from historical sources, alongside
+        the places, businesses, and happenings of Berne, Knox, Rensselaerville, and
+        Westerlo. Every tale lists its original teller and source, and every pin is
+        placed only as confidently as the record allows.</div></div>
+        <div class="field"><div class="fv story">Additions, suggestions, corrections,
+        complaints about the universe? Message us on Instagram at
+        <a class="weblink" href="https://instagram.com/NYHilltowners" target="_blank"
+        rel="noopener">@NYHilltowners</a></div></div>
+      </div>
     </div>
   </div>
 
@@ -375,6 +432,63 @@ function discGlyph(fg, ch){
   return x.getImageData(0,0,size,size);
 }
 
+/* ============ SLUGS, DEEP LINKS & HEARTS ============ */
+var SLUG_OF = {}, KEY_OF = {};
+function slugify(x){
+  return x.toLowerCase().replace(/['\u2019"\u201c\u201d]/g,'')
+    .replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'').slice(0,60) || 'entry';
+}
+(function buildSlugs(){
+  var used = {};
+  records.forEach(function(r){
+    var base = slugify(r.t), sl = base, n = 2;
+    while(used[sl]){ sl = base + '-' + (n++); }
+    used[sl] = true;
+    SLUG_OF[r._k] = sl; KEY_OF[sl] = r._k;
+  });
+})();
+function setHash(k){
+  try{ history.replaceState(null, '', '#' + (SLUG_OF[k]||'')); }catch(e){}
+}
+function applyHash(){
+  var sl = decodeURIComponent((location.hash||'').replace(/^#/,''));
+  if(!sl || !(sl in KEY_OF)) return;
+  var k = KEY_OF[sl];
+  var r = records.find(function(x){return x._k===k;});
+  if(!r) return;
+  if(r.tier==='none' || !map) openDetail(k);
+  else selectRecord(k, {pan:true, popup:true});
+}
+window.addEventListener('hashchange', applyHash);
+
+var LIKE_API = 'https://abacus.jasoncameron.dev';
+var LIKE_NS = 'nyhilltowners-explore-hills';
+function likeWidget(r){
+  return '<button class="likebtn" data-slug="'+esc(SLUG_OF[r._k])+'" '
+    + 'onclick="likeHit(this)" title="Leave a heart">&#9829;<span class="lc">&nbsp;</span></button>';
+}
+function loadLikes(scope){
+  var els = (scope||document).querySelectorAll ? (scope||document).querySelectorAll('.likebtn') : [];
+  Array.prototype.forEach.call(els, function(el){
+    var sl = el.getAttribute('data-slug');
+    fetch(LIKE_API+'/get/'+LIKE_NS+'/'+encodeURIComponent(sl))
+      .then(function(r){return r.json();})
+      .then(function(d){ if(d && typeof d.value==='number' && d.value>0)
+        el.querySelector('.lc').textContent = ' '+d.value; })
+      .catch(function(){});
+  });
+}
+function likeHit(el){
+  var sl = el.getAttribute('data-slug');
+  var lc = el.querySelector('.lc');
+  var cur = parseInt((lc.textContent||'').trim(),10) || 0;
+  lc.textContent = ' '+(cur+1); /* optimistic — the fun must not lag */
+  fetch(LIKE_API+'/hit/'+LIKE_NS+'/'+encodeURIComponent(sl))
+    .then(function(r){return r.json();})
+    .then(function(d){ if(d && typeof d.value==='number') lc.textContent=' '+d.value; })
+    .catch(function(){});
+}
+
 /* ============ STATE ============ */
 var activeId=null, currentPopup=null;
 var catsOn = {};
@@ -416,7 +530,7 @@ var style = {
     {id:'disc-pins', type:'symbol', source:'folk',
       filter:['all',['!=',['get','ty'],'folklore'],['!=',['get','cat'],'Points of Interest']],
       layout:{'icon-image':['concat','gd-',['get','col'],'-',['get','g']],'icon-allow-overlap':true,'icon-ignore-placement':true,
-        'icon-size':['interpolate',['linear'],['zoom'], 4,0.48, 9,0.72, 13,0.96]}},
+        'icon-size':['interpolate',['linear'],['zoom'], 4,0.32, 9,0.48, 13,0.64]}},
     {id:'poi-pins', type:'symbol', source:'folk',
       filter:['==',['get','cat'],'Points of Interest'],
       layout:{'icon-image':['concat','gd-',['get','col'],'-',['get','g']],'icon-allow-overlap':true,'icon-ignore-placement':true,
@@ -460,6 +574,9 @@ map = new maplibregl.Map({
 });
 map.addControl(new maplibregl.NavigationControl({visualizePitch:true}), 'top-left');
 map.addControl(new maplibregl.ScaleControl({unit:'imperial'}), 'bottom-left');
+map.addControl(new maplibregl.GeolocateControl({
+  positionOptions:{enableHighAccuracy:true}, trackUserLocation:true, showUserHeading:true
+}), 'top-left');
 map.on('styleimagemissing', function(e){
   if(map.hasImage(e.id)) return;
   if(e.id==='folkGlyph'){ map.addImage(e.id, glyphImageData()); return; }
@@ -601,7 +718,13 @@ function popupHtml(rec){
   var sibs = siblingsOf(rec).slice(0,5);
   var h = '<div class="pop">'+imgTag(rec,'popimg')+'<h4>'+esc(rec.t)+'</h4>'
     + popupBody(rec)
-    + '<button class="btn" onclick="openDetail(\''+rec._k+'\')">Full entry</button>';
+    + '<button class="btn" onclick="openDetail(\''+rec._k+'\')">Full entry</button> '
+    + likeWidget(rec);
+  if(rec.ty==='poi' && rec.web){
+    var href = /^https?:\/\//i.test(rec.web) ? rec.web : 'https://'+rec.web;
+    h += ' <a class="btn" style="text-decoration:none;display:inline-block;" href="'
+      + esc(href) + '" target="_blank" rel="noopener">Visit site &rarr;</a>';
+  }
   if(sibs.length){
     h += '<div class="others">Also here: ';
     h += sibs.map(function(s){return '<a onclick="openDetail(\''+s._k+'\')">'+esc(s.t)+'</a>';}).join(' · ');
@@ -614,6 +737,8 @@ function showPopup(rec){
   if(currentPopup) currentPopup.remove();
   currentPopup = new maplibregl.Popup({offset:14, maxWidth:'300px'})
     .setLngLat([rec.lng, rec.lat]).setHTML(popupHtml(rec)).addTo(map);
+  setHash(rec._k);
+  loadLikes(currentPopup.getElement ? currentPopup.getElement() : document);
 }
 
 function selectRecord(k, opts){
@@ -679,7 +804,7 @@ function hoursTable(h){
 }
 
 function detailBody(r){
-  var b = '<h2>'+esc(r.t)+'</h2>';
+  var b = '<h2>'+esc(r.t)+' '+likeWidget(r)+'</h2>';
   if(r.img){
     b += '<div class="dimg"><img src="'+esc(r.img)+'" alt="" loading="lazy" '
       + 'onerror="this.parentNode.style.display=\'none\'">'
@@ -728,8 +853,10 @@ function openDetail(k){
   if(r.ty==='folklore') eyebrow += ' · ' + TIER_LABEL[r.tier];
   if(r.ty==='events' && r.d1) eyebrow += ' · ' + fmtRange(r);
   document.getElementById('d_eyebrow').textContent = eyebrow;
+  setHash(k);
   document.getElementById('d_body').innerHTML = detailBody(r);
   document.getElementById('d_body').scrollTop = 0;
+  loadLikes(document.getElementById('d_body'));
   document.getElementById('btnFly').style.display = (r.tier==='none')?'none':'';
   document.getElementById('btnFly').onclick = function(){
     closeDetail(); selectRecord(k,{pan:true,popup:true});
@@ -742,6 +869,24 @@ document.getElementById('btnBack').onclick = closeDetail;
 /* ============ CONTROLS ============ */
 document.getElementById('q').addEventListener('input', renderList);
 document.getElementById('btnNorth').onclick = function(){ if(map) map.easeTo({pitch:0, bearing:0, duration:500}); };
+document.getElementById('btnAbout').onclick = function(){ document.getElementById('about').classList.add('open'); };
+document.getElementById('btnAboutBack').onclick = function(){ document.getElementById('about').classList.remove('open'); };
+document.getElementById('btnCopyLink').onclick = function(){
+  var b = document.getElementById('btnCopyLink');
+  function done(){ b.textContent='Copied!'; setTimeout(function(){ b.textContent='Copy link'; }, 1400); }
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(location.href).then(done).catch(function(){});
+  } else { try{ prompt('Copy this link:', location.href); }catch(e){} }
+};
+var _fc = document.getElementById('filtersToggle');
+if(window.matchMedia('(max-width:760px)').matches){
+  document.querySelector('.controls').classList.add('fcollapsed');
+}
+_fc.onclick = function(){
+  var c = document.querySelector('.controls');
+  c.classList.toggle('fcollapsed');
+  _fc.innerHTML = c.classList.contains('fcollapsed') ? 'Filters &#9662;' : 'Filters &#9652;';
+};
 
 function catMark(c){
   if(c.schema==='folklore') return '<span class="catmark ochre">𖦹</span>';
@@ -754,7 +899,10 @@ function buildCats(){
   var main = document.getElementById('catsMain');
   var story = document.getElementById('catsStory');
   main.innerHTML=''; story.innerHTML='';
+  var liveCounts = {};
+  records.forEach(function(r){ if(!isExpired(r)) liveCounts[r.cat]=(liveCounts[r.cat]||0)+1; });
   CATEGORIES.forEach(function(c){
+    if(!liveCounts[c.label]) return; /* nothing to show yet — hide until it has data */
     if(!(c.label in catsOn)) catsOn[c.label] = (c.default_on !== false);
     var lb = document.createElement('label'); lb.className='catbox';
     lb.innerHTML = '<input type="checkbox"'+(catsOn[c.label]?' checked':'')+'>'
@@ -810,8 +958,9 @@ if(window.matchMedia('(max-width:760px)').matches){
 
 /* ============ INIT ============ */
 buildCats();
-if(map) map.on('load', function(){ renderList(); });
+if(map) map.on('load', function(){ renderList(); applyHash(); });
 renderList(); /* list renders immediately; map data attaches once loaded */
+if(!map) applyHash();
 </script>
 </body>
 </html>

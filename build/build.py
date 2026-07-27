@@ -286,6 +286,7 @@ POI_SPEC = [
     ("g", r"glyph|icon|symbol", False),
     ("img", r"^image(\s*url)?$|^photo", False),
     ("cred", r"image\s*credit|^credit$|attribution", False),
+    ("disp", r"^display$|^show$|^visible$", False),
 ]
 
 
@@ -304,6 +305,9 @@ def parse_poi(path: Path, label: str, sheet=None):
         if not rid and not title:
             continue
         rw = f"{where} row {n}"
+        disp = s(cell(row, idx, "disp")).lower()
+        if disp in ("no", "n", "false", "0", "hide", "hidden"):
+            continue  # curated out via the Display column
         if not title:
             fail(f"{rw}: Name is required")
         lat = coord(cell(row, idx, "lat"), -90, 90, "Latitude", rw, required=False)
@@ -396,13 +400,34 @@ def parse_events(path: Path, label: str, sheet=None):
 PARSERS = {"folklore": parse_folklore, "poi": parse_poi, "events": parse_events}
 
 
+def resolve_workbook(path: Path, label: str) -> Path:
+    """Exact filename wins. Otherwise accept exactly one versioned variant
+    (points_of_interest_v2.xlsx, points_of_interest (3).xlsx, etc.).
+    Multiple candidates = ambiguous -> loud stop so the wrong data never ships."""
+    variants = sorted(p for p in path.parent.glob(path.stem + "*" + path.suffix)
+                      if p.name != path.name and not p.name.startswith("~$"))
+    if path.exists():
+        if variants:
+            warn(f"{label}: using {path.name}, but versioned copies also exist "
+                 f"({', '.join(v.name for v in variants)}) — delete extras or "
+                 f"the wrong data may be published")
+        return path
+    if len(variants) == 1:
+        warn(f"{label}: {path.name} not found; using {variants[0].name} instead")
+        return variants[0]
+    if len(variants) > 1:
+        fail(f"{label}: {path.name} not found and multiple candidates exist "
+             f"({', '.join(v.name for v in variants)}) — keep exactly one")
+    return path
+
+
 def main() -> int:
     manifest = json.loads((ROOT / "manifest.json").read_text(encoding="utf-8"))
     all_records = []
     categories = []
     for cat in manifest["categories"]:
         label, schema = cat["label"], cat["schema"]
-        wb_path = ROOT / cat["workbook"]
+        wb_path = resolve_workbook(ROOT / cat["workbook"], label)
         categories.append({"key": cat["key"], "label": label, "schema": schema,
                            "color": cat.get("color", ""),
                            "default_on": cat.get("default_on", True),
