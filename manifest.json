@@ -126,7 +126,8 @@
       "workbook": "data/events.xlsx",
       "color": "#39b7ff",
       "default_on": true,
-      "glyph": "𐪎"
+      "glyph": "𐪎",
+      "sheet": "Events"
     }
   ]
 }

@@ -212,6 +212,7 @@ FOLK_SPEC = [
     ("pg", r"page", False),
     ("img", r"^image(\s*url)?$|^photo", False),
     ("cred", r"image\s*credit|^credit$|attribution", False),
+    ("disp", r"^display$|^show$|^visible$", False),
 ]
 
 
@@ -237,6 +238,8 @@ def parse_folklore(path: Path, label: str, sheet=None):
         rid, title = s(cell(row, idx, "id")), s(cell(row, idx, "t"))
         if not rid and not title:
             continue
+        if s(cell(row, idx, "disp")).lower() in ("no", "n", "false", "0", "hide", "hidden"):
+            continue  # curated out via the Display column
         rw = f"{where} row {n}"
         lat = coord(cell(row, idx, "lat"), -90, 90, "Latitude", rw, required=False)
         lng = coord(cell(row, idx, "lng"), -180, 180, "Longitude", rw, required=False)
@@ -366,6 +369,7 @@ def parse_events(path: Path, label: str, sheet=None):
     idx = map_headers(hdr, EVT_SPEC, where)
     today = datetime.date.today().isoformat()
     out = []
+    skipped_past = [0]
     for n, row in enumerate(rows, start=2):
         title = s(cell(row, idx, "t"))
         rid = s(cell(row, idx, "id"))
@@ -374,26 +378,39 @@ def parse_events(path: Path, label: str, sheet=None):
         rw = f"{where} row {n}"
         if not title:
             fail(f"{rw}: Event Name is required")
-        lat = coord(cell(row, idx, "lat"), -90, 90, "Latitude", rw, required=True)
-        lng = coord(cell(row, idx, "lng"), -180, 180, "Longitude", rw, required=True)
+        ven_txt = s(cell(row, idx, "ven")).lower()
+        addr_txt = s(cell(row, idx, "addr")).lower()
+        is_online = bool(re.search(r"\bonline\b|\bvirtual\b|\bzoom\b|\blivestream\b",
+                                   ven_txt + " " + addr_txt))
+        lat = coord(cell(row, idx, "lat"), -90, 90, "Latitude", rw,
+                    required=False)
+        lng = coord(cell(row, idx, "lng"), -180, 180, "Longitude", rw,
+                    required=False)
+        if not is_online and (lat is None or lng is None):
+            # upcoming but not yet locatable: keep it in the listings, off the map
+            warn(f"{rw}: {title} has no coordinates yet — listed but not mapped")
         d1 = parse_date(cell(row, idx, "d1"), "Start Date", rw, required=True)
         d2 = parse_date(cell(row, idx, "d2"), "End Date", rw, required=False)
         if d1 and d2 and d2 < d1:
             fail(f"{rw}: End Date {d2} is before Start Date {d1}")
         end = d2 or d1
         if end and end < today:
-            warn(f"{rw}: event already past ({end}); it will be built but never displayed")
+            skipped_past[0] += 1
+            continue  # past events are dropped from the build entirely
         out.append({
             "ty": "events", "cat": label, "id": rid, "t": title or "(unnamed)",
             "ven": s(cell(row, idx, "ven")), "addr": s(cell(row, idx, "addr")),
             "lat": lat, "lng": lng, "s": s(cell(row, idx, "stry")),
             "d1": d1, "d2": d2 or "", "tm": s(cell(row, idx, "tm")),
             "web": s(cell(row, idx, "web")), "g": s(cell(row, idx, "g")),
-            "tier": "exact",
+            "online": is_online,
+            "tier": "exact" if (lat is not None and lng is not None) else "none",
             "img": norm_image(cell(row, idx, "img"), rw),
             "cred": s(cell(row, idx, "cred")),
         })
     check_dupe_ids(out, where)
+    if skipped_past[0]:
+        print(f"    ({skipped_past[0]} past events skipped)")
     return out
 
 

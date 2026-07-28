@@ -44,6 +44,12 @@ body{
   font-size:10px; letter-spacing:.22em; text-transform:uppercase; color:var(--birch);
 }
 .masthead h1{font-family:'Montserrat',ui-sans-serif,system-ui,sans-serif; font-size:21px; font-weight:800; line-height:1.2; margin-top:2px; letter-spacing:.05em; text-transform:uppercase;}
+.planrow{display:flex; align-items:center; gap:8px; margin-top:9px;
+  font-family:'Montserrat',ui-sans-serif,system-ui,sans-serif; font-size:11px; color:var(--birch);}
+.planrow input[type=date]{flex:1; background:#0d0d73; border:1px solid #2e2ea8; border-radius:7px;
+  color:var(--lichen); padding:5px 8px; font-family:inherit; font-size:12px; color-scheme:dark;}
+.planrow input[type=date].active{border-color:var(--wampum);}
+.planrow .btn{padding:4px 9px;}
 .epigraph{font-size:12px; font-style:italic; color:var(--birch); line-height:1.5; margin:13px 1px 3px;}
 .superhead{font-family:'Montserrat',ui-sans-serif,system-ui,sans-serif; font-size:9.5px;
   letter-spacing:.18em; text-transform:uppercase; color:var(--birch); line-height:1.5; margin-bottom:6px;}
@@ -193,6 +199,14 @@ a.weblink:hover{text-decoration:underline;}
 #layers .note{font-size:8.5px; color:var(--faint); margin-top:2px; line-height:1.35;}
 #layersToggle{display:none;}
 
+#onlinePill{position:absolute; bottom:26px; left:12px; z-index:900; display:none;
+  background:rgba(0,0,77,.9); border:1px solid #39b7ff; border-radius:16px; color:#dde0f2;
+  font-family:'Montserrat',ui-sans-serif,system-ui,sans-serif; font-size:11px; padding:6px 12px;
+  cursor:pointer;}
+#onlinePill:hover{background:rgba(0,0,102,.95);}
+.card .onlinechip{display:inline-block; padding:1px 8px; border-radius:10px; border:1px solid #39b7ff;
+  color:#39b7ff; font-size:9px; letter-spacing:.08em; text-transform:uppercase;
+  font-family:'Montserrat',ui-sans-serif,system-ui,sans-serif;}
 .mapbar{
   position:absolute; top:12px; right:12px; z-index:900; display:flex; flex-direction:column; gap:8px;
 }
@@ -226,6 +240,11 @@ a.weblink:hover{text-decoration:underline;}
 
     <div class="controls">
       <input type="text" id="q" placeholder="Search…" autocomplete="off">
+      <div class="planrow">
+        <label for="planPick">Plan ahead:</label>
+        <input type="date" id="planPick">
+        <button class="btn" id="planClear" title="Back to today" style="display:none;">&times;</button>
+      </div>
       <button class="btn" id="filtersToggle">Filters &#9662;</button>
       <div class="cats" id="catsMain"></div>
       <div class="epigraph">People lived in these hills long before you, and will long after you&#8217;re gone. Discover their stories&#8230;</div>
@@ -272,6 +291,7 @@ a.weblink:hover{text-decoration:underline;}
 
   <div id="mapwrap">
     <div id="map"></div>
+    <button id="onlinePill" title="Show online events">&#8907; Online events: <span id="onlineN">0</span></button>
     <button class="btn" id="layersToggle">Layers</button>
     <div id="layers">
       <div class="lh">Base map</div>
@@ -345,6 +365,18 @@ function isExpired(r){
   if(!end) return false;
   return end < TODAY_E;
 }
+var planDate = null;   /* ISO yyyy-mm-dd when planning ahead; null = now mode */
+function isoAddDays(iso, n){
+  var d = new Date(iso+'T12:00:00'); d.setDate(d.getDate()+n);
+  return d.toISOString().slice(0,10);
+}
+function evVisible(r){
+  if(r.ty!=='events') return true;
+  var s = r.d1, e = r.d2 || r.d1;
+  if(!s) return false;
+  if(planDate) return s <= planDate && planDate <= e;      /* on the chosen date */
+  return s <= isoAddDays(TODAY_E,10) && e >= TODAY_E;      /* within 10 days */
+}
 function fmtDate(iso){
   if(!iso) return '';
   var d = new Date(iso+'T12:00:00');
@@ -357,7 +389,7 @@ function fmtRange(r){
 }
 function searchText(r){
   if(r.ty==='poi') return [r.t,r.tags.join(' '),r.addr,r.s].join(' ');
-  if(r.ty==='events') return [r.t,r.ven,r.addr,r.s].join(' ');
+  if(r.ty==='events') return [r.t,r.ven,r.addr,r.s,(r.online?'online':'')].join(' ');
   return [r.t,r.b,r.n,r.p,r.s,r.rb].join(' ');
 }
 
@@ -526,19 +558,21 @@ var style = {
     {id:'folk-pins', type:'symbol', source:'folk',
       filter:['==',['get','ty'],'folklore'],
       layout:{'icon-image':'folkGlyph','icon-allow-overlap':true,'icon-ignore-placement':true,
-        'icon-size':['interpolate',['linear'],['zoom'], 4,0.48, 9,0.72, 13,0.96]}},
+        'icon-size':['interpolate',['linear'],['zoom'], 4,0.32, 9,0.48, 13,0.64]}},
     {id:'disc-pins', type:'symbol', source:'folk',
       filter:['all',['!=',['get','ty'],'folklore'],['!=',['get','cat'],'Points of Interest']],
-      layout:{'icon-image':['concat','gd-',['get','col'],'-',['get','g']],'icon-allow-overlap':true,'icon-ignore-placement':true,
-        'icon-size':['interpolate',['linear'],['zoom'], 4,0.32, 9,0.48, 13,0.64]}},
+      layout:{'icon-image':['concat','gd-',['case',['==',['get','dim'],1],'#9aa0a6',['get','col']],'-',['get','g']],'icon-allow-overlap':true,'icon-ignore-placement':true,
+        'icon-size':['interpolate',['linear'],['zoom'], 4,0.32, 9,0.48, 13,0.64]},
+      paint:{'icon-opacity':['case',['==',['get','dim'],1],0.55,1]}},
     {id:'poi-pins', type:'symbol', source:'folk',
       filter:['==',['get','cat'],'Points of Interest'],
-      layout:{'icon-image':['concat','gd-',['get','col'],'-',['get','g']],'icon-allow-overlap':true,'icon-ignore-placement':true,
-        'icon-size':['interpolate',['linear'],['zoom'], 4,0.24, 9,0.36, 13,0.48]}},
+      layout:{'icon-image':['concat','gd-',['case',['==',['get','dim'],1],'#9aa0a6',['get','col']],'-',['get','g']],'icon-allow-overlap':true,'icon-ignore-placement':true,
+        'icon-size':['interpolate',['linear'],['zoom'], 4,0.24, 9,0.36, 13,0.48]},
+      paint:{'icon-opacity':['case',['==',['get','dim'],1],0.55,1]}},
     {id:'pin-selected', type:'circle', source:'folk', filter:['==',['get','k'],'__none__'],
       paint:{
         'circle-color':'rgba(0,0,0,0)',
-        'circle-radius':['interpolate',['linear'],['zoom'], 4,25, 9,36, 13,47],
+        'circle-radius':['interpolate',['linear'],['zoom'], 4,18, 9,26, 13,33],
         'circle-stroke-color':'#39b7ff', 'circle-stroke-width':2.5
       }}
   ]
@@ -606,11 +640,48 @@ if(IN_SANDBOX && map && !noticeShown){
 }
 
 /* ============ GEOJSON BUILD ============ */
+var DOW_KEYS=['sun','mon','tue','wed','thu','fri','sat'];
+function _parseTimes(str){
+  var out=[], rx=/(\d{1,2})(?::(\d{2}))?\s*([AP])\.?\s*M/gi, m;
+  while((m=rx.exec(str))){
+    var h=parseInt(m[1],10)%12; if(m[3].toUpperCase()==='P') h+=12;
+    out.push(h*60+(m[2]?parseInt(m[2],10):0));
+  }
+  return out;
+}
+function isClosedNow(r){
+  if(!r.hrs) return false;
+  if(planDate){                                 /* planning mode: day-level only */
+    var pc=(r.hrs[DOW_KEYS[new Date(planDate+'T12:00:00').getDay()]]||'').trim();
+    return /closed/i.test(pc);                  /* dim only a stated Closed day */
+  }
+  var cell=(r.hrs[DOW_KEYS[new Date().getDay()]]||'').trim();
+  if(!cell) return false;                       /* unknown hours: never dim */
+  if(/closed/i.test(cell)) return true;
+  if(/24\s*hours|open\s*24|always\s*open/i.test(cell)) return false;
+  var ts=_parseTimes(cell);
+  if(ts.length<2) return false;                 /* unparseable: don't punish */
+  var now=new Date(), nm=now.getHours()*60+now.getMinutes();
+  for(var i=0;i+1<ts.length;i+=2){
+    var s=ts[i], e=ts[i+1];
+    if(e<=s){ if(nm>=s || nm<e) return false; } /* overnight range */
+    else if(nm>=s && nm<e) return false;
+  }
+  return true;
+}
+function isDimmed(r){
+  if(r.ty==='events'){
+    var ref = planDate || TODAY_E;
+    return r.d1 > ref;         /* announced but not yet begun: gray */
+  }
+  return isClosedNow(r);
+}
 function toFC(list){
   return {type:'FeatureCollection', features:list
     .filter(function(r){return r.tier!=='none';})
     .map(function(r){ return {type:'Feature',
-      properties:{k:r._k, tier:r.tier, ty:r.ty, cat:r.cat, g:r.g||'', col:r.col},
+      properties:{k:r._k, tier:r.tier, ty:r.ty, cat:r.cat, g:r.g||'', col:r.col,
+        dim:isDimmed(r)?1:0},
       geometry:{type:'Point', coordinates:[r.lng, r.lat]}};
     })};
 }
@@ -625,6 +696,7 @@ function currentFilter(){
   var q = document.getElementById('q').value.trim().toLowerCase();
   return records.filter(function(r){
     if(isExpired(r)) return false;
+    if(!evVisible(r)) return false;
     if(!catsOn[r.cat]) return false;
     if(!q) return true;
     return searchText(r).toLowerCase().indexOf(q)>=0;
@@ -652,14 +724,26 @@ function cardMeta(r){
   }
   if(r.ty==='events'){
     return '<span class="nat">'+esc(fmtRange(r))+'</span>'
-      + (r.ven?'<span>'+esc(r.ven)+'</span>':'');
+      + (r.online?'<span class="onlinechip">Online</span>':'')
+      + (r.ven && !r.online?'<span>'+esc(r.ven)+'</span>':'');
   }
   return '<span class="nat">'+esc(r.n||'—')+'</span>'
     + (r.p?'<span>'+esc(r.p)+'</span>':'')
     + '<span class="chip '+r.tier+'">'+TIER_LABEL[r.tier]+'</span>';
 }
 
+function updateOnlinePill(){
+  var el = document.getElementById('onlinePill');
+  if(!el) return;
+  var n = records.filter(function(r){
+    return r.ty==='events' && r.online && !isExpired(r) && evVisible(r)
+      && catsOn['Events'] !== false;
+  }).length;
+  document.getElementById('onlineN').textContent = n;
+  el.style.display = n>0 ? '' : 'none';
+}
 function renderList(){
+  updateOnlinePill();
   var list = currentFilter();
   var mapped = list.filter(function(r){return r.tier!=='none';})
     .sort(function(a,b){return a.dist-b.dist;});
@@ -781,9 +865,13 @@ if(map){
 }
 
 /* ============ DETAIL ============ */
+function linkify(escaped){
+  return escaped.replace(/(https?:\/\/[^\s<]+[^\s<.,;:)\]])/g,
+    '<a class="weblink" href="$1" target="_blank" rel="noopener">$1</a>');
+}
 function fieldHtml(label, val, cls){
   if(!val) return '';
-  return '<div class="field"><div class="fl">'+label+'</div><div class="fv '+(cls||'')+'">'+esc(val)+'</div></div>';
+  return '<div class="field"><div class="fl">'+label+'</div><div class="fv '+(cls||'')+'">'+linkify(esc(val))+'</div></div>';
 }
 function linkHtml(label, url){
   if(!url) return '';
@@ -878,6 +966,23 @@ document.getElementById('btnCopyLink').onclick = function(){
     navigator.clipboard.writeText(location.href).then(done).catch(function(){});
   } else { try{ prompt('Copy this link:', location.href); }catch(e){} }
 };
+var _pp = document.getElementById('planPick');
+var _pc = document.getElementById('planClear');
+_pp.min = TODAY_E;
+_pp.addEventListener('change', function(){
+  planDate = _pp.value || null;
+  if(planDate && planDate < TODAY_E){ planDate = null; _pp.value=''; }
+  _pp.classList.toggle('active', !!planDate);
+  _pc.style.display = planDate ? '' : 'none';
+  renderList();
+});
+document.getElementById('onlinePill').onclick = function(){
+  var q=document.getElementById('q'); q.value='online'; renderList();
+};
+_pc.onclick = function(){
+  planDate = null; _pp.value=''; _pp.classList.remove('active');
+  _pc.style.display='none'; renderList();
+};
 var _fc = document.getElementById('filtersToggle');
 if(window.matchMedia('(max-width:760px)').matches){
   document.querySelector('.controls').classList.add('fcollapsed');
@@ -900,7 +1005,7 @@ function buildCats(){
   var story = document.getElementById('catsStory');
   main.innerHTML=''; story.innerHTML='';
   var liveCounts = {};
-  records.forEach(function(r){ if(!isExpired(r)) liveCounts[r.cat]=(liveCounts[r.cat]||0)+1; });
+  records.forEach(function(r){ if(!isExpired(r) && evVisible(r)) liveCounts[r.cat]=(liveCounts[r.cat]||0)+1; });
   CATEGORIES.forEach(function(c){
     if(!liveCounts[c.label]) return; /* nothing to show yet — hide until it has data */
     if(!(c.label in catsOn)) catsOn[c.label] = (c.default_on !== false);
@@ -959,6 +1064,11 @@ if(window.matchMedia('(max-width:760px)').matches){
 /* ============ INIT ============ */
 buildCats();
 if(map) map.on('load', function(){ renderList(); applyHash(); });
+setInterval(function(){
+  if(map && map.getSource && map.getSource('folk')){
+    map.getSource('folk').setData(toFC(currentFilter()));
+  }
+}, 300000);
 renderList(); /* list renders immediately; map data attaches once loaded */
 if(!map) applyHash();
 </script>
