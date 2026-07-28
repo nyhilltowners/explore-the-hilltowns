@@ -434,6 +434,13 @@ function fmtDate(iso){
 }
 function fmtRange(r){
   if(!r.d1) return '';
+  // Recurring/seasonal events: show the NEXT actual occurrence (computed at build
+  // time as nextOcc), not the raw season range — far more useful at a glance.
+  // Plain-text marker (no HTML) so it renders safely whether the caller escapes it,
+  // sets textContent, or injects as innerHTML.
+  if(r.nextOcc){
+    return fmtDate(r.nextOcc) + ' · recurring';
+  }
   if(!r.d2 || r.d2===r.d1) return fmtDate(r.d1);
   return fmtDate(r.d1)+' – '+fmtDate(r.d2);
 }
