@@ -13,6 +13,8 @@
 <meta name="twitter:card" content="summary_large_image">
 <meta name="theme-color" content="#00004d">
 <link rel="icon" type="image/svg+xml" href="images/favicon.svg">
+<link rel="icon" type="image/png" sizes="32x32" href="images/favicon-32.png">
+<link rel="apple-touch-icon" sizes="180x180" href="images/apple-touch-icon.png">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/maplibre-gl/4.7.1/maplibre-gl.min.css">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -22,6 +24,7 @@
   --ink:#00004d; --ink2:#000066; --ink3:#12127a;
   --lichen:#dde0f2; --birch:#a9b0dd; --faint:#7b82b8;
   --wampum:#39b7ff; --wampum-deep:#000080;
+  --gold:#fca315; --gold-ink:#2b2410;
   --precise:#000080; --fair:#39b7ff; --approx:#fca315; --unver:#b25b45;
 }
 *{box-sizing:border-box; margin:0; padding:0;}
@@ -43,7 +46,7 @@ body{
   font-family:'Montserrat',ui-sans-serif,system-ui,sans-serif;
   font-size:10px; letter-spacing:.22em; text-transform:uppercase; color:var(--birch);
 }
-.masthead h1{font-family:'Montserrat',ui-sans-serif,system-ui,sans-serif; font-size:21px; font-weight:800; line-height:1.2; margin-top:2px; letter-spacing:.05em; text-transform:uppercase;}
+.masthead h1{font-family:'Montserrat',ui-sans-serif,system-ui,sans-serif; font-size:21px; font-weight:800; line-height:1.2; margin-top:2px; letter-spacing:.05em; text-transform:uppercase; color:var(--gold);}
 .planrow{display:flex; align-items:center; gap:8px; margin-top:9px;
   font-family:'Montserrat',ui-sans-serif,system-ui,sans-serif; font-size:11px; color:var(--birch);}
 .planrow input[type=date]{flex:1; background:#0d0d73; border:1px solid #2e2ea8; border-radius:7px;
@@ -51,6 +54,8 @@ body{
 .planrow input[type=date].active{border-color:var(--wampum);}
 .planrow .btn{padding:4px 9px;}
 .epigraph{font-size:12px; font-style:italic; color:var(--birch); line-height:1.5; margin:13px 1px 3px;}
+.secondary-nav{margin-top:12px; padding-top:11px; border-top:1px solid #26268f;}
+.secondary-nav .planrow{margin-top:0; margin-bottom:9px;}
 .superhead{font-family:'Montserrat',ui-sans-serif,system-ui,sans-serif; font-size:9.5px;
   letter-spacing:.18em; text-transform:uppercase; color:var(--birch); line-height:1.5; margin-bottom:6px;}
 .superhead .towns{display:block; color:var(--faint); letter-spacing:.14em; margin-top:2px;}
@@ -90,14 +95,15 @@ body{
 }
 .card .meta .nat{color:var(--birch);}
 .chip{
-  display:inline-block; padding:1px 7px; border-radius:9px; font-size:9.5px; letter-spacing:.06em;
-  text-transform:uppercase; font-weight:600;
+  display:inline-block; padding:1px 7px; border-radius:9px; font-size:9px; letter-spacing:.06em;
+  text-transform:uppercase; font-weight:500; background:transparent; color:var(--faint);
+  border:1px solid #2e2ea8;
 }
-.chip.precise{background:var(--precise); color:#ffffff;}
-.chip.fair{background:var(--fair); color:#0b2a40;}
-.chip.approx{background:var(--approx); color:#2b2410;}
-.chip.unver{background:transparent; color:var(--unver); border:1px dashed var(--unver);}
-.chip.none{background:transparent; color:var(--faint); border:1px solid #2e2ea8;}
+.chip.precise{color:var(--birch); border-color:#2e2ea8;}
+.chip.fair{color:var(--birch); border-color:#2e2ea8;}
+.chip.approx{color:var(--faint); border-color:#2e2ea8;}
+.chip.unver{color:var(--faint); border:1px dashed #2e2ea8;}
+.chip.none{color:var(--faint); border:1px solid #2e2ea8;}
 .empty{padding:26px 22px; color:var(--faint); font-size:13px; font-style:italic; line-height:1.5;}
 
 .btn{
@@ -106,7 +112,9 @@ body{
   font-family:'Montserrat',ui-sans-serif,system-ui,sans-serif;
   transition:border-color .15s;
 }
-.btn:hover{border-color:var(--wampum);}
+.btn:hover{border-color:var(--gold);}
+.btn.primary{background:var(--gold); border-color:var(--gold); color:var(--gold-ink); font-weight:700;}
+.btn.primary:hover{background:#ffb733; border-color:#ffb733;}
 
 /* ---------- Detail panel ---------- */
 #detail{
@@ -186,18 +194,22 @@ a.weblink:hover{text-decoration:underline;}
 
 /* layer switcher */
 #layers{
-  position:absolute; bottom:26px; right:12px; z-index:900;
-  background:rgba(0,0,77,.82); border:1px solid #2e2ea8; border-radius:8px;
+  position:absolute; bottom:52px; right:12px; z-index:900;
+  background:rgba(0,0,77,.9); border:1px solid #2e2ea8; border-radius:8px;
   padding:8px 11px 9px; font-family:'Montserrat',ui-sans-serif,system-ui,sans-serif;
   box-shadow:0 2px 8px rgba(0,0,0,.3); min-width:148px;
 }
+#layers.collapsed{display:none;}
 #layers .lh{font-size:8.5px; letter-spacing:.2em; text-transform:uppercase; color:var(--faint); margin-bottom:6px;}
 #layers label{display:flex; align-items:center; gap:6px; font-size:11px; color:var(--lichen); padding:3px 0; cursor:pointer;}
 #layers label:hover{color:#fff;}
 #layers hr{border:none; border-top:1px solid #26268f; margin:6px 0 5px;}
 #layers input{accent-color:var(--wampum);}
 #layers .note{font-size:8.5px; color:var(--faint); margin-top:2px; line-height:1.35;}
-#layersToggle{display:none;}
+#layersToggle{position:absolute; bottom:12px; right:12px; z-index:901; display:block;
+  background:rgba(0,0,77,.82); border:1px solid #2e2ea8; box-shadow:0 2px 8px rgba(0,0,0,.3);
+  font-size:11px; padding:6px 11px; opacity:.85;}
+#layersToggle:hover{opacity:1; border-color:var(--gold);}
 
 #onlinePill{position:absolute; bottom:26px; left:12px; z-index:900; display:none;
   background:rgba(0,0,77,.9); border:1px solid #39b7ff; border-radius:16px; color:#dde0f2;
@@ -239,16 +251,18 @@ a.weblink:hover{text-decoration:underline;}
     </div>
 
     <div class="controls">
-      <input type="text" id="q" placeholder="Search…" autocomplete="off">
-      <div class="planrow">
-        <label for="planPick">Plan ahead:</label>
-        <input type="date" id="planPick">
-        <button class="btn" id="planClear" title="Back to today" style="display:none;">&times;</button>
-      </div>
       <button class="btn" id="filtersToggle">Filters &#9662;</button>
       <div class="cats" id="catsMain"></div>
       <div class="epigraph">People lived in these hills long before you, and will long after you&#8217;re gone. Discover their stories&#8230;</div>
       <div class="cats" id="catsStory"></div>
+      <div class="secondary-nav">
+        <div class="planrow">
+          <label for="planPick">Plan ahead:</label>
+          <input type="date" id="planPick">
+          <button class="btn" id="planClear" title="Back to today" style="display:none;">&times;</button>
+        </div>
+        <input type="text" id="q" placeholder="Search…" autocomplete="off">
+      </div>
     </div>
 
     <div id="listwrap"></div>
@@ -292,7 +306,7 @@ a.weblink:hover{text-decoration:underline;}
   <div id="mapwrap">
     <div id="map"></div>
     <button id="onlinePill" title="Show online events">&#8907; Online events: <span id="onlineN">0</span></button>
-    <button class="btn" id="layersToggle">Layers</button>
+    <button class="btn" id="layersToggle" title="Base map &amp; layers">&#9638; Map</button>
     <div id="layers">
       <div class="lh">Base map</div>
       <label><input type="radio" name="base" value="worldtopo" checked> World Topo</label>
@@ -742,11 +756,29 @@ function updateOnlinePill(){
   document.getElementById('onlineN').textContent = n;
   el.style.display = n>0 ? '' : 'none';
 }
+function evStartKey(r){
+  /* happening-now events (started, not ended) sort before upcoming ones,
+     then by soonest start date */
+  var s = r.d1 || '9999-99-99', e = r.d2 || r.d1 || '9999-99-99';
+  var live = (s <= TODAY_E && e >= TODAY_E) ? 0 : 1;
+  return live + '|' + s;
+}
+function cmpListOrder(a, b){
+  var ae = a.ty==='events', be = b.ty==='events';
+  /* events as a block sort chronologically; non-events by proximity;
+     when mixed, events lead (they're time-sensitive) */
+  if(ae && be){
+    var ka = evStartKey(a), kb = evStartKey(b);
+    return ka < kb ? -1 : ka > kb ? 1 : 0;
+  }
+  if(ae !== be) return ae ? -1 : 1;
+  return a.dist - b.dist;
+}
 function renderList(){
   updateOnlinePill();
   var list = currentFilter();
   var mapped = list.filter(function(r){return r.tier!=='none';})
-    .sort(function(a,b){return a.dist-b.dist;});
+    .sort(cmpListOrder);
   var unplaced = list.filter(function(r){return r.tier==='none';});
   var w = document.getElementById('listwrap'); w.innerHTML='';
 
@@ -1057,9 +1089,7 @@ document.getElementById('ovTerrain').addEventListener('change', function(e){
 document.getElementById('layersToggle').onclick = function(){
   document.getElementById('layers').classList.toggle('collapsed');
 };
-if(window.matchMedia('(max-width:760px)').matches){
-  document.getElementById('layers').classList.add('collapsed');
-}
+document.getElementById('layers').classList.add('collapsed');
 
 /* ============ INIT ============ */
 buildCats();

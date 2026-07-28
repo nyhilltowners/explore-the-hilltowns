@@ -360,6 +360,7 @@ EVT_SPEC = [
     ("g", r"glyph|icon|symbol", False),
     ("img", r"^image(\s*url)?$|^photo", False),
     ("cred", r"image\s*credit|^credit$|attribution", False),
+    ("disp", r"^display$|^show$|^visible$", False),
 ]
 
 
@@ -376,6 +377,8 @@ def parse_events(path: Path, label: str, sheet=None):
         if not rid and not title:
             continue
         rw = f"{where} row {n}"
+        if s(cell(row, idx, "disp")).lower() in ("no", "n", "false", "0", "hide", "hidden"):
+            continue  # curated out via the Display column (blank = shown)
         if not title:
             fail(f"{rw}: Event Name is required")
         ven_txt = s(cell(row, idx, "ven")).lower()
