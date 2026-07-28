@@ -2,22 +2,24 @@
   "site_title": "Explore These Hills — Catskill & Beyond",
   "categories": [
     {
-      "key": "folklore",
-      "label": "Folklore",
-      "schema": "folklore",
-      "workbook": "data/folklore_legends.xlsx",
-      "color": "#000080",
-      "default_on": true
+      "key": "events",
+      "label": "Events",
+      "schema": "events",
+      "workbook": "data/events.xlsx",
+      "color": "#ff6f5e",
+      "default_on": true,
+      "glyph": "📅",
+      "sheet": "Events"
     },
     {
-      "key": "poi",
-      "label": "Points of Interest",
+      "key": "adventures",
+      "label": "Adventures",
       "schema": "poi",
       "workbook": "data/points_of_interest.xlsx",
-      "sheet": "Points of Interest",
-      "color": "#fca315",
+      "sheet": "Adventures",
+      "color": "#00a896",
       "default_on": false,
-      "glyph": "⁕"
+      "glyph": "≋"
     },
     {
       "key": "restaurants",
@@ -40,16 +42,6 @@
       "glyph": "𐚱"
     },
     {
-      "key": "lodging",
-      "label": "Lodging",
-      "schema": "poi",
-      "workbook": "data/points_of_interest.xlsx",
-      "sheet": "Lodging",
-      "color": "#8e6cf0",
-      "default_on": false,
-      "glyph": "☾"
-    },
-    {
       "key": "antiques",
       "label": "Antiques & Vintage",
       "schema": "poi",
@@ -58,56 +50,6 @@
       "color": "#b08968",
       "default_on": false,
       "glyph": "☞"
-    },
-    {
-      "key": "adventures",
-      "label": "Adventures",
-      "schema": "poi",
-      "workbook": "data/points_of_interest.xlsx",
-      "sheet": "Adventures",
-      "color": "#00a896",
-      "default_on": false,
-      "glyph": "≋"
-    },
-    {
-      "key": "mutualaid",
-      "label": "Mutual Aid",
-      "schema": "poi",
-      "workbook": "data/points_of_interest.xlsx",
-      "sheet": "Mutual Aid",
-      "color": "#d4519f",
-      "default_on": false,
-      "glyph": "✚"
-    },
-    {
-      "key": "wellness",
-      "label": "Wellness",
-      "schema": "poi",
-      "workbook": "data/points_of_interest.xlsx",
-      "sheet": "Wellness",
-      "color": "#e6b422",
-      "default_on": false,
-      "glyph": "𐘿"
-    },
-    {
-      "key": "flowersgifts",
-      "label": "Flowers & Gifts",
-      "schema": "poi",
-      "workbook": "data/points_of_interest.xlsx",
-      "sheet": "Flowers & Gifts",
-      "color": "#c2185b",
-      "default_on": false,
-      "glyph": "𐫱"
-    },
-    {
-      "key": "othernecessities",
-      "label": "Other Necessities",
-      "schema": "poi",
-      "workbook": "data/points_of_interest.xlsx",
-      "sheet": "Other Necessities",
-      "color": "#7a8ba6",
-      "default_on": false,
-      "glyph": "⚙"
     },
     {
       "key": "artsent",
@@ -120,14 +62,72 @@
       "glyph": "▣"
     },
     {
-      "key": "events",
-      "label": "Events",
-      "schema": "events",
-      "workbook": "data/events.xlsx",
-      "color": "#ff6f5e",
-      "default_on": true,
-      "glyph": "📅",
-      "sheet": "Events"
+      "key": "lodging",
+      "label": "Lodging",
+      "schema": "poi",
+      "workbook": "data/points_of_interest.xlsx",
+      "sheet": "Lodging",
+      "color": "#8e6cf0",
+      "default_on": false,
+      "glyph": "☾"
+    },
+    {
+      "key": "flowersgifts",
+      "label": "Flowers & Gifts",
+      "schema": "poi",
+      "workbook": "data/points_of_interest.xlsx",
+      "sheet": "Flowers & Gifts",
+      "color": "#c2185b",
+      "default_on": false,
+      "glyph": "𐫱"
+    },
+    {
+      "key": "wellness",
+      "label": "Wellness",
+      "schema": "poi",
+      "workbook": "data/points_of_interest.xlsx",
+      "sheet": "Wellness",
+      "color": "#e6b422",
+      "default_on": false,
+      "glyph": "𐘿"
+    },
+    {
+      "key": "mutualaid",
+      "label": "Mutual Aid",
+      "schema": "poi",
+      "workbook": "data/points_of_interest.xlsx",
+      "sheet": "Mutual Aid",
+      "color": "#d4519f",
+      "default_on": false,
+      "glyph": "✚"
+    },
+    {
+      "key": "othernecessities",
+      "label": "Other Necessities",
+      "schema": "poi",
+      "workbook": "data/points_of_interest.xlsx",
+      "sheet": "Other Necessities",
+      "color": "#7a8ba6",
+      "default_on": false,
+      "glyph": "⚙"
+    },
+    {
+      "key": "folklore",
+      "label": "Folklore",
+      "schema": "folklore",
+      "workbook": "data/folklore_legends.xlsx",
+      "color": "#000080",
+      "default_on": true
+    },
+    {
+      "key": "poi",
+      "label": "Points of Interest",
+      "schema": "poi",
+      "workbook": "data/points_of_interest.xlsx",
+      "sheet": "Points of Interest",
+      "color": "#fca315",
+      "default_on": false,
+      "glyph": "⁕"
     }
   ]
 }

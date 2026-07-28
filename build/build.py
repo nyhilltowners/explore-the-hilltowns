@@ -212,6 +212,7 @@ FOLK_SPEC = [
     ("pg", r"page", False),
     ("img", r"^image(\s*url)?$|^photo", False),
     ("cred", r"image\s*credit|^credit$|attribution", False),
+    ("web", r"^website$|^url$|^link$", False),
     ("disp", r"^display$|^show$|^visible$", False),
 ]
 
@@ -257,6 +258,7 @@ def parse_folklore(path: Path, label: str, sheet=None):
             "src": s(cell(row, idx, "src")), "pg": s(cell(row, idx, "pg")),
             "img": norm_image(cell(row, idx, "img"), rw),
             "cred": s(cell(row, idx, "cred")),
+            "web": s(cell(row, idx, "web")),
         }
         # column-drift dedupe, mirrored from the interactive versions
         if rec["b"] and rec["b"] == rec["s"]:
