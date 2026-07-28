@@ -23,6 +23,7 @@
 :root{
   --ink:#00004d; --ink2:#000066; --ink3:#12127a;
   --paper:#feffff;
+  --parchment:#f4efe1; --parchment-line:#e3dcc8; --ink-blue:#1a1d5c;
   --lichen:#dde0f2; --birch:#a9b0dd; --faint:#7b82b8;
   --wampum:#39b7ff; --wampum-deep:#000080;
   --gold:#fca315; --gold-ink:#2b2410; --gold-dim:#c7a24a;
@@ -41,15 +42,17 @@ body{
 /* ---------- Sidebar ---------- */
 #sidebar{
   width:392px; min-width:392px; height:100%; display:flex; flex-direction:column;
-  background:linear-gradient(180deg,var(--ink) 0%, var(--ink2) 100%);
+  background:var(--parchment);
+  background-image:radial-gradient(rgba(180,168,132,.10) 0.6px, transparent 0.6px);
+  background-size:7px 7px;
   border-right:1px solid #26268f; position:relative; z-index:1000;
 }
-.masthead{padding:20px 22px 14px; border-bottom:1px solid #26268f;}
+.masthead{padding:18px 22px 12px; border-bottom:1px solid var(--parchment-line); background:transparent;}
 .eyebrow{
   font-family:'Montserrat',ui-sans-serif,system-ui,sans-serif;
   font-size:10px; letter-spacing:.22em; text-transform:uppercase; color:var(--birch);
 }
-.masthead h1{font-family:'Montserrat',ui-sans-serif,system-ui,sans-serif; font-size:21px; font-weight:800; line-height:1.2; margin-top:4px; letter-spacing:.05em; text-transform:uppercase; color:var(--gold); display:flex; align-items:center; gap:10px;}
+.masthead h1{font-family:'Montserrat',ui-sans-serif,system-ui,sans-serif; font-size:21px; font-weight:800; line-height:1.2; margin-top:0; letter-spacing:.05em; text-transform:uppercase; color:var(--ink-blue); display:flex; align-items:center; gap:10px;}
 .masthead h1 .mast-logo{width:38px; height:38px; flex:none; border-radius:8px;}
 .planrow{display:flex; align-items:center; gap:8px; margin-top:9px;
   font-family:'Montserrat',ui-sans-serif,system-ui,sans-serif; font-size:11px; color:var(--birch);}
@@ -57,7 +60,12 @@ body{
   color:var(--lichen); padding:5px 8px; font-family:inherit; font-size:12px; color-scheme:dark;}
 .planrow input[type=date].active{border-color:var(--wampum);}
 .planrow .btn{padding:4px 9px;}
-.epigraph{font-size:12px; font-style:italic; color:var(--birch); line-height:1.5; margin:13px 1px 3px;}
+.epigraph{font-size:12px; font-style:italic; color:#6b6552; line-height:1.5; margin:11px 1px 3px;}
+.navfoot{display:flex; align-items:center; justify-content:space-between; margin-top:11px; padding-top:10px; border-top:1px solid #b8d4ec;}
+.navfoot .iglink{font-family:'Montserrat',ui-sans-serif,system-ui,sans-serif; font-size:11px; letter-spacing:.1em; color:var(--gold); text-decoration:none;}
+.navfoot .iglink:hover{color:var(--ink-blue); text-decoration:underline;}
+.navfoot #btnAbout{padding:4px 10px; font-size:11px; background:#eef4fb; border-color:#a9c6e0; color:#2b4a63;}
+.navfoot #btnAbout:hover{border-color:var(--gold);}
 .secondary-nav{flex:none; padding:12px 22px 14px; border-top:1px solid #b8d4ec; background:#dbeaf6;}
 .secondary-nav .planrow{margin-top:0; margin-bottom:9px; color:#2b4a63;}
 .secondary-nav input[type=date]{flex:1; background:#fff; border:1px solid #a9c6e0; border-radius:7px;
@@ -70,9 +78,10 @@ body{
 .superhead .iglink{color:var(--gold); text-decoration:none; letter-spacing:.14em;}
 .superhead .iglink:hover{color:var(--paper); text-decoration:underline;}
 
-.controls{padding:14px 22px 14px; border-bottom:1px solid #26268f; background:var(--paper);}
+.controls{padding:12px 22px 12px; border-bottom:1px solid var(--parchment-line); background:transparent;}
 .controls .epigraph{color:#4a4f7a;}
 .controls #filtersToggle{background:#eef0fb; border-color:#c9cdec; color:#2b2f57;}
+.controls.fcollapsed .cats, .controls.fcollapsed .epigraph{display:none;}
 .controls #filtersToggle:hover{border-color:var(--gold);}
 .controls input[type=text], .secondary-nav input[type=text]{
   width:100%; background:#fff; border:1px solid #a9c6e0; color:#1c3348;
@@ -80,10 +89,10 @@ body{
 }
 .controls input[type=text]::placeholder, .secondary-nav input[type=text]::placeholder{color:#7089a0;}
 .controls input[type=text]:focus, .secondary-nav input[type=text]:focus{border-color:var(--gold);}
-.cats{display:flex; flex-direction:column; gap:2px; margin-top:10px;}
+.cats{display:flex; flex-direction:column; gap:0; margin-top:6px;}
 .catbox{display:flex; align-items:center; gap:10px; cursor:pointer; user-select:none;
-  font-family:'Montserrat',ui-sans-serif,system-ui,sans-serif; font-size:12.5px; color:#2b2f57;
-  padding:6px 4px; border:none; border-radius:0; background:transparent; transition:color .15s;}
+  font-family:'Montserrat',ui-sans-serif,system-ui,sans-serif; font-size:12.5px; color:var(--ink-blue);
+  padding:2px 4px; border:none; border-radius:0; background:transparent; transition:color .15s;}
 .catbox:hover{color:#000; background:transparent;}
 .catbox input{accent-color:var(--gold); width:15px; height:15px; flex:none;}
 .catname{flex:1;}
@@ -92,20 +101,20 @@ body{
 .catmark.disc{background:transparent; font-size:19px;}
 .catmark.poi{color:var(--wampum); font-size:18px;}
 
-#listwrap{flex:1; overflow-y:auto; background:var(--paper); scrollbar-width:thin; scrollbar-color:#c9cdec transparent;}
+#listwrap{flex:1; overflow-y:auto; background:transparent; scrollbar-width:thin; scrollbar-color:#c9bfa0 transparent;}
 .grouphead{
-  position:sticky; top:0; background:var(--paper); z-index:2;
+  position:sticky; top:0; background:var(--parchment); z-index:2;
   padding:9px 22px 7px; font-family:'Montserrat',ui-sans-serif,system-ui,sans-serif;
   font-size:10px; letter-spacing:.2em; text-transform:uppercase; color:var(--gold-dim);
-  border-bottom:1px solid #e2e4f2;
+  border-bottom:1px solid var(--parchment-line);
 }
-.card{padding:12px 22px 13px; border-bottom:1px solid #e8eaf4; cursor:pointer; transition:background .12s;}
-.card:hover{background:#f3f5fc;}
-.card.active{background:#fff6e6; box-shadow:inset 3px 0 0 var(--gold);}
-.card h3{font-size:13.5px; font-weight:600; line-height:1.3; color:#1a1d3a; font-family:'Montserrat',ui-sans-serif,system-ui,sans-serif;}
+.card{padding:12px 22px 13px; border-bottom:1px solid var(--parchment-line); cursor:pointer; transition:background .12s;}
+.card:hover{background:rgba(255,255,255,.45);}
+.card.active{background:rgba(252,163,21,.14); box-shadow:inset 3px 0 0 var(--gold);}
+.card h3{font-size:13.5px; font-weight:600; line-height:1.3; color:var(--ink-blue); font-family:'Montserrat',ui-sans-serif,system-ui,sans-serif;}
 .card .meta{
   display:flex; align-items:baseline; gap:8px; margin-top:4px; flex-wrap:wrap;
-  font-family:'Montserrat',ui-sans-serif,system-ui,sans-serif; font-size:10.5px; color:#6b7194; letter-spacing:.03em;
+  font-family:'Montserrat',ui-sans-serif,system-ui,sans-serif; font-size:10.5px; color:#7a7460; letter-spacing:.03em;
 }
 .card .meta .nat{color:#8a6d1f;}
 .chip{
@@ -169,13 +178,10 @@ a.weblink:hover{text-decoration:underline;}
 .likebtn:hover{border-color:#e0526e;}
 .likebtn:active{transform:scale(1.25);}
 .likebtn .lc{color:var(--birch); margin-left:3px; font-size:11px;}
-#btnAbout{position:absolute; top:14px; right:14px; width:26px; height:26px; padding:0;
-  border-radius:50%; font-size:13px; line-height:1;}
 .masthead{position:relative;}
-#filtersToggle{display:none; width:100%; margin-top:8px;}
+#filtersToggle{display:block; width:100%; margin-top:0; margin-bottom:2px;}
 @media (max-width:760px){
   #filtersToggle{display:block;}
-  .controls.fcollapsed .cats, .controls.fcollapsed .epigraph{display:none;}
 }
 .tag{display:inline-block; padding:2px 9px; margin:0 4px 4px 0; border-radius:11px;
   border:1px solid #2e2ea8; color:var(--birch); font-size:9.5px; letter-spacing:.05em;
@@ -249,6 +255,15 @@ a.weblink:hover{text-decoration:underline;}
     background:rgba(0,0,77,.9); box-shadow:0 2px 8px rgba(0,0,0,.35);}
   #layers.collapsed{display:none;}
   .mapbar{top:auto; bottom:12px;}
+
+  /* Detail & About break out to full-screen on mobile so the scroll area is
+     tall enough to reach bottom links (were confined to the 44vh sidebar,
+     which fought touch-scroll and snapped back on release). */
+  #detail, #about{position:fixed; inset:0; z-index:3000; border-right:none;}
+  #detail .detail-body, #about .detail-body{
+    -webkit-overflow-scrolling:touch; overscroll-behavior:contain;
+    padding-bottom:64px; max-height:none;
+  }
 }
 @media (prefers-reduced-motion: reduce){
   #detail{transition:none;} .card,.catbox,.btn{transition:none;}
@@ -259,13 +274,11 @@ a.weblink:hover{text-decoration:underline;}
 <div class="app">
   <div id="sidebar">
     <div class="masthead">
-      <button class="btn" id="btnAbout" title="About this atlas">&#9432;</button>
-      <div class="superhead"><a href="https://instagram.com/NYHilltowners" target="_blank" rel="noopener" class="iglink">@NYHilltowners</a></div>
       <h1><img src="images/favicon.svg" alt="" class="mast-logo">Hilltowns Atlas</h1>
     </div>
 
     <div class="controls">
-      <button class="btn" id="filtersToggle">Filters &#9662;</button>
+      <button class="btn" id="filtersToggle" title="Collapse categories to browse the map">Hide categories &#9652;</button>
       <div class="cats" id="catsMain"></div>
       <div class="epigraph">People have been sharing stories in these hills since long before you were here, and will be long after you&#8217;re gone&#8230;</div>
       <div class="cats" id="catsStory"></div>
@@ -280,6 +293,10 @@ a.weblink:hover{text-decoration:underline;}
         <button class="btn" id="planClear" title="Back to today" style="display:none;">&times;</button>
       </div>
       <input type="text" id="q" placeholder="Search…" autocomplete="off">
+      <div class="navfoot">
+        <a href="https://instagram.com/NYHilltowners" target="_blank" rel="noopener" class="iglink">@NYHilltowners</a>
+        <button class="btn" id="btnAbout" title="About this atlas">&#9432; About</button>
+      </div>
     </div>
 
     <div id="detail">
@@ -1049,11 +1066,12 @@ _pc.onclick = function(){
 var _fc = document.getElementById('filtersToggle');
 if(window.matchMedia('(max-width:760px)').matches){
   document.querySelector('.controls').classList.add('fcollapsed');
+  _fc.innerHTML = 'Show categories &#9662;';
 }
 _fc.onclick = function(){
   var c = document.querySelector('.controls');
   c.classList.toggle('fcollapsed');
-  _fc.innerHTML = c.classList.contains('fcollapsed') ? 'Filters &#9662;' : 'Filters &#9652;';
+  _fc.innerHTML = c.classList.contains('fcollapsed') ? 'Show categories &#9662;' : 'Hide categories &#9652;';
 };
 
 function catMark(c){
