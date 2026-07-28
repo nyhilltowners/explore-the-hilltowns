@@ -3,7 +3,7 @@
   "categories": [
     {
       "key": "folklore",
-      "label": "Folklore & Legends",
+      "label": "Folklore",
       "schema": "folklore",
       "workbook": "data/folklore_legends.xlsx",
       "color": "#000080",
@@ -124,7 +124,7 @@
       "label": "Events",
       "schema": "events",
       "workbook": "data/events.xlsx",
-      "color": "#39b7ff",
+      "color": "#ff6f5e",
       "default_on": true,
       "glyph": "📅",
       "sheet": "Events"

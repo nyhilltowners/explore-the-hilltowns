@@ -345,6 +345,86 @@ def parse_poi(path: Path, label: str, sheet=None):
 
 # ---------------- events ----------------
 
+_WD = {"mon": 0, "tue": 1, "wed": 2, "thu": 3, "fri": 4, "sat": 5, "sun": 6}
+_ORD = {"1st": 1, "2nd": 2, "3rd": 3, "4th": 4, "5th": 5, "last": 0}
+
+
+def _next_weekday(frm, wd):
+    """First date >= frm falling on weekday wd (0=Mon..6=Sun)."""
+    delta = (wd - frm.weekday()) % 7
+    return frm + datetime.timedelta(days=delta)
+
+
+def _nth_weekday_of_month(year, month, wd, nth):
+    """The nth (1..5, or 0='last') weekday wd in a given month, or None."""
+    first = datetime.date(year, month, 1)
+    first_wd = _next_weekday(first, wd)
+    if nth == 0:  # last occurrence
+        d = first_wd
+        while (d + datetime.timedelta(days=7)).month == month:
+            d += datetime.timedelta(days=7)
+        return d
+    d = first_wd + datetime.timedelta(days=7 * (nth - 1))
+    return d if d.month == month else None
+
+
+def next_occurrence(notes, start, end, today):
+    """Given a 'Recurring — …' Notes string, return the soonest date >= today
+    that the event actually happens (respecting its start/end bounds), or None
+    if the notes carry no parseable recurrence. Handles:
+      'every week: Thursday'            (one or many days)
+      '2nd week: Tuesday'               (nth weekday of month)
+      '1st week of month: Wednesday; 3rd week: Wednesday'  (compound)
+    Dates are ISO strings; today/start/end are ISO strings or ''.
+    """
+    m = re.search(r"Recurring\s*[\u2014-]\s*([^|]+)", notes or "")
+    if not m:
+        return None
+    frag = m.group(1).strip()
+
+    def iso2d(x):
+        try:
+            return datetime.date.fromisoformat(x[:10])
+        except Exception:
+            return None
+
+    tdy = iso2d(today)
+    st = iso2d(start) if start else None
+    en = iso2d(end) if end else None
+    lo = max(st, tdy) if st else tdy
+    if lo is None:
+        return None
+
+    def within(d):
+        return d is not None and d >= lo and (en is None or d <= en)
+
+    cands = []
+
+    wk = re.search(r"every week\s*:\s*(.+)", frag, re.I)
+    if wk:
+        for name in re.findall(r"Mon|Tue|Wed|Thu|Fri|Sat|Sun", wk.group(1)):
+            d = _next_weekday(lo, _WD[name.lower()])
+            if within(d):
+                cands.append(d)
+
+    for seg in re.split(r";", frag):
+        mm = re.search(r"(1st|2nd|3rd|4th|5th|last)\s*week(?:\s*of\s*month)?\s*:\s*"
+                       r"(Mon|Tue|Wed|Thu|Fri|Sat|Sun)", seg, re.I)
+        if not mm:
+            continue
+        nth = _ORD[mm.group(1).lower()]
+        wd = _WD[mm.group(2).lower()]
+        probe = datetime.date(lo.year, lo.month, 1)
+        for _ in range(4):
+            d = _nth_weekday_of_month(probe.year, probe.month, wd, nth)
+            if within(d) and d >= lo:
+                cands.append(d)
+                break
+            probe = (probe.replace(day=28) + datetime.timedelta(days=7)).replace(day=1)
+
+    return min(cands).isoformat() if cands else None
+
+
 EVT_SPEC = [
     ("id", r"^id$", False),
     ("t", r"event\s*name|^name$|^title", True),
@@ -360,6 +440,7 @@ EVT_SPEC = [
     ("g", r"glyph|icon|symbol", False),
     ("img", r"^image(\s*url)?$|^photo", False),
     ("cred", r"image\s*credit|^credit$|attribution", False),
+    ("notes", r"^notes?$", False),
     ("disp", r"^display$|^show$|^visible$", False),
 ]
 
@@ -396,21 +477,30 @@ def parse_events(path: Path, label: str, sheet=None):
         d2 = parse_date(cell(row, idx, "d2"), "End Date", rw, required=False)
         if d1 and d2 and d2 < d1:
             fail(f"{rw}: End Date {d2} is before Start Date {d1}")
+        notes = s(cell(row, idx, "notes"))
+        nocc = next_occurrence(notes, d1, d2, today)  # ISO string or None
         end = d2 or d1
-        if end and end < today:
+        if end and end < today and not nocc:
             skipped_past[0] += 1
-            continue  # past events are dropped from the build entirely
+            continue  # non-recurring past events are dropped from the build
+        if nocc and end and end < today:
+            # a recurring series whose bare End Date is stale but still recurs:
+            # its real horizon is the next occurrence, so it stays in.
+            pass
         out.append({
             "ty": "events", "cat": label, "id": rid, "t": title or "(unnamed)",
             "ven": s(cell(row, idx, "ven")), "addr": s(cell(row, idx, "addr")),
             "lat": lat, "lng": lng, "s": s(cell(row, idx, "stry")),
             "d1": d1, "d2": d2 or "", "tm": s(cell(row, idx, "tm")),
             "web": s(cell(row, idx, "web")), "g": s(cell(row, idx, "g")),
-            "online": is_online,
+            "online": is_online, "nextOcc": nocc or "",
             "tier": "exact" if (lat is not None and lng is not None) else "none",
             "img": norm_image(cell(row, idx, "img"), rw),
             "cred": s(cell(row, idx, "cred")),
         })
+        ev_web = s(cell(row, idx, "web"))
+        if not out[-1]["img"] and ev_web:
+            out[-1]["img"] = fetch_site_image(ev_web, rw)
     check_dupe_ids(out, where)
     if skipped_past[0]:
         print(f"    ({skipped_past[0]} past events skipped)")

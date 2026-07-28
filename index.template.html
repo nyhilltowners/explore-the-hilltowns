@@ -22,9 +22,12 @@
 <style>
 :root{
   --ink:#00004d; --ink2:#000066; --ink3:#12127a;
+  --paper:#feffff;
   --lichen:#dde0f2; --birch:#a9b0dd; --faint:#7b82b8;
   --wampum:#39b7ff; --wampum-deep:#000080;
-  --gold:#fca315; --gold-ink:#2b2410;
+  --gold:#fca315; --gold-ink:#2b2410; --gold-dim:#c7a24a;
+  --coral:#ff6f5e; --coral-dim:#e0574a;
+  --card:#0a0a5c; --card-line:#2a2a9e;
   --precise:#000080; --fair:#39b7ff; --approx:#fca315; --unver:#b25b45;
 }
 *{box-sizing:border-box; margin:0; padding:0;}
@@ -54,19 +57,20 @@ body{
 .planrow input[type=date].active{border-color:var(--wampum);}
 .planrow .btn{padding:4px 9px;}
 .epigraph{font-size:12px; font-style:italic; color:var(--birch); line-height:1.5; margin:13px 1px 3px;}
-.secondary-nav{margin-top:12px; padding-top:11px; border-top:1px solid #26268f;}
+.secondary-nav{flex:none; padding:12px 22px 14px; border-top:1px solid #26268f; background:var(--ink2);}
 .secondary-nav .planrow{margin-top:0; margin-bottom:9px;}
 .superhead{font-family:'Montserrat',ui-sans-serif,system-ui,sans-serif; font-size:9.5px;
   letter-spacing:.18em; text-transform:uppercase; color:var(--birch); line-height:1.5; margin-bottom:6px;}
-.superhead .towns{display:block; color:var(--faint); letter-spacing:.14em; margin-top:2px;}
+.superhead .iglink{color:var(--coral); text-decoration:none; letter-spacing:.14em;}
+.superhead .iglink:hover{color:var(--gold); text-decoration:underline;}
 
 .controls{padding:14px 22px 10px; border-bottom:1px solid #26268f;}
-.controls input[type=text]{
+.controls input[type=text], .secondary-nav input[type=text]{
   width:100%; background:var(--ink3); border:1px solid #2e2ea8; color:var(--lichen);
   border-radius:6px; padding:8px 11px; font-size:13.5px; font-family:inherit; outline:none;
 }
-.controls input[type=text]::placeholder{color:var(--faint);}
-.controls input[type=text]:focus{border-color:var(--wampum);}
+.controls input[type=text]::placeholder, .secondary-nav input[type=text]::placeholder{color:var(--faint);}
+.controls input[type=text]:focus, .secondary-nav input[type=text]:focus{border-color:var(--gold);}
 .cats{display:grid; grid-template-columns:1fr 1fr; gap:6px; margin-top:10px;}
 .catbox{display:flex; align-items:center; gap:7px; cursor:pointer; user-select:none;
   font-family:'Montserrat',ui-sans-serif,system-ui,sans-serif; font-size:11px; color:var(--lichen);
@@ -82,13 +86,13 @@ body{
 .grouphead{
   position:sticky; top:0; background:var(--ink2); z-index:2;
   padding:9px 22px 7px; font-family:'Montserrat',ui-sans-serif,system-ui,sans-serif;
-  font-size:10px; letter-spacing:.2em; text-transform:uppercase; color:var(--faint);
+  font-size:10px; letter-spacing:.2em; text-transform:uppercase; color:var(--gold-dim);
   border-bottom:1px solid #26268f;
 }
-.card{padding:12px 22px 13px; border-bottom:1px solid #1b1b80; cursor:pointer; transition:background .12s;}
-.card:hover{background:#0d0d70;}
-.card.active{background:#14148c; box-shadow:inset 3px 0 0 var(--wampum);}
-.card h3{font-size:13.5px; font-weight:600; line-height:1.3; font-family:'Montserrat',ui-sans-serif,system-ui,sans-serif;}
+.card{padding:12px 22px 13px; border-bottom:1px solid var(--card-line); cursor:pointer; transition:background .12s;}
+.card:hover{background:var(--card);}
+.card.active{background:var(--card); box-shadow:inset 3px 0 0 var(--gold);}
+.card h3{font-size:13.5px; font-weight:600; line-height:1.3; color:var(--paper); font-family:'Montserrat',ui-sans-serif,system-ui,sans-serif;}
 .card .meta{
   display:flex; align-items:baseline; gap:8px; margin-top:4px; flex-wrap:wrap;
   font-family:'Montserrat',ui-sans-serif,system-ui,sans-serif; font-size:10.5px; color:var(--faint); letter-spacing:.03em;
@@ -130,13 +134,13 @@ body{
 .detail-head{padding:16px 22px 12px; border-bottom:1px solid #26268f;}
 .detail-head .backrow{display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;}
 .detail-body{flex:1; overflow-y:auto; padding:18px 22px 30px; scrollbar-width:thin;}
-.detail-body h2{font-size:18px; line-height:1.25; font-weight:600; margin-bottom:10px; font-family:'Montserrat',ui-sans-serif,system-ui,sans-serif;}
+.detail-body h2{font-size:18px; line-height:1.25; font-weight:600; margin-bottom:10px; color:var(--paper); font-family:'Montserrat',ui-sans-serif,system-ui,sans-serif;}
 .field{margin-bottom:14px;}
 .field .fl{
   font-family:'Montserrat',ui-sans-serif,system-ui,sans-serif; font-size:9.5px; letter-spacing:.2em;
   text-transform:uppercase; color:var(--faint); margin-bottom:3px;
 }
-.field .fv{font-size:13.5px; line-height:1.55;}
+.field .fv{font-size:13.5px; line-height:1.55; color:var(--paper);}
 .field .fv.story{font-size:14.5px; line-height:1.62;}
 .certline{display:flex; gap:8px; align-items:center; margin:8px 0 14px; flex-wrap:wrap;}
 .certnote{font-size:12px; color:var(--birch); font-style:italic; line-height:1.4;}
@@ -212,12 +216,12 @@ a.weblink:hover{text-decoration:underline;}
 #layersToggle:hover{opacity:1; border-color:var(--gold);}
 
 #onlinePill{position:absolute; bottom:26px; left:12px; z-index:900; display:none;
-  background:rgba(0,0,77,.9); border:1px solid #39b7ff; border-radius:16px; color:#dde0f2;
+  background:rgba(0,0,77,.9); border:1px solid var(--coral); border-radius:16px; color:var(--coral);
   font-family:'Montserrat',ui-sans-serif,system-ui,sans-serif; font-size:11px; padding:6px 12px;
   cursor:pointer;}
 #onlinePill:hover{background:rgba(0,0,102,.95);}
-.card .onlinechip{display:inline-block; padding:1px 8px; border-radius:10px; border:1px solid #39b7ff;
-  color:#39b7ff; font-size:9px; letter-spacing:.08em; text-transform:uppercase;
+.card .onlinechip{display:inline-block; padding:1px 8px; border-radius:10px; border:1px solid var(--coral);
+  color:var(--coral); font-size:9px; letter-spacing:.08em; text-transform:uppercase;
   font-family:'Montserrat',ui-sans-serif,system-ui,sans-serif;}
 .mapbar{
   position:absolute; top:12px; right:12px; z-index:900; display:flex; flex-direction:column; gap:8px;
@@ -246,26 +250,27 @@ a.weblink:hover{text-decoration:underline;}
   <div id="sidebar">
     <div class="masthead">
       <button class="btn" id="btnAbout" title="About this atlas">&#9432;</button>
-      <div class="superhead">NY Helderberg-Hudson Hilltowns<span class="towns">Berne &middot; Knox &middot; Rensselaerville &middot; Westerlo</span></div>
+      <div class="superhead"><a href="https://instagram.com/NYHilltowners" target="_blank" rel="noopener" class="iglink">@NYHilltowners</a></div>
       <h1>Explore these hills&#8230;</h1>
     </div>
 
     <div class="controls">
       <button class="btn" id="filtersToggle">Filters &#9662;</button>
       <div class="cats" id="catsMain"></div>
-      <div class="epigraph">People lived in these hills long before you, and will long after you&#8217;re gone. Discover their stories&#8230;</div>
+      <div class="epigraph">People have been sharing stories in these hills since long before you were here, and will be long after you&#8217;re gone&#8230;</div>
       <div class="cats" id="catsStory"></div>
-      <div class="secondary-nav">
-        <div class="planrow">
-          <label for="planPick">Plan ahead:</label>
-          <input type="date" id="planPick">
-          <button class="btn" id="planClear" title="Back to today" style="display:none;">&times;</button>
-        </div>
-        <input type="text" id="q" placeholder="Search…" autocomplete="off">
-      </div>
     </div>
 
     <div id="listwrap"></div>
+
+    <div class="secondary-nav" id="secondaryNav">
+      <div class="planrow">
+        <label for="planPick">Plan ahead:</label>
+        <input type="date" id="planPick">
+        <button class="btn" id="planClear" title="Back to today" style="display:none;">&times;</button>
+      </div>
+      <input type="text" id="q" placeholder="Search…" autocomplete="off">
+    </div>
 
     <div id="detail">
       <div class="detail-head">
@@ -347,7 +352,7 @@ CATEGORIES.forEach(function(c){ if(c.color) CAT_COLOR[c.label]=c.color; });
 var records = (ATLAS.records || []).map(function(d,i){
   d._k='r'+i;
   d.dist = (d.lat!=null && d.lng!=null) ? kmFromHome(d.lat, d.lng) : Infinity;
-  d.col = CAT_COLOR[d.cat] || (d.ty==='events' ? '#39b7ff' : '#fca315');
+  d.col = CAT_COLOR[d.cat] || (d.ty==='events' ? '#ff6f5e' : '#fca315');
   if(!d.g && d.ty==='events') d.g='✦';
   if(typeof d.tags==='string') d.tags = d.tags.split(/[;,]/).map(function(x){return x.trim();}).filter(Boolean);
   if(!Array.isArray(d.tags)) d.tags = [];
@@ -375,6 +380,7 @@ var TODAY_DOW = (function(){
 
 function isExpired(r){
   if(r.ty!=='events') return false;
+  if(r.nextOcc) return r.nextOcc < TODAY_E;   /* recurring: honor next occurrence */
   var end = r.d2 || r.d1;
   if(!end) return false;
   return end < TODAY_E;
@@ -388,8 +394,12 @@ function evVisible(r){
   if(r.ty!=='events') return true;
   var s = r.d1, e = r.d2 || r.d1;
   if(!s) return false;
+  if(r.nextOcc){
+    if(planDate) return r.nextOcc <= planDate && (!e || planDate <= e);
+    return r.nextOcc <= isoAddDays(TODAY_E,7) && r.nextOcc >= TODAY_E;
+  }
   if(planDate) return s <= planDate && planDate <= e;      /* on the chosen date */
-  return s <= isoAddDays(TODAY_E,10) && e >= TODAY_E;      /* within 10 days */
+  return s <= isoAddDays(TODAY_E,7) && e >= TODAY_E;      /* within 7 days */
 }
 function fmtDate(iso){
   if(!iso) return '';
@@ -757,11 +767,21 @@ function updateOnlinePill(){
   el.style.display = n>0 ? '' : 'none';
 }
 function evStartKey(r){
-  /* happening-now events (started, not ended) sort before upcoming ones,
-     then by soonest start date */
+  /* Rank by the NEXT date you could actually attend, not the arbitrary listed
+     start. Recurring events rank on their true next occurrence (e.g. a Thursday
+     series ranks on this-or-next Thursday, sorting fairly against one-offs).
+     A continuous run already under way ranks as today ("available now").
+     Order: happening-now first; then soonest next date; within the same date,
+     the one ENDING sooner leads (catch it before it's gone). */
   var s = r.d1 || '9999-99-99', e = r.d2 || r.d1 || '9999-99-99';
-  var live = (s <= TODAY_E && e >= TODAY_E) ? 0 : 1;
-  return live + '|' + s;
+  var nextDate;
+  if(r.nextOcc){
+    nextDate = r.nextOcc;                          /* real recurrence date */
+  } else {
+    nextDate = (s < TODAY_E) ? TODAY_E : s;        /* clamp past starts to today */
+  }
+  var live = (nextDate <= TODAY_E && e >= TODAY_E) ? 0 : 1;
+  return live + '|' + nextDate + '|' + e;
 }
 function cmpListOrder(a, b){
   var ae = a.ty==='events', be = b.ty==='events';
@@ -1032,7 +1052,7 @@ function catMark(c){
   return '<span class="catmark disc" style="color:'+esc(col)+'">'+ch+'</span>';
 }
 function buildCats(){
-  var STORY = {'Folklore & Legends':1, 'Points of Interest':1};
+  var STORY_SCHEMA = {folklore:1, poi:1};   /* schema-based so label edits never break grouping */
   var main = document.getElementById('catsMain');
   var story = document.getElementById('catsStory');
   main.innerHTML=''; story.innerHTML='';
@@ -1046,7 +1066,7 @@ function buildCats(){
       + catMark(c) + '<span class="catname">'+esc(c.label)+'</span>';
     var cb = lb.querySelector('input');
     if(cb) cb.addEventListener('change', function(ev){ catsOn[c.label]=ev.target.checked; renderList(); });
-    (STORY[c.label] ? story : main).appendChild(lb);
+    (STORY_SCHEMA[c.schema] ? story : main).appendChild(lb);
   });
 }
 
