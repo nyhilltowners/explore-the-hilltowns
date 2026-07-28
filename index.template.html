@@ -53,7 +53,7 @@ body{
   font-size:10px; letter-spacing:.22em; text-transform:uppercase; color:var(--birch);
 }
 .masthead h1{font-family:'Montserrat',ui-sans-serif,system-ui,sans-serif; font-size:21px; font-weight:800; line-height:1.2; margin-top:0; letter-spacing:.05em; text-transform:uppercase; color:var(--ink-blue); display:flex; align-items:center; gap:10px;}
-.masthead h1 .mast-logo{width:38px; height:38px; flex:none; border-radius:8px;}
+.masthead h1 .mast-logo{width:46px; height:46px; flex:none; object-fit:contain;}
 .planrow{display:flex; align-items:center; gap:8px; margin-top:9px;
   font-family:'Montserrat',ui-sans-serif,system-ui,sans-serif; font-size:11px; color:var(--birch);}
 .planrow input[type=date]{flex:1; background:#0d0d73; border:1px solid #2e2ea8; border-radius:7px;
@@ -61,17 +61,17 @@ body{
 .planrow input[type=date].active{border-color:var(--wampum);}
 .planrow .btn{padding:4px 9px;}
 .epigraph{font-size:12px; font-style:italic; color:#6b6552; line-height:1.5; margin:11px 1px 3px;}
-.navfoot{display:flex; align-items:center; justify-content:space-between; margin-top:11px; padding-top:10px; border-top:1px solid #b8d4ec;}
+.navfoot{display:flex; align-items:center; justify-content:space-between; margin-top:11px; padding-top:10px; border-top:1px solid #2e2ea8;}
 .navfoot .iglink{font-family:'Montserrat',ui-sans-serif,system-ui,sans-serif; font-size:11px; letter-spacing:.1em; color:var(--gold); text-decoration:none;}
-.navfoot .iglink:hover{color:var(--ink-blue); text-decoration:underline;}
-.navfoot #btnAbout{padding:4px 10px; font-size:11px; background:#eef4fb; border-color:#a9c6e0; color:#2b4a63;}
+.navfoot .iglink:hover{color:var(--paper); text-decoration:underline;}
+.navfoot #btnAbout{padding:4px 10px; font-size:11px; background:#12127a; border-color:#2e2ea8; color:var(--lichen);}
 .navfoot #btnAbout:hover{border-color:var(--gold);}
-.secondary-nav{flex:none; padding:12px 22px 14px; border-top:1px solid #b8d4ec; background:#dbeaf6;}
-.secondary-nav .planrow{margin-top:0; margin-bottom:9px; color:#2b4a63;}
-.secondary-nav input[type=date]{flex:1; background:#fff; border:1px solid #a9c6e0; border-radius:7px;
-  color:#1c3348; padding:5px 8px; font-family:inherit; font-size:12px; color-scheme:light;}
+.secondary-nav{flex:none; padding:12px 22px 14px; border-top:1px solid #26268f; background:var(--ink2);}
+.secondary-nav .planrow{margin-top:0; margin-bottom:9px; color:var(--birch);}
+.secondary-nav input[type=date]{flex:1; background:#0d0d73; border:1px solid #2e2ea8; border-radius:7px;
+  color:var(--lichen); padding:5px 8px; font-family:inherit; font-size:12px; color-scheme:dark;}
 .secondary-nav input[type=date].active{border-color:var(--gold);}
-.secondary-nav .btn{padding:4px 9px; background:#eef4fb; border-color:#a9c6e0; color:#2b4a63;}
+.secondary-nav .btn{padding:4px 9px; background:#12127a; border-color:#2e2ea8; color:var(--lichen);}
 .secondary-nav .btn:hover{border-color:var(--gold);}
 .superhead{font-family:'Montserrat',ui-sans-serif,system-ui,sans-serif; font-size:9.5px;
   letter-spacing:.18em; text-transform:uppercase; color:var(--birch); line-height:1.5; margin-bottom:6px;}
@@ -84,10 +84,10 @@ body{
 .controls.fcollapsed .cats, .controls.fcollapsed .epigraph{display:none;}
 .controls #filtersToggle:hover{border-color:var(--gold);}
 .controls input[type=text], .secondary-nav input[type=text]{
-  width:100%; background:#fff; border:1px solid #a9c6e0; color:#1c3348;
+  width:100%; background:var(--ink3); border:1px solid #2e2ea8; color:var(--lichen);
   border-radius:6px; padding:8px 11px; font-size:13.5px; font-family:inherit; outline:none;
 }
-.controls input[type=text]::placeholder, .secondary-nav input[type=text]::placeholder{color:#7089a0;}
+.controls input[type=text]::placeholder, .secondary-nav input[type=text]::placeholder{color:var(--faint);}
 .controls input[type=text]:focus, .secondary-nav input[type=text]:focus{border-color:var(--gold);}
 .cats{display:flex; flex-direction:column; gap:0; margin-top:6px;}
 .catbox{display:flex; align-items:center; gap:10px; cursor:pointer; user-select:none;
@@ -103,10 +103,10 @@ body{
 
 #listwrap{flex:1; overflow-y:auto; background:transparent; scrollbar-width:thin; scrollbar-color:#c9bfa0 transparent;}
 .grouphead{
-  position:sticky; top:0; background:var(--parchment); z-index:2;
+  position:sticky; top:0; background:var(--ink-blue); z-index:2;
   padding:9px 22px 7px; font-family:'Montserrat',ui-sans-serif,system-ui,sans-serif;
-  font-size:10px; letter-spacing:.2em; text-transform:uppercase; color:var(--gold-dim);
-  border-bottom:1px solid var(--parchment-line);
+  font-size:10px; letter-spacing:.2em; text-transform:uppercase; color:var(--parchment);
+  border-bottom:1px solid var(--ink-blue);
 }
 .card{padding:12px 22px 13px; border-bottom:1px solid var(--parchment-line); cursor:pointer; transition:background .12s;}
 .card:hover{background:rgba(255,255,255,.45);}
@@ -274,7 +274,7 @@ a.weblink:hover{text-decoration:underline;}
 <div class="app">
   <div id="sidebar">
     <div class="masthead">
-      <h1><img src="images/favicon.svg" alt="" class="mast-logo">Hilltowns Atlas</h1>
+      <h1><img src="images/raccoon-mark.svg" alt="" class="mast-logo">Hilltowns Atlas</h1>
     </div>
 
     <div class="controls">
@@ -324,9 +324,8 @@ a.weblink:hover{text-decoration:underline;}
         <h2>Hilltowns Atlas</h2>
         <div class="field"><div class="fv story">A living atlas of the NY Helderberg-Hudson
         Hilltowns &mdash; folklore and legends gathered from historical sources, alongside
-        the places, businesses, and happenings of Berne, Knox, Rensselaerville, and
-        Westerlo. Every tale lists its original teller and source, and every pin is
-        placed only as confidently as the record allows.</div></div>
+        the people making and telling stories today. Every tale lists its original teller
+        and source, stories are only as reliable as their tellers.</div></div>
         <div class="field"><div class="fv story">Additions, suggestions, corrections,
         complaints about the universe? Message us on Instagram at
         <a class="weblink" href="https://instagram.com/NYHilltowners" target="_blank"
