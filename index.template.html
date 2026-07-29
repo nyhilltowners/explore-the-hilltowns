@@ -113,6 +113,7 @@ body{
 .card:hover{background:rgba(255,255,255,.45);}
 .card.active{background:rgba(252,163,21,.14); box-shadow:inset 3px 0 0 var(--gold);}
 .card h3{font-size:13.5px; font-weight:600; line-height:1.3; color:var(--ink-blue); font-family:'Montserrat',ui-sans-serif,system-ui,sans-serif;}
+.card h3 .cg{margin-right:7px; font-size:14px; vertical-align:-1px;}
 .card .meta{
   display:flex; align-items:baseline; gap:8px; margin-top:4px; flex-wrap:wrap;
   font-family:'Montserrat',ui-sans-serif,system-ui,sans-serif; font-size:10.5px; color:#7a7460; letter-spacing:.03em;
@@ -913,9 +914,18 @@ function renderList(){
   function head(txt){ var g=document.createElement('div'); g.className='grouphead'; g.innerHTML=txt; w.appendChild(g); }
   function card(r, mappedFlag){
     var c=document.createElement('div'); c.className='card'+(r._k===activeId?' active':'');
-    c.innerHTML = '<h3>'+esc(r.t)+'</h3>'
+    c.innerHTML = '<h3>'+(r.g?'<span class="cg">'+esc(r.g)+'</span>':'')+esc(r.t)+'</h3>'
       + '<div class="meta">'+cardMeta(r)+'</div>';
-    c.onclick=function(){ mappedFlag ? selectRecord(r._k,{pan:true,popup:true}) : openDetail(r._k); };
+    c.onclick=function(){
+      if(mappedFlag){
+        // On mobile the sheet covers the map; drop it to the peek so the
+        // pin, pan, and popup are the immediate, visible response.
+        if(window.__sheetIsActive && window.__sheetIsActive() && window.__sheetCollapse) window.__sheetCollapse();
+        selectRecord(r._k,{pan:true,popup:true});
+      } else {
+        openDetail(r._k);
+      }
+    };
     w.appendChild(c);
   }
   head('On the map');
@@ -1249,11 +1259,17 @@ if(!map) applyHash();
   var sheet  = document.getElementById('sidebar');
   if(!handle || !sheet) return;
 
-  // Snap stops as fractions of viewport height: peek, mid (default), full.
-  var STOPS = [0.30, 0.46, 0.92];
+  // Snap stops as fractions of the *visible* viewport: peek, mid (default), tall.
+  // Tall is capped at 0.85 so the map always peeks and the handle stays reachable.
+  // Height is applied in px from window.innerHeight (mobile 100vh includes the
+  // browser chrome, which is what let the handle escape off-screen).
+  var STOPS = [0.30, 0.46, 0.85];
   var current = 0.46;
   function vh(){ return window.innerHeight || document.documentElement.clientHeight; }
-  function apply(frac){ current = frac; sheet.style.setProperty('--sheet', (frac*100).toFixed(2)+'vh'); }
+  function apply(frac){ current = frac; sheet.style.setProperty('--sheet', Math.round(frac*vh())+'px'); }
+  window.addEventListener('resize', function(){ apply(current); });
+  window.__sheetCollapse = function(){ apply(STOPS[0]); };
+  window.__sheetIsActive = function(){ return getComputedStyle(handle).display !== 'none'; };
   function nearestStop(frac){
     var best = STOPS[0], d = Math.abs(frac-STOPS[0]);
     for(var i=1;i<STOPS.length;i++){ var dd=Math.abs(frac-STOPS[i]); if(dd<d){d=dd;best=STOPS[i];} }
@@ -1274,7 +1290,7 @@ if(!map) applyHash();
     var dy = startY - y;                       // up = positive
     if(Math.abs(dy)>4) moved=true;
     var frac = startFrac + dy/vh();
-    frac = Math.max(0.16, Math.min(0.94, frac)); // clamp
+    frac = Math.max(0.16, Math.min(0.87, frac)); // clamp (map always peeks)
     sheet.style.setProperty('--sheet', (frac*100).toFixed(2)+'vh');
     current = frac;
     if(e.cancelable) e.preventDefault();
@@ -1284,8 +1300,8 @@ if(!map) applyHash();
     dragging=false;
     sheet.classList.remove('dragging');
     if(!moved){
-      // A tap toggles between mid and full for accessibility / no-drag users.
-      apply(current >= 0.7 ? 0.46 : 0.92);
+      // A tap toggles between mid and tall for accessibility / no-drag users.
+      apply(current >= 0.66 ? 0.46 : 0.85);
     } else {
       apply(nearestStop(current));
     }
@@ -1299,11 +1315,6 @@ if(!map) applyHash();
   window.addEventListener('touchmove', onMove, {passive:false});
   window.addEventListener('touchend', onUp);
 
-  // Opening a detail view or tapping a card is easier if the sheet is roomy;
-  // nudge it up to mid if it's sitting at the tiny peek.
-  document.getElementById('listwrap').addEventListener('click', function(){
-    if(current < 0.34) apply(0.46);
-  });
 })();
 </script>
 </body>

@@ -307,7 +307,7 @@ def parse_poi(path: Path, label: str, sheet=None):
     idx = map_headers(hdr, POI_SPEC, where)
     out = []
     for n, row in enumerate(rows, start=2):
-        title = s(cell(row, idx, "t"))
+        title = html_mod.unescape(s(cell(row, idx, "t")))
         rid = s(cell(row, idx, "id"))
         if not rid and not title:
             continue
@@ -457,7 +457,7 @@ def parse_events(path: Path, label: str, sheet=None):
     out = []
     skipped_past = [0]
     for n, row in enumerate(rows, start=2):
-        title = s(cell(row, idx, "t"))
+        title = html_mod.unescape(s(cell(row, idx, "t")))
         rid = s(cell(row, idx, "id"))
         if not rid and not title:
             continue
@@ -493,8 +493,8 @@ def parse_events(path: Path, label: str, sheet=None):
             pass
         out.append({
             "ty": "events", "cat": label, "id": rid, "t": title or "(unnamed)",
-            "ven": s(cell(row, idx, "ven")), "addr": s(cell(row, idx, "addr")),
-            "lat": lat, "lng": lng, "s": s(cell(row, idx, "stry")),
+            "ven": html_mod.unescape(s(cell(row, idx, "ven"))), "addr": s(cell(row, idx, "addr")),
+            "lat": lat, "lng": lng, "s": html_mod.unescape(s(cell(row, idx, "stry"))),
             "d1": d1, "d2": d2 or "", "tm": s(cell(row, idx, "tm")),
             "web": s(cell(row, idx, "web")), "g": s(cell(row, idx, "g")),
             "online": is_online, "nextOcc": nocc or "",
