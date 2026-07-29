@@ -38,6 +38,7 @@ body{
   background:var(--ink); color:var(--lichen); overflow:hidden;
 }
 .app{display:flex; height:100vh; width:100vw;}
+#sheetHandle{display:none;}   /* mobile-only; shown in the max-width:760px query */
 
 /* ---------- Sidebar ---------- */
 #sidebar{
@@ -250,23 +251,47 @@ a.weblink:hover{text-decoration:underline;}
 
 @media (max-width:760px){
   .app{flex-direction:column;}
-  #sidebar{width:100%; min-width:0; height:44vh; order:2; border-right:none; border-top:1px solid #26268f;}
-  #mapwrap{height:56vh; order:1;}
-  .masthead{padding:12px 16px 8px;} .masthead h1{font-size:17px;}
+  /* Sidebar becomes a draggable bottom sheet overlaid on the map. Its height is
+     driven by the --sheet CSS var (set by drag JS); it can be pulled up over the
+     map for free list scrolling, or down to a peek. */
+  #mapwrap{height:100vh; order:1;}
+  #sidebar{
+    position:fixed; left:0; right:0; bottom:0; z-index:1500;
+    width:100%; min-width:0;
+    height:var(--sheet, 46vh);
+    order:2; border-right:none; border-top:none;
+    border-top-left-radius:16px; border-top-right-radius:16px;
+    box-shadow:0 -6px 24px rgba(0,0,0,.28);
+    transition:height .18s ease;
+  }
+  #sidebar.dragging{transition:none;}   /* no lag while a finger is moving it */
+  /* Drag handle (the grab bar) */
+  #sheetHandle{
+    display:block; position:relative; flex:none;
+    height:22px; cursor:grab; touch-action:none;
+    border-top-left-radius:16px; border-top-right-radius:16px;
+  }
+  #sheetHandle::before{
+    content:''; position:absolute; top:8px; left:50%; transform:translateX(-50%);
+    width:40px; height:4px; border-radius:2px; background:#b9b09a;
+  }
+  .masthead{padding:6px 16px 8px;} .masthead h1{font-size:17px;}
   .controls,.card,.grouphead{padding-left:16px; padding-right:16px;}
   #layers{bottom:12px; right:auto; left:12px;}
   #layersToggle{display:block; position:absolute; bottom:12px; left:12px; z-index:901;
     background:rgba(0,0,77,.9); box-shadow:0 2px 8px rgba(0,0,0,.35);}
   #layers.collapsed{display:none;}
   .mapbar{top:auto; bottom:12px;}
+  /* Give the calendar/search block room to clear the phone's home indicator so its
+     controls are always fully visible when the sheet is open. */
+  .secondary-nav{padding-bottom:calc(18px + env(safe-area-inset-bottom, 12px));}
 
   /* Detail & About break out to full-screen on mobile so the scroll area is
-     tall enough to reach bottom links (were confined to the 44vh sidebar,
-     which fought touch-scroll and snapped back on release). */
-  #detail, #about{position:fixed; inset:0; z-index:3000; border-right:none;}
+     tall enough to reach bottom links. */
+  #detail, #about{position:fixed; inset:0; z-index:3000; border-right:none; border-radius:0;}
   #detail .detail-body, #about .detail-body{
     -webkit-overflow-scrolling:touch; overscroll-behavior:contain;
-    padding-bottom:64px; max-height:none;
+    padding-bottom:calc(64px + env(safe-area-inset-bottom, 0px)); max-height:none;
   }
 }
 @media (prefers-reduced-motion: reduce){
@@ -277,6 +302,7 @@ a.weblink:hover{text-decoration:underline;}
 <body>
 <div class="app">
   <div id="sidebar">
+    <div id="sheetHandle" aria-hidden="true"></div>
     <div class="masthead">
       <h1><img src="images/raccoon-mark.svg" alt="" class="mast-logo">Hilltowns Atlas</h1>
     </div>
@@ -420,6 +446,21 @@ function isoAddDays(iso, n){
   var d = new Date(iso+'T12:00:00'); d.setDate(d.getDate()+n);
   return d.toISOString().slice(0,10);
 }
+/* Classify an event so routine things don't crowd out unique programming:
+   'recurring' = repeats (has a next-occurrence rule),
+   'longrun'   = a continuous run longer than a week (gallery/exhibit/season),
+   'oneoff'    = a single day or a short multi-day festival (<= 7 days).
+   Short festivals stay 'oneoff' so they show throughout their brief run. */
+function daysBetween(a, b){
+  return Math.round((new Date(b+'T12:00:00') - new Date(a+'T12:00:00'))/86400000);
+}
+function evClass(r){
+  if(r.ty!=='events') return 'oneoff';
+  if(r.nextOcc) return 'recurring';
+  var s = r.d1, e = r.d2 || r.d1;
+  if(s && e && daysBetween(s, e) > 7) return 'longrun';
+  return 'oneoff';
+}
 function evVisible(r){
   if(r.ty!=='events') return true;
   var s = r.d1, e = r.d2 || r.d1;
@@ -427,6 +468,13 @@ function evVisible(r){
   if(r.nextOcc){
     if(planDate) return r.nextOcc <= planDate && (!e || planDate <= e);
     return r.nextOcc <= isoAddDays(TODAY_E,7) && r.nextOcc >= TODAY_E;
+  }
+  /* Long-running runs (galleries, seasonal exhibits) stay visible for their whole
+     run — but the sort deprioritizes them to the bottom of the day except during
+     their first/last 2 days, when they rise to the top (just-opened / last-chance). */
+  if(evClass(r)==='longrun'){
+    var ref = planDate || TODAY_E;
+    return ref >= s && ref <= e;                          /* visible any day it's open */
   }
   if(planDate) return s <= planDate && planDate <= e;      /* on the chosen date */
   return s <= isoAddDays(TODAY_E,7) && e >= TODAY_E;      /* within 7 days */
@@ -622,9 +670,8 @@ var style = {
         'icon-size':['interpolate',['linear'],['zoom'], 4,0.32, 9,0.48, 13,0.64]}},
     {id:'disc-pins', type:'symbol', source:'folk',
       filter:['all',['!=',['get','ty'],'folklore'],['!=',['get','cat'],'Points of Interest']],
-      layout:{'icon-image':['concat','gd-',['case',['==',['get','dim'],1],'#9aa0a6',['get','col']],'-',['get','g']],'icon-allow-overlap':true,'icon-ignore-placement':true,
-        'icon-size':['interpolate',['linear'],['zoom'], 4,0.32, 9,0.48, 13,0.64]},
-      paint:{'icon-opacity':['case',['==',['get','dim'],1],0.55,1]}},
+      layout:{'icon-image':['concat','gd-',['case',['all',['==',['get','dim'],1],['!=',['get','ty'],'events']],'#9aa0a6',['get','col']],'-',['get','g']],'icon-allow-overlap':true,'icon-ignore-placement':true,
+        'icon-size':['*',['coalesce',['get','imm'],1],['interpolate',['linear'],['zoom'], 4,0.32, 9,0.48, 13,0.64]]}},
     {id:'poi-pins', type:'symbol', source:'folk',
       filter:['==',['get','cat'],'Points of Interest'],
       layout:{'icon-image':['concat','gd-',['case',['==',['get','dim'],1],'#9aa0a6',['get','col']],'-',['get','g']],'icon-allow-overlap':true,'icon-ignore-placement':true,
@@ -737,12 +784,24 @@ function isDimmed(r){
   }
   return isClosedNow(r);
 }
+/* Event marker imminence within the 7-day visible window:
+   active now = full size; within 48h = 0.5; else (3-7 days out) = 0.36. */
+function immScale(r){
+  if(r.ty!=='events') return 1;
+  var ref = planDate || TODAY_E;
+  var start = r.nextOcc || r.d1;
+  if(!start || start <= ref) return 1;    /* already active/ongoing: full size */
+  var MS=86400000;
+  var days = Math.round((new Date(start+'T12:00:00') - new Date(ref+'T12:00:00'))/MS);
+  if(days <= 2) return 0.5;               /* starts within 48 hours */
+  return 0.36;                            /* 3-7 days out */
+}
 function toFC(list){
   return {type:'FeatureCollection', features:list
     .filter(function(r){return r.tier!=='none';})
     .map(function(r){ return {type:'Feature',
       properties:{k:r._k, tier:r.tier, ty:r.ty, cat:r.cat, g:r.g||'', col:r.col,
-        dim:isDimmed(r)?1:0},
+        dim:isDimmed(r)?1:0, imm:immScale(r)},
       geometry:{type:'Point', coordinates:[r.lng, r.lat]}};
     })};
 }
@@ -806,11 +865,11 @@ function updateOnlinePill(){
 }
 function evStartKey(r){
   /* Rank by the NEXT date you could actually attend, not the arbitrary listed
-     start. Recurring events rank on their true next occurrence (e.g. a Thursday
-     series ranks on this-or-next Thursday, sorting fairly against one-offs).
-     A continuous run already under way ranks as today ("available now").
-     Order: happening-now first; then soonest next date; within the same date,
-     the one ENDING sooner leads (catch it before it's gone). */
+     start. Recurring events rank on their true next occurrence. A continuous run
+     already under way ranks as today ("available now"). Within the same date:
+     unique one-offs and just-opened/last-chance long-runs lead; then recurring;
+     then long-runs in the middle of their run (deprioritized, but still shown);
+     final tie-break the one ENDING sooner (catch it before it's gone). */
   var s = r.d1 || '9999-99-99', e = r.d2 || r.d1 || '9999-99-99';
   var nextDate;
   if(r.nextOcc){
@@ -819,7 +878,18 @@ function evStartKey(r){
     nextDate = (s < TODAY_E) ? TODAY_E : s;        /* clamp past starts to today */
   }
   var live = (nextDate <= TODAY_E && e >= TODAY_E) ? 0 : 1;
-  return live + '|' + nextDate + '|' + e;
+  var cls = evClass(r);
+  var crank;
+  if(cls==='oneoff'){
+    crank = 0;
+  } else if(cls==='recurring'){
+    crank = 1;
+  } else {                                          /* longrun */
+    var ref = planDate || TODAY_E;
+    var atEdge = (ref <= isoAddDays(s, 1)) || (ref >= isoAddDays(e, -1)); /* first/last 2 days */
+    crank = atEdge ? 0 : 3;                          /* just-opened/last-chance -> top; mid-run -> bottom */
+  }
+  return live + '|' + nextDate + '|' + crank + '|' + e;
 }
 function cmpListOrder(a, b){
   var ae = a.ty==='events', be = b.ty==='events';
@@ -1172,6 +1242,69 @@ setInterval(function(){
 }, 300000);
 renderList(); /* list renders immediately; map data attaches once loaded */
 if(!map) applyHash();
+
+/* ============ MOBILE BOTTOM SHEET (drag to pull the list up over the map) ============ */
+(function(){
+  var handle = document.getElementById('sheetHandle');
+  var sheet  = document.getElementById('sidebar');
+  if(!handle || !sheet) return;
+
+  // Snap stops as fractions of viewport height: peek, mid (default), full.
+  var STOPS = [0.30, 0.46, 0.92];
+  var current = 0.46;
+  function vh(){ return window.innerHeight || document.documentElement.clientHeight; }
+  function apply(frac){ current = frac; sheet.style.setProperty('--sheet', (frac*100).toFixed(2)+'vh'); }
+  function nearestStop(frac){
+    var best = STOPS[0], d = Math.abs(frac-STOPS[0]);
+    for(var i=1;i<STOPS.length;i++){ var dd=Math.abs(frac-STOPS[i]); if(dd<d){d=dd;best=STOPS[i];} }
+    return best;
+  }
+
+  var dragging=false, startY=0, startFrac=0.46, moved=false;
+  function onDown(e){
+    dragging=true; moved=false;
+    startY = (e.touches?e.touches[0].clientY:e.clientY);
+    startFrac = current;
+    sheet.classList.add('dragging');
+    if(handle.setPointerCapture && e.pointerId!=null){ try{handle.setPointerCapture(e.pointerId);}catch(_){} }
+  }
+  function onMove(e){
+    if(!dragging) return;
+    var y = (e.touches?e.touches[0].clientY:e.clientY);
+    var dy = startY - y;                       // up = positive
+    if(Math.abs(dy)>4) moved=true;
+    var frac = startFrac + dy/vh();
+    frac = Math.max(0.16, Math.min(0.94, frac)); // clamp
+    sheet.style.setProperty('--sheet', (frac*100).toFixed(2)+'vh');
+    current = frac;
+    if(e.cancelable) e.preventDefault();
+  }
+  function onUp(){
+    if(!dragging) return;
+    dragging=false;
+    sheet.classList.remove('dragging');
+    if(!moved){
+      // A tap toggles between mid and full for accessibility / no-drag users.
+      apply(current >= 0.7 ? 0.46 : 0.92);
+    } else {
+      apply(nearestStop(current));
+    }
+  }
+
+  handle.addEventListener('pointerdown', onDown);
+  window.addEventListener('pointermove', onMove, {passive:false});
+  window.addEventListener('pointerup', onUp);
+  // Touch fallback for older mobile browsers without pointer events
+  handle.addEventListener('touchstart', onDown, {passive:true});
+  window.addEventListener('touchmove', onMove, {passive:false});
+  window.addEventListener('touchend', onUp);
+
+  // Opening a detail view or tapping a card is easier if the sheet is roomy;
+  // nudge it up to mid if it's sitting at the tiny peek.
+  document.getElementById('listwrap').addEventListener('click', function(){
+    if(current < 0.34) apply(0.46);
+  });
+})();
 </script>
 </body>
 </html>
