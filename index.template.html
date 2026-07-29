@@ -164,6 +164,9 @@ body{
 .certline{display:flex; gap:8px; align-items:center; margin:8px 0 14px; flex-wrap:wrap;}
 .certnote{font-size:12px; color:var(--birch); font-style:italic; line-height:1.4;}
 .srcbox{background:var(--ink); border:1px solid #26268f; border-radius:8px; padding:12px 14px; margin-top:6px;}
+.afnote{margin-top:18px; padding-top:12px; border-top:1px solid #26268f; font-size:11.5px; line-height:1.5; color:var(--birch);}
+.afnote p{margin:0 0 8px;}
+.afnote p:last-child{margin-bottom:0;}
 .srcbox .field{margin-bottom:9px;} .srcbox .field:last-child{margin-bottom:0;}
 table.hours{border-collapse:collapse; font-size:13px; margin-top:2px;}
 table.hours td{padding:2.5px 14px 2.5px 0; color:var(--lichen);}
@@ -187,6 +190,7 @@ a.weblink:hover{text-decoration:underline;}
   border:1px solid #2e2ea8; color:var(--birch); font-size:9.5px; letter-spacing:.05em;
   text-transform:uppercase; font-family:'Montserrat',ui-sans-serif,system-ui,sans-serif;
   cursor:pointer; transition:border-color .12s, color .12s;}
+.tagrow{flex-basis:100%; margin-top:5px;}
 .tag:hover{border-color:var(--wampum); color:#fff;}
 .popimg{margin:-13px -16px 10px; height:118px; overflow:hidden; border-radius:8px 8px 0 0; background:#0a0a45;}
 .popimg img{width:100%; height:100%; object-fit:cover; display:block;}
@@ -447,7 +451,7 @@ function fmtRange(r){
 function searchText(r){
   if(r.ty==='poi') return [r.t,r.tags.join(' '),r.addr,r.s].join(' ');
   if(r.ty==='events') return [r.t,r.ven,r.addr,r.s,(r.online?'online':'')].join(' ');
-  return [r.t,r.b,r.n,r.p,r.s,r.rb].join(' ');
+  return [r.t,r.b,r.n,r.p,r.s,r.rb,(r.tags?r.tags.join(' '):'')].join(' ');
 }
 
 /* geodesic-ish circle polygon for uncertainty halos */
@@ -786,7 +790,8 @@ function cardMeta(r){
   }
   return '<span class="nat">'+esc(r.n||'—')+'</span>'
     + (r.p?'<span>'+esc(r.p)+'</span>':'')
-    + '<span class="chip '+r.tier+'">'+TIER_LABEL[r.tier]+'</span>';
+    + '<span class="chip '+r.tier+'">'+TIER_LABEL[r.tier]+'</span>'
+    + (r.tags && r.tags.length ? '<span class="tagrow">'+tagChips(r)+'</span>' : '');
 }
 
 function updateOnlinePill(){
@@ -976,6 +981,14 @@ function hoursTable(h){
   return '<div class="field"><div class="fl">Hours</div><table class="hours">'+rows+'</table></div>';
 }
 
+function affiliationNote(){
+  return '<div class="afnote">'
+    + '<p>Please note none of these businesses or organizations are affiliated with us '
+    + 'in any way. We just love them and want them to be around for a long long time to come.</p>'
+    + '<p>Do you have an organization, business, or event you want to be included? '
+    + 'Please let us know! [Link to come]</p>'
+    + '</div>';
+}
 function detailBody(r){
   var b = '<h2>'+esc(r.t)+' '+likeWidget(r)+'</h2>';
   if(r.img){
@@ -991,6 +1004,7 @@ function detailBody(r){
     b += hoursTable(r.hrs);
     b += fieldHtml('Phone', r.ph);
     b += linkHtml('Website', r.web);
+    b += affiliationNote();
     return b;
   }
   if(r.ty==='events'){
@@ -999,10 +1013,12 @@ function detailBody(r){
     b += fieldHtml('Address', r.addr);
     b += fieldHtml('About', r.s, 'story');
     b += linkHtml('Website', r.web);
+    b += affiliationNote();
     return b;
   }
   b += '<div class="certline"><span class="chip '+r.tier+'">'+TIER_LABEL[r.tier]+'</span>'
      + (r.c?'<span class="certnote">'+esc(r.c)+'</span>':'') + '</div>';
+  if(r.tags && r.tags.length) b += '<div class="tagrow">'+tagChips(r)+'</div>';
   b += fieldHtml('Where', r.p);
   if(r.b) b += fieldHtml('Tale / being', r.b);
   b += fieldHtml('The story', r.s, 'story');
