@@ -468,7 +468,7 @@ def parse_events(path: Path, label: str, sheet=None):
             fail(f"{rw}: Event Name is required")
         ven_txt = s(cell(row, idx, "ven")).lower()
         addr_txt = s(cell(row, idx, "addr")).lower()
-        is_online = bool(re.search(r"\bonline\b|\bvirtual\b|\bzoom\b|\blivestream\b",
+        is_online = bool(re.search(r"\bonline\b|\bvirtual\b|\bzoom\b(?!\s*flume)|\blivestream\b",
                                    ven_txt + " " + addr_txt))
         lat = coord(cell(row, idx, "lat"), -90, 90, "Latitude", rw,
                     required=False)
