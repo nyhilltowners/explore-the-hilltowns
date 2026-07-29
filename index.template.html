@@ -791,7 +791,12 @@ function immScale(r){
   if(r.ty!=='events') return 1;
   var ref = planDate || TODAY_E;
   var start = r.nextOcc || r.d1;
-  if(!start || start <= ref) return 1;    /* already active/ongoing: full size */
+  if(!start || start <= ref){
+    /* Active/ongoing. A long-run outside its opening/closing 2-day windows is
+       scenery rather than news: half size, matching its demotion in the list. */
+    if(evClass(r)==='longrun' && !longrunAtEdge(r, ref)) return 0.5;
+    return 1;
+  }
   var MS=86400000;
   var days = Math.round((new Date(start+'T12:00:00') - new Date(ref+'T12:00:00'))/MS);
   if(days <= 2) return 0.5;               /* starts within 48 hours */
@@ -864,6 +869,12 @@ function updateOnlinePill(){
   document.getElementById('onlineN').textContent = n;
   el.style.display = n>0 ? '' : 'none';
 }
+function longrunAtEdge(r, ref){
+  /* First/last 2 days of a long continuous run: the "just opened" and "last
+     chance" windows. Shared by list ranking and pin sizing so they can't drift. */
+  var s = r.d1 || '9999-99-99', e = r.d2 || r.d1 || '9999-99-99';
+  return (ref <= isoAddDays(s, 1)) || (ref >= isoAddDays(e, -1));
+}
 function evStartKey(r){
   /* Rank by the NEXT date you could actually attend, not the arbitrary listed
      start. Recurring events rank on their true next occurrence. A continuous run
@@ -886,9 +897,7 @@ function evStartKey(r){
   } else if(cls==='recurring'){
     crank = 1;
   } else {                                          /* longrun */
-    var ref = planDate || TODAY_E;
-    var atEdge = (ref <= isoAddDays(s, 1)) || (ref >= isoAddDays(e, -1)); /* first/last 2 days */
-    crank = atEdge ? 0 : 3;                          /* just-opened/last-chance -> top; mid-run -> bottom */
+    crank = longrunAtEdge(r, planDate || TODAY_E) ? 0 : 3; /* just-opened/last-chance -> top; mid-run -> bottom */
   }
   return live + '|' + nextDate + '|' + crank + '|' + e;
 }

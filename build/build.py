@@ -449,6 +449,82 @@ EVT_SPEC = [
 ]
 
 
+
+# ---- Event glyph auto-fill -------------------------------------------------
+# Applied at build time whenever an event's Glyph cell is blank, so newly
+# scraped events get sensible emojis without manual passes. Ordered: the
+# first matching rule wins; titles are consulted before venues so an event's
+# own subject beats its host's identity. Hand-set cells are never overridden
+# (except the lossless 🎬→🍿 normalization below).
+GLYPH_NORMALIZE = {"🎬": "🍿"}
+GLYPH_RULES = [
+ (r"\bkids?\b|\bchild(ren)?(\'s)?\b|\btoddlers?\b|\byouth\b|\bteens?\b|\bstory ?time\b|\bfor ages? \d|\blittle ones\b|\bknee high\b", "🐤"),
+ (r"\bmovies?\b|\bfilm(s|ing)?\b|\bscreening\b|\bdrive[- ]?in\b|\bcinema\b", "🍿"),
+ (r"\bart gallery\b|\bgallery (opening|show|night|tour)\b|\bexhibit(ion)?\b|\bopening reception\b|\bcurator tour\b", "🖼️"),
+ (r"\btheat(re|er)\b|\bstage play\b|\ba play\b|\bmusical\b|\bcabaret\b|\bimprov\b|\bcomedy (show|night|festival)\b", "🎟️"),
+ (r"\bchoir\b", "👯"),
+ (r"\bjazz\b", "🎶"),
+ (r"\bopen[- ]?mics?\b|\bkaraoke\b", "🎤"),
+ (r"\bconcert\b|\bsymphony\b|\bquartet\b|\bchamber music\b|\brecital\b|\bsingalong\b|\bbluegrass\b|\blive music\b", "🎵"),
+ (r"\bperformances?\b|\bintermission\b|\bplayers present\b|\bshakespeare\b", "🎭"),
+ (r"\bbutterfl(y|ies)\b|\blupine fest\b|\bmonarch\b(?! hill)", "🦋"),
+ (r"\bturtles?\b", "🐢"),
+ (r"\btennis\b", "🎾"),
+ (r"\bhorse(s|back)?\b|\bequestrian\b|\bpon(y|ies)\b|\btrail(s)? ?rides?\b|\bmustang\b|\bunbridled\b", "🐴"),
+ (r"\bbird(s|ing| watch| banding| walk)?\b|\beagle walk\b|\baudubon\b", "🐦"),
+ (r"\bdye(s|ing)? workshop\b|\b(plant|natural) dyes?\b|\bdyeing\b", "🎨"),
+ (r"\bacupuncture\b", "😌"),
+ (r"\bpostpartum\b|\bnew parents?\b|\bbabywearing\b|\bla leche\b", "🍼"),
+ (r"\bforest (walk|bath(e|ing)|stewardship|tour|school)\b", "🌲"),
+ (r"\bnature bus\b", "🚌"),
+ (r"\bastrolog(y|ical|er)\b|\bhoroscopes?\b|\btarot\b|\breikk?i\b|\bpsychics?\b", "🔮"),
+ (r"\bbee ?keep(er|ers|ing)?\b|\bbeekep\w*\b", "🍯"),
+ (r"\bnative trees?\b", "🌲"),
+ (r"\bnative plants?\b", "🌿"),
+ (r"\bzba\b|\btown (hall|board) meeting\b|\bbudget town hall\b", "🇺🇸"),
+ (r"(?<!baseball )\bbats?\b(?! mitzvah)(?!man)|\bbat (walk|night|watch|count)\b", "🦇"),
+ (r"\bhik(e|es|ing)\b|\btrail (run|walk|preview|day)\b|\btrail ?blaz(e|ing|er|ers)\b|\bramble\b|\bmeander\b|\bnature walk\b|\bwalks?\b|\bwalking\b", "🥾"),
+ (r"\bart(s)?\b|\bpaint(ing)?\b|\bdraw(ing)?\b|\bsketch\b|\bwatercolor\b|\bprintmaking\b|\bscreenprint(ing)?\b|\bpottery\b|\bceramics\b|\bsculpture\b|\bcreative circles?\b", "🎨"),
+ (r"\bwrit(ing|ers?)\b|\bscreenwrit\w*\b|\bmemoir\b|\bjournaling\b", "🖋️"),
+ (r"\bbook (club|fair|launch|sale|signing)\b|\blibrary\b|\bauthor\b|\bpoetry\b|\bpoem\b|\breading\b", "📚"),
+ (r"\btrivia\b|\bquiz\b", "🧠"),
+ (r"\bpuzzles?\b|\bjigsaw\b|\bcrossword\b", "🧩"),
+ (r"\bmah ?jongg?\b", "🀄"),
+ (r"\bboard games?\b|\bgame night\b|\bgames? meetup\b|\btabletop\b|\bwarmachine\b|\bwargam(e|es|ing)\b|\bmagic:? the gathering\b|\borganized play\b|\bcasual play\b|\bclocktower\b|\bcrokinole\b|\bdart(s| league)\b|\bbingo\b|\bchess\b", "🎲"),
+ (r"\bbrewery\b|\bbrewing\b|\bbeer\b|\bcask\b|\btap ?takeover\b|\bcider\b|\bmeadworks\b|\bmead\b", "🍺"),
+ (r"\bcocktail\b|\bhappy hour\b|\bwine (tasting|dinner|pairing)\b|\bsip\b", "🍸"),
+ (r"\bsound ?bath\b|\bsound healing\b|\bsound(s)? for healing\b", "🎐"),
+ (r"\byoga\b|\bmeditat(ion|e)\b|\bbreath ?work\b", "🧘"),
+ (r"\bcoworking\b|\btech meetup\b|\bcod(e|ing)\b", "💼"),
+ (r"\bfarmers market\b|\bfarm stand\b|\bplant (sale|swap|exchange)\b|\bseed (swap|sowing|library)\b|\bgarden(ing)?\b", "🌱"),
+ (r"\bforag(e|ing)\b|\bmushrooms?\b|\bfungi\b|\bmycelium\b|\bmycolog(y|ical|ist)\b", "🍄"),
+ (r"\bstitch(ing|ery)?\b|\bup-?stitch\b|\bquilt(s|ing)?\b|\bcross-?stitch\b", "🧵"),
+ (r"\bknit(ting)?\b|\bpurl\b|\bcrochet\b|\bsew(ing)?\b|\bcraft\b|\bweav(e|ing)\b|\bembroidery\b|\bmending\b", "🧶"),
+ (r"\b5k\b|\brun club\b|\btrot\b|\bfun run\b", "🏃"),
+ (r"\bkayak\b|\bpaddle\b|\bcanoe\b|\bsail\b", "🛶"),
+ (r"\bgala\b|\bpotluck\b|\bpart(y|ies)\b|\bcelebration\b|\banniversary\b|\bbirthday\b", "🎉"),
+ (r"\bvolunteer\b|\bclean ?up\b|\btrash crawl\b|\bfood pantry\b|\bfood drive\b|\bdonation\b|\bfundraiser\b|\bbenefit\b", "🤝"),
+ (r"\bfestival\b|\bfair\b|\bfest\b|\bcarnival\b", "🎪"),
+ (r"\bhistor(y|ic|ical)\b|\bmuseum\b|\bheritage\b|\brevolution\b|\bcivil war\b", "🏛️"),
+]
+def auto_glyph(title, venue, cell_glyph, is_online=False):
+    g = (cell_glyph or "").strip()
+    if g:
+        # 💻 changed meaning: it now marks online events. A celled 💻 on an
+        # in-person event predates that change and meant coworking → 💼.
+        if g == "💻" and not is_online:
+            return "💼"
+        return GLYPH_NORMALIZE.get(g, g)
+    t = (title or "").lower()
+    for pat, gg in GLYPH_RULES:          # pass 1: the event's own title
+        if re.search(pat, t):
+            return gg
+    tv = t + " " + (venue or "").lower() # pass 2: fall back to venue context
+    for pat, gg in GLYPH_RULES:
+        if re.search(pat, tv):
+            return gg
+    return "💻" if is_online else ""
+
 def parse_events(path: Path, label: str, sheet=None):
     where = path.name + (f" [{sheet}]" if sheet else "")
     hdr, rows = read_rows(path, where, sheet)
@@ -496,7 +572,7 @@ def parse_events(path: Path, label: str, sheet=None):
             "ven": html_mod.unescape(s(cell(row, idx, "ven"))), "addr": s(cell(row, idx, "addr")),
             "lat": lat, "lng": lng, "s": html_mod.unescape(s(cell(row, idx, "stry"))),
             "d1": d1, "d2": d2 or "", "tm": s(cell(row, idx, "tm")),
-            "web": s(cell(row, idx, "web")), "g": s(cell(row, idx, "g")),
+            "web": s(cell(row, idx, "web")), "g": auto_glyph(title, s(cell(row, idx, "ven")), s(cell(row, idx, "g")), is_online),
             "online": is_online, "nextOcc": nocc or "",
             "tier": "exact" if (lat is not None and lng is not None) else "none",
             "img": norm_image(cell(row, idx, "img"), rw),
