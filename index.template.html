@@ -859,14 +859,17 @@ function immScale(r){
   var start = r.nextOcc || r.d1;
   if(!start || start <= ref){
     /* Active/ongoing. A long-run outside its opening/closing 2-day windows is
-       scenery rather than news: half size, matching its demotion in the list. */
-    if(evClass(r)==='longrun' && !longrunAtEdge(r, ref)) return 0.5;
+       scenery rather than news: slightly smaller, matching its list demotion. */
+    if(evClass(r)==='longrun' && !longrunAtEdge(r, ref)) return 0.85;
     return 1;
   }
   var MS=86400000;
   var days = Math.round((new Date(start+'T12:00:00') - new Date(ref+'T12:00:00'))/MS);
-  if(days <= 2) return 0.5;               /* starts within 48 hours */
-  return 0.36;                            /* 3-7 days out */
+  /* Three legible tiers: active=1.0, within 48h=0.85, 3-7 days out=0.72.
+     The floor stays high enough that even the smallest pin renders as a full
+     disc (~30px at regional zoom) rather than a bare glyph. */
+  if(days <= 2) return 0.85;              /* starts within 48 hours */
+  return 0.72;                            /* 3-7 days out */
 }
 function toFC(list){
   return {type:'FeatureCollection', features:list
