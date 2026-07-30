@@ -469,7 +469,7 @@ function evVisible(r){
   if(!s) return false;
   if(r.nextOcc){
     if(planDate) return r.nextOcc <= planDate && (!e || planDate <= e);
-    return r.nextOcc <= isoAddDays(TODAY_E,7) && r.nextOcc >= TODAY_E;
+    return r.nextOcc <= isoAddDays(TODAY_E,6) && r.nextOcc >= TODAY_E;
   }
   /* Long-running runs (galleries, seasonal exhibits) stay visible for their whole
      run — but the sort deprioritizes them to the bottom of the day except during
@@ -479,7 +479,7 @@ function evVisible(r){
     return ref >= s && ref <= e;                          /* visible any day it's open */
   }
   if(planDate) return s <= planDate && planDate <= e;      /* on the chosen date */
-  return s <= isoAddDays(TODAY_E,7) && e >= TODAY_E;      /* within 7 days */
+  return s <= isoAddDays(TODAY_E,6) && e >= TODAY_E;      /* within 6 days */
 }
 function fmtDate(iso){
   if(!iso) return '';
@@ -848,7 +848,7 @@ function isDimmed(r){
   }
   return isClosedNow(r);
 }
-/* Event marker imminence within the 7-day visible window:
+/* Event marker imminence within the 6-day visible window:
    active now = full size; within 48h = 0.5; else (3-7 days out) = 0.36. */
 function immScale(r){
   if(r.ty!=='events') return 1;
@@ -916,7 +916,7 @@ function refreshMapData(){
   if(!map) return;
   var src = map.getSource('folk');
   // Mirror the list: while a query is active, draw the matching pins even if they
-  // fall outside the 7-day window. The query bounds the count, so no flood. With no
+  // fall outside the 6-day window. The query bounds the count, so no flood. With no
   // query, the window still keeps the map to the near-term set.
   if(src) src.setData(toFC(currentFilter(true)));
 }
@@ -925,7 +925,7 @@ function refreshMapData(){
 function currentFilter(ignoreDateWindow){
   var q = document.getElementById('q').value.trim().toLowerCase();
   // When the user is actively searching, the list should reach the WHOLE corpus,
-  // not just the next-7-days window that keeps the map uncluttered. Callers that
+  // not just the next-6-days window that keeps the map uncluttered. Callers that
   // draw pins (the map) never pass this flag; the list passes it while a query is
   // present so a search for a September festival surfaces even in July. Expired
   // events are still excluded — search finds upcoming things, not the past.
