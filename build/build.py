@@ -352,6 +352,40 @@ def parse_poi(path: Path, label: str, sheet=None):
 _WD = {"mon": 0, "tue": 1, "wed": 2, "thu": 3, "fri": 4, "sat": 5, "sun": 6}
 _ORD = {"1st": 1, "2nd": 2, "3rd": 3, "4th": 4, "5th": 5, "last": 0}
 
+_ORDWORD = {"first": "1st", "second": "2nd", "third": "3rd",
+            "fourth": "4th", "fifth": "5th", "last": "last"}
+
+
+def _normalize_ordinal_recurrence(text):
+    """Turn natural standing-schedule phrasing into the 'Recurring — …' grammar
+    that next_occurrence() understands. Recognizes forms like:
+        '1st & 3rd Tuesdays, 6:00 PM'
+        '2nd Wednesdays'
+        'first and third Tuesday of the month'
+        '2nd & 4th Wednesdays'
+    Returns a normalized 'Recurring — 1st week: Tue; 3rd week: Tue' string, or ''
+    if no ordinal-weekday pattern is present. This lets schedules be written the
+    plain way a person would, while the date math stays in one place."""
+    if not text:
+        return ""
+    t = text.lower()
+    # word ordinals -> numeric ('first' -> '1st') so one grammar handles both
+    for word, num in _ORDWORD.items():
+        t = re.sub(r"\b" + word + r"\b", num, t)
+    # find the weekday this clause is about (first weekday token present)
+    wdm = re.search(r"\b(mon|tue|wed|thu|fri|sat|sun)", t)
+    if not wdm:
+        return ""
+    wd = wdm.group(1)
+    # collect every ordinal that appears before the weekday token
+    head = t[:wdm.start()]
+    ords = re.findall(r"\b(1st|2nd|3rd|4th|5th|last)\b", head)
+    if not ords:
+        return ""
+    wd_title = wd.capitalize()
+    segs = ["{} week: {}".format(o, wd_title) for o in ords]
+    return "Recurring — " + "; ".join(segs)
+
 
 def _next_weekday(frm, wd):
     """First date >= frm falling on weekday wd (0=Mon..6=Sun)."""
@@ -372,18 +406,29 @@ def _nth_weekday_of_month(year, month, wd, nth):
     return d if d.month == month else None
 
 
-def next_occurrence(notes, start, end, today):
+def next_occurrence(notes, start, end, today, time_field=""):
     """Given a 'Recurring — …' Notes string, return the soonest date >= today
     that the event actually happens (respecting its start/end bounds), or None
     if the notes carry no parseable recurrence. Handles:
       'every week: Thursday'            (one or many days)
       '2nd week: Tuesday'               (nth weekday of month)
       '1st week of month: Wednesday; 3rd week: Wednesday'  (compound)
+    If the Notes carry no explicit 'Recurring —' clause, natural standing-schedule
+    phrasing in the Notes or Time field (e.g. '1st & 3rd Tuesdays, 6:00 PM') is
+    normalized into the same grammar, so plainly-written schedules still surface.
     Dates are ISO strings; today/start/end are ISO strings or ''.
     """
     m = re.search(r"Recurring\s*[\u2014-]\s*([^|]+)", notes or "")
     if not m:
-        return None
+        # no explicit recurrence clause — try to read natural ordinal phrasing
+        # from the Notes, then the Time field ('1st & 3rd Tuesdays, 6:00 PM')
+        normalized = (_normalize_ordinal_recurrence(notes)
+                      or _normalize_ordinal_recurrence(time_field))
+        if not normalized:
+            return None
+        m = re.search(r"Recurring\s*[\u2014-]\s*([^|]+)", normalized)
+        if not m:
+            return None
     frag = m.group(1).strip()
 
     def iso2d(x):
@@ -575,7 +620,8 @@ def parse_events(path: Path, label: str, sheet=None):
         if d1 and d2 and d2 < d1:
             fail(f"{rw}: End Date {d2} is before Start Date {d1}")
         notes = s(cell(row, idx, "notes"))
-        nocc = next_occurrence(notes, d1, d2, today)  # ISO string or None
+        nocc = next_occurrence(notes, d1, d2, today,
+                               time_field=s(cell(row, idx, "tm")))  # ISO string or None
         end = d2 or d1
         if end and end < today and not nocc:
             skipped_past[0] += 1
