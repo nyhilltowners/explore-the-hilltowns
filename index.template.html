@@ -55,9 +55,6 @@ body{
 }
 .masthead h1{font-family:'Montserrat',ui-sans-serif,system-ui,sans-serif; font-size:21px; font-weight:800; line-height:1.2; margin-top:0; letter-spacing:.05em; text-transform:uppercase; color:var(--ink-blue); display:flex; align-items:center; gap:6px;}
 .masthead h1 .mast-logo{width:46px; height:46px; flex:none; object-fit:contain; transform:scale(1.55); transform-origin:center; margin-right:-2px;}
-.masthead h1 .mast-words{display:flex; flex-direction:column; gap:2px;}
-.mast-beta{font-size:8px; font-weight:700; letter-spacing:.14em; text-transform:uppercase; color:var(--birch); opacity:.85; line-height:1;}
-.mast-beta a{color:inherit; text-decoration:underline; text-underline-offset:1px;}
 .planrow{display:flex; align-items:center; gap:8px; margin-top:9px;
   font-family:'Montserrat',ui-sans-serif,system-ui,sans-serif; font-size:11px; color:var(--birch);}
 .planrow input[type=date]{flex:1; background:#0d0d73; border:1px solid #2e2ea8; border-radius:7px;
@@ -280,7 +277,7 @@ a.weblink:hover{text-decoration:underline;}
     content:''; position:absolute; top:8px; left:50%; transform:translateX(-50%);
     width:40px; height:4px; border-radius:2px; background:#b9b09a;
   }
-  .masthead{padding:6px 16px 8px;} .masthead h1{font-size:17px;} .masthead h1 .mast-logo{width:38px; height:38px; transform:scale(1.5);} .mast-beta{font-size:7px;}
+  .masthead{padding:6px 16px 8px;} .masthead h1{font-size:17px;} .masthead h1 .mast-logo{width:38px; height:38px; transform:scale(1.5);}
   .controls,.card,.grouphead{padding-left:16px; padding-right:16px;}
   #layers{bottom:12px; right:auto; left:12px;}
   #layersToggle{display:block; position:absolute; bottom:12px; left:12px; z-index:901;
@@ -309,7 +306,7 @@ a.weblink:hover{text-decoration:underline;}
   <div id="sidebar">
     <div id="sheetHandle" aria-hidden="true"></div>
     <div class="masthead">
-      <h1><img src="images/raccoon-mark.svg" alt="" class="mast-logo"><span class="mast-words">Hilltowns Folk Atlas<span class="mast-beta">Beta: comment on the chaos! <a href="mailto:nyhilltowners@gmail.com">nyhilltowners@gmail.com</a></span></span></h1>
+      <h1><img src="images/raccoon-mark.svg" alt="" class="mast-logo">Hilltowns Folk Atlas</h1>
     </div>
 
     <div class="controls">
@@ -872,13 +869,48 @@ function immScale(r){
   return 0.72;                            /* 3-7 days out */
 }
 function toFC(list){
-  return {type:'FeatureCollection', features:list
+  var feats = list
     .filter(function(r){return r.tier!=='none';})
     .map(function(r){ return {type:'Feature',
       properties:{k:r._k, tier:r.tier, ty:r.ty, cat:r.cat, g:r.g||'', col:r.col,
         dim:isDimmed(r)?1:0, imm:immScale(r)},
       geometry:{type:'Point', coordinates:[r.lng, r.lat]}};
-    })};
+    });
+  spreadCollisions(feats);
+  return {type:'FeatureCollection', features:feats};
+}
+/* When several pins share (almost) the same coordinate they stack and only the
+   top one is clickable — a "crash". We fan co-located pins out around their shared
+   point in a small ring so each is reachable. The offset is deterministic (keyed by
+   the stable feature id) so a given event always lands in the same spot, and tiny
+   (a few meters) so the cluster still reads as one place. */
+function spreadCollisions(feats){
+  var groups = {};
+  feats.forEach(function(f){
+    // key by ~11m grid so near-identical points (e.g. two library events) group together
+    var key = f.geometry.coordinates[1].toFixed(4)+','+f.geometry.coordinates[0].toFixed(4);
+    (groups[key] || (groups[key] = [])).push(f);
+  });
+  Object.keys(groups).forEach(function(key){
+    var g = groups[key];
+    if(g.length < 2) return;
+    // sort by id for stable ordering, then fan out on a ring
+    g.sort(function(a,b){ return a.properties.k < b.properties.k ? -1 : 1; });
+    var lat = g[0].geometry.coordinates[1];
+    // ~0.00016 deg latitude ≈ 18m; scale longitude by cos(lat) so the ring stays round
+    var R = 0.00016, cos = Math.cos(lat*Math.PI/180) || 1;
+    // rings of up to 8; grow radius for larger stacks so they don't overlap
+    g.forEach(function(f, i){
+      if(i === 0) return;            // leave the first pin on the true point
+      var ring = Math.ceil(i/8), idx = (i-1) % 8;
+      var ang = (idx/8) * 2*Math.PI + ring*0.4;   // offset each ring's phase
+      var rad = R * ring;
+      f.geometry.coordinates = [
+        f.geometry.coordinates[0] + (rad*Math.cos(ang))/cos,
+        f.geometry.coordinates[1] +  rad*Math.sin(ang)
+      ];
+    });
+  });
 }
 function refreshMapData(){
   if(!map) return;

@@ -629,6 +629,52 @@ def resolve_workbook(path: Path, label: str) -> Path:
     return path
 
 
+def backfill_event_coords_from_poi(all_records):
+    """Fill in coordinates for events that lack them by reusing the verified
+    coordinates of a matching Point of Interest. Matching is deliberately strict:
+    an event borrows a POI's location only when its venue name equals the POI name,
+    or its street address matches the POI's street address. This never invents a
+    coordinate — it only reuses one already vetted in the POI sheet — and it never
+    overrides coordinates an event already has. Loose/substring matching is avoided
+    on purpose so we don't, say, pin a 'Sleepy Hollow' reading to a farm that merely
+    shares a word."""
+    def norm(v):
+        return re.sub(r"[^a-z0-9]+", " ", str(v or "").lower()).strip()
+
+    def street_key(addr):
+        m = re.match(r"\s*(\d+)\s+([a-z0-9]+)", str(addr or "").lower())
+        return (m.group(1), m.group(2)) if m else None
+
+    pois = [r for r in all_records
+            if r.get("ty") == "poi" and r.get("lat") is not None]
+    by_name, by_addr = {}, {}
+    for p in pois:
+        n = norm(p.get("t"))
+        if n and n not in by_name:
+            by_name[n] = p
+        k = street_key(p.get("addr"))
+        if k and k not in by_addr:
+            by_addr[k] = p
+
+    filled = 0
+    for e in all_records:
+        if e.get("ty") != "events" or e.get("lat") is not None:
+            continue
+        if e.get("online"):
+            continue
+        hit = by_name.get(norm(e.get("ven")))
+        if not hit:
+            k = street_key(e.get("addr"))
+            if k:
+                hit = by_addr.get(k)
+        if hit:
+            e["lat"], e["lng"] = hit["lat"], hit["lng"]
+            e["tier"] = "exact"
+            filled += 1
+    if filled:
+        print(f"  event→POI coord backfill: filled {filled} event(s) from matching POIs")
+
+
 def main() -> int:
     manifest = json.loads((ROOT / "manifest.json").read_text(encoding="utf-8"))
     all_records = []
@@ -654,6 +700,8 @@ def main() -> int:
                     r["g"] = dg
         all_records.extend(recs)
         print(f"  {label}: {len(recs)} records")
+
+    backfill_event_coords_from_poi(all_records)
 
     print()
     for w in WARNS:
