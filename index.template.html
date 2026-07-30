@@ -3,9 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Hilltowns Atlas — NY Helderberg-Hudson Hilltowns</title>
+<title>Hilltowns Folk Atlas — NY Helderberg-Hudson Hilltowns</title>
 <meta name="description" content="An interactive atlas of folklore, history, and daily life in the NY Helderberg-Hudson Hilltowns — Berne, Knox, Rensselaerville, and Westerlo.">
-<meta property="og:title" content="Hilltowns Atlas">
+<meta property="og:title" content="Hilltowns Folk Atlas">
 <meta property="og:description" content="Folklore, history &amp; daily life in the NY Helderberg-Hudson Hilltowns — mapped.">
 <meta property="og:image" content="https://nyhilltowners.github.io/explore-the-hilltowns/images/share-card.png">
 <meta property="og:url" content="https://nyhilltowners.github.io/explore-the-hilltowns/">
@@ -53,8 +53,11 @@ body{
   font-family:'Montserrat',ui-sans-serif,system-ui,sans-serif;
   font-size:10px; letter-spacing:.22em; text-transform:uppercase; color:var(--birch);
 }
-.masthead h1{font-family:'Montserrat',ui-sans-serif,system-ui,sans-serif; font-size:21px; font-weight:800; line-height:1.2; margin-top:0; letter-spacing:.05em; text-transform:uppercase; color:var(--ink-blue); display:flex; align-items:center; gap:10px;}
-.masthead h1 .mast-logo{width:46px; height:46px; flex:none; object-fit:contain;}
+.masthead h1{font-family:'Montserrat',ui-sans-serif,system-ui,sans-serif; font-size:21px; font-weight:800; line-height:1.2; margin-top:0; letter-spacing:.05em; text-transform:uppercase; color:var(--ink-blue); display:flex; align-items:center; gap:6px;}
+.masthead h1 .mast-logo{width:46px; height:46px; flex:none; object-fit:contain; transform:scale(1.55); transform-origin:center; margin-right:-2px;}
+.masthead h1 .mast-words{display:flex; flex-direction:column; gap:2px;}
+.mast-beta{font-size:8px; font-weight:700; letter-spacing:.14em; text-transform:uppercase; color:var(--birch); opacity:.85; line-height:1;}
+.mast-beta a{color:inherit; text-decoration:underline; text-underline-offset:1px;}
 .planrow{display:flex; align-items:center; gap:8px; margin-top:9px;
   font-family:'Montserrat',ui-sans-serif,system-ui,sans-serif; font-size:11px; color:var(--birch);}
 .planrow input[type=date]{flex:1; background:#0d0d73; border:1px solid #2e2ea8; border-radius:7px;
@@ -212,6 +215,7 @@ a.weblink:hover{text-decoration:underline;}
 .maplibregl-popup-close-button{color:var(--birch); font-size:18px; right:4px; top:2px;}
 .pop h4{font-size:13.5px; font-weight:600; margin-bottom:3px; line-height:1.3; font-family:'Montserrat',ui-sans-serif,system-ui,sans-serif;}
 .pop .pm{font-family:'Montserrat',ui-sans-serif,system-ui,sans-serif; font-size:10.5px; color:var(--birch); margin-bottom:5px;}
+.whenrange{opacity:0.62; font-weight:400; white-space:nowrap;}
 .pop .ps{font-size:12.5px; color:var(--lichen); margin:6px 0 9px; line-height:1.45;
   display:-webkit-box; -webkit-line-clamp:4; -webkit-box-orient:vertical; overflow:hidden;}
 .pop .others{font-family:'Montserrat',ui-sans-serif,system-ui,sans-serif; font-size:10.5px; color:var(--faint); margin-top:8px; border-top:1px solid #26268f; padding-top:7px; line-height:1.6;}
@@ -276,7 +280,7 @@ a.weblink:hover{text-decoration:underline;}
     content:''; position:absolute; top:8px; left:50%; transform:translateX(-50%);
     width:40px; height:4px; border-radius:2px; background:#b9b09a;
   }
-  .masthead{padding:6px 16px 8px;} .masthead h1{font-size:17px;}
+  .masthead{padding:6px 16px 8px;} .masthead h1{font-size:17px;} .masthead h1 .mast-logo{width:38px; height:38px; transform:scale(1.5);} .mast-beta{font-size:7px;}
   .controls,.card,.grouphead{padding-left:16px; padding-right:16px;}
   #layers{bottom:12px; right:auto; left:12px;}
   #layersToggle{display:block; position:absolute; bottom:12px; left:12px; z-index:901;
@@ -305,7 +309,7 @@ a.weblink:hover{text-decoration:underline;}
   <div id="sidebar">
     <div id="sheetHandle" aria-hidden="true"></div>
     <div class="masthead">
-      <h1><img src="images/raccoon-mark.svg" alt="" class="mast-logo">Hilltowns Atlas</h1>
+      <h1><img src="images/raccoon-mark.svg" alt="" class="mast-logo"><span class="mast-words">Hilltowns Folk Atlas<span class="mast-beta">Beta: comment on the chaos! <a href="mailto:nyhilltowners@gmail.com">nyhilltowners@gmail.com</a></span></span></h1>
     </div>
 
     <div class="controls">
@@ -352,7 +356,7 @@ a.weblink:hover{text-decoration:underline;}
         <div class="eyebrow">About this atlas</div>
       </div>
       <div class="detail-body">
-        <h2>Hilltowns Atlas</h2>
+        <h2>Hilltowns Folk Atlas</h2>
         <div class="field"><div class="fv story">A living atlas of the NY Helderberg-Hudson
         Hilltowns &mdash; folklore and legends gathered from historical sources, alongside
         the people making and telling stories today. Every tale lists its original teller
@@ -485,6 +489,45 @@ function fmtDate(iso){
   var d = new Date(iso+'T12:00:00');
   return d.toLocaleDateString('en-US',{weekday:'short', month:'short', day:'numeric', year:'numeric'});
 }
+var DOW_FULL=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+var DOW_RE=/\b(mon|tues?|wed(?:nes)?|thur?s?|fri|satur?|sun)(day)?s?\b/i;
+var DOW_CANON={mon:'Monday',tue:'Tuesday',tues:'Tuesday',wed:'Wednesday',wednes:'Wednesday',
+  thu:'Thursday',thur:'Thursday',thurs:'Thursday',fri:'Friday',satur:'Saturday',sat:'Saturday',sun:'Sunday'};
+/* Recurrence weekday for a long-run event, or '' if it can't be known honestly.
+   Precedence: (1) an explicit weekday stated in the Time or title — the maintainer's
+   own word; (2) a weekday COMPUTED from d1 only when d1 and d2 fall on the SAME
+   weekday (self-verifying: a true weekly series' endpoints share a weekday). A lone
+   d1 is not trusted — season boundaries like Jan 1 are placeholders, not occurrences. */
+function recurWeekday(r){
+  var hay=((r.tm||'')+' '+(r.t||''));
+  var m=hay.match(DOW_RE);
+  if(m){ var key=m[1].toLowerCase(); if(DOW_CANON[key]) return DOW_CANON[key]; }
+  // Fallback: compute from endpoints, but ONLY for a bounded seasonal run (roughly a
+  // single season, < 300 days). A full-calendar-year placeholder (Jan 1 – Dec 31)
+  // has coincidentally-equal endpoint weekdays yet tells us nothing about the real
+  // meeting day, so we refuse to guess it. Truth over a plausible fabrication.
+  if(r.d1 && r.d2 && r.d2!==r.d1){
+    var span=Math.round((new Date(r.d2+'T12:00:00')-new Date(r.d1+'T12:00:00'))/86400000);
+    if(span<300){
+      var w1=new Date(r.d1+'T12:00:00').getDay(), w2=new Date(r.d2+'T12:00:00').getDay();
+      if(w1===w2) return DOW_FULL[w1];
+    }
+  }
+  return '';
+}
+/* Does the Time string carry an ordinal recurrence ("1st & 3rd Tuesdays")? Those are
+   not simple weeklies — we show the tm verbatim and never prepend a bare weekday. */
+function isOrdinalRecur(tm){
+  return /\b(1st|2nd|3rd|4th|first|second|third|fourth|last)\b/i.test(tm||'');
+}
+/* Strip a leading weekday token from a Time string so we don't print the day twice
+   once recurWeekday() has surfaced it. "Fridays, 6:30 PM" -> "6:30 PM". Ordinal
+   patterns ("1st & 3rd Tuesdays") are left intact — they're not simple weeklies. */
+function timeSansWeekday(tm){
+  if(!tm) return '';
+  if(/\b(1st|2nd|3rd|4th|first|second|third|fourth|last)\b/i.test(tm)) return tm;
+  return tm.replace(/^\s*(?:mon|tues?|wed(?:nes)?|thur?s?|fri|satur?|sun)(?:day)?s?\s*[,·—–-]?\s*/i,'').trim() || tm;
+}
 function fmtRange(r){
   if(!r.d1) return '';
   // Recurring/seasonal events: show the NEXT actual occurrence (computed at build
@@ -497,9 +540,31 @@ function fmtRange(r){
   if(!r.d2 || r.d2===r.d1) return fmtDate(r.d1);
   return fmtDate(r.d1)+' – '+fmtDate(r.d2);
 }
+/* The "When" line for events. Long seasonal series lead with the day-of-week and
+   time (what a user acts on) and trail the full run as a freshness signal:
+       Wednesdays · 4:00–7:00 PM   (through Oct 28, 2026)
+   Everything else keeps the plain date (+ time). */
+function whenLine(r){
+  var isRange = r.d1 && r.d2 && r.d2!==r.d1;
+  var spanDays = isRange ? Math.round((new Date(r.d2+'T12:00:00')-new Date(r.d1+'T12:00:00'))/86400000) : 0;
+  if(!r.nextOcc && spanDays>7){
+    // Ordinal series ("1st & 3rd Tuesdays"): show the maintainer's phrasing as-is,
+    // just moved ahead of the range. No computed weekday, no de-duping.
+    if(isOrdinalRecur(r.tm)){
+      return esc(r.tm)+' <span class="whenrange">(through '+esc(fmtDate(r.d2))+')</span>';
+    }
+    var wd=recurWeekday(r);
+    if(wd){
+      var t=timeSansWeekday(r.tm);
+      var lead=wd+'s'+(t?' · '+esc(t):'');
+      return lead+' <span class="whenrange">(through '+esc(fmtDate(r.d2))+')</span>';
+    }
+  }
+  return esc(fmtRange(r))+(r.tm?' · '+esc(r.tm):'');
+}
 function searchText(r){
   if(r.ty==='poi') return [r.t,r.tags.join(' '),r.addr,r.s].join(' ');
-  if(r.ty==='events') return [r.t,r.ven,r.addr,r.s,(r.online?'online':'')].join(' ');
+  if(r.ty==='events') return [r.t,r.ven,r.addr,r.s,(r.tags?r.tags.join(' '):''),(r.online?'online':'')].join(' ');
   return [r.t,r.b,r.n,r.p,r.s,r.rb,(r.tags?r.tags.join(' '):'')].join(' ');
 }
 
@@ -815,15 +880,24 @@ function toFC(list){
 function refreshMapData(){
   if(!map) return;
   var src = map.getSource('folk');
-  if(src) src.setData(toFC(currentFilter()));
+  // Mirror the list: while a query is active, draw the matching pins even if they
+  // fall outside the 7-day window. The query bounds the count, so no flood. With no
+  // query, the window still keeps the map to the near-term set.
+  if(src) src.setData(toFC(currentFilter(true)));
 }
 
 /* ============ FILTER / LIST ============ */
-function currentFilter(){
+function currentFilter(ignoreDateWindow){
   var q = document.getElementById('q').value.trim().toLowerCase();
+  // When the user is actively searching, the list should reach the WHOLE corpus,
+  // not just the next-7-days window that keeps the map uncluttered. Callers that
+  // draw pins (the map) never pass this flag; the list passes it while a query is
+  // present so a search for a September festival surfaces even in July. Expired
+  // events are still excluded — search finds upcoming things, not the past.
+  var bypass = ignoreDateWindow && !!q;
   return records.filter(function(r){
     if(isExpired(r)) return false;
-    if(!evVisible(r)) return false;
+    if(!bypass && !evVisible(r)) return false;
     if(!catsOn[r.cat]) return false;
     if(!q) return true;
     return searchText(r).toLowerCase().indexOf(q)>=0;
@@ -915,7 +989,7 @@ function cmpListOrder(a, b){
 }
 function renderList(){
   updateOnlinePill();
-  var list = currentFilter();
+  var list = currentFilter(true);
   var mapped = list.filter(function(r){return r.tier!=='none';})
     .sort(cmpListOrder);
   var unplaced = list.filter(function(r){return r.tier==='none';});
@@ -965,8 +1039,9 @@ function popupBody(r){
       + '<div class="ps">'+esc(r.s||'')+'</div>';
   }
   if(r.ty==='events'){
-    return '<div class="pm">'+esc(fmtRange(r))+(r.tm?' · '+esc(r.tm):'')+'</div>'
+    return '<div class="pm">'+whenLine(r)+'</div>'
       + (r.ven?'<div class="pm">'+esc(r.ven)+'</div>':'')
+      + (r.tags && r.tags.length ? '<div>'+tagChips(r)+'</div>' : '')
       + '<div class="ps">'+esc(r.s||'')+'</div>';
   }
   return '<div class="pm">'+esc(r.n||'—')+(r.p?' · '+esc(r.p):'')+'</div>'
@@ -1049,9 +1124,10 @@ function linkify(escaped){
   return escaped.replace(/(https?:\/\/[^\s<]+[^\s<.,;:)\]])/g,
     '<a class="weblink" href="$1" target="_blank" rel="noopener">$1</a>');
 }
-function fieldHtml(label, val, cls){
+function fieldHtml(label, val, cls, rawHtml){
   if(!val) return '';
-  return '<div class="field"><div class="fl">'+label+'</div><div class="fv '+(cls||'')+'">'+linkify(esc(val))+'</div></div>';
+  var body = rawHtml ? val : linkify(esc(val));
+  return '<div class="field"><div class="fl">'+label+'</div><div class="fv '+(cls||'')+'">'+body+'</div></div>';
 }
 function linkHtml(label, url){
   if(!url) return '';
@@ -1098,7 +1174,8 @@ function detailBody(r){
     return b;
   }
   if(r.ty==='events'){
-    b += fieldHtml('When', fmtRange(r) + (r.tm ? ' · '+r.tm : ''));
+    b += fieldHtml('When', whenLine(r), '', true);
+    if(r.tags && r.tags.length) b += '<div class="field"><div class="fl">What</div><div>'+tagChips(r)+'</div></div>';
     b += fieldHtml('Venue', r.ven);
     b += fieldHtml('Address', r.addr);
     b += fieldHtml('About', r.s, 'story');
@@ -1257,7 +1334,7 @@ buildCats();
 if(map) map.on('load', function(){ renderList(); applyHash(); });
 setInterval(function(){
   if(map && map.getSource && map.getSource('folk')){
-    map.getSource('folk').setData(toFC(currentFilter()));
+    map.getSource('folk').setData(toFC(currentFilter(true)));
   }
 }, 300000);
 renderList(); /* list renders immediately; map data attaches once loaded */

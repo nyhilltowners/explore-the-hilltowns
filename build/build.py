@@ -437,6 +437,7 @@ EVT_SPEC = [
     ("lat", r"^lat", True),
     ("lng", r"^lon|^lng", True),
     ("stry", r"description", False),
+    ("tags", r"tags?|keywords?|themes?", False),
     ("d1", r"start\s*date|^date$", True),
     ("d2", r"end\s*date", False),
     ("tm", r"^time", False),
@@ -458,6 +459,7 @@ EVT_SPEC = [
 # (except the lossless 🎬→🍿 normalization below).
 GLYPH_NORMALIZE = {"🎬": "🍿"}
 GLYPH_RULES = [
+ (r"\bfood truck(s)?\b", "\U0001F69A"),
  (r"\bkids?\b|\bchild(ren)?(\'s)?\b|\btoddlers?\b|\byouth\b|\bteens?\b|\bstory ?time\b|\bfor ages? \d|\blittle ones\b|\bknee high\b", "🐤"),
  (r"\bmovies?\b|\bfilm(s|ing)?\b|\bscreening\b|\bdrive[- ]?in\b|\bcinema\b", "🍿"),
  (r"\bart gallery\b|\bgallery (opening|show|night|tour)\b|\bexhibit(ion)?\b|\bopening reception\b|\bcurator tour\b", "🖼️"),
@@ -508,6 +510,10 @@ GLYPH_RULES = [
  (r"\bhistor(y|ic|ical)\b|\bmuseum\b|\bheritage\b|\brevolution\b|\bcivil war\b", "🏛️"),
 ]
 def auto_glyph(title, venue, cell_glyph, is_online=False):
+    # Food trucks always show the truck, overriding any celled food glyph
+    # (🍕/🍔/etc.) so the category reads consistently at a glance on the map.
+    if re.search(r"\bfood truck(s)?\b", (title or "").lower()):
+        return "\U0001F69A"  # 🚚
     g = (cell_glyph or "").strip()
     if g:
         # 💻 changed meaning: it now marks online events. A celled 💻 on an
@@ -550,6 +556,17 @@ def parse_events(path: Path, label: str, sheet=None):
                     required=False)
         lng = coord(cell(row, idx, "lng"), -180, 180, "Longitude", rw,
                     required=False)
+        # Food trucks are roaming vendors. When their location is only a town
+        # (or blank) — no street address — they have no fixed spot to pin, so we
+        # keep them in the listings/search but off the map. A real street address
+        # (e.g. hosted at a brewery) keeps them mapped as normal.
+        _addr_raw = s(cell(row, idx, "addr")).strip()
+        _has_street = bool(re.match(r"^\d+\s+\S", _addr_raw))
+        if re.search(r"\bfood truck(s)?\b", (title or "").lower()) and not _has_street:
+            if lat is not None or lng is not None:
+                warn(f"{rw}: {title} is a roaming food truck with no street address — listed/searchable but not mapped")
+            lat = None
+            lng = None
         if not is_online and (lat is None or lng is None):
             # upcoming but not yet locatable: keep it in the listings, off the map
             warn(f"{rw}: {title} has no coordinates yet — listed but not mapped")
@@ -570,6 +587,7 @@ def parse_events(path: Path, label: str, sheet=None):
         out.append({
             "ty": "events", "cat": label, "id": rid, "t": title or "(unnamed)",
             "ven": html_mod.unescape(s(cell(row, idx, "ven"))), "addr": s(cell(row, idx, "addr")),
+            "tags": [x.strip() for x in re.split(r"[;,]", s(cell(row, idx, "tags"))) if x.strip()],
             "lat": lat, "lng": lng, "s": html_mod.unescape(s(cell(row, idx, "stry"))),
             "d1": d1, "d2": d2 or "", "tm": s(cell(row, idx, "tm")),
             "web": s(cell(row, idx, "web")), "g": auto_glyph(title, s(cell(row, idx, "ven")), s(cell(row, idx, "g")), is_online),
