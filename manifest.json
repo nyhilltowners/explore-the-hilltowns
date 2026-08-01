@@ -28,7 +28,7 @@
       "workbook": "data/points_of_interest.xlsx",
       "sheet": "Restaurants",
       "color": "#e05252",
-      "default_on": false,
+      "default_on": true,
       "glyph": "◎"
     },
     {
@@ -117,7 +117,7 @@
       "schema": "folklore",
       "workbook": "data/folklore_legends.xlsx",
       "color": "#000080",
-      "default_on": true
+      "default_on": false
     },
     {
       "key": "poi",
