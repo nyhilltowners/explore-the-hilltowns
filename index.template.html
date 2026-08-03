@@ -331,7 +331,7 @@ a.weblink:hover{text-decoration:underline;}
       <input type="text" id="q" placeholder="Search…" autocomplete="off">
       <div class="navfoot">
         <a href="https://instagram.com/NYHilltowners" target="_blank" rel="noopener" class="iglink">@NYHilltowners</a>
-        <button class="btn" id="btnAbout" title="About this atlas">&#9432; About</button>
+        <a href="about.html" class="btn" title="About this atlas" style="text-decoration:none;">&#9432; About</a>
       </div>
     </div>
 
@@ -366,6 +366,10 @@ a.weblink:hover{text-decoration:underline;}
         complaints about the universe? Message us on Instagram at
         <a class="weblink" href="https://instagram.com/NYHilltowners" target="_blank"
         rel="noopener">@NYHilltowners</a></div></div>
+        <div class="field"><div class="fv story">Is there an event that should be on the
+        map? Please let us know! <a class="weblink"
+        href="https://forms.gle/AwjBQ4bjNB9GQJTc7" target="_blank"
+        rel="noopener">Submit an event</a></div></div>
       </div>
     </div>
   </div>
@@ -1265,7 +1269,6 @@ document.getElementById('btnBack').onclick = closeDetail;
 /* ============ CONTROLS ============ */
 document.getElementById('q').addEventListener('input', renderList);
 document.getElementById('btnNorth').onclick = function(){ if(map) map.easeTo({pitch:0, bearing:0, duration:500}); };
-document.getElementById('btnAbout').onclick = function(){ document.getElementById('about').classList.add('open'); };
 document.getElementById('btnAboutBack').onclick = function(){ document.getElementById('about').classList.remove('open'); };
 document.getElementById('btnCopyLink').onclick = function(){
   var b = document.getElementById('btnCopyLink');

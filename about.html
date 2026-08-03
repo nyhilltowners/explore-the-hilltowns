@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>About — Hilltowns Folk Atlas</title>
+<meta name="description" content="About the Hilltowns Folk Atlas — a living atlas of the NY Helderberg-Hudson Hilltowns.">
+<meta property="og:title" content="About — Hilltowns Folk Atlas">
+<meta property="og:type" content="website">
+<meta property="og:image" content="images/share-card.png">
+<link rel="icon" href="images/favicon.svg">
+<link rel="apple-touch-icon" href="images/apple-touch-icon.png">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lato:ital,wght@0,400;0,700;1,400&family=Montserrat:ital,wght@0,400;0,600;0,700;0,800;1,600&display=swap">
+<style>
+:root{
+  --ink:#00004d; --paper:#feffff; --parchment:#f4efe1; --parchment-line:#e3dcc8;
+  --ink-blue:#1a1d5c; --lichen:#dde0f2; --birch:#a9b0dd; --faint:#7b82b8;
+  --wampum:#39b7ff; --wampum-deep:#000080; --gold:#fca315; --gold-ink:#2b2410;
+}
+*{box-sizing:border-box; margin:0; padding:0;}
+body{
+  font-family:'Lato',ui-sans-serif,system-ui,sans-serif;
+  color:var(--ink-blue); background:var(--parchment);
+  -webkit-font-smoothing:antialiased; line-height:1.6;
+}
+.sitenav{
+  position:sticky; top:0; z-index:100;
+  display:flex; align-items:center; justify-content:space-between;
+  padding:8px 20px; background:var(--parchment);
+  border-bottom:3px solid var(--ink-blue); box-shadow:0 2px 8px rgba(0,0,60,.05);
+}
+.sitenav .brand{
+  display:flex; align-items:center; gap:8px; text-decoration:none;
+  font-family:'Montserrat',sans-serif; font-weight:800; text-transform:uppercase;
+  letter-spacing:.05em; color:var(--ink-blue);
+}
+.sitenav .brand img{height:42px; width:auto; flex:none; display:block;}
+.sitenav .brand .stack{display:flex; flex-direction:column; line-height:1.03; margin-left:2px;}
+.sitenav .brand .stack .l1{font-size:16px; display:block;}
+.sitenav .brand .stack .l2{font-size:16px; display:block; transform:scaleX(0.979); transform-origin:left center;}
+.sitenav .links{display:flex; align-items:center; gap:4px;}
+.sitenav .links a{
+  font-family:'Montserrat',sans-serif; font-weight:600; font-size:12.5px;
+  letter-spacing:.08em; text-transform:uppercase; text-decoration:none;
+  color:var(--ink-blue); padding:8px 14px; border-radius:6px; transition:.15s;
+}
+.sitenav .links a:hover{background:rgba(26,29,92,.07);}
+.sitenav .links a.active{color:var(--gold);}
+.sitenav .links a.ig{display:flex; align-items:center; justify-content:center; padding:7px; margin-left:2px; color:var(--ink-blue);}
+.sitenav .links a.ig:hover{background:rgba(26,29,92,.07); color:var(--gold);}
+.sitenav .links a.ig svg{width:22px; height:22px; display:block;}
+
+.wrap{max-width:720px; margin:0 auto; padding:56px 24px 72px;}
+.eyebrow{font-family:'Montserrat',sans-serif; font-weight:700; font-size:12px; letter-spacing:.18em;
+  text-transform:uppercase; color:var(--gold); margin-bottom:12px;}
+h1{font-family:'Montserrat',sans-serif; font-weight:800; text-transform:uppercase; letter-spacing:.03em;
+  font-size:clamp(26px,5vw,38px); color:var(--ink-blue); line-height:1.08; margin-bottom:26px;}
+p{font-size:17px; color:#3a3f6b; margin-bottom:18px;}
+a.link{color:var(--wampum-deep); font-weight:700; text-decoration:none; border-bottom:2px solid var(--gold);}
+a.link:hover{background:rgba(252,163,21,.14);}
+.backmap{display:inline-block; margin-top:26px; font-family:'Montserrat',sans-serif; font-weight:700;
+  font-size:14px; letter-spacing:.05em; text-transform:uppercase; text-decoration:none;
+  background:var(--ink-blue); color:var(--paper); padding:13px 26px; border-radius:8px;}
+.backmap:hover{background:#24287a;}
+.foot{background:var(--ink-blue); color:var(--birch); text-align:center; padding:32px 24px; font-size:13px; border-top:3px solid var(--gold);}
+.foot a{color:var(--gold); text-decoration:none; letter-spacing:.06em; font-family:'Montserrat',sans-serif; font-weight:600; font-size:12px;}
+.foot .row{margin-top:10px; display:flex; gap:18px; justify-content:center; flex-wrap:wrap;}
+@media (max-width:560px){
+  .sitenav{padding:6px 14px;}
+  .sitenav .brand img{height:36px;}
+  .sitenav .brand .stack .l1, .sitenav .brand .stack .l2{font-size:14px;}
+  .sitenav .links a{padding:8px 10px; font-size:11.5px;}
+}
+</style>
+</head>
+<body>
+
+<nav class="sitenav">
+  <a class="brand" href="index.html">
+    <img src="images/raccoon-mark.svg" alt="">
+    <span class="stack"><span class="l1">Hilltowns</span><span class="l2">Folk Atlas</span></span>
+  </a>
+  <div class="links">
+    <a href="index.html">Atlas</a>
+    <a href="about.html" class="active">About</a>
+    <a href="https://instagram.com/NYHilltowners" class="ig" target="_blank" rel="noopener" title="@NYHilltowners on Instagram" aria-label="Instagram">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line></svg>
+    </a>
+  </div>
+</nav>
+
+<main class="wrap">
+  <div class="eyebrow">About this atlas</div>
+  <h1>Hilltowns Folk Atlas</h1>
+
+  <p>A living atlas of the NY Helderberg-Hudson Hilltowns &mdash; folklore and legends gathered from historical sources, alongside the people making and telling stories today. Every tale lists its original teller and source, stories are only as reliable as their tellers.</p>
+
+  <p>Additions, suggestions, corrections, complaints about the universe? Message us on Instagram at <a class="link" href="https://instagram.com/NYHilltowners" target="_blank" rel="noopener">@NYHilltowners</a></p>
+
+  <p>Is there an event that should be on the map? Please let us know! <a class="link" href="https://forms.gle/AwjBQ4bjNB9GQJTc7" target="_blank" rel="noopener">Submit an event</a></p>
+
+  <p>Local organization, business, interesting bit of folklore, or something else you think should be on the map? Let us know! <span class="link" style="border-bottom-style:dashed;">[link to come]</span></p>
+
+  <a class="backmap" href="index.html">Explore the Atlas &rarr;</a>
+</main>
+
+<footer class="foot">
+  <div>A community project of the NY Hilltowners.</div>
+  <div class="row">
+    <a href="index.html">Atlas</a>
+    <a href="https://instagram.com/NYHilltowners" target="_blank" rel="noopener">@NYHilltowners</a>
+    <a href="https://forms.gle/AwjBQ4bjNB9GQJTc7" target="_blank" rel="noopener">Submit an event</a>
+  </div>
+</footer>
+
+</body>
+</html>

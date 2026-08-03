@@ -761,6 +761,9 @@ def main() -> int:
         return 1
 
     SITE.mkdir(exist_ok=True)
+    # Remove stale generated HTML so renamed/removed pages don't linger locally.
+    for old in SITE.glob("*.html"):
+        old.unlink()
     payload = {
         "generated": datetime.datetime.now(datetime.timezone.utc)
                      .strftime("%Y-%m-%d %H:%M UTC"),
@@ -778,6 +781,9 @@ def main() -> int:
         print("ERROR: no index.template.html (or index.html) found at repo root")
         return 1
     shutil.copyfile(template, SITE / "index.html")
+    # Standalone About page (hand-authored, not templated).
+    if (ROOT / "about.html").exists():
+        shutil.copyfile(ROOT / "about.html", SITE / "about.html")
     if (ROOT / "images").exists():
         shutil.copytree(ROOT / "images", SITE / "images", dirs_exist_ok=True)
     if (ROOT / "fonts").exists():
