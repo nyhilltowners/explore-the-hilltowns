@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Event Calendar — Hilltowns Folk Atlas</title>
+<meta name="description" content="Upcoming events across the NY Helderberg-Hudson Hilltowns — a community event calendar.">
+<meta property="og:title" content="Event Calendar — Hilltowns Folk Atlas">
+<meta property="og:type" content="website">
+<meta property="og:image" content="images/share-card.png">
+<link rel="icon" href="images/favicon.svg">
+<link rel="apple-touch-icon" href="images/apple-touch-icon.png">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lato:ital,wght@0,400;0,700;1,400&family=Montserrat:ital,wght@0,400;0,600;0,700;0,800;1,600&display=swap">
+<style>
+:root{
+  --ink:#00004d; --paper:#feffff; --parchment:#f4efe1; --parchment-line:#e3dcc8;
+  --ink-blue:#1a1d5c; --lichen:#dde0f2; --birch:#a9b0dd; --faint:#7b82b8;
+  --wampum:#39b7ff; --wampum-deep:#000080; --gold:#fca315; --gold-ink:#2b2410;
+}
+*{box-sizing:border-box; margin:0; padding:0;}
+body{
+  font-family:'Lato',ui-sans-serif,system-ui,sans-serif;
+  color:var(--ink-blue); background:var(--parchment);
+  -webkit-font-smoothing:antialiased; line-height:1.6;
+}
+.sitenav{
+  position:sticky; top:0; z-index:100;
+  display:flex; align-items:center; justify-content:space-between;
+  padding:8px 20px; background:var(--parchment);
+  border-bottom:3px solid var(--ink-blue); box-shadow:0 2px 8px rgba(0,0,60,.05);
+}
+.sitenav .brand{display:flex; align-items:center; gap:8px; text-decoration:none;}
+.sitenav .brand img{height:42px; width:auto; flex:none; display:block;}
+.sitenav .brand .stack{display:flex; flex-direction:column; line-height:1.03; margin-left:2px;}
+.sitenav .brand .stack .l1,.sitenav .brand .stack .l2{
+  font-family:'Montserrat',sans-serif; font-weight:800; text-transform:uppercase;
+  letter-spacing:.05em; color:var(--ink-blue);}
+.sitenav .brand .stack .l1{font-size:16px; display:block;}
+.sitenav .brand .stack .l2{font-size:16px; display:block; transform:scaleX(0.979); transform-origin:left center;}
+.sitenav .links{display:flex; align-items:center; gap:4px;}
+.sitenav .links a{
+  font-family:'Montserrat',sans-serif; font-weight:600; font-size:12.5px;
+  text-transform:uppercase; letter-spacing:.04em; text-decoration:none;
+  color:var(--ink-blue); padding:8px 14px; border-radius:6px; transition:.15s;}
+.sitenav .links a:hover{background:rgba(26,29,92,.07);}
+.sitenav .links a.active{color:var(--gold);}
+.sitenav .links a.ig{display:flex; align-items:center; justify-content:center; padding:7px; margin-left:2px; color:var(--ink-blue);}
+.sitenav .links a.ig:hover{background:rgba(26,29,92,.07); color:var(--gold);}
+.sitenav .links a.ig svg{width:22px; height:22px; display:block;}
+
+.wrap{max-width:920px; margin:0 auto; padding:40px 24px 72px;}
+.eyebrow{font-family:'Montserrat',sans-serif; font-weight:700; font-size:12px; letter-spacing:.18em;
+  text-transform:uppercase; color:var(--gold); margin-bottom:12px;}
+h1{font-family:'Montserrat',sans-serif; font-weight:800; text-transform:uppercase; letter-spacing:.03em;
+  font-size:clamp(26px,5vw,38px); color:var(--ink-blue); line-height:1.08; margin-bottom:10px;}
+.lede{font-size:16px; color:#3a3f6b; margin-bottom:24px; max-width:640px;}
+
+/* controls bar */
+.controls{display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px; margin-bottom:22px;}
+.monthnav{display:flex; align-items:center; gap:10px;}
+.monthnav button{
+  font-family:'Montserrat',sans-serif; font-weight:700; font-size:15px; line-height:1;
+  color:var(--ink-blue); background:var(--paper); border:2px solid var(--parchment-line);
+  border-radius:8px; padding:8px 12px; cursor:pointer; transition:.15s;}
+.monthnav button:hover{border-color:var(--gold); background:#fffdf7;}
+.monthlabel{font-family:'Montserrat',sans-serif; font-weight:800; text-transform:uppercase;
+  letter-spacing:.03em; font-size:17px; color:var(--ink-blue); min-width:190px; text-align:center;}
+.viewtoggle{display:flex; gap:0; border:2px solid var(--parchment-line); border-radius:8px; overflow:hidden;}
+.viewtoggle button{
+  font-family:'Montserrat',sans-serif; font-weight:700; font-size:12px; text-transform:uppercase; letter-spacing:.05em;
+  color:var(--faint); background:var(--paper); border:none; padding:9px 16px; cursor:pointer; transition:.15s;}
+.viewtoggle button.on{background:var(--ink-blue); color:var(--paper);}
+.viewtoggle button:not(.on):hover{background:#fffdf7; color:var(--ink-blue);}
+.todaybtn{font-family:'Montserrat',sans-serif; font-weight:700; font-size:12px; text-transform:uppercase; letter-spacing:.05em;
+  color:var(--wampum-deep); background:var(--paper); border:2px solid var(--parchment-line);
+  border-radius:8px; padding:8px 14px; cursor:pointer; transition:.15s;}
+.todaybtn:hover{border-color:var(--gold);}
+
+/* ===== MONTH GRID ===== */
+.grid-wrap{background:var(--paper); border:1px solid var(--parchment-line); border-radius:12px; overflow:hidden; box-shadow:0 2px 10px rgba(0,0,60,.05);}
+.dow{display:grid; grid-template-columns:repeat(7,1fr); background:var(--ink-blue);}
+.dow div{font-family:'Montserrat',sans-serif; font-weight:700; font-size:11px; letter-spacing:.08em; text-transform:uppercase;
+  color:var(--lichen); text-align:center; padding:9px 4px;}
+.grid{display:grid; grid-template-columns:repeat(7,1fr);}
+.cell{min-height:104px; border-right:1px solid var(--parchment-line); border-bottom:1px solid var(--parchment-line);
+  padding:6px 6px 4px; position:relative; overflow:hidden;}
+.cell:nth-child(7n){border-right:none;}
+.cell.blank{background:#faf7ee;}
+.cell .dnum{font-family:'Montserrat',sans-serif; font-weight:700; font-size:12px; color:var(--faint); margin-bottom:3px;}
+.cell.today .dnum{background:var(--gold); color:var(--gold-ink); border-radius:50%; width:22px; height:22px;
+  display:flex; align-items:center; justify-content:center;}
+.evt{display:block; width:100%; text-align:left; background:rgba(255,111,94,.13); border:none; border-left:3px solid #ff6f5e;
+  color:var(--ink-blue); font-size:11.5px; line-height:1.25; padding:3px 5px; margin-bottom:3px; border-radius:0 4px 4px 0;
+  cursor:pointer; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; transition:.12s;}
+.evt:hover{background:rgba(255,111,94,.26);}
+.evt .etime{font-weight:700; color:var(--wampum-deep); margin-right:4px;}
+.more{font-size:10.5px; font-weight:700; color:var(--faint); cursor:pointer; padding:1px 5px;}
+.more:hover{color:var(--gold);}
+
+/* ===== AGENDA ===== */
+.agenda{display:none;}
+.agenda.on{display:block;}
+.grid-wrap.off{display:none;}
+.daygroup{margin-bottom:8px; background:var(--paper); border:1px solid var(--parchment-line); border-radius:10px; overflow:hidden;}
+.dayhead{display:flex; align-items:baseline; gap:10px; background:#faf7ee; padding:9px 16px; border-bottom:1px solid var(--parchment-line);}
+.dayhead .dd{font-family:'Montserrat',sans-serif; font-weight:800; font-size:15px; color:var(--ink-blue); text-transform:uppercase; letter-spacing:.02em;}
+.dayhead .dw{font-size:13px; color:var(--faint); font-weight:700; text-transform:uppercase; letter-spacing:.05em;}
+.dayhead.istoday .dd{color:var(--gold-ink);}
+.dayhead.istoday::before{content:"Today"; font-family:'Montserrat',sans-serif; font-weight:800; font-size:10px; letter-spacing:.08em;
+  text-transform:uppercase; background:var(--gold); color:var(--gold-ink); padding:2px 7px; border-radius:20px; align-self:center;}
+.arow{display:flex; gap:12px; align-items:flex-start; padding:11px 16px; border-bottom:1px solid var(--parchment-line); cursor:pointer; transition:.12s;}
+.arow:last-child{border-bottom:none;}
+.arow:hover{background:#fffdf7;}
+.arow .atime{flex:none; width:104px; font-weight:700; color:var(--wampum-deep); font-size:13.5px;}
+.arow .amain{flex:1; min-width:0;}
+.arow .atitle{font-weight:700; color:var(--ink-blue); font-size:15px;}
+.arow .ameta{font-size:13px; color:var(--faint); margin-top:1px;}
+.arow .aglyph{flex:none; font-size:16px;}
+
+.empty{text-align:center; color:var(--faint); padding:48px 20px; font-size:15px;}
+
+/* ===== DETAIL MODAL ===== */
+.modal{position:fixed; inset:0; z-index:500; background:rgba(0,0,40,.44); display:none; align-items:center; justify-content:center; padding:20px;}
+.modal.on{display:flex;}
+.card{background:var(--paper); border-radius:14px; max-width:460px; width:100%; max-height:86vh; overflow:auto; box-shadow:0 20px 60px rgba(0,0,40,.35);}
+.card .chead{padding:20px 22px 14px; border-bottom:1px solid var(--parchment-line); position:relative;}
+.card .cglyph{font-size:26px; margin-bottom:6px;}
+.card h2{font-family:'Montserrat',sans-serif; font-weight:800; font-size:20px; color:var(--ink-blue); line-height:1.15; padding-right:28px;}
+.card .cclose{position:absolute; top:14px; right:16px; background:none; border:none; font-size:24px; line-height:1; color:var(--faint); cursor:pointer;}
+.card .cclose:hover{color:var(--ink-blue);}
+.card .cbody{padding:16px 22px 22px;}
+.card .crow{display:flex; gap:9px; font-size:14px; color:#3a3f6b; margin-bottom:9px; align-items:flex-start;}
+.card .crow .k{flex:none; font-family:'Montserrat',sans-serif; font-weight:700; font-size:11px; letter-spacing:.05em; text-transform:uppercase;
+  color:var(--faint); width:64px; padding-top:2px;}
+.card .cbody .cdesc{font-size:14px; color:#3a3f6b; margin:4px 0 14px;}
+.card a.weblink{color:var(--wampum-deep); font-weight:700; text-decoration:none; border-bottom:2px solid var(--gold); word-break:break-word;}
+.card a.weblink:hover{background:rgba(252,163,21,.14);}
+.card .cmap{display:inline-block; margin-top:6px; font-family:'Montserrat',sans-serif; font-weight:700; font-size:12px;
+  text-transform:uppercase; letter-spacing:.04em; text-decoration:none; background:var(--ink-blue); color:var(--paper); padding:9px 16px; border-radius:8px;}
+.card .cmap:hover{background:#24287a;}
+
+.backmap{display:inline-block; margin-top:26px; font-family:'Montserrat',sans-serif; font-weight:700;
+  text-transform:uppercase; letter-spacing:.04em; font-size:13px; text-decoration:none;
+  background:var(--ink-blue); color:var(--paper); padding:13px 26px; border-radius:8px;}
+.backmap:hover{background:#24287a;}
+
+.foot{background:var(--ink-blue); color:var(--birch); text-align:center; padding:32px 24px; font-size:13px; border-top:3px solid var(--gold); margin-top:40px;}
+.foot a{color:var(--gold); text-decoration:none; letter-spacing:.06em; font-family:'Montserrat',sans-serif; font-weight:600; font-size:12px;}
+.foot .row{display:flex; gap:18px; justify-content:center; margin-top:10px; flex-wrap:wrap;}
+
+@media (max-width:640px){
+  .cell{min-height:74px;}
+  .cell .dnum{font-size:11px;}
+  .evt{font-size:0; padding:3px; border-left-width:6px; margin-bottom:2px;}
+  .evt .etime{font-size:0;}
+  .evt::after{content:""; }
+  .dow div{font-size:9px;}
+  .arow .atime{width:82px; font-size:12.5px;}
+  .monthlabel{min-width:130px; font-size:15px;}
+}
+</style>
+</head>
+<body>
+
+<nav class="sitenav">
+  <a class="brand" href="index.html">
+    <img src="images/raccoon-mark.svg" alt="">
+    <span class="stack"><span class="l1">Hilltowns</span><span class="l2">Folk Atlas</span></span>
+  </a>
+  <div class="links">
+    <a href="index.html">Atlas</a>
+    <a href="calendar.html" class="active">Calendar</a>
+    <a href="about.html">About</a>
+    <a href="https://instagram.com/NYHilltowners" class="ig" target="_blank" rel="noopener" title="@NYHilltowners on Instagram" aria-label="Instagram">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line></svg>
+    </a>
+  </div>
+</nav>
+
+<main class="wrap">
+  <div class="eyebrow">What's happening</div>
+  <h1>Event Calendar</h1>
+  <p class="lede">Upcoming events across the Helderberg-Hudson Hilltowns and the wider Catskills &amp; Hudson Valley. Tap any event for details, or open it on the Atlas map.</p>
+
+  <div class="controls">
+    <div class="monthnav">
+      <button id="prev" aria-label="Previous month">&larr;</button>
+      <div class="monthlabel" id="mlabel">—</div>
+      <button id="next" aria-label="Next month">&rarr;</button>
+      <button class="todaybtn" id="today">Today</button>
+    </div>
+    <div class="viewtoggle">
+      <button id="vMonth" class="on">Month</button>
+      <button id="vAgenda">Agenda</button>
+    </div>
+  </div>
+
+  <div class="grid-wrap" id="gridWrap">
+    <div class="dow"><div>Sun</div><div>Mon</div><div>Tue</div><div>Wed</div><div>Thu</div><div>Fri</div><div>Sat</div></div>
+    <div class="grid" id="grid"></div>
+  </div>
+
+  <div class="agenda" id="agenda"></div>
+
+  <a class="backmap" href="index.html">Explore the Atlas &rarr;</a>
+</main>
+
+<div class="modal" id="modal">
+  <div class="card" id="card"></div>
+</div>
+
+<footer class="foot">
+  <div>A community project of the NY Hilltowners.</div>
+  <div class="row">
+    <a href="index.html">Atlas</a>
+    <a href="about.html">About</a>
+    <a href="https://instagram.com/NYHilltowners" target="_blank" rel="noopener">@NYHilltowners</a>
+    <a href="https://forms.gle/AwjBQ4bjNB9GQJTc7" target="_blank" rel="noopener">Submit an event</a>
+  </div>
+</footer>
+
+<script src="data.js"></script>
+<script>
+(function(){
+  "use strict";
+  var DATA = (window.ATLAS_DATA && window.ATLAS_DATA.records) || [];
+  var MONTHS = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+  var DOWLONG = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
+
+  function pad(n){ return (n<10?"0":"")+n; }
+  function ymd(d){ return d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate()); }
+  function parseISO(s){
+    if(!s) return null;
+    var m = String(s).slice(0,10).match(/^(\d{4})-(\d{2})-(\d{2})$/);
+    if(!m) return null;
+    return new Date(+m[1], +m[2]-1, +m[3]);
+  }
+  var TODAY = new Date(); TODAY.setHours(0,0,0,0);
+
+  // Build the display date for an event: prefer nextOcc (recurring), else d1.
+  // A multi-day event (d1..d2) is shown on each day it spans within the visible month.
+  function eventsForRange(startDate, endDate){
+    // returns map "YYYY-MM-DD" -> [events], for single occurrences within [startDate,endDate]
+    var byDay = {};
+    function push(dstr, ev){ (byDay[dstr] || (byDay[dstr]=[])).push(ev); }
+    DATA.forEach(function(ev){
+      if(ev.ty !== "events") return;
+      var d1 = parseISO(ev.nextOcc) || parseISO(ev.d1);
+      if(!d1) return;
+      var d2 = parseISO(ev.d2) || d1;
+      if(d2 < d1) d2 = d1;
+      // clamp span; cap at 60 days to avoid runaway "permanent" exhibitions flooding every day
+      var span = Math.round((d2 - d1)/86400000);
+      var multiday = span > 0 && span <= 45;
+      if(multiday){
+        var cur = new Date(d1);
+        while(cur <= d2){
+          if(cur >= startDate && cur <= endDate) push(ymd(cur), ev);
+          cur.setDate(cur.getDate()+1);
+        }
+      } else {
+        // single-day (or an open-ended/very-long run: pin to its start only)
+        if(d1 >= startDate && d1 <= endDate) push(ymd(d1), ev);
+      }
+    });
+    // sort each day's events by time then title
+    Object.keys(byDay).forEach(function(k){
+      byDay[k].sort(function(a,b){
+        var ta = timeKey(a.tm), tb = timeKey(b.tm);
+        if(ta !== tb) return ta - tb;
+        return (a.t||"").localeCompare(b.t||"");
+      });
+    });
+    return byDay;
+  }
+
+  // crude time-to-minutes for sorting; untimed sorts last
+  function timeKey(tm){
+    tm = cleanTime(tm);
+    if(!tm) return 99999;
+    var m = String(tm).match(/(\d{1,2}):?(\d{2})?\s*([ap])\.?m/i);
+    if(!m) return 99998;
+    var h = +m[1] % 12; if(/p/i.test(m[3])) h += 12;
+    return h*60 + (m[2]?+m[2]:0);
+  }
+  // Some scraped events carry the recurrence day inside the time field,
+  // e.g. "Fridays, 6:30 PM" or "Saturdays, 7:00–11:00 PM". Strip that lead-in
+  // so the calendar shows a clean clock time, not "fridays,6:30pm".
+  function cleanTime(tm){
+    return String(tm||"").replace(/^\s*(?:mon|tues|tue|wednes|wed|thurs|thur|thu|fri|satur|sat|sun)(?:day)?s?\s*[,:]?\s*/i,"").trim();
+  }
+  function fmtTime(tm){
+    tm = cleanTime(tm);
+    if(!tm) return "All day";
+    // show just the start time, compacted
+    return tm.replace(/\s*[–-]\s*.*$/,"").replace(/:00/g,"").replace(/\s+/g,"").toLowerCase()
+      .replace(/([ap])m/,"$1m");
+  }
+
+  var view = "month";
+  var cursor = new Date(TODAY.getFullYear(), TODAY.getMonth(), 1);
+
+  var grid = document.getElementById("grid");
+  var agenda = document.getElementById("agenda");
+  var mlabel = document.getElementById("mlabel");
+  var gridWrap = document.getElementById("gridWrap");
+
+  function renderMonth(){
+    mlabel.textContent = MONTHS[cursor.getMonth()] + " " + cursor.getFullYear();
+    var first = new Date(cursor.getFullYear(), cursor.getMonth(), 1);
+    var startPad = first.getDay();
+    var gridStart = new Date(first); gridStart.setDate(1 - startPad);
+    var daysInMonth = new Date(cursor.getFullYear(), cursor.getMonth()+1, 0).getDate();
+    var totalCells = Math.ceil((startPad + daysInMonth)/7)*7;
+    var gridEnd = new Date(gridStart); gridEnd.setDate(gridStart.getDate()+totalCells-1);
+    var byDay = eventsForRange(gridStart, gridEnd);
+
+    grid.innerHTML = "";
+    var cur = new Date(gridStart);
+    for(var i=0;i<totalCells;i++){
+      var cell = document.createElement("div");
+      cell.className = "cell";
+      var inMonth = cur.getMonth() === cursor.getMonth();
+      if(!inMonth) cell.className += " blank";
+      var isToday = ymd(cur) === ymd(TODAY);
+      if(isToday) cell.className += " today";
+      var dnum = document.createElement("div"); dnum.className="dnum"; dnum.textContent = cur.getDate();
+      cell.appendChild(dnum);
+      var evs = byDay[ymd(cur)] || [];
+      var shown = evs.slice(0,3);
+      shown.forEach(function(ev){
+        var b = document.createElement("button"); b.className="evt";
+        b.title = ev.t || "";
+        var tspan = ev.tm ? '<span class="etime">'+esc(fmtTime(ev.tm))+'</span>' : '';
+        b.innerHTML = tspan + esc(ev.t||"(untitled)");
+        b.onclick = (function(e){ return function(){ openModal(e); }; })(ev);
+        cell.appendChild(b);
+      });
+      if(evs.length > shown.length){
+        var mo = document.createElement("div"); mo.className="more";
+        mo.textContent = "+"+(evs.length-shown.length)+" more";
+        mo.onclick = (function(dstr){ return function(){ view="agenda"; setView(); scrollToDay(dstr); }; })(ymd(cur));
+        cell.appendChild(mo);
+      }
+      grid.appendChild(cell);
+      cur.setDate(cur.getDate()+1);
+    }
+  }
+
+  function renderAgenda(){
+    mlabel.textContent = MONTHS[cursor.getMonth()] + " " + cursor.getFullYear();
+    var mStart = new Date(cursor.getFullYear(), cursor.getMonth(), 1);
+    var mEnd = new Date(cursor.getFullYear(), cursor.getMonth()+1, 0);
+    // Agenda for the visible month, but if it's the current month, start at today
+    var from = (cursor.getFullYear()===TODAY.getFullYear() && cursor.getMonth()===TODAY.getMonth()) ? TODAY : mStart;
+    var byDay = eventsForRange(from, mEnd);
+    var days = Object.keys(byDay).sort();
+    agenda.innerHTML = "";
+    if(!days.length){
+      agenda.innerHTML = '<div class="empty">No events listed for '+MONTHS[cursor.getMonth()]+' '+cursor.getFullYear()+'.<br>Try another month, or check back soon.</div>';
+      return;
+    }
+    days.forEach(function(dstr){
+      var d = parseISO(dstr);
+      var group = document.createElement("div"); group.className="daygroup"; group.id="day-"+dstr;
+      var head = document.createElement("div"); head.className="dayhead"+(dstr===ymd(TODAY)?" istoday":"");
+      head.innerHTML = '<span class="dd">'+MONTHS[d.getMonth()].slice(0,3)+' '+d.getDate()+'</span><span class="dw">'+DOWLONG[d.getDay()]+'</span>';
+      group.appendChild(head);
+      byDay[dstr].forEach(function(ev){
+        var row = document.createElement("div"); row.className="arow";
+        row.innerHTML =
+          '<div class="atime">'+esc(ev.tm ? shortRange(ev.tm) : "All day")+'</div>'+
+          '<div class="amain"><div class="atitle">'+esc(ev.t||"(untitled)")+'</div>'+
+          '<div class="ameta">'+esc([ev.ven, townOf(ev.addr)].filter(Boolean).join(" · "))+'</div></div>'+
+          (ev.g ? '<div class="aglyph">'+esc(ev.g)+'</div>' : '');
+        row.onclick = (function(e){ return function(){ openModal(e); }; })(ev);
+        group.appendChild(row);
+      });
+      agenda.appendChild(group);
+    });
+  }
+
+  function shortRange(tm){
+    return cleanTime(tm).replace(/:00/g,"").replace(/\s*([AP])M/gi, function(_,p){return p.toLowerCase()+"m";}).replace(/\s*–\s*/,"–");
+  }
+  function townOf(addr){
+    if(!addr) return "";
+    var parts = String(addr).split(",");
+    if(parts.length>=3) return parts[parts.length-3].trim() + ", " + parts[parts.length-2].trim().replace(/\s+\d.*$/,"");
+    if(parts.length===2) return parts[0].trim();
+    return "";
+  }
+
+  function scrollToDay(dstr){
+    setTimeout(function(){
+      var el = document.getElementById("day-"+dstr);
+      if(el) el.scrollIntoView({behavior:"smooth", block:"start"});
+    }, 40);
+  }
+
+  // ---- detail modal ----
+  var modal = document.getElementById("modal");
+  var card = document.getElementById("card");
+  function openModal(ev){
+    var d1 = parseISO(ev.nextOcc) || parseISO(ev.d1);
+    var dateStr = d1 ? (DOWLONG[d1.getDay()]+", "+MONTHS[d1.getMonth()]+" "+d1.getDate()+", "+d1.getFullYear()) : "";
+    var rows = "";
+    if(dateStr) rows += crow("When", dateStr + (ev.tm ? " · "+shortRange(ev.tm) : ""));
+    if(ev.ven) rows += crow("Where", esc(ev.ven));
+    if(ev.addr) rows += crow("", esc(ev.addr));
+    var body = "";
+    if(ev.s) body += '<div class="cdesc">'+esc(ev.s)+'</div>';
+    body += rows;
+    if(ev.web) body += crow("Link", '<a class="weblink" href="'+esc(ev.web)+'" target="_blank" rel="noopener">'+esc(ev.web.replace(/^https?:\/\//,"").replace(/\/$/,""))+'</a>');
+    var mapBtn = (ev.lat && ev.lng) ? '<a class="cmap" href="index.html?focus='+encodeURIComponent(ev.t||"")+'&lat='+ev.lat+'&lng='+ev.lng+'">View on the Atlas &rarr;</a>' : '';
+    card.innerHTML =
+      '<div class="chead">'+(ev.g?'<div class="cglyph">'+esc(ev.g)+'</div>':'')+
+      '<button class="cclose" aria-label="Close">&times;</button>'+
+      '<h2>'+esc(ev.t||"(untitled)")+'</h2></div>'+
+      '<div class="cbody">'+body+mapBtn+'</div>';
+    card.querySelector(".cclose").onclick = closeModal;
+    modal.classList.add("on");
+  }
+  function crow(k,v){ return '<div class="crow"><span class="k">'+esc(k)+'</span><span>'+v+'</span></div>'; }
+  function closeModal(){ modal.classList.remove("on"); }
+  modal.onclick = function(e){ if(e.target===modal) closeModal(); };
+  document.addEventListener("keydown", function(e){ if(e.key==="Escape") closeModal(); });
+
+  function esc(s){ return String(s==null?"":s).replace(/[&<>"']/g, function(c){
+    return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]; }); }
+
+  function render(){ if(view==="month"){ renderMonth(); } else { renderAgenda(); } }
+  function setView(){
+    document.getElementById("vMonth").classList.toggle("on", view==="month");
+    document.getElementById("vAgenda").classList.toggle("on", view==="agenda");
+    gridWrap.classList.toggle("off", view!=="month");
+    agenda.classList.toggle("on", view==="agenda");
+    render();
+  }
+
+  document.getElementById("prev").onclick = function(){ cursor.setMonth(cursor.getMonth()-1); render(); };
+  document.getElementById("next").onclick = function(){ cursor.setMonth(cursor.getMonth()+1); render(); };
+  document.getElementById("today").onclick = function(){ cursor = new Date(TODAY.getFullYear(), TODAY.getMonth(), 1); render(); };
+  document.getElementById("vMonth").onclick = function(){ view="month"; setView(); };
+  document.getElementById("vAgenda").onclick = function(){ view="agenda"; setView(); };
+
+  render();
+})();
+</script>
+</body>
+</html>

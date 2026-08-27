@@ -29,7 +29,7 @@
       "sheet": "Restaurants",
       "color": "#e05252",
       "default_on": true,
-      "glyph": "◎"
+      "glyph": "🍴"
     },
     {
       "key": "farmstands",

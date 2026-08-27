@@ -784,6 +784,9 @@ def main() -> int:
     # Standalone About page (hand-authored, not templated).
     if (ROOT / "about.html").exists():
         shutil.copyfile(ROOT / "about.html", SITE / "about.html")
+    # Standalone Event Calendar page (reads site/data.js at runtime).
+    if (ROOT / "calendar.html").exists():
+        shutil.copyfile(ROOT / "calendar.html", SITE / "calendar.html")
     if (ROOT / "images").exists():
         shutil.copytree(ROOT / "images", SITE / "images", dirs_exist_ok=True)
     if (ROOT / "fonts").exists():
