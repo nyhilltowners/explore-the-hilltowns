@@ -190,8 +190,8 @@ h1{font-family:'Montserrat',sans-serif; font-weight:800; text-transform:uppercas
       <button class="todaybtn" id="today">Today</button>
     </div>
     <div class="viewtoggle">
-      <button id="vMonth" class="on">Month</button>
-      <button id="vAgenda">Agenda</button>
+      <button id="vMonth">Month</button>
+      <button id="vAgenda" class="on">Agenda</button>
     </div>
   </div>
 
@@ -274,30 +274,84 @@ h1{font-family:'Montserrat',sans-serif; font-weight:800; text-transform:uppercas
     return byDay;
   }
 
-  // crude time-to-minutes for sorting; untimed sorts last
-  function timeKey(tm){
-    tm = cleanTime(tm);
-    if(!tm) return 99999;
-    var m = String(tm).match(/(\d{1,2}):?(\d{2})?\s*([ap])\.?m/i);
-    if(!m) return 99998;
-    var h = +m[1] % 12; if(/p/i.test(m[3])) h += 12;
-    return h*60 + (m[2]?+m[2]:0);
-  }
-  // Some scraped events carry the recurrence day inside the time field,
-  // e.g. "Fridays, 6:30 PM" or "Saturdays, 7:00–11:00 PM". Strip that lead-in
-  // so the calendar shows a clean clock time, not "fridays,6:30pm".
+  // ---- Time normalization ----------------------------------------------
+  // Event `tm` values arrive in many shapes:
+  //   "10:00:00" (24h+seconds, no meridiem), "7:00 PM", "9:00 AM – 2:00 PM",
+  //   "6:00 pm - 8:00 pm", "Thursdays, 5:00–6:00 PM", "Museum hours (seasonal)".
+  // We parse each clock time to minutes-since-midnight, then render a clean,
+  // consistent range like "10am–6pm". Non-numeric notes ("Museum hours…")
+  // pass through as-is so we never fabricate a time.
   function cleanTime(tm){
     return String(tm||"").replace(/^\s*(?:mon|tues|tue|wednes|wed|thurs|thur|thu|fri|satur|sat|sun)(?:day)?s?\s*[,:]?\s*/i,"").trim();
   }
+  // Parse a single clock token -> {min, mer} or null. Handles "10:00:00",
+  // "6:00 pm", "5", "10:30 AM". `ctx` supplies a meridiem when the token omits it.
+  function parseClock(tok){
+    var m = String(tok).trim().match(/^(\d{1,2})(?::(\d{2}))?(?::\d{2})?\s*([ap])\.?m?\.?/i);
+    if(m){
+      var h = +m[1] % 12; if(/p/i.test(m[3])) h += 12;
+      return { min: h*60 + (m[2]?+m[2]:0), hasMer:true };
+    }
+    // 24h or bare number, no meridiem: "10:00:00", "16:00", "10"
+    m = String(tok).trim().match(/^(\d{1,2})(?::(\d{2}))?(?::\d{2})?$/);
+    if(m){
+      var hh = +m[1];
+      return { min: hh*60 + (m[2]?+m[2]:0), hasMer:false, raw24: hh>=13 || hh===0 };
+    }
+    return null;
+  }
+  function minToLabel(min){
+    var h = Math.floor(min/60), mm = min%60;
+    var mer = h>=12 ? "pm" : "am";
+    var h12 = h%12; if(h12===0) h12=12;
+    return h12 + (mm? ":"+(mm<10?"0":"")+mm : "") + mer;
+  }
+  // Full parse of a tm string into {start, end, note}. If it isn't clock-like,
+  // returns {note: <original cleaned text>} so callers can show it verbatim.
+  function parseRange(tm){
+    var s = cleanTime(tm);
+    if(!s) return {empty:true};
+    // split on dash/en-dash/"to"
+    var parts = s.split(/\s*(?:[–—-]|\bto\b)\s*/i);
+    var a = parseClock(parts[0]);
+    var b = parts.length>1 ? parseClock(parts[1]) : null;
+    if(!a){
+      // not a clock time — a note like "Museum hours (seasonal)". Keep it, but
+      // trim to something short-ish.
+      return {note:s};
+    }
+    // If one side had no meridiem, infer from the side that did.
+    if(b){
+      if(!a.hasMer && b.hasMer){
+        // borrow b's am/pm if a would otherwise be ambiguous & a<12h
+        if(!a.raw24 && a.min < 12*60 && b.min >= 12*60 && a.min+ (12*60) <= b.min) a.min += 12*60;
+      }
+    }
+    return { start:a.min, end: b? b.min : null };
+  }
+  // sort key: minutes of the start; untimed/notes sort last
+  function timeKey(tm){
+    var r = parseRange(tm);
+    if(r.empty) return 99999;
+    if(r.note!=null) return 99990;      // notes after timed, before truly empty
+    return r.start;
+  }
+  // compact single-time for month chips: just the start ("10am")
   function fmtTime(tm){
-    tm = cleanTime(tm);
-    if(!tm) return "All day";
-    // show just the start time, compacted
-    return tm.replace(/\s*[–-]\s*.*$/,"").replace(/:00/g,"").replace(/\s+/g,"").toLowerCase()
-      .replace(/([ap])m/,"$1m");
+    var r = parseRange(tm);
+    if(r.empty) return "All day";
+    if(r.note!=null) return r.note.length>10 ? r.note.slice(0,10)+"\u2026" : r.note;
+    return minToLabel(r.start);
+  }
+  // full range for agenda/modal ("10am\u20136pm")
+  function shortRange(tm){
+    var r = parseRange(tm);
+    if(r.empty) return "All day";
+    if(r.note!=null) return r.note;
+    return minToLabel(r.start) + (r.end!=null ? "\u2013"+minToLabel(r.end) : "");
   }
 
-  var view = "month";
+  var view = "agenda";
   var cursor = new Date(TODAY.getFullYear(), TODAY.getMonth(), 1);
 
   var grid = document.getElementById("grid");
@@ -380,9 +434,6 @@ h1{font-family:'Montserrat',sans-serif; font-weight:800; text-transform:uppercas
     });
   }
 
-  function shortRange(tm){
-    return cleanTime(tm).replace(/:00/g,"").replace(/\s*([AP])M/gi, function(_,p){return p.toLowerCase()+"m";}).replace(/\s*–\s*/,"–");
-  }
   function townOf(addr){
     if(!addr) return "";
     var parts = String(addr).split(",");
@@ -444,7 +495,7 @@ h1{font-family:'Montserrat',sans-serif; font-weight:800; text-transform:uppercas
   document.getElementById("vMonth").onclick = function(){ view="month"; setView(); };
   document.getElementById("vAgenda").onclick = function(){ view="agenda"; setView(); };
 
-  render();
+  setView();
 })();
 </script>
 </body>
