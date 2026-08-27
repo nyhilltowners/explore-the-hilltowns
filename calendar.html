@@ -54,6 +54,7 @@ body{
 h1{font-family:'Montserrat',sans-serif; font-weight:800; text-transform:uppercase; letter-spacing:.03em;
   font-size:clamp(26px,5vw,38px); color:var(--ink-blue); line-height:1.08; margin-bottom:10px;}
 .lede{font-size:16px; color:#3a3f6b; margin-bottom:24px; max-width:640px;}
+.lede .corenote{color:var(--gold-ink); font-weight:700; box-shadow:inset 0 -8px 0 rgba(252,163,21,.22);}
 
 /* controls bar */
 .controls{display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px; margin-bottom:22px;}
@@ -93,6 +94,8 @@ h1{font-family:'Montserrat',sans-serif; font-weight:800; text-transform:uppercas
   color:var(--ink-blue); font-size:11.5px; line-height:1.25; padding:3px 5px; margin-bottom:3px; border-radius:0 4px 4px 0;
   cursor:pointer; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; transition:.12s;}
 .evt:hover{background:rgba(255,111,94,.26);}
+.evt.core{background:rgba(252,163,21,.16); border-left-color:var(--gold);}
+.evt.core:hover{background:rgba(252,163,21,.3);}
 .evt .etime{font-weight:700; color:var(--wampum-deep); margin-right:4px;}
 .more{font-size:10.5px; font-weight:700; color:var(--faint); cursor:pointer; padding:1px 5px;}
 .more:hover{color:var(--gold);}
@@ -111,6 +114,10 @@ h1{font-family:'Montserrat',sans-serif; font-weight:800; text-transform:uppercas
 .arow{display:flex; gap:12px; align-items:flex-start; padding:11px 16px; border-bottom:1px solid var(--parchment-line); cursor:pointer; transition:.12s;}
 .arow:last-child{border-bottom:none;}
 .arow:hover{background:#fffdf7;}
+/* Core-hilltowns events get a gold left bar + faint wash for prominence. */
+.arow.core{border-left:4px solid var(--gold); background:rgba(252,163,21,.06); padding-left:12px;}
+.arow.core:hover{background:rgba(252,163,21,.12);}
+.arow.core .atitle::after{content:"★"; color:var(--gold); font-size:11px; margin-left:7px; vertical-align:2px;}
 .arow .atime{flex:none; width:104px; font-weight:700; color:var(--wampum-deep); font-size:13.5px;}
 .arow .amain{flex:1; min-width:0;}
 .arow .atitle{font-weight:700; color:var(--ink-blue); font-size:15px;}
@@ -180,7 +187,7 @@ h1{font-family:'Montserrat',sans-serif; font-weight:800; text-transform:uppercas
 <main class="wrap">
   <div class="eyebrow">What's happening</div>
   <h1>Event Calendar</h1>
-  <p class="lede">Upcoming events across the Helderberg-Hudson Hilltowns and the wider Catskills &amp; Hudson Valley. Tap any event for details, or open it on the Atlas map.</p>
+  <p class="lede">Upcoming events across the Helderberg-Hudson Hilltowns and the wider Catskills &amp; Hudson Valley. Tap any event for details, or open it on the Atlas map. Events in our core hilltowns &mdash; <span class="corenote">Rensselaerville, Berne, Knox, Westerlo, Oak Hill, Potter Hollow, Medusa, and Preston Hollow</span> &mdash; are marked with a gold bar.</p>
 
   <div class="controls">
     <div class="monthnav">
@@ -383,7 +390,7 @@ h1{font-family:'Montserrat',sans-serif; font-weight:800; text-transform:uppercas
       var evs = byDay[ymd(cur)] || [];
       var shown = evs.slice(0,3);
       shown.forEach(function(ev){
-        var b = document.createElement("button"); b.className="evt";
+        var b = document.createElement("button"); b.className="evt"+(isCoreTown(ev)?" core":"");
         b.title = ev.t || "";
         var tspan = ev.tm ? '<span class="etime">'+esc(fmtTime(ev.tm))+'</span>' : '';
         b.innerHTML = tspan + esc(ev.t||"(untitled)");
@@ -421,7 +428,7 @@ h1{font-family:'Montserrat',sans-serif; font-weight:800; text-transform:uppercas
       head.innerHTML = '<span class="dd">'+MONTHS[d.getMonth()].slice(0,3)+' '+d.getDate()+'</span><span class="dw">'+DOWLONG[d.getDay()]+'</span>';
       group.appendChild(head);
       byDay[dstr].forEach(function(ev){
-        var row = document.createElement("div"); row.className="arow";
+        var row = document.createElement("div"); row.className="arow"+(isCoreTown(ev)?" core":"");
         row.innerHTML =
           '<div class="atime">'+esc(ev.tm ? shortRange(ev.tm) : "All day")+'</div>'+
           '<div class="amain"><div class="atitle">'+esc(ev.t||"(untitled)")+'</div>'+
@@ -440,6 +447,20 @@ h1{font-family:'Montserrat',sans-serif; font-weight:800; text-transform:uppercas
     if(parts.length>=3) return parts[parts.length-3].trim() + ", " + parts[parts.length-2].trim().replace(/\s+\d.*$/,"");
     if(parts.length===2) return parts[0].trim();
     return "";
+  }
+
+  // Core hilltowns — events in these get a gold highlight bar for prominence.
+  // Matched against the event's address + venue text, case-insensitive, on word
+  // boundaries so "Berne" doesn't match "Bernese" and "Knox" is whole-word.
+  var CORE_TOWNS = [
+    "Rensselaerville","Berne","Knox","Westerlo","Oak Hill",
+    "Potter Hollow","Medusa","Preston Hollow","Preston-Potter Hollow"
+  ];
+  var CORE_RE = new RegExp("\\b(" + CORE_TOWNS.map(function(t){
+    return t.replace(/[-\s]/g,"[-\\s]");   // allow hyphen/space variants
+  }).join("|") + ")\\b", "i");
+  function isCoreTown(ev){
+    return CORE_RE.test(String(ev.addr||"") + " " + String(ev.ven||""));
   }
 
   function scrollToDay(dstr){
