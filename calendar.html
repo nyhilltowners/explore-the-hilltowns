@@ -484,12 +484,11 @@ h1{font-family:'Montserrat',sans-serif; font-weight:800; text-transform:uppercas
     if(ev.s) body += '<div class="cdesc">'+esc(ev.s)+'</div>';
     body += rows;
     if(ev.web) body += crow("Link", '<a class="weblink" href="'+esc(ev.web)+'" target="_blank" rel="noopener">'+esc(ev.web.replace(/^https?:\/\//,"").replace(/\/$/,""))+'</a>');
-    var mapBtn = (ev.lat && ev.lng) ? '<a class="cmap" href="index.html?focus='+encodeURIComponent(ev.t||"")+'&lat='+ev.lat+'&lng='+ev.lng+'">View on the Atlas &rarr;</a>' : '';
     card.innerHTML =
       '<div class="chead">'+(ev.g?'<div class="cglyph">'+esc(ev.g)+'</div>':'')+
       '<button class="cclose" aria-label="Close">&times;</button>'+
       '<h2>'+esc(ev.t||"(untitled)")+'</h2></div>'+
-      '<div class="cbody">'+body+mapBtn+'</div>';
+      '<div class="cbody">'+body+'</div>';
     card.querySelector(".cclose").onclick = closeModal;
     modal.classList.add("on");
   }

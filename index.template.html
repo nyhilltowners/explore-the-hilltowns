@@ -1096,6 +1096,7 @@ function popupBody(r){
   }
   return '<div class="pm">'+esc(r.n||'—')+(r.p?' · '+esc(r.p):'')+'</div>'
     + '<span class="chip '+r.tier+'">'+TIER_LABEL[r.tier]+'</span>'
+    + (r.tags && r.tags.length ? '<div>'+tagChips(r)+'</div>' : '')
     + '<div class="ps">'+esc(r.s||r.b||'')+'</div>';
 }
 function imgTag(r, cls){
@@ -1306,11 +1307,34 @@ if(window.matchMedia('(max-width:760px)').matches){
   document.querySelector('.controls').classList.add('fcollapsed');
   _fc.innerHTML = 'Show categories &#9662;';
 }
-_fc.onclick = function(){
+function _fcToggle(){
   var c = document.querySelector('.controls');
   c.classList.toggle('fcollapsed');
   _fc.innerHTML = c.classList.contains('fcollapsed') ? 'Show categories &#9662;' : 'Hide categories &#9652;';
-};
+}
+// On touch devices a plain click can be swallowed or delayed (feels like it takes
+// two taps or sticks). Fire on a clean tap: pointerup with negligible movement,
+// with a click fallback for mouse/keyboard. touch-action:manipulation drops the
+// 300ms delay. We guard against double-firing (pointer + click) with a timestamp.
+_fc.style.touchAction = 'manipulation';
+var _fcLast = 0;
+function _fcFire(){
+  var now = Date.now();
+  if(now - _fcLast < 400) return;   // ignore the paired click after a pointer tap
+  _fcLast = now;
+  _fcToggle();
+}
+if(window.PointerEvent){
+  var _px=0,_py=0,_pmoved=false;
+  _fc.addEventListener('pointerdown', function(e){ _px=e.clientX; _py=e.clientY; _pmoved=false; }, {passive:true});
+  _fc.addEventListener('pointermove', function(e){
+    if(Math.abs(e.clientX-_px)>8 || Math.abs(e.clientY-_py)>8) _pmoved=true;
+  }, {passive:true});
+  _fc.addEventListener('pointerup', function(e){ if(!_pmoved) _fcFire(); });
+  _fc.addEventListener('click', function(e){ e.preventDefault(); _fcFire(); });
+} else {
+  _fc.addEventListener('click', _fcFire);
+}
 
 function catMark(c){
   if(c.schema==='folklore') return '<span class="catmark ochre">𖦹</span>';

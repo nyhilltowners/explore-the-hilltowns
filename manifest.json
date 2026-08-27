@@ -121,7 +121,7 @@
     },
     {
       "key": "poi",
-      "label": "Points of Interest",
+      "label": "Historical Markers",
       "schema": "poi",
       "workbook": "data/points_of_interest.xlsx",
       "sheet": "Points of Interest",
