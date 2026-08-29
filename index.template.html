@@ -36,8 +36,74 @@ html,body{height:100%;}
 body{
   font-family:'Lato',ui-sans-serif,system-ui,sans-serif;
   background:var(--ink); color:var(--lichen); overflow:hidden;
+  display:flex; flex-direction:column;
 }
-.app{display:flex; height:100vh; width:100vw;}
+.app{display:flex; flex:1 1 auto; min-height:0; width:100vw;}
+
+/* ---------- Universal header (shared house style across all pages) ---------- */
+.sitenav{
+  position:relative; z-index:2500; flex:none;   /* above #mapnotice(2000); below mobile full-screen #detail(3000) */
+  display:flex; align-items:center; justify-content:space-between;
+  padding:8px 20px; background:var(--parchment);
+  border-bottom:3px solid var(--ink-blue); box-shadow:0 2px 8px rgba(0,0,60,.15);
+}
+.sitenav .brand{
+  display:flex; align-items:center; gap:8px; text-decoration:none;
+  font-family:'Montserrat',sans-serif; font-weight:800; text-transform:uppercase;
+  letter-spacing:.05em; color:var(--ink-blue);
+}
+.sitenav .brand img{height:42px; width:auto; flex:none; display:block;}
+.sitenav .brand .stack{display:flex; flex-direction:column; line-height:1.03; margin-left:2px;}
+.sitenav .brand .stack .l1{font-size:16px; display:block;}
+.sitenav .brand .stack .l2{font-size:16px; display:block; transform:scaleX(0.979); transform-origin:left center;}
+.sitenav .hright{display:flex; align-items:center; gap:2px;}
+.sitenav .links{display:flex; align-items:center; gap:4px;}
+.sitenav .links a{
+  font-family:'Montserrat',sans-serif; font-weight:600; font-size:12.5px;
+  letter-spacing:.08em; text-transform:uppercase; text-decoration:none;
+  color:var(--ink-blue); padding:8px 14px; border-radius:6px; transition:.15s;
+}
+.sitenav .links a:hover{background:rgba(26,29,92,.07);}
+.sitenav .links a.active{color:var(--gold);}
+.sitenav .links a.ig{display:flex; align-items:center; justify-content:center; padding:7px; margin-left:2px; color:var(--ink-blue);}
+.sitenav .links a.ig:hover{background:rgba(26,29,92,.07); color:var(--gold);}
+.sitenav .links a.ig svg{width:22px; height:22px; display:block;}
+.iconbtn{display:flex; align-items:center; justify-content:center; background:none; border:none;
+  cursor:pointer; padding:8px; border-radius:6px; color:var(--ink-blue); transition:.15s;}
+.iconbtn:hover{background:rgba(26,29,92,.07); color:var(--gold);}
+.iconbtn svg{width:22px; height:22px; display:block;}
+#menuToggle{display:none;}
+/* Search overlay: drops from the header, anchored to it, over the map. */
+#searchbar{
+  display:none; position:absolute; top:100%; left:0; right:0; z-index:1999;
+  padding:10px 20px 12px; background:var(--parchment);
+  border-bottom:3px solid var(--ink-blue); box-shadow:0 10px 24px rgba(0,0,60,.18);
+  align-items:center; gap:10px;
+}
+#searchbar.open{display:flex;}
+#searchbar input[type=text]{
+  flex:1; background:#fff; border:2px solid var(--parchment-line); color:var(--ink-blue);
+  border-radius:8px; padding:9px 13px; font-size:15px; font-family:inherit; outline:none;
+}
+#searchbar input[type=text]::placeholder{color:#9a937c;}
+#searchbar input[type=text]:focus{border-color:var(--gold);}
+#searchClose{font-size:22px; line-height:1; color:var(--ink-blue); flex:none;}
+@media (max-width:760px){
+  .sitenav .brand img{height:36px;}
+  .sitenav .brand .stack .l1, .sitenav .brand .stack .l2{font-size:14px;}
+  .sitenav{padding:6px 12px;}
+  #menuToggle{display:flex;}
+  .sitenav .links{
+    display:none; position:absolute; top:100%; left:0; right:0;
+    flex-direction:column; align-items:stretch; gap:0;
+    background:var(--parchment); border-bottom:3px solid var(--ink-blue);
+    box-shadow:0 12px 26px rgba(0,0,60,.22); padding:6px 10px 12px; z-index:2001;
+  }
+  .sitenav .links.open{display:flex;}
+  .sitenav .links a{padding:13px 14px; font-size:14px;}
+  .sitenav .links a.ig{align-self:flex-start;}
+  #searchbar{padding:8px 12px 10px;}
+}
 #sheetHandle{display:none;}   /* mobile-only; shown in the max-width:760px query */
 
 /* ---------- Sidebar ---------- */
@@ -48,52 +114,24 @@ body{
   background-size:7px 7px;
   border-right:1px solid #26268f; position:relative; z-index:1000;
 }
-.masthead{padding:18px 22px 12px; border-bottom:1px solid var(--parchment-line); background:transparent;}
 .eyebrow{
   font-family:'Montserrat',ui-sans-serif,system-ui,sans-serif;
   font-size:10px; letter-spacing:.22em; text-transform:uppercase; color:var(--birch);
 }
-.masthead h1{font-family:'Montserrat',ui-sans-serif,system-ui,sans-serif; font-size:21px; font-weight:800; line-height:1.2; margin-top:0; letter-spacing:.05em; text-transform:uppercase; color:var(--ink-blue); display:flex; align-items:center; gap:6px;}
-.masthead h1 .mast-logo{width:46px; height:46px; flex:none; object-fit:contain; transform:scale(1.55); transform-origin:center; margin-right:-2px;}
-/* stacked title: "Hilltowns" over "Folk Atlas", both the same width; nudged right to clear the raccoon */
-.masthead h1 .mast-words{display:inline-flex; flex-direction:column; align-items:flex-start; line-height:1.05; margin-left:10px;}
-.masthead h1 .mast-line1{display:block;}
-.masthead h1 .mast-line2{display:block; transform-origin:left center; transform:scaleX(0.979); white-space:nowrap;}
-.planrow{display:flex; align-items:center; gap:8px; margin-top:9px;
-  font-family:'Montserrat',ui-sans-serif,system-ui,sans-serif; font-size:11px; color:var(--birch);}
-.planrow input[type=date]{flex:1; background:#0d0d73; border:1px solid #2e2ea8; border-radius:7px;
-  color:var(--lichen); padding:5px 8px; font-family:inherit; font-size:12px; color-scheme:dark;}
-.planrow input[type=date].active{border-color:var(--wampum);}
-.planrow .btn{padding:4px 9px;}
-.epigraph{font-size:12px; font-style:italic; color:#6b6552; line-height:1.5; margin:11px 1px 3px;}
-.navfoot{display:flex; align-items:center; justify-content:space-between; margin-top:11px; padding-top:10px; border-top:1px solid #2e2ea8;}
-.navfoot .iglink{font-family:'Montserrat',ui-sans-serif,system-ui,sans-serif; font-size:11px; letter-spacing:.1em; color:var(--gold); text-decoration:none;}
-.navfoot .iglink:hover{color:var(--paper); text-decoration:underline;}
-.navfoot #btnAbout{padding:4px 10px; font-size:11px; background:#12127a; border-color:#2e2ea8; color:var(--lichen);}
-.navfoot #btnAbout:hover{border-color:var(--gold);}
-.secondary-nav{flex:none; padding:12px 22px 14px; border-top:1px solid #26268f; background:var(--ink2);}
-.secondary-nav .planrow{margin-top:0; margin-bottom:9px; color:var(--birch);}
-.secondary-nav input[type=date]{flex:1; background:#0d0d73; border:1px solid #2e2ea8; border-radius:7px;
-  color:var(--lichen); padding:5px 8px; font-family:inherit; font-size:12px; color-scheme:dark;}
-.secondary-nav input[type=date].active{border-color:var(--gold);}
-.secondary-nav .btn{padding:4px 9px; background:#12127a; border-color:#2e2ea8; color:var(--lichen);}
-.secondary-nav .btn:hover{border-color:var(--gold);}
-.superhead{font-family:'Montserrat',ui-sans-serif,system-ui,sans-serif; font-size:9.5px;
-  letter-spacing:.18em; text-transform:uppercase; color:var(--birch); line-height:1.5; margin-bottom:6px;}
-.superhead .iglink{color:var(--gold); text-decoration:none; letter-spacing:.14em;}
-.superhead .iglink:hover{color:var(--paper); text-decoration:underline;}
+/* "Plan ahead" look-ahead picker — lives in the filters area with the categories */
+.planrow{display:flex; align-items:center; gap:8px; margin:8px 0 4px;
+  font-family:'Montserrat',ui-sans-serif,system-ui,sans-serif; font-size:11px; color:#4a4f7a;}
+.planrow input[type=date]{flex:1; background:#fff; border:1px solid #c9cdec; border-radius:7px;
+  color:var(--ink-blue); padding:5px 8px; font-family:inherit; font-size:12px;}
+.planrow input[type=date].active{border-color:var(--gold);}
+.planrow .btn{padding:4px 9px; background:#eef0fb; border-color:#c9cdec; color:#2b2f57;}
 
 .controls{padding:12px 22px 12px; border-bottom:1px solid var(--parchment-line); background:transparent;}
+.epigraph{font-size:12px; font-style:italic; color:#6b6552; line-height:1.5; margin:11px 1px 3px;}
 .controls .epigraph{color:#4a4f7a;}
 .controls #filtersToggle{background:#eef0fb; border-color:#c9cdec; color:#2b2f57;}
-.controls.fcollapsed .cats, .controls.fcollapsed .epigraph{display:none;}
+.controls.fcollapsed .cats, .controls.fcollapsed .epigraph, .controls.fcollapsed .planrow{display:none;}
 .controls #filtersToggle:hover{border-color:var(--gold);}
-.controls input[type=text], .secondary-nav input[type=text]{
-  width:100%; background:var(--ink3); border:1px solid #2e2ea8; color:var(--lichen);
-  border-radius:6px; padding:8px 11px; font-size:13.5px; font-family:inherit; outline:none;
-}
-.controls input[type=text]::placeholder, .secondary-nav input[type=text]::placeholder{color:var(--faint);}
-.controls input[type=text]:focus, .secondary-nav input[type=text]:focus{border-color:var(--gold);}
 .cats{display:flex; flex-direction:column; gap:0; margin-top:6px;}
 .catbox{display:flex; align-items:center; gap:10px; cursor:pointer; user-select:none;
   font-family:'Montserrat',ui-sans-serif,system-ui,sans-serif; font-size:12.5px; color:var(--ink-blue);
@@ -187,7 +225,6 @@ a.weblink:hover{text-decoration:underline;}
 .likebtn:hover{border-color:#e0526e;}
 .likebtn:active{transform:scale(1.25);}
 .likebtn .lc{color:var(--birch); margin-left:3px; font-size:11px;}
-.masthead{position:relative;}
 #filtersToggle{display:block; width:100%; margin-top:0; margin-bottom:2px;}
 @media (max-width:760px){
   #filtersToggle{display:block;}
@@ -260,7 +297,7 @@ a.weblink:hover{text-decoration:underline;}
   /* Sidebar becomes a draggable bottom sheet overlaid on the map. Its height is
      driven by the --sheet CSS var (set by drag JS); it can be pulled up over the
      map for free list scrolling, or down to a peek. */
-  #mapwrap{height:100vh; order:1;}
+  #mapwrap{height:100%; order:1;}
   #sidebar{
     position:fixed; left:0; right:0; bottom:0; z-index:1500;
     width:100%; min-width:0;
@@ -281,22 +318,23 @@ a.weblink:hover{text-decoration:underline;}
     content:''; position:absolute; top:8px; left:50%; transform:translateX(-50%);
     width:40px; height:4px; border-radius:2px; background:#b9b09a;
   }
-  .masthead{padding:6px 16px 8px;} .masthead h1{font-size:17px;} .masthead h1 .mast-logo{width:38px; height:38px; transform:scale(1.5);} .masthead h1 .mast-words{margin-left:8px;}
   .controls,.card,.grouphead{padding-left:16px; padding-right:16px;}
   /* On the mobile bottom-sheet the category list can be taller than the sheet.
      Let .controls take the available height and scroll internally so every
      checkbox (through Points of Interest) is reachable. #listwrap yields. */
   .controls{flex:1 1 auto; min-height:0; overflow-y:auto; -webkit-overflow-scrolling:touch; overscroll-behavior:contain;}
   #listwrap{flex:0 1 34%; min-height:0;}
+  /* collapsed filters shrink to their button; the list takes the freed room */
+  .controls.fcollapsed{flex:0 0 auto;}
+  .controls.fcollapsed + #listwrap{flex:1 1 auto;}
   #sidebar{min-height:0;}
   #layers{bottom:12px; right:auto; left:12px;}
   #layersToggle{display:block; position:absolute; bottom:12px; left:12px; z-index:901;
     background:rgba(0,0,77,.9); box-shadow:0 2px 8px rgba(0,0,0,.35);}
   #layers.collapsed{display:none;}
   .mapbar{top:auto; bottom:12px;}
-  /* Give the calendar/search block room to clear the phone's home indicator so its
-     controls are always fully visible when the sheet is open. */
-  .secondary-nav{padding-bottom:calc(18px + env(safe-area-inset-bottom, 12px));}
+  /* Clear the phone's home indicator so the last list rows stay reachable. */
+  #listwrap{padding-bottom:env(safe-area-inset-bottom, 12px);}
 
   /* Detail & About break out to full-screen on mobile so the scroll area is
      tall enough to reach bottom links. */
@@ -312,35 +350,50 @@ a.weblink:hover{text-decoration:underline;}
 </style>
 </head>
 <body>
+<nav class="sitenav">
+  <a class="brand" href="index.html">
+    <img src="images/raccoon-mark.svg" alt="">
+    <span class="stack"><span class="l1">Hilltowns</span><span class="l2">Folk Atlas</span></span>
+  </a>
+  <div class="hright">
+    <div class="links" id="hnav">
+      <a href="index.html" class="active">Atlas</a>
+      <a href="calendar.html">Calendar</a>
+      <a href="directory.html">Directory</a>
+      <a href="about.html">About</a>
+      <a href="https://instagram.com/NYHilltowners" class="ig" target="_blank" rel="noopener" title="@NYHilltowners on Instagram" aria-label="Instagram">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line></svg>
+      </a>
+    </div>
+    <button class="iconbtn" id="searchToggle" title="Search the atlas" aria-label="Search" aria-expanded="false">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"></circle><line x1="21" y1="21" x2="16.2" y2="16.2"></line></svg>
+    </button>
+    <button class="iconbtn" id="menuToggle" title="Menu" aria-label="Menu" aria-expanded="false">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="4" y1="7" x2="20" y2="7"></line><line x1="4" y1="12" x2="20" y2="12"></line><line x1="4" y1="17" x2="20" y2="17"></line></svg>
+    </button>
+  </div>
+  <div id="searchbar">
+    <input type="text" id="q" placeholder="Search the atlas &mdash; places, events, stories&hellip;" autocomplete="off">
+    <button class="iconbtn" id="searchClose" title="Clear search and close" aria-label="Clear search and close">&times;</button>
+  </div>
+</nav>
 <div class="app">
   <div id="sidebar">
     <div id="sheetHandle" aria-hidden="true"></div>
-    <div class="masthead">
-      <h1><img src="images/raccoon-mark.svg" alt="" class="mast-logo"><span class="mast-words"><span class="mast-line1">Hilltowns</span><span class="mast-line2">Folk Atlas</span></span></h1>
-    </div>
 
     <div class="controls">
-      <button class="btn" id="filtersToggle" title="Collapse categories to browse the map">Hide categories &#9652;</button>
+      <button class="btn" id="filtersToggle" title="Collapse filters to browse the map">Hide filters &#9652;</button>
+      <div class="planrow">
+        <label for="planPick">Plan ahead:</label>
+        <input type="date" id="planPick">
+        <button class="btn" id="planClear" title="Back to today" style="display:none;">&times;</button>
+      </div>
       <div class="cats" id="catsMain"></div>
       <div class="epigraph">People have been sharing stories in these hills since long before you were here, and will be long after you&#8217;re gone&#8230;</div>
       <div class="cats" id="catsStory"></div>
     </div>
 
     <div id="listwrap"></div>
-
-    <div class="secondary-nav" id="secondaryNav">
-      <div class="planrow">
-        <label for="planPick">Plan ahead:</label>
-        <input type="date" id="planPick">
-        <button class="btn" id="planClear" title="Back to today" style="display:none;">&times;</button>
-      </div>
-      <input type="text" id="q" placeholder="Search…" autocomplete="off">
-      <div class="navfoot">
-        <a href="https://instagram.com/NYHilltowners" target="_blank" rel="noopener" class="iglink">@NYHilltowners</a>
-        <a href="calendar.html" class="btn" title="Event calendar" style="text-decoration:none;">&#128197; Calendar</a>
-        <a href="about.html" class="btn" title="About this atlas" style="text-decoration:none;">&#9432; About</a>
-      </div>
-    </div>
 
     <div id="detail">
       <div class="detail-head">
@@ -966,6 +1019,7 @@ function searchTag(tg){
   if(currentPopup) currentPopup.remove();
   var q = document.getElementById('q');
   q.value = tg;
+  openSearch();   /* the query must stay visible while it filters */
   renderList();
 }
 function cardMeta(r){
@@ -996,7 +1050,8 @@ function updateOnlinePill(){
 }
 function longrunAtEdge(r, ref){
   /* First/last 2 days of a long continuous run: the "just opened" and "last
-     chance" windows. Shared by list ranking and pin sizing so they can't drift. */
+     chance" windows. Used by MAP PIN sizing only — the list now always sorts
+     multi-day runs to the bottom of their day (Laurie, Aug 29 2026). */
   var s = r.d1 || '9999-99-99', e = r.d2 || r.d1 || '9999-99-99';
   return (ref <= isoAddDays(s, 1)) || (ref >= isoAddDays(e, -1));
 }
@@ -1004,9 +1059,10 @@ function evStartKey(r){
   /* Rank by the NEXT date you could actually attend, not the arbitrary listed
      start. Recurring events rank on their true next occurrence. A continuous run
      already under way ranks as today ("available now"). Within the same date:
-     unique one-offs and just-opened/last-chance long-runs lead; then recurring;
-     then long-runs in the middle of their run (deprioritized, but still shown);
-     final tie-break the one ENDING sooner (catch it before it's gone). */
+     single-day events lead, then recurring series, and ANY multi-day run (short
+     festival or months-long exhibit) sorts to the BOTTOM of that day's list, so
+     ongoing programs never crowd out the day's unique items or read as stale.
+     Final tie-break: the one ENDING sooner (catch it before it's gone). */
   var s = r.d1 || '9999-99-99', e = r.d2 || r.d1 || '9999-99-99';
   var nextDate;
   if(r.nextOcc){
@@ -1016,14 +1072,11 @@ function evStartKey(r){
   }
   var live = (nextDate <= TODAY_E && e >= TODAY_E) ? 0 : 1;
   var cls = evClass(r);
+  var multiday = !!(r.d1 && r.d2 && r.d2 !== r.d1);
   var crank;
-  if(cls==='oneoff'){
-    crank = 0;
-  } else if(cls==='recurring'){
-    crank = 1;
-  } else {                                          /* longrun */
-    crank = longrunAtEdge(r, planDate || TODAY_E) ? 0 : 3; /* just-opened/last-chance -> top; mid-run -> bottom */
-  }
+  if(cls==='recurring'){ crank = 1; }               /* a recurrence is a single-day occurrence */
+  else if(multiday){ crank = 3; }                   /* >1 day long -> bottom of the day */
+  else { crank = 0; }
   return live + '|' + nextDate + '|' + crank + '|' + e;
 }
 function cmpListOrder(a, b){
@@ -1276,6 +1329,47 @@ document.getElementById('btnBack').onclick = closeDetail;
 
 /* ============ CONTROLS ============ */
 document.getElementById('q').addEventListener('input', renderList);
+
+/* --- universal header: mobile menu + search overlay --- */
+var _hnav = document.getElementById('hnav');
+var _menuT = document.getElementById('menuToggle');
+var _sbar = document.getElementById('searchbar');
+var _sT = document.getElementById('searchToggle');
+var _sX = document.getElementById('searchClose');
+var _qEl = document.getElementById('q');
+_menuT.style.touchAction = 'manipulation';
+_sT.style.touchAction = 'manipulation';
+_menuT.addEventListener('click', function(e){
+  e.stopPropagation();
+  var open = _hnav.classList.toggle('open');
+  _menuT.setAttribute('aria-expanded', open ? 'true' : 'false');
+  if(open) closeSearch(false);   /* one dropdown at a time */
+});
+_hnav.addEventListener('click', function(){ _hnav.classList.remove('open'); _menuT.setAttribute('aria-expanded','false'); });
+document.addEventListener('click', function(e){
+  if(_hnav.classList.contains('open') && !_hnav.contains(e.target) && e.target!==_menuT && !_menuT.contains(e.target)){
+    _hnav.classList.remove('open'); _menuT.setAttribute('aria-expanded','false');
+  }
+});
+function openSearch(){
+  _sbar.classList.add('open');
+  _sT.setAttribute('aria-expanded','true');
+  _hnav.classList.remove('open'); _menuT.setAttribute('aria-expanded','false');
+  setTimeout(function(){ try{ _qEl.focus(); }catch(e){} }, 30);
+}
+/* Closing always clears the query — an invisible active filter would silently
+   empty the map. clearQ:false is only for the menu-open swap (no query yet). */
+function closeSearch(clearQ){
+  _sbar.classList.remove('open');
+  _sT.setAttribute('aria-expanded','false');
+  if(clearQ !== false && _qEl.value){ _qEl.value=''; renderList(); }
+}
+_sT.addEventListener('click', function(e){
+  e.stopPropagation();
+  if(_sbar.classList.contains('open')) closeSearch(true); else openSearch();
+});
+_sX.addEventListener('click', function(){ closeSearch(true); });
+_qEl.addEventListener('keydown', function(e){ if(e.key==='Escape') closeSearch(true); });
 document.getElementById('btnNorth').onclick = function(){ if(map) map.easeTo({pitch:0, bearing:0, duration:500}); };
 document.getElementById('btnAboutBack').onclick = function(){ document.getElementById('about').classList.remove('open'); };
 document.getElementById('btnCopyLink').onclick = function(){
@@ -1296,7 +1390,7 @@ _pp.addEventListener('change', function(){
   renderList();
 });
 document.getElementById('onlinePill').onclick = function(){
-  var q=document.getElementById('q'); q.value='online'; renderList();
+  var q=document.getElementById('q'); q.value='online'; openSearch(); renderList();
 };
 _pc.onclick = function(){
   planDate = null; _pp.value=''; _pp.classList.remove('active');
@@ -1305,12 +1399,12 @@ _pc.onclick = function(){
 var _fc = document.getElementById('filtersToggle');
 if(window.matchMedia('(max-width:760px)').matches){
   document.querySelector('.controls').classList.add('fcollapsed');
-  _fc.innerHTML = 'Show categories &#9662;';
+  _fc.innerHTML = 'Show filters &#9662;';
 }
 function _fcToggle(){
   var c = document.querySelector('.controls');
   c.classList.toggle('fcollapsed');
-  _fc.innerHTML = c.classList.contains('fcollapsed') ? 'Show categories &#9662;' : 'Hide categories &#9652;';
+  _fc.innerHTML = c.classList.contains('fcollapsed') ? 'Show filters &#9662;' : 'Hide filters &#9652;';
 }
 // On touch devices a plain click can be swallowed or delayed (feels like it takes
 // two taps or sticks). Fire on a clean tap: pointerup with negligible movement,

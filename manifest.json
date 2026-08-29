@@ -118,16 +118,6 @@
       "workbook": "data/folklore_legends.xlsx",
       "color": "#000080",
       "default_on": false
-    },
-    {
-      "key": "poi",
-      "label": "Historical Markers",
-      "schema": "poi",
-      "workbook": "data/points_of_interest.xlsx",
-      "sheet": "Points of Interest",
-      "color": "#fca315",
-      "default_on": false,
-      "glyph": "⁕"
     }
   ]
 }

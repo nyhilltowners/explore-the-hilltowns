@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Directory — Hilltowns Folk Atlas</title>
+<meta name="description" content="An A–Z directory of the organizations and businesses on the Hilltowns Folk Atlas — NY Helderberg-Hudson Hilltowns and beyond.">
+<meta property="og:title" content="Directory — Hilltowns Folk Atlas">
+<meta property="og:type" content="website">
+<meta property="og:image" content="images/share-card.png">
+<link rel="icon" href="images/favicon.svg">
+<link rel="apple-touch-icon" href="images/apple-touch-icon.png">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lato:ital,wght@0,400;0,700;1,400&family=Montserrat:ital,wght@0,400;0,600;0,700;0,800;1,600&display=swap">
+<style>
+:root{
+  --ink:#00004d; --paper:#feffff; --parchment:#f4efe1; --parchment-line:#e3dcc8;
+  --ink-blue:#1a1d5c; --lichen:#dde0f2; --birch:#a9b0dd; --faint:#7b82b8;
+  --wampum:#39b7ff; --wampum-deep:#000080; --gold:#fca315; --gold-ink:#2b2410;
+}
+*{box-sizing:border-box; margin:0; padding:0;}
+body{
+  font-family:'Lato',ui-sans-serif,system-ui,sans-serif;
+  color:var(--ink-blue); background:var(--parchment);
+  -webkit-font-smoothing:antialiased; line-height:1.6;
+}
+.sitenav{
+  position:sticky; top:0; z-index:100;
+  display:flex; align-items:center; justify-content:space-between;
+  padding:8px 20px; background:var(--parchment);
+  border-bottom:3px solid var(--ink-blue); box-shadow:0 2px 8px rgba(0,0,60,.05);
+}
+.sitenav .brand{
+  display:flex; align-items:center; gap:8px; text-decoration:none;
+  font-family:'Montserrat',sans-serif; font-weight:800; text-transform:uppercase;
+  letter-spacing:.05em; color:var(--ink-blue);
+}
+.sitenav .brand img{height:42px; width:auto; flex:none; display:block;}
+.sitenav .brand .stack{display:flex; flex-direction:column; line-height:1.03; margin-left:2px;}
+.sitenav .brand .stack .l1{font-size:16px; display:block;}
+.sitenav .brand .stack .l2{font-size:16px; display:block; transform:scaleX(0.979); transform-origin:left center;}
+.sitenav .links{display:flex; align-items:center; gap:4px;}
+.sitenav .links a{
+  font-family:'Montserrat',sans-serif; font-weight:600; font-size:12.5px;
+  letter-spacing:.08em; text-transform:uppercase; text-decoration:none;
+  color:var(--ink-blue); padding:8px 14px; border-radius:6px; transition:.15s;
+}
+.sitenav .links a:hover{background:rgba(26,29,92,.07);}
+.sitenav .links a.active{color:var(--gold);}
+.sitenav .links a.ig{display:flex; align-items:center; justify-content:center; padding:7px; margin-left:2px; color:var(--ink-blue);}
+.sitenav .links a.ig:hover{background:rgba(26,29,92,.07); color:var(--gold);}
+.sitenav .links a.ig svg{width:22px; height:22px; display:block;}
+.menubtn{display:none; align-items:center; justify-content:center; background:none; border:none;
+  cursor:pointer; padding:8px; border-radius:6px; color:var(--ink-blue); transition:.15s; touch-action:manipulation;}
+.menubtn:hover{background:rgba(26,29,92,.07); color:var(--gold);}
+.menubtn svg{width:24px; height:24px; display:block;}
+@media (max-width:760px){
+  .menubtn{display:flex;}
+  .sitenav .links{
+    display:none; position:absolute; top:100%; left:0; right:0;
+    flex-direction:column; align-items:stretch; gap:0;
+    background:var(--parchment); border-bottom:3px solid var(--ink-blue);
+    box-shadow:0 12px 26px rgba(0,0,60,.18); padding:6px 10px 12px; z-index:101;
+  }
+  .sitenav .links.open{display:flex;}
+  .sitenav .links a{padding:13px 14px; font-size:14px;}
+  .sitenav .links a.ig{align-self:flex-start;}
+}
+
+.wrap{max-width:920px; margin:0 auto; padding:40px 24px 72px;}
+.eyebrow{font-family:'Montserrat',sans-serif; font-weight:700; font-size:12px; letter-spacing:.18em;
+  text-transform:uppercase; color:var(--gold); margin-bottom:12px;}
+h1{font-family:'Montserrat',sans-serif; font-weight:800; text-transform:uppercase; letter-spacing:.03em;
+  font-size:clamp(26px,5vw,38px); color:var(--ink-blue); line-height:1.08; margin-bottom:10px;}
+.count{font-family:'Montserrat',sans-serif; font-weight:700; font-size:12px; letter-spacing:.06em;
+  text-transform:uppercase; color:var(--faint); margin-bottom:16px;}
+
+/* category checkboxes — mirrors the atlas sidebar UX */
+.catchecks{display:flex; flex-wrap:wrap; gap:0 24px; margin-bottom:14px;}
+.catbox{display:flex; align-items:center; gap:9px; cursor:pointer; user-select:none;
+  font-family:'Montserrat',sans-serif; font-size:12.5px; color:var(--ink-blue);
+  padding:3px 2px; flex:0 0 218px; transition:color .15s; touch-action:manipulation;}
+.catbox:hover{color:#000;}
+.catbox input{accent-color:var(--gold); width:15px; height:15px; flex:none;}
+.catbox .catmark{font-size:18px; line-height:1; width:24px; display:inline-flex;
+  align-items:center; justify-content:center; flex:none;}
+.catbox .catname{flex:1;}
+.catbox .n{font-weight:600; color:var(--faint); font-size:11px; margin-left:4px;}
+@media (max-width:640px){ .catbox{flex:1 1 44%;} }
+
+/* clickable tags on listings (same idiom as the atlas tag chips) */
+.tagrow{margin:6px 0 2px;}
+.tag{display:inline-block; padding:2px 9px; margin:0 4px 4px 0; border-radius:11px;
+  border:1px solid #c9cdec; color:#5a5f8a; font-size:9.5px; letter-spacing:.05em;
+  text-transform:uppercase; font-family:'Montserrat',sans-serif; cursor:pointer;
+  background:#fdfcf7; transition:border-color .12s, color .12s;}
+.tag:hover{border-color:var(--gold); color:var(--ink-blue);}
+.tag.on{background:var(--gold); border-color:var(--gold); color:var(--gold-ink); font-weight:700;}
+.tagbar{display:none; align-items:center; gap:10px; margin:0 0 14px;
+  font-family:'Montserrat',sans-serif; font-weight:700; font-size:12px; color:#4a4f7a;}
+.tagbar.show{display:flex;}
+.tagbar .tagname{background:var(--gold); color:var(--gold-ink); border-radius:11px;
+  padding:2px 10px; font-size:11px; letter-spacing:.05em; text-transform:uppercase;}
+.tagbar .clear{background:var(--ink-blue); color:var(--paper); border:none; border-radius:14px;
+  padding:4px 12px; font-family:'Montserrat',sans-serif; font-weight:700; font-size:11px; cursor:pointer;}
+.tagbar .clear:hover{background:#24287a;}
+
+/* A–Z jump bar */
+.azbar{
+  position:sticky; top:61px; z-index:50; display:flex; flex-wrap:wrap; gap:2px;
+  background:var(--parchment); padding:8px 0 10px; margin-bottom:8px;
+  border-bottom:1px solid var(--parchment-line);
+}
+.azbar a{
+  font-family:'Montserrat',sans-serif; font-weight:700; font-size:13px; text-decoration:none;
+  color:var(--wampum-deep); padding:3px 7px; border-radius:5px; transition:.12s;
+}
+.azbar a:hover{background:rgba(252,163,21,.18);}
+.azbar span{font-family:'Montserrat',sans-serif; font-weight:700; font-size:13px;
+  color:#c6bfa6; padding:3px 7px;}
+
+/* letter sections (flat A–Z with slim dividers) */
+.letterhead{
+  display:flex; align-items:center; gap:12px; margin:26px 0 10px;
+  font-family:'Montserrat',sans-serif; font-weight:800; font-size:20px; color:var(--gold);
+  scroll-margin-top:120px;
+}
+.letterhead::after{content:""; flex:1; height:1px; background:var(--parchment-line);}
+
+/* listing cards */
+.org{background:var(--paper); border:1px solid var(--parchment-line); border-radius:10px;
+  padding:16px 18px 14px; margin-bottom:10px; box-shadow:0 1px 4px rgba(0,0,60,.04);}
+.org .toprow{display:flex; align-items:baseline; gap:10px; flex-wrap:wrap; margin-bottom:2px;}
+.org h3{font-family:'Montserrat',sans-serif; font-weight:700; font-size:17px; color:var(--ink-blue); line-height:1.25;}
+.org .town{font-family:'Montserrat',sans-serif; font-weight:700; font-size:11.5px; letter-spacing:.05em;
+  text-transform:uppercase; color:var(--faint);}
+.chips{display:inline-flex; flex-wrap:wrap; gap:6px; vertical-align:middle;}
+.catchip{
+  display:inline-flex; align-items:center; gap:5px; font-family:'Montserrat',sans-serif; font-weight:600;
+  font-size:10px; letter-spacing:.06em; text-transform:uppercase; color:#5a5f8a;
+  border:1px solid var(--parchment-line); border-radius:10px; padding:2px 9px; background:#fdfcf7;
+}
+.catchip .dot{width:8px; height:8px; border-radius:50%; flex:none;}
+.org .ddesc{font-size:14.5px; color:#3a3f6b; margin:7px 0 4px; max-width:680px;}
+.org .facts{margin-top:6px; font-size:13.5px; color:#3a3f6b;}
+.org .facts .frow{display:flex; gap:9px; align-items:baseline; margin-bottom:3px;}
+.org .facts .k{flex:none; font-family:'Montserrat',sans-serif; font-weight:700; font-size:10px;
+  letter-spacing:.06em; text-transform:uppercase; color:var(--faint); width:58px; position:relative; top:-1px;}
+.org a.weblink{color:var(--wampum-deep); font-weight:700; text-decoration:none;
+  border-bottom:2px solid var(--gold); word-break:break-word;}
+.org a.weblink:hover{background:rgba(252,163,21,.14);}
+.org details.dhours{margin-top:4px;}
+.org details.dhours summary{
+  cursor:pointer; font-family:'Montserrat',sans-serif; font-weight:700; font-size:11px;
+  letter-spacing:.06em; text-transform:uppercase; color:var(--wampum-deep); list-style:none;
+  display:inline-flex; align-items:center; gap:5px; padding:2px 0;
+}
+.org details.dhours summary::-webkit-details-marker{display:none;}
+.org details.dhours summary::after{content:"▾"; font-size:10px; transition:transform .15s;}
+.org details.dhours[open] summary::after{transform:rotate(180deg);}
+table.hours{border-collapse:collapse; font-size:13px; margin-top:4px;}
+table.hours td{padding:2px 14px 2px 0; color:#3a3f6b;}
+table.hours td:first-child{color:var(--faint); padding-right:22px; font-family:'Montserrat',sans-serif; font-size:12px;}
+table.hours tr.today td{color:var(--ink-blue); font-weight:700;}
+table.hours tr.today td:first-child{color:var(--gold-ink);}
+
+.empty{text-align:center; color:var(--faint); padding:48px 20px; font-size:15px;}
+
+.afnote{margin-top:34px; padding-top:16px; border-top:1px solid var(--parchment-line);
+  font-size:13px; color:#6b6f96; max-width:680px;}
+.afnote p{margin:0 0 8px;}
+
+.backmap{display:inline-block; margin-top:26px; font-family:'Montserrat',sans-serif; font-weight:700;
+  text-transform:uppercase; letter-spacing:.04em; font-size:13px; text-decoration:none;
+  background:var(--ink-blue); color:var(--paper); padding:13px 26px; border-radius:8px;}
+.backmap:hover{background:#24287a;}
+
+.foot{background:var(--ink-blue); color:var(--birch); text-align:center; padding:32px 24px; font-size:13px; border-top:3px solid var(--gold); margin-top:40px;}
+.foot a{color:var(--gold); text-decoration:none; letter-spacing:.06em; font-family:'Montserrat',sans-serif; font-weight:600; font-size:12px;}
+.foot .row{display:flex; gap:18px; justify-content:center; margin-top:10px; flex-wrap:wrap;}
+
+@media (max-width:640px){
+  .azbar{top:52px;}
+  .org{padding:13px 14px 12px;}
+  .org .facts .frow{flex-wrap:wrap;}
+}
+</style>
+</head>
+<body>
+
+<nav class="sitenav">
+  <a class="brand" href="index.html">
+    <img src="images/raccoon-mark.svg" alt="">
+    <span class="stack"><span class="l1">Hilltowns</span><span class="l2">Folk Atlas</span></span>
+  </a>
+  <div class="links" id="hnav">
+    <a href="index.html">Atlas</a>
+    <a href="calendar.html">Calendar</a>
+    <a href="directory.html" class="active">Directory</a>
+    <a href="about.html">About</a>
+    <a href="https://instagram.com/NYHilltowners" class="ig" target="_blank" rel="noopener" title="@NYHilltowners on Instagram" aria-label="Instagram">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line></svg>
+    </a>
+  </div>
+  <button class="menubtn" id="menuToggle" title="Menu" aria-label="Menu" aria-expanded="false">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="4" y1="7" x2="20" y2="7"></line><line x1="4" y1="12" x2="20" y2="12"></line><line x1="4" y1="17" x2="20" y2="17"></line></svg>
+  </button>
+</nav>
+
+<main class="wrap">
+  <div class="eyebrow">Organizations &amp; Businesses</div>
+  <h1>Directory</h1>
+  <div class="count" id="count"></div>
+
+  <div class="catchecks" id="catchecks"></div>
+  <div class="tagbar" id="tagbar"></div>
+  <nav class="azbar" id="azbar" aria-label="Jump to letter"></nav>
+
+  <div id="listing"></div>
+
+  <div class="afnote">
+    <p>Please note none of these businesses or organizations are affiliated with us in any way. We just love them and want them to be around for a long long time to come.</p>
+    <p>Do you have an organization, business, or event you want to be included? Please let us know! [Link to come]</p>
+  </div>
+
+  <a class="backmap" href="index.html">Explore the Atlas &rarr;</a>
+</main>
+
+<footer class="foot">
+  <div>A community project of the NY Hilltowners.</div>
+  <div class="row">
+    <a href="index.html">Atlas</a>
+    <a href="calendar.html">Calendar</a>
+    <a href="about.html">About</a>
+    <a href="https://instagram.com/NYHilltowners" target="_blank" rel="noopener">@NYHilltowners</a>
+    <a href="https://forms.gle/AwjBQ4bjNB9GQJTc7" target="_blank" rel="noopener">Submit an event</a>
+  </div>
+</footer>
+
+<script src="data.js"></script>
+<script>
+(function(){
+  "use strict";
+  var ATLAS = window.ATLAS_DATA || {records:[], categories:[]};
+  var CATS = (ATLAS.categories || []).filter(function(c){ return c.schema === "poi"; });
+  var CAT_COLOR = {};
+  CATS.forEach(function(c){ CAT_COLOR[c.label] = c.color || "#fca315"; });
+
+  function esc(s){ return String(s==null?"":s).replace(/[&<>"']/g, function(c){
+    return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]; }); }
+
+  /* ---- town from address ----
+     Handles "Street, Town, NY 12345", "Town, NY 12345", "..., Suite 5, Town, NY",
+     comma-less "Street Town NY 12345", and out-of-state (shown as "Town, ST").
+     No match -> "" (omit rather than guess). */
+  function townOf(addr){
+    if(!addr) return "";
+    var s = String(addr).trim(), m, town = "", st = "";
+    m = s.match(/,\s*([^,]+?)\s*,\s*([A-Z]{2})\b/);              /* ", Town, ST" */
+    if(!m) m = s.match(/(?:^|,)\s*([^,]+?)\s*,?\s+([A-Z]{2})\s+\d{5}/); /* "Town ST 12345" */
+    if(!m) m = s.match(/^\s*([^,]+?)\s*,\s*(NY|New York)\b/i);   /* "Town, NY" (2 parts) */
+    if(!m) return "";
+    town = m[1].trim(); st = (m[2]||"NY").toUpperCase();
+    if(/^\d/.test(town)){                       /* capture swallowed the street */
+      var w = town.split(/\s+/); town = w[w.length-1];
+      if(/\d/.test(town)) return "";            /* still not a town — omit */
+    }
+    if(!town) return "";
+    return st==="NY" || st==="NEW YORK" ? town : town + ", " + st;
+  }
+
+  /* ---- merge the same org listed in several category sheets ----
+     Same normalized name = same org, UNLESS both records carry street addresses
+     whose leading street numbers differ (two distinct locations keep two cards).
+     Merged card: union of category chips; first non-empty address/phone/site/hours;
+     the longest description on file. */
+  function normName(t){ return String(t||"").toLowerCase().replace(/\s+/g," ").trim(); }
+  function streetNum(addr){ var m = String(addr||"").match(/^\s*(\d+)/); return m ? m[1] : ""; }
+  function mergeRecords(recs){
+    var byName = {}, out = [];
+    recs.forEach(function(r){
+      var key = normName(r.t);
+      var bucket = byName[key] || (byName[key] = []);
+      var target = null;
+      for(var i=0;i<bucket.length;i++){
+        var b = bucket[i];
+        var na = streetNum(b.addr), nb = streetNum(r.addr);
+        if(!na || !nb || na === nb){ target = b; break; }   /* same/unknown location */
+      }
+      if(!target){
+        target = { t:r.t, cats:[], tags:[], addr:"", ph:"", web:"", s:"", hrs:null };
+        bucket.push(target); out.push(target);
+      }
+      if(target.cats.indexOf(r.cat) < 0) target.cats.push(r.cat);
+      (r.tags || []).forEach(function(tg){                  /* union of tags across sheets */
+        if(!target.tags.some(function(x){ return x.toLowerCase() === tg.toLowerCase(); }))
+          target.tags.push(tg);
+      });
+      if(!target.addr && r.addr) target.addr = r.addr;
+      if(!target.ph && r.ph) target.ph = r.ph;
+      if(!target.web && r.web) target.web = r.web;
+      if(r.s && r.s.length > target.s.length) target.s = r.s;  /* longest copy wins */
+      var hasHrs = r.hrs && Object.keys(r.hrs).some(function(k){ return r.hrs[k]; });
+      if(!target.hrs && hasHrs) target.hrs = r.hrs;
+    });
+    return out;
+  }
+
+  var orgs = mergeRecords((ATLAS.records || []).filter(function(r){ return r.ty === "poi"; }));
+  orgs.forEach(function(o){
+    o.town = townOf(o.addr);
+    o.lctags = o.tags.map(function(t){ return t.toLowerCase(); });
+    o.sortKey = normName(o.t).replace(/^(the|a|an)\s+/, "");    /* "The X" files under X */
+    var c0 = o.sortKey.charAt(0).toUpperCase();
+    o.letter = (c0 >= "A" && c0 <= "Z") ? c0 : "#";
+  });
+  orgs.sort(function(a,b){ return a.sortKey < b.sortKey ? -1 : a.sortKey > b.sortKey ? 1 : 0; });
+
+  /* ---- category checkboxes (atlas idiom: checked = shown) + tag filter ---- */
+  var catsOn = {};
+  var selTag = null;      /* lowercase tag currently filtered, or null */
+  var selTagLabel = "";   /* display casing */
+  var ccWrap = document.getElementById("catchecks");
+  var tagbar = document.getElementById("tagbar");
+  function catCount(label){
+    return orgs.reduce(function(n,o){ return n + (o.cats.indexOf(label)>=0 ? 1 : 0); }, 0);
+  }
+  function buildCatChecks(){
+    ccWrap.innerHTML = "";
+    CATS.forEach(function(c){
+      var n = catCount(c.label);
+      if(!n) return;
+      if(!(c.label in catsOn)) catsOn[c.label] = true;
+      var lb = document.createElement("label"); lb.className = "catbox";
+      var mark = c.glyph || "●";
+      lb.innerHTML = '<input type="checkbox"'+(catsOn[c.label]?' checked':'')+'>'
+        + '<span class="catmark" style="color:'+esc(CAT_COLOR[c.label])+'">'+esc(mark)+'</span>'
+        + '<span class="catname">'+esc(c.label)+'</span><span class="n">'+n+'</span>';
+      lb.querySelector("input").addEventListener("change", function(ev){
+        catsOn[c.label] = ev.target.checked; render();
+      });
+      ccWrap.appendChild(lb);
+    });
+  }
+  function setTag(label){
+    if(label === null){ selTag = null; selTagLabel = ""; }
+    else { selTag = label.toLowerCase(); selTagLabel = label; }
+    tagbar.className = "tagbar" + (selTag ? " show" : "");
+    tagbar.innerHTML = selTag
+      ? 'Showing listings tagged <span class="tagname">'+esc(selTagLabel)+'</span>'
+        + '<button class="clear" id="tagClear">&times; Clear</button>'
+      : "";
+    if(selTag) document.getElementById("tagClear").onclick = function(){ setTag(null); render(); };
+    render();
+  }
+
+  function visible(){
+    return orgs.filter(function(o){
+      if(!o.cats.some(function(c){ return catsOn[c]; })) return false;
+      if(selTag && o.lctags.indexOf(selTag) < 0) return false;
+      return true;
+    });
+  }
+
+  /* ---- rendering ---- */
+  var TODAY_DOW = (function(){
+    try{ return new Intl.DateTimeFormat("en-US",{timeZone:"America/New_York",weekday:"short"})
+          .format(new Date()).toLowerCase().slice(0,3); }
+    catch(e){ return ["sun","mon","tue","wed","thu","fri","sat"][new Date().getDay()]; }
+  })();
+  function hoursTable(h){
+    if(!h) return "";
+    var days=[["mon","Mon"],["tue","Tue"],["wed","Wed"],["thu","Thu"],["fri","Fri"],["sat","Sat"],["sun","Sun"]];
+    if(!days.some(function(d){ return h[d[0]]; })) return "";
+    var rows = days.map(function(d){
+      var cls = d[0]===TODAY_DOW ? ' class="today"' : "";
+      return "<tr"+cls+"><td>"+d[1]+"</td><td>"+esc(h[d[0]]||"—")+"</td></tr>";
+    }).join("");
+    return '<details class="dhours"><summary>Hours</summary><table class="hours">'+rows+"</table></details>";
+  }
+  function chipRow(o){
+    return '<span class="chips">' + o.cats.map(function(c){
+      return '<span class="catchip"><span class="dot" style="background:'+esc(CAT_COLOR[c]||"#fca315")+'"></span>'+esc(c)+'</span>';
+    }).join("") + "</span>";
+  }
+  function tagChips(o){
+    if(!o.tags.length) return "";
+    return '<div class="tagrow">' + o.tags.map(function(tg){
+      var on = selTag && tg.toLowerCase() === selTag;
+      return '<button class="tag'+(on?' on':'')+'" data-tag="'+esc(tg)+'">'+esc(tg)+'</button>';
+    }).join("") + "</div>";
+  }
+  function orgCard(o){
+    var h = '<div class="org">';
+    h += '<div class="toprow"><h3>'+esc(o.t)+'</h3>' + chipRow(o)
+       + (o.town ? '<span class="town">'+esc(o.town)+'</span>' : "") + "</div>";
+    h += tagChips(o);
+    /* Description is Laurie-authored copy, shown verbatim; blank = omitted entirely
+       (the workbook's Description column stays the slot for adding it later). */
+    if(o.s) h += '<div class="ddesc">'+esc(o.s)+'</div>';
+    h += '<div class="facts">';
+    if(o.addr) h += '<div class="frow"><span class="k">Where</span><span>'+esc(o.addr)+'</span></div>';
+    if(o.ph){
+      var tel = String(o.ph).replace(/[^\d+]/g,"");
+      h += '<div class="frow"><span class="k">Phone</span><span><a class="weblink" href="tel:'+esc(tel)+'">'+esc(o.ph)+'</a></span></div>';
+    }
+    if(o.web){
+      var href = /^https?:\/\//i.test(o.web) ? o.web : "https://"+o.web;
+      var label = String(o.web).replace(/^https?:\/\//i,"").replace(/\/$/,"");
+      h += '<div class="frow"><span class="k">Site</span><span><a class="weblink" href="'+esc(href)+'" target="_blank" rel="noopener">'+esc(label)+'</a></span></div>';
+    }
+    h += hoursTable(o.hrs);
+    h += "</div></div>";
+    return h;
+  }
+
+  var listing = document.getElementById("listing");
+  var azbar = document.getElementById("azbar");
+  var countEl = document.getElementById("count");
+  function render(){
+    var list = visible();
+    var filtered = !!selTag || Object.keys(catsOn).some(function(k){ return !catsOn[k]; });
+    countEl.textContent = list.length + (list.length===1 ? " listing" : " listings")
+      + (filtered ? " (filtered)" : "");
+    var present = {};
+    list.forEach(function(o){ present[o.letter] = true; });
+    /* jump bar */
+    var letters = "#ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
+    azbar.innerHTML = letters.map(function(L){
+      return present[L]
+        ? '<a href="#sec-'+(L==="#"?"num":L)+'">'+L+"</a>"
+        : "<span>"+L+"</span>";
+    }).join("");
+    /* flat A–Z with slim letter dividers */
+    if(!list.length){
+      listing.innerHTML = '<div class="empty">Nothing matches these filters.</div>';
+      return;
+    }
+    var h = "", cur = null;
+    list.forEach(function(o){
+      if(o.letter !== cur){
+        cur = o.letter;
+        h += '<div class="letterhead" id="sec-'+(cur==="#"?"num":cur)+'">'+cur+"</div>";
+      }
+      h += orgCard(o);
+    });
+    listing.innerHTML = h;
+  }
+
+  /* tag chips: one delegated handler; clicking the active tag clears it */
+  document.getElementById("listing").addEventListener("click", function(e){
+    var el = e.target.closest ? e.target.closest(".tag") : null;
+    if(!el) return;
+    var tg = el.getAttribute("data-tag");
+    if(selTag && tg.toLowerCase() === selTag) setTag(null); else setTag(tg);
+    window.scrollTo({top:0, behavior:"smooth"});   /* results start at the top */
+  });
+
+  buildCatChecks();
+  render();
+
+  /* universal header: mobile hamburger */
+  var nav = document.getElementById("hnav"), btn = document.getElementById("menuToggle");
+  btn.addEventListener("click", function(e){
+    e.stopPropagation();
+    var open = nav.classList.toggle("open");
+    btn.setAttribute("aria-expanded", open ? "true" : "false");
+  });
+  nav.addEventListener("click", function(){ nav.classList.remove("open"); btn.setAttribute("aria-expanded","false"); });
+  document.addEventListener("click", function(e){
+    if(nav.classList.contains("open") && !nav.contains(e.target) && !btn.contains(e.target)){
+      nav.classList.remove("open"); btn.setAttribute("aria-expanded","false");
+    }
+  });
+})();
+</script>
+<!-- GoatCounter: privacy-friendly analytics, no cookies, no personal data -->
+<script data-goatcounter="https://nyhilltowners.goatcounter.com/count"
+        async src="//gc.zgo.at/count.js"></script>
+</body>
+</html>
