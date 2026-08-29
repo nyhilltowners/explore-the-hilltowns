@@ -318,6 +318,7 @@ table.hours tr.today td:first-child{color:var(--gold-ink);}
     o.sortKey = normName(o.t).replace(/^(the|a|an)\s+/, "");    /* "The X" files under X */
     var c0 = o.sortKey.charAt(0).toUpperCase();
     o.letter = (c0 >= "A" && c0 <= "Z") ? c0 : "#";
+    if(o.letter === "#") o.sortKey = "\u007F" + o.sortKey;   /* numbers file AFTER Z (DEL sorts past z) */
   });
   orgs.sort(function(a,b){ return a.sortKey < b.sortKey ? -1 : a.sortKey > b.sortKey ? 1 : 0; });
 
@@ -430,7 +431,7 @@ table.hours tr.today td:first-child{color:var(--gold-ink);}
     var present = {};
     list.forEach(function(o){ present[o.letter] = true; });
     /* jump bar */
-    var letters = "#ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
+    var letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ#".split("");
     azbar.innerHTML = letters.map(function(L){
       return present[L]
         ? '<a href="#sec-'+(L==="#"?"num":L)+'">'+L+"</a>"
