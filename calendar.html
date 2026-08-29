@@ -23,6 +23,9 @@ body{
   color:var(--ink-blue); background:var(--parchment);
   -webkit-font-smoothing:antialiased; line-height:1.6;
 }
+.betabar{background:var(--gold); color:var(--gold-ink); text-align:center;
+  font-family:'Montserrat',sans-serif; font-weight:700; font-size:11px;
+  letter-spacing:.08em; text-transform:uppercase; padding:5px 12px; line-height:1.4;}
 .sitenav{
   position:sticky; top:0; z-index:100;
   display:flex; align-items:center; justify-content:space-between;
@@ -184,6 +187,7 @@ h1{font-family:'Montserrat',sans-serif; font-weight:800; text-transform:uppercas
 </style>
 </head>
 <body>
+<div class="betabar">beta version: please double check info before traveling!</div>
 
 <nav class="sitenav">
   <a class="brand" href="index.html">
@@ -304,6 +308,12 @@ h1{font-family:'Montserrat',sans-serif; font-weight:800; text-transform:uppercas
       if(d2 < d1) d2 = d1;
       // clamp span; cap at 60 days to avoid runaway "permanent" exhibitions flooding every day
       var span = Math.round((d2 - d1)/86400000);
+      // An overnight event (time range crossing midnight, e.g. 10:00 PM – 12:00 AM)
+      // spans two dates on paper but is one evening: place it on its start day only.
+      if(span === 1){
+        var rr = parseRange(ev.tm);
+        if(rr.start != null && rr.end != null && rr.end <= rr.start){ d2 = d1; span = 0; }
+      }
       var multiday = span > 0 && span <= 45;
       if(multiday){
         var od = openDaysOf(ev);   // only place a run on days it is actually open

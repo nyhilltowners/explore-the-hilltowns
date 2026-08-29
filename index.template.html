@@ -41,6 +41,9 @@ body{
 .app{display:flex; flex:1 1 auto; min-height:0; width:100vw;}
 
 /* ---------- Universal header (shared house style across all pages) ---------- */
+.betabar{flex:none; background:var(--gold); color:var(--gold-ink); text-align:center;
+  font-family:'Montserrat',ui-sans-serif,system-ui,sans-serif; font-weight:700; font-size:11px;
+  letter-spacing:.08em; text-transform:uppercase; padding:5px 12px; line-height:1.4;}
 .sitenav{
   position:relative; z-index:2500; flex:none;   /* above #mapnotice(2000); below mobile full-screen #detail(3000) */
   display:flex; align-items:center; justify-content:space-between;
@@ -350,6 +353,7 @@ a.weblink:hover{text-decoration:underline;}
 </style>
 </head>
 <body>
+<div class="betabar">beta version: please double check info before traveling!</div>
 <nav class="sitenav">
   <a class="brand" href="index.html">
     <img src="images/raccoon-mark.svg" alt="">
@@ -504,10 +508,19 @@ var TODAY_DOW = (function(){
   catch(e){ return ['sun','mon','tue','wed','thu','fri','sat'][new Date().getDay()]; }
 })();
 
+/* An "overnight" event spans exactly two calendar dates only because its time
+   range crosses midnight (a 10:00 PM – 12:00 AM gig stored as Fri→Sat). It is
+   really a single evening on d1: it ranks, displays, and expires as one day. */
+function crossesMidnight(r){
+  if(!(r.d1 && r.d2) || r.d2===r.d1) return false;
+  if(daysBetween(r.d1, r.d2) !== 1) return false;
+  var ts = _parseTimes(r.tm||'');
+  return ts.length>=2 && ts[ts.length-1] <= ts[0];
+}
 function isExpired(r){
   if(r.ty!=='events') return false;
   if(r.nextOcc) return r.nextOcc < TODAY_E;   /* recurring: honor next occurrence */
-  var end = r.d2 || r.d1;
+  var end = crossesMidnight(r) ? r.d1 : (r.d2 || r.d1);
   if(!end) return false;
   return end < TODAY_E;
 }
@@ -575,7 +588,7 @@ function evVisible(r){
      Fri–Sun disappears from Monday's list instead of sitting there stale.
      Runs that name no weekdays keep showing (we don't guess), but sink to the
      bottom of the list via evStartKey. */
-  if(e !== s && s <= ref){
+  if(e !== s && s <= ref && !crossesMidnight(r)){
     var od = openDaysOf(r);
     if(od && !od[new Date(ref+'T12:00:00').getDay()]) return false;
   }
@@ -639,6 +652,7 @@ function fmtRange(r){
     return fmtDate(r.nextOcc) + ' · recurring';
   }
   if(!r.d2 || r.d2===r.d1) return fmtDate(r.d1);
+  if(crossesMidnight(r)) return fmtDate(r.d1);   /* overnight gig: one evening, one date */
   return fmtDate(r.d1)+' – '+fmtDate(r.d2);
 }
 /* The "When" line for events. Long seasonal series lead with the day-of-week and
@@ -888,7 +902,7 @@ if(typeof maplibregl === 'undefined'){
 } else {
 try{
 map = new maplibregl.Map({
-  container:'map', style:style, center:HOME, zoom:11.8,
+  container:'map', style:style, center:HOME, zoom:10.9,   /* regional default: Cobleskill–Hudson River, Central Bridge–Windham (Laurie, Aug 29) */
   maxZoom:19, minZoom:3, attributionControl:{compact:true}
 });
 map.addControl(new maplibregl.NavigationControl({visualizePitch:true}), 'top-left');
@@ -1115,8 +1129,12 @@ function evStartKey(r){
     nextDate = (s < TODAY_E) ? TODAY_E : s;        /* clamp past starts to today */
   }
   var cls = evClass(r);
-  if(cls !== 'recurring' && r.d1 && r.d2 && r.d2 !== r.d1){
+  if(cls !== 'recurring' && r.d1 && r.d2 && r.d2 !== r.d1 && !crossesMidnight(r)){
     return '2|' + e + '|' + nextDate;              /* all multi-day runs: global bottom */
+  }
+  if(crossesMidnight(r)){                          /* overnight gig = one evening on d1 */
+    nextDate = (s < TODAY_E) ? TODAY_E : s;
+    e = s;
   }
   var live = (nextDate <= TODAY_E && e >= TODAY_E) ? 0 : 1;
   var crank = cls === 'recurring' ? 1 : 0;         /* single-day one-offs lead, then recurrences */

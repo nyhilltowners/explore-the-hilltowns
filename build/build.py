@@ -294,6 +294,7 @@ POI_SPEC = [
     ("img", r"^image(\s*url)?$|^photo", False),
     ("cred", r"image\s*credit|^credit$|attribution", False),
     ("disp", r"^display$|^show$|^visible$", False),
+    ("anchor", r"^anchor", False),
 ]
 
 
@@ -319,7 +320,11 @@ def parse_poi(path: Path, label: str, sheet=None):
             fail(f"{rw}: Name is required")
         lat = coord(cell(row, idx, "lat"), -90, 90, "Latitude", rw, required=False)
         lng = coord(cell(row, idx, "lng"), -180, 180, "Longitude", rw, required=False)
-        if lat is None or lng is None:
+        # Anchor Type contract (2026-08-29): pin iff numeric Latitude AND Longitude;
+        # never geocode Address. 'none' = directory-only by design, so a missing
+        # coordinate there is intended, not a data gap — no warning.
+        anchor = s(cell(row, idx, "anchor")).lower()
+        if (lat is None or lng is None) and anchor != "none":
             # not yet locatable — keep it in the catalog list, just off the map
             warn(f"{rw}: {name_v_or_title(title)} has no coordinates yet — "
                  f"listed but not mapped")
