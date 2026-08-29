@@ -74,18 +74,20 @@ h1{font-family:'Montserrat',sans-serif; font-weight:800; text-transform:uppercas
 .count{font-family:'Montserrat',sans-serif; font-weight:700; font-size:12px; letter-spacing:.06em;
   text-transform:uppercase; color:var(--faint); margin-bottom:16px;}
 
-/* category checkboxes — mirrors the atlas sidebar UX */
-.catchecks{display:flex; flex-wrap:wrap; gap:0 24px; margin-bottom:14px;}
-.catbox{display:flex; align-items:center; gap:9px; cursor:pointer; user-select:none;
-  font-family:'Montserrat',sans-serif; font-size:12.5px; color:var(--ink-blue);
-  padding:3px 2px; flex:0 0 218px; transition:color .15s; touch-action:manipulation;}
+/* category checkboxes — mirrors the atlas sidebar UX; two tidy columns,
+   counts right-aligned so the block reads as one clean table */
+.catchecks{display:grid; grid-template-columns:repeat(2, minmax(0, 300px));
+  gap:3px 36px; margin-bottom:16px;}
+.catbox{display:flex; align-items:center; gap:10px; cursor:pointer; user-select:none;
+  font-family:'Montserrat',sans-serif; font-size:13px; color:var(--ink-blue);
+  padding:4px 2px; transition:color .15s; touch-action:manipulation;}
 .catbox:hover{color:#000;}
 .catbox input{accent-color:var(--gold); width:15px; height:15px; flex:none;}
 .catbox .catmark{font-size:18px; line-height:1; width:24px; display:inline-flex;
   align-items:center; justify-content:center; flex:none;}
-.catbox .catname{flex:1;}
-.catbox .n{font-weight:600; color:var(--faint); font-size:11px; margin-left:4px;}
-@media (max-width:640px){ .catbox{flex:1 1 44%;} }
+.catbox .catname{flex:1; min-width:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+.catbox .n{font-weight:600; color:var(--faint); font-size:11px; margin-left:auto; flex:none;}
+@media (max-width:640px){ .catchecks{grid-template-columns:minmax(0,1fr); gap:1px; margin-bottom:14px;} .catbox{padding:3px 2px;} }
 
 /* clickable tags on listings (same idiom as the atlas tag chips) */
 .tagrow{margin:6px 0 2px;}
@@ -207,7 +209,7 @@ table.hours tr.today td:first-child{color:var(--gold-ink);}
 </nav>
 
 <main class="wrap">
-  <div class="eyebrow">Organizations &amp; Businesses</div>
+  <div class="eyebrow">The Scrappy Pages</div>
   <h1>Directory</h1>
   <div class="count" id="count"></div>
 

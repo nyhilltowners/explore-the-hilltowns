@@ -512,6 +512,36 @@ function isExpired(r){
   return end < TODAY_E;
 }
 var planDate = null;   /* ISO yyyy-mm-dd when planning ahead; null = now mode */
+/* Which weekdays a continuous run is actually open, read from its Time field
+   (preferred) or, failing that, its title ("Medusa Wednesdays: Adult Crafts").
+   Handles lists ("Fri–Sat 11:00 AM – 5:00 PM; Sun 11:00 AM – 3:00 PM"), ranges
+   ("Wed–Sun", "Friday through Sunday"), and "daily"/"every day". Returns null
+   when no weekday is named — such runs stay visible on every day of their span
+   rather than us guessing an open schedule that isn't in the data. */
+function openDaysOf(r){
+  var IDX = {sun:0,mon:1,tue:2,wed:3,thu:4,fri:5,sat:6};
+  function scan(text){
+    if(!text) return null;
+    var t = String(text);
+    if(/\bdaily\b|\bevery\s?day\b|\b7 days\b/i.test(t)) return {0:1,1:1,2:1,3:1,4:1,5:1,6:1};
+    var rx = /\b(sun(?:day)?|mon(?:day)?|tue(?:s(?:day)?)?|wed(?:nesday)?|thu(?:r(?:s(?:day)?)?)?|fri(?:day)?|sat(?:urday)?)s?\b/gi;
+    var out = null, m, prev = null;
+    while((m = rx.exec(t))){
+      var d = IDX[m[1].slice(0,3).toLowerCase()];
+      out = out || {};
+      if(prev !== null){
+        var between = t.slice(prev.end, m.index);
+        if(/^\s*(?:[-–—]|to|through|thru)\s*$/i.test(between)){
+          for(var i = prev.d; i !== d; i = (i+1)%7){ out[i] = 1; }
+        }
+      }
+      out[d] = 1;
+      prev = {d:d, end:rx.lastIndex};
+    }
+    return out;
+  }
+  return scan(r.tm) || scan(r.t);
+}
 function isoAddDays(iso, n){
   var d = new Date(iso+'T12:00:00'); d.setDate(d.getDate()+n);
   return d.toISOString().slice(0,10);
@@ -539,12 +569,18 @@ function evVisible(r){
     if(planDate) return r.nextOcc <= planDate && (!e || planDate <= e);
     return r.nextOcc <= isoAddDays(TODAY_E,6) && r.nextOcc >= TODAY_E;
   }
-  /* Long-running runs (galleries, seasonal exhibits) stay visible for their whole
-     run — but the sort deprioritizes them to the bottom of the day except during
-     their first/last 2 days, when they rise to the top (just-opened / last-chance). */
+  var ref = planDate || TODAY_E;
+  /* A continuous run that has already begun only shows on days it is actually
+     OPEN, when its Time field (or title) names weekdays — a gallery open
+     Fri–Sun disappears from Monday's list instead of sitting there stale.
+     Runs that name no weekdays keep showing (we don't guess), but sink to the
+     bottom of the list via evStartKey. */
+  if(e !== s && s <= ref){
+    var od = openDaysOf(r);
+    if(od && !od[new Date(ref+'T12:00:00').getDay()]) return false;
+  }
   if(evClass(r)==='longrun'){
-    var ref = planDate || TODAY_E;
-    return ref >= s && ref <= e;                          /* visible any day it's open */
+    return ref >= s && ref <= e;                          /* visible any open day of its run */
   }
   if(planDate) return s <= planDate && planDate <= e;      /* on the chosen date */
   return s <= isoAddDays(TODAY_E,6) && e >= TODAY_E;      /* within 6 days */
@@ -612,6 +648,15 @@ function fmtRange(r){
 function whenLine(r){
   var isRange = r.d1 && r.d2 && r.d2!==r.d1;
   var spanDays = isRange ? Math.round((new Date(r.d2+'T12:00:00')-new Date(r.d1+'T12:00:00'))/86400000) : 0;
+  /* A run whose Time field names several weekdays ("Fri–Sat 11:00 AM – 5:00 PM;
+     Sun 11:00 AM – 3:00 PM") shows that schedule verbatim — never a computed
+     single weekday, which would misstate the schedule. */
+  if(!r.nextOcc && spanDays>1 && r.tm){
+    var dtoks = r.tm.match(/\b(sun|mon|tue|wed|thu|fri|sat)/gi);
+    if(dtoks && dtoks.length>=2){
+      return esc(r.tm)+' <span class="whenrange">(through '+esc(fmtDate(r.d2))+')</span>';
+    }
+  }
   if(!r.nextOcc && spanDays>7){
     // Ordinal series ("1st & 3rd Tuesdays"): show the maintainer's phrasing as-is,
     // just moved ahead of the range. No computed weekday, no de-duping.
@@ -1057,12 +1102,11 @@ function longrunAtEdge(r, ref){
 }
 function evStartKey(r){
   /* Rank by the NEXT date you could actually attend, not the arbitrary listed
-     start. Recurring events rank on their true next occurrence. A continuous run
-     already under way ranks as today ("available now"). Within the same date:
-     single-day events lead, then recurring series, and ANY multi-day run (short
-     festival or months-long exhibit) sorts to the BOTTOM of that day's list, so
-     ongoing programs never crowd out the day's unique items or read as stale.
-     Final tie-break: the one ENDING sooner (catch it before it's gone). */
+     start. Recurring events rank on their true next occurrence. Continuous
+     multi-day runs (festivals, exhibits, seasons) sink below EVERY dated
+     single-day pick — they're available for days, weeks or months, so the list
+     leads with what is unique to a date; within that bottom section the run
+     ENDING soonest comes first (last chance). */
   var s = r.d1 || '9999-99-99', e = r.d2 || r.d1 || '9999-99-99';
   var nextDate;
   if(r.nextOcc){
@@ -1070,13 +1114,12 @@ function evStartKey(r){
   } else {
     nextDate = (s < TODAY_E) ? TODAY_E : s;        /* clamp past starts to today */
   }
-  var live = (nextDate <= TODAY_E && e >= TODAY_E) ? 0 : 1;
   var cls = evClass(r);
-  var multiday = !!(r.d1 && r.d2 && r.d2 !== r.d1);
-  var crank;
-  if(cls==='recurring'){ crank = 1; }               /* a recurrence is a single-day occurrence */
-  else if(multiday){ crank = 3; }                   /* >1 day long -> bottom of the day */
-  else { crank = 0; }
+  if(cls !== 'recurring' && r.d1 && r.d2 && r.d2 !== r.d1){
+    return '2|' + e + '|' + nextDate;              /* all multi-day runs: global bottom */
+  }
+  var live = (nextDate <= TODAY_E && e >= TODAY_E) ? 0 : 1;
+  var crank = cls === 'recurring' ? 1 : 0;         /* single-day one-offs lead, then recurrences */
   return live + '|' + nextDate + '|' + crank + '|' + e;
 }
 function cmpListOrder(a, b){

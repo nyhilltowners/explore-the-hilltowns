@@ -261,6 +261,35 @@ h1{font-family:'Montserrat',sans-serif; font-weight:800; text-transform:uppercas
   }
   var TODAY = new Date(); TODAY.setHours(0,0,0,0);
 
+  // Which weekdays a continuous run is open, read from its Time field (preferred)
+  // or title. Mirrors the atlas's openDaysOf: lists ("Fri–Sat …; Sun …"), ranges
+  // ("Wed–Sun", "Friday through Sunday"), "daily". null = no weekdays named, so
+  // the run shows on every day of its span (we don't guess).
+  function openDaysOf(ev){
+    var IDX = {sun:0,mon:1,tue:2,wed:3,thu:4,fri:5,sat:6};
+    function scan(text){
+      if(!text) return null;
+      var t = String(text);
+      if(/\bdaily\b|\bevery\s?day\b|\b7 days\b/i.test(t)) return {0:1,1:1,2:1,3:1,4:1,5:1,6:1};
+      var rx = /\b(sun(?:day)?|mon(?:day)?|tue(?:s(?:day)?)?|wed(?:nesday)?|thu(?:r(?:s(?:day)?)?)?|fri(?:day)?|sat(?:urday)?)s?\b/gi;
+      var out = null, m, prev = null;
+      while((m = rx.exec(t))){
+        var d = IDX[m[1].slice(0,3).toLowerCase()];
+        out = out || {};
+        if(prev !== null){
+          var between = t.slice(prev.end, m.index);
+          if(/^\s*(?:[-–—]|to|through|thru)\s*$/i.test(between)){
+            for(var i = prev.d; i !== d; i = (i+1)%7){ out[i] = 1; }
+          }
+        }
+        out[d] = 1;
+        prev = {d:d, end:rx.lastIndex};
+      }
+      return out;
+    }
+    return scan(ev.tm) || scan(ev.t);
+  }
+
   // Build the display date for an event: prefer nextOcc (recurring), else d1.
   // A multi-day event (d1..d2) is shown on each day it spans within the visible month.
   function eventsForRange(startDate, endDate){
@@ -277,9 +306,10 @@ h1{font-family:'Montserrat',sans-serif; font-weight:800; text-transform:uppercas
       var span = Math.round((d2 - d1)/86400000);
       var multiday = span > 0 && span <= 45;
       if(multiday){
+        var od = openDaysOf(ev);   // only place a run on days it is actually open
         var cur = new Date(d1);
         while(cur <= d2){
-          if(cur >= startDate && cur <= endDate) push(ymd(cur), ev);
+          if(cur >= startDate && cur <= endDate && (!od || od[cur.getDay()])) push(ymd(cur), ev);
           cur.setDate(cur.getDate()+1);
         }
       } else {
@@ -333,6 +363,10 @@ h1{font-family:'Montserrat',sans-serif; font-weight:800; text-transform:uppercas
   // Full parse of a tm string into {start, end, note}. If it isn't clock-like,
   // returns {note: <original cleaned text>} so callers can show it verbatim.
   function parseRange(tm){
+    // A schedule naming several weekdays ("Fri–Sat 11:00 AM – 5:00 PM; Sun …")
+    // is shown verbatim — a single parsed clock time would misstate it.
+    var multi = String(tm||"").match(/\b(sun|mon|tue|wed|thu|fri|sat)/gi);
+    if(multi && multi.length>=2) return {note:String(tm).trim()};
     var s = cleanTime(tm);
     if(!s) return {empty:true};
     // split on dash/en-dash/"to"
