@@ -3,9 +3,9 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>About — Hilltowns Folk Atlas</title>
-<meta name="description" content="About the Hilltowns Folk Atlas — a living atlas of the NY Helderberg-Hudson Hilltowns.">
-<meta property="og:title" content="About — Hilltowns Folk Atlas">
+<title>Instagram — Hilltowns Folk Atlas</title>
+<meta name="description" content="Our latest posts from @NYHilltowners on Instagram.">
+<meta property="og:title" content="Instagram — Hilltowns Folk Atlas">
 <meta property="og:type" content="website">
 <meta property="og:image" content="images/share-card.png">
 <link rel="icon" href="images/favicon.svg">
@@ -84,7 +84,7 @@ body{
 .eyebrow{font-family:'Montserrat',sans-serif; font-weight:700; font-size:12px; letter-spacing:.18em;
   text-transform:uppercase; color:var(--gold); margin-bottom:12px;}
 h1{font-family:'Montserrat',sans-serif; font-weight:800; text-transform:uppercase; letter-spacing:.03em;
-  font-size:clamp(26px,5vw,38px); color:var(--ink-blue); line-height:1.08; margin-bottom:26px;}
+  font-size:clamp(26px,5vw,38px); color:var(--ink-blue); line-height:1.08; margin-bottom:18px;}
 p{font-size:17px; color:#3a3f6b; margin-bottom:18px;}
 a.link{color:var(--wampum-deep); font-weight:700; text-decoration:none; border-bottom:2px solid var(--gold);}
 a.link:hover{background:rgba(252,163,21,.14);}
@@ -92,12 +92,16 @@ a.link:hover{background:rgba(252,163,21,.14);}
   font-size:14px; letter-spacing:.05em; text-transform:uppercase; text-decoration:none;
   background:var(--ink-blue); color:var(--paper); padding:13px 26px; border-radius:8px;}
 .backmap:hover{background:#24287a;}
-.faq{margin-top:44px; padding-top:8px; border-top:1px solid var(--parchment-line);}
-.faq .eyebrow{margin-top:32px;}
-.faq h2{font-family:'Montserrat',sans-serif; font-weight:800; text-transform:uppercase; letter-spacing:.02em;
-  font-size:clamp(20px,3.6vw,26px); color:var(--ink-blue); line-height:1.1; margin:0 0 22px;}
-.faq h3{font-family:'Montserrat',sans-serif; font-weight:700; font-size:18px; letter-spacing:.01em;
-  color:var(--ink-blue); margin:28px 0 10px;}
+
+/* ---------- Instagram embed slot ---------- */
+.ig-embed{margin:32px 0 26px; padding:18px; border-radius:12px; border:1px solid var(--parchment-line); background:var(--paper);}
+.ig-embed iframe{display:block; width:100%; border:none;}
+.ig-follow{display:inline-flex; align-items:center; gap:9px; font-family:'Montserrat',sans-serif; font-weight:700;
+  font-size:14px; letter-spacing:.05em; text-transform:uppercase; text-decoration:none;
+  background:var(--gold); color:var(--gold-ink); padding:12px 24px; border-radius:8px;}
+.ig-follow:hover{background:#e8930a;}
+.ig-follow svg{width:18px; height:18px;}
+
 .foot{background:var(--ink-blue); color:var(--birch); text-align:center; padding:32px 24px; font-size:13px; border-top:3px solid var(--gold);}
 .foot a{color:var(--gold); text-decoration:none; letter-spacing:.06em; font-family:'Montserrat',sans-serif; font-weight:600; font-size:12px;}
 .foot .row{margin-top:10px; display:flex; gap:18px; justify-content:center; flex-wrap:wrap;}
@@ -134,8 +138,8 @@ a.link:hover{background:rgba(252,163,21,.14);}
     <a href="index.html">Atlas</a>
     <a href="calendar.html">Calendar</a>
     <a href="directory.html">Directory</a>
-    <a href="instagram.html">Instagram</a>
-    <a href="about.html" class="active">About</a>
+    <a href="instagram.html" class="active">Instagram</a>
+    <a href="about.html">About</a>
     <a href="https://instagram.com/NYHilltowners" class="ig" target="_blank" rel="noopener" title="@NYHilltowners on Instagram" aria-label="Instagram">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line></svg>
     </a>
@@ -146,39 +150,16 @@ a.link:hover{background:rgba(252,163,21,.14);}
 </nav>
 
 <main class="wrap">
-  <div class="eyebrow">About this atlas</div>
-  <h1>Hilltowns Folk Atlas</h1>
+  <div class="eyebrow">Follow us on instagram</div>
 
-  <p>A living atlas of the NY Helderberg-Hudson Hilltowns &mdash; folklore and legends gathered from historical sources, alongside the people making and telling stories today. Every tale lists its original teller and source, stories are only as reliable as their tellers.</p>
+  <div class="ig-embed">
+    <behold-widget feed-id="DQQgLTlaBRa7ShPrK2jU"></behold-widget>
+  </div>
 
-  <p>Additions, suggestions, corrections, complaints about the universe? Message us on Instagram at <a class="link" href="https://instagram.com/NYHilltowners" target="_blank" rel="noopener">@NYHilltowners</a></p>
-
-  <p>Local organization, business, interesting bit of folklore, or something else you think should be on the map? Let us know! <span class="link" style="border-bottom-style:dashed;">[link to come]</span></p>
-
-  <section class="faq">
-    <div class="eyebrow">Infrequently Asked Questions</div>
-
-    <h3>Who are you?</h3>
-    <p>A group of neighbors who believe in the power of people and democracy. We support free speech and free thought, civil discourse, food sovereignty, local farms and businesses, and economic resilience.</p>
-
-    <h3>Why did you build this?</h3>
-    <p>We believe that many of the problems we face are, at their core, due to the consolidation of power &mdash; including economic power. We have many monopolies and duopolies (big box stores and brands) that offer the illusion of choice but ultimately just feed our dollars into lobbying against the will of the people.</p>
-    <p>We need to redirect our dollars and our power into local businesses that will invest in our communities and people &mdash; not corporations who invest our money into buying elections, dismantling democracy, or endless stock buybacks to benefit shareholders and CEOs.</p>
-
-    <h3>How did you make this? Who is paying for this?! Soros?!</h3>
-    <p>Good questions! Always follow the $$ &mdash; we like the way you think. This site was made by a rag tag group of professional and semi-professional writers, designers, artists, developers, and community contributors, volunteering our time because we love these organizations and businesses, and we think you will too. If you support them, they'll be around for a long time to come, and pay local taxes, and that's good for all of us. Hosting fees were paid by an anonymous Timothy Snyder fan at our last meetup; there's always a hero in the crowd if you look.</p>
-    <p>And we used AI for help with the following aspects: data analysis and spreadsheet cleanup, and coding assistance.</p>
-
-    <h3>You used AI? I thought you were anti-AI &mdash; what gives?</h3>
-    <p>We're not anti-tech or anti-AI! We love technology &mdash; from flint-knapping to protein-folding algorithms, technology has made the world a more creative, and in many ways better, place. Some artists were against the camera. Some embraced it and used it to connect with people. And others used it to create mass surveillance systems. Most technology is what we make of it. We need to use it thoughtfully, have conversations about it, and course-correct when we make mistakes.</p>
-    <p>We approached this project with intention &mdash; bringing the information, artwork, design, research, and user experience to the project ourselves, and using AI tools as a one-time bridge to help us fill knowledge gaps in development. This site and system does not use or rely on AI now that it is launched. We never use generative AI for creative, art, ethical, or design work, and we promise to always disclose when we use it, and what we use it for.</p>
-
-    <h3>Do you track visitors?</h3>
-    <p>Only in the lightest way. We use <a href="https://www.goatcounter.com/" target="_blank" rel="noopener">GoatCounter</a>, a privacy-friendly analytics tool, to count visits &mdash; so we can see how many people the site reaches and which pages are useful. It sets no cookies, collects no personal data, and doesn't track you across the web. No creepy stuff, no surveillance, no selling your information &mdash; just a simple headcount.</p>
-
-    <h3>Do you have an opinion you think we should hear?</h3>
-    <p>We always welcome new perspectives and civil discourse. Please DM us on Instagram at <a href="https://instagram.com/NYHilltowners" target="_blank" rel="noopener">@NYHilltowners</a> or email us at <a href="mailto:nyhilltowners@gmail.com">nyhilltowners@gmail.com</a>.</p>
-  </section>
+  <a class="ig-follow" href="https://instagram.com/NYHilltowners" target="_blank" rel="noopener">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line></svg>
+    @NYHilltowners
+  </a>
 
   <a class="backmap" href="index.html">Explore the Atlas &rarr;</a>
 </main>
@@ -209,6 +190,14 @@ a.link:hover{background:rgba(252,163,21,.14);}
     }
   });
 })();
+</script>
+<!-- Behold.so Instagram widget loader -->
+<script>
+  (() => {
+    if(window.__bhldScript)return;window.__bhldScript=true;
+    const d=document,s=d.createElement("script");s.type="module";
+    s.src="https://w.behold.so/widget.js";setTimeout(()=>{d.head.append(s);},0);
+  })();
 </script>
 <!-- GoatCounter: privacy-friendly analytics, no cookies, no personal data -->
 <script data-goatcounter="https://nyhilltowners.goatcounter.com/count"

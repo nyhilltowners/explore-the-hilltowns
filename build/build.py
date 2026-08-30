@@ -795,6 +795,9 @@ def main() -> int:
     # Standalone Directory page (reads site/data.js at runtime).
     if (ROOT / "directory.html").exists():
         shutil.copyfile(ROOT / "directory.html", SITE / "directory.html")
+    # Standalone Instagram feed page (static; embed widget added separately).
+    if (ROOT / "instagram.html").exists():
+        shutil.copyfile(ROOT / "instagram.html", SITE / "instagram.html")
     if (ROOT / "images").exists():
         shutil.copytree(ROOT / "images", SITE / "images", dirs_exist_ok=True)
     if (ROOT / "fonts").exists():
