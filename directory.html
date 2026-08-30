@@ -144,7 +144,15 @@ h1{font-family:'Montserrat',sans-serif; font-weight:800; text-transform:uppercas
 
 /* listing cards */
 .org{background:var(--paper); border:1px solid var(--parchment-line); border-radius:10px;
-  padding:16px 18px 14px; margin-bottom:10px; box-shadow:0 1px 4px rgba(0,0,60,.04);}
+  padding:16px 18px 14px; margin-bottom:10px; box-shadow:0 1px 4px rgba(0,0,60,.04);
+  display:flex; gap:14px; align-items:flex-start;}
+/* Hilltowns-proper highlight: gold sidebar + faint warm tint, for orgs physically
+   located in Berne/Knox/Westerlo/Rensselaerville/Preston Hollow/Potter Hollow/Oak Hill */
+.org.htown{border-left:4px solid var(--gold); padding-left:14px; background:#fdf6e6;}
+.org .orgthumb{flex:none; width:88px; height:88px; border-radius:8px; overflow:hidden;
+  background:#e9e4d2;}
+.org .orgthumb img{width:100%; height:100%; object-fit:cover; display:block;}
+.org .orgbody{flex:1; min-width:0;}
 .org .toprow{display:flex; align-items:baseline; gap:10px; flex-wrap:wrap; margin-bottom:2px;}
 .org h3{font-family:'Montserrat',sans-serif; font-weight:700; font-size:17px; color:var(--ink-blue); line-height:1.25;}
 .org .town{font-family:'Montserrat',sans-serif; font-weight:700; font-size:11.5px; letter-spacing:.05em;
@@ -196,7 +204,9 @@ table.hours tr.today td:first-child{color:var(--gold-ink);}
 
 @media (max-width:640px){
   .azbar{top:52px;}
-  .org{padding:13px 14px 12px;}
+  .org{padding:13px 14px 12px; gap:10px;}
+  .org.htown{padding-left:10px;}
+  .org .orgthumb{width:64px; height:64px;}
   .org .facts .frow{flex-wrap:wrap;}
 }
 </style>
@@ -300,6 +310,22 @@ table.hours tr.today td:first-child{color:var(--gold-ink);}
     return st==="NY" || st==="NEW YORK" ? town : town + ", " + st;
   }
 
+  /* ---- physically-in-the-Hilltowns highlight ----
+     Matches against the parsed town only (never the raw street address) — a raw-address
+     search would false-positive on street names like "Berne-Altamont Rd" in Altamont,
+     which is not itself a Hilltown. Whole-word/phrase match so "East Berne" and
+     "South Westerlo" (real hamlets within Berne/Westerlo) still count. */
+  var HILLTOWN_NAMES = ["berne","knox","westerlo","rensselaerville",
+    "preston hollow","potter hollow","oak hill","preston-potter hollow"];
+  function isHilltownOrg(town){
+    var t = String(town||"").toLowerCase().replace(/,\s*(ny|new york)$/i,"").trim();
+    if(!t) return false;
+    return HILLTOWN_NAMES.some(function(name){
+      var rx = new RegExp("\\b" + name.replace(/[-/\\^$*+?.()|[\]{}]/g,"\\$&").replace(/ /g,"[\\s-]+") + "\\b");
+      return rx.test(t);
+    });
+  }
+
   /* ---- merge the same org listed in several category sheets ----
      Same normalized name = same org, UNLESS both records carry street addresses
      whose leading street numbers differ (two distinct locations keep two cards).
@@ -319,7 +345,7 @@ table.hours tr.today td:first-child{color:var(--gold-ink);}
         if(!na || !nb || na === nb){ target = b; break; }   /* same/unknown location */
       }
       if(!target){
-        target = { t:r.t, cats:[], tags:[], addr:"", ph:"", web:"", s:"", hrs:null };
+        target = { t:r.t, cats:[], tags:[], addr:"", ph:"", web:"", s:"", hrs:null, img:"", cred:"" };
         bucket.push(target); out.push(target);
       }
       if(target.cats.indexOf(r.cat) < 0) target.cats.push(r.cat);
@@ -333,6 +359,7 @@ table.hours tr.today td:first-child{color:var(--gold-ink);}
       if(r.s && r.s.length > target.s.length) target.s = r.s;  /* longest copy wins */
       var hasHrs = r.hrs && Object.keys(r.hrs).some(function(k){ return r.hrs[k]; });
       if(!target.hrs && hasHrs) target.hrs = r.hrs;
+      if(!target.img && r.img){ target.img = r.img; target.cred = r.cred || ""; }  /* thumbnail, when available */
     });
     return out;
   }
@@ -340,6 +367,7 @@ table.hours tr.today td:first-child{color:var(--gold-ink);}
   var orgs = mergeRecords((ATLAS.records || []).filter(function(r){ return r.ty === "poi"; }));
   orgs.forEach(function(o){
     o.town = townOf(o.addr);
+    o.inHilltowns = isHilltownOrg(o.town);
     o.lctags = o.tags.map(function(t){ return t.toLowerCase(); });
     o.sortKey = normName(o.t).replace(/^(the|a|an)\s+/, "");    /* "The X" files under X */
     var c0 = o.sortKey.charAt(0).toUpperCase();
@@ -423,7 +451,14 @@ table.hours tr.today td:first-child{color:var(--gold-ink);}
     }).join("") + "</div>";
   }
   function orgCard(o){
-    var h = '<div class="org">';
+    var h = '<div class="org'+(o.inHilltowns?' htown':'')+'">';
+    /* Thumbnail, when one was found (explicit Image, or pulled from the org's
+       own website) — no placeholder is shown when there isn't one. */
+    if(o.img){
+      h += '<div class="orgthumb"><img src="'+esc(o.img)+'" alt="" loading="lazy" '
+        + 'onerror="this.parentNode.style.display=\'none\'"></div>';
+    }
+    h += '<div class="orgbody">';
     h += '<div class="toprow"><h3>'+esc(o.t)+'</h3>' + chipRow(o)
        + (o.town ? '<span class="town">'+esc(o.town)+'</span>' : "") + "</div>";
     h += tagChips(o);
@@ -442,7 +477,7 @@ table.hours tr.today td:first-child{color:var(--gold-ink);}
       h += '<div class="frow"><span class="k">Site</span><span><a class="weblink" href="'+esc(href)+'" target="_blank" rel="noopener">'+esc(label)+'</a></span></div>';
     }
     h += hoursTable(o.hrs);
-    h += "</div></div>";
+    h += "</div></div></div>";
     return h;
   }
 
