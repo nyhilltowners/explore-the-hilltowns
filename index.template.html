@@ -87,7 +87,7 @@ body{
 .iconbtn:hover{background:rgba(26,29,92,.07); color:var(--gold);}
 .iconbtn svg{width:22px; height:22px; display:block;}
 #menuToggle{display:none;}
-/* Skyline: conditions at the Huyck Preserve · today's sunrise/sunset · moon.
+/* Skyline: current conditions · today's sunrise/sunset · moon.
    Three icon+two-line groups, left to right. Desktop header only. */
 .skyline{
   display:flex; align-items:center; gap:18px; margin:0 14px; flex:none;
@@ -488,7 +488,7 @@ html[data-theme="night"] #modeToggle{color:#fca315;}
   <div class="skyline" id="skyline">
     <div class="sky-g sky-wx" id="skyWx">
       <svg id="skyIco" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"></svg>
-      <div class="sky-stack"><span class="sky-eyebrow">Huyck Preserve</span><span class="sky-val" id="skyTemp"></span></div>
+      <div class="sky-stack"><span class="sky-eyebrow" id="skyCond"></span><span class="sky-val" id="skyTemp"></span></div>
     </div>
     <div class="sky-g sky-sun" title="Today's sunrise and sunset, Berne time">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 16a8 8 0 0 1 16 0"/><line x1="2" y1="19.5" x2="22" y2="19.5"/><line x1="12" y1="3" x2="12" y2="5.5"/><line x1="5" y1="6.5" x2="6.6" y2="8.1"/><line x1="19" y1="6.5" x2="17.4" y2="8.1"/></svg>
@@ -1948,11 +1948,12 @@ setInterval(function(){                /* re-check the sun once a minute; a page
 }, 60000);
 document.addEventListener('visibilitychange', function(){ if(document.hidden){ stopGlow(); stopSparks(); } else { startGlow(); startSparks(); } });
 
-/* ============ SKYLINE: weather at the Huyck Preserve + today's sun ============
-   Weather is Open-Meteo's modeled current conditions at the Preserve's own POI
-   coordinates (5052 Delaware Tpke) — the Preserve/UAlbany station itself has no
-   public feed. No key, no build step; refreshed every 15 min; hidden (never
-   faked) if the fetch fails. Sunrise/sunset reuse the night-mode clock. */
+/* ============ SKYLINE: Hilltowns weather + today's sun ============
+   Weather is Open-Meteo's modeled current conditions, sampled at the Huyck
+   Preserve's coordinates (a central Hilltowns point; the Preserve isn't named
+   in the UI and isn't affiliated). No key, no build step; refreshed every 15
+   min; hidden (never faked) if the fetch fails. Sunrise/sunset reuse the
+   night-mode clock. */
 var HUYCK = {lat:42.5155081667906, lng:-74.1401693189751};
 var SKY_ICONS = {   /* simple stroke icons matching the header's search/menu glyphs */
   sun:   '<circle cx="12" cy="12" r="4.2"/><line x1="12" y1="2.5" x2="12" y2="5"/><line x1="12" y1="19" x2="12" y2="21.5"/><line x1="2.5" y1="12" x2="5" y2="12"/><line x1="19" y1="12" x2="21.5" y2="12"/><line x1="5.3" y1="5.3" x2="7" y2="7"/><line x1="17" y1="17" x2="18.7" y2="18.7"/><line x1="5.3" y1="18.7" x2="7" y2="17"/><line x1="17" y1="7" x2="18.7" y2="5.3"/>',
@@ -1997,13 +1998,14 @@ function renderSkyWx(cur){
   var kind = skyKind(cur.weather_code, cur.is_day);
   ico.innerHTML = SKY_ICONS[kind[0]] || SKY_ICONS.cloud;
   ico.setAttribute('aria-label', kind[1]);
+  document.getElementById('skyCond').textContent = kind[1];
   t.innerHTML = f+'&deg;F<span class="c">'+c+'&deg;C</span>';
   /* Open-Meteo stamps the reading with its model time (local, 15-minute grid) — surface it so a
      reading that looks stale can be checked at a glance. */
   var asOf = '';
   if(cur.time){ var mt = /T(\d{2}):(\d{2})/.exec(cur.time); if(mt){ var hh = +mt[1]; asOf = ' \u00b7 as of '+((hh%12)||12)+':'+mt[2]+(hh<12?' am':' pm'); } }
   var fetchedAt = new Date().toLocaleTimeString('en-US',{timeZone:'America/New_York',hour:'numeric',minute:'2-digit'}).toLowerCase();
-  document.getElementById('skyWx').title = kind[1]+asOf+' \u2014 modeled current conditions at the Huyck Preserve, Rensselaerville (not the Preserve\u2019s own station; data: Open-Meteo.com). Fetched '+fetchedAt+'; refreshes every 15 min and whenever this tab comes back into focus.';
+  document.getElementById('skyWx').title = kind[1]+asOf+' \u2014 modeled current conditions for the Hilltowns (data: Open-Meteo.com). Fetched '+fetchedAt+'; refreshes every 15 min and whenever this tab comes back into focus.';
   box.classList.add('has-wx');
 }
 var skyLastFetch = 0;
