@@ -13,6 +13,7 @@ import re
 import shutil
 import sys
 import urllib.request
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 from urllib.parse import urljoin, urlparse
 
@@ -20,6 +21,13 @@ from openpyxl import load_workbook
 
 ROOT = Path(__file__).resolve().parent.parent
 SITE = ROOT / "site"
+
+# Line-buffered stdout so progress shows up live in GitHub Actions logs instead
+# of all at once when the script exits (Python block-buffers when not a TTY).
+try:
+    sys.stdout.reconfigure(line_buffering=True)
+except Exception:
+    pass
 
 FAILS: list[str] = []
 WARNS: list[str] = []
@@ -105,7 +113,25 @@ OG_RXS = [
     re.compile(r'<meta[^>]+name=["\']twitter:image(?::src)?["\'][^>]*content=["\']([^"\']+)["\']', re.I),
     re.compile(r'<meta[^>]+content=["\']([^"\']+)["\'][^>]*name=["\']twitter:image(?::src)?["\']', re.I),
 ]
-_og_cache: dict = {}
+# ---- Preview-image cache + parallel fetch ----------------------------------
+# Every POI/event with a Website but no explicit Image gets an Open Graph
+# thumbnail scraped from that site. ~2,200 serial fetches with an 8 s timeout is
+# what made builds take 10–15 min (and far longer on a bad day). Now:
+#   * results are cached in site/preview-cache.json, which GitHub Pages serves
+#     along with the site, so the NEXT build seeds itself from the live copy
+#     (PREVIEW_CACHE_URL) and only fetches sites it hasn't seen recently —
+#     no workflow change needed for persistence;
+#   * misses are fetched in parallel (PREVIEW_WORKERS threads, 6 s timeout);
+#   * successes are re-checked every 30 days, failures every 7.
+PREVIEW_CACHE_FILE = "preview-cache.json"
+PREVIEW_CACHE_URL = "https://nyhilltowners.com/" + PREVIEW_CACHE_FILE
+PREVIEW_WORKERS = 12
+PREVIEW_TIMEOUT = 6
+PREVIEW_TTL_OK_DAYS = 30
+PREVIEW_TTL_FAIL_DAYS = 7
+_PENDING = "\x00preview-pending:"        # placeholder written into records until resolve_previews() runs
+_preview_cache: dict = {}
+_preview_pending: dict = {}              # url -> first `where` that asked (for warnings)
 
 
 # Hosts whose Open Graph preview is a generic platform/portal image rather than
@@ -123,19 +149,59 @@ def preview_blocked(url):
     return any(host == h or host.endswith("." + h) for h in NO_PREVIEW_HOSTS)
 
 
+def _cache_fresh(entry):
+    try:
+        age = (datetime.datetime.utcnow() - datetime.datetime.strptime(entry["t"], "%Y-%m-%d")).days
+    except Exception:
+        return False
+    return age <= (PREVIEW_TTL_OK_DAYS if entry.get("img") else PREVIEW_TTL_FAIL_DAYS)
+
+
+def load_preview_cache():
+    """Local site/preview-cache.json if present (local rebuilds), else the live
+    copy published with the last deploy, else start empty."""
+    global _preview_cache
+    local = SITE / PREVIEW_CACHE_FILE
+    src = None
+    try:
+        if local.exists():
+            _preview_cache = json.loads(local.read_text(encoding="utf-8"))
+            src = "local"
+        else:
+            req = urllib.request.Request(PREVIEW_CACHE_URL,
+                                         headers={"User-Agent": "Mozilla/5.0 (compatible; AtlasBuild/1.0)"})
+            with urllib.request.urlopen(req, timeout=10) as resp:
+                _preview_cache = json.loads(resp.read().decode("utf-8"))
+            src = "live site"
+    except Exception as e:
+        _preview_cache = {}
+        print(f"  preview cache: none available ({e.__class__.__name__}) — fetching everything this build")
+        return
+    if not isinstance(_preview_cache, dict):
+        _preview_cache = {}
+    print(f"  preview cache: {len(_preview_cache)} entries loaded from {src}")
+
+
 def fetch_site_image(url, where):
-    """Fetch a site's Open Graph / Twitter preview image. Warnings only."""
+    """Return a cached preview image URL, or a placeholder that
+    resolve_previews() fills in after all workbooks are parsed."""
     if preview_blocked(url):
         return ""
     if not re.match(r"^https?://", url, re.I):
         url = "https://" + url
-    if url in _og_cache:
-        return _og_cache[url]
-    img = ""
+    ent = _preview_cache.get(url)
+    if ent and _cache_fresh(ent):
+        return ent.get("img", "")
+    _preview_pending.setdefault(url, where)
+    return _PENDING + url
+
+
+def _fetch_one(url):
+    img, err = "", ""
     try:
         req = urllib.request.Request(
             url, headers={"User-Agent": "Mozilla/5.0 (compatible; AtlasBuild/1.0)"})
-        with urllib.request.urlopen(req, timeout=8) as resp:
+        with urllib.request.urlopen(req, timeout=PREVIEW_TIMEOUT) as resp:
             page = resp.read(300_000).decode("utf-8", errors="ignore")
             final_url = resp.geturl()
         for rx in OG_RXS:
@@ -143,14 +209,41 @@ def fetch_site_image(url, where):
             if m:
                 img = urljoin(final_url, html_mod.unescape(m.group(1).strip()))
                 break
-        if not img:
-            warn(f"{where}: no preview image published by {url} — pin will have no photo "
-                 f"(you can set one explicitly in the Image column)")
     except Exception as e:
-        warn(f"{where}: couldn't reach {url} for a preview image "
-             f"({e.__class__.__name__}) — pin will have no photo this build")
-    _og_cache[url] = img
-    return img
+        err = e.__class__.__name__
+    return url, img, err
+
+
+def resolve_previews(all_records):
+    """Fetch every pending preview in parallel, fill the placeholders, and
+    write the refreshed cache into site/ so the next build can reuse it."""
+    urls = list(_preview_pending)
+    today = datetime.datetime.utcnow().strftime("%Y-%m-%d")
+    if urls:
+        print(f"  previews: {len(urls)} site(s) to fetch ({PREVIEW_WORKERS} at a time, {PREVIEW_TIMEOUT}s timeout)")
+        done = 0
+        with ThreadPoolExecutor(max_workers=PREVIEW_WORKERS) as pool:
+            for fut in as_completed([pool.submit(_fetch_one, u) for u in urls]):
+                url, img, err = fut.result()
+                where = _preview_pending[url]
+                if err:
+                    warn(f"{where}: couldn't reach {url} for a preview image ({err}) — no photo this build; retried in {PREVIEW_TTL_FAIL_DAYS} days")
+                elif not img:
+                    warn(f"{where}: no preview image published by {url} — no photo (you can set one explicitly in the Image column)")
+                _preview_cache[url] = {"img": img, "t": today}
+                done += 1
+                if done % 100 == 0 or done == len(urls):
+                    print(f"  previews: {done}/{len(urls)}")
+    for r in all_records:
+        img = r.get("img")
+        if isinstance(img, str) and img.startswith(_PENDING):
+            r["img"] = _preview_cache.get(img[len(_PENDING):], {}).get("img", "")
+    # prune entries for sites no longer referenced anywhere, then persist
+    referenced = set(urls) | {u for u, e in _preview_cache.items() if _cache_fresh(e)}
+    SITE.mkdir(exist_ok=True)
+    (SITE / PREVIEW_CACHE_FILE).write_text(
+        json.dumps({u: _preview_cache[u] for u in sorted(referenced) if u in _preview_cache},
+                   ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
 
 
 WIKI_FILE_RX = re.compile(
@@ -745,6 +838,7 @@ def backfill_event_coords_from_poi(all_records):
 
 def main() -> int:
     manifest = json.loads((ROOT / "manifest.json").read_text(encoding="utf-8"))
+    load_preview_cache()
     all_records = []
     categories = []
     for cat in manifest["categories"]:
@@ -770,6 +864,7 @@ def main() -> int:
         print(f"  {label}: {len(recs)} records")
 
     backfill_event_coords_from_poi(all_records)
+    resolve_previews(all_records)
 
     print()
     for w in WARNS:
