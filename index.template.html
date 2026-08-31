@@ -87,6 +87,23 @@ body{
 .iconbtn:hover{background:rgba(26,29,92,.07); color:var(--gold);}
 .iconbtn svg{width:22px; height:22px; display:block;}
 #menuToggle{display:none;}
+/* Skyline: current conditions at the Huyck Preserve + today's sunrise/sunset.
+   Desktop header only; hidden under 900px where the nav needs the room. */
+.skyline{
+  display:flex; align-items:center; gap:10px; margin:0 14px; flex:none;
+  font-family:'Montserrat',sans-serif; font-size:11.5px; letter-spacing:.04em; color:var(--ink-blue);
+  line-height:1.2;
+}
+.skyline .sky-ico{width:28px; height:28px; flex:none; display:none; color:var(--ink-blue);}
+.skyline.has-wx .sky-ico{display:block;}
+.skyline .sky-stack{display:flex; flex-direction:column; gap:2px;}
+.skyline .sky-temp{font-weight:700; font-size:13px; letter-spacing:.02em; display:none;}
+.skyline.has-wx .sky-temp{display:block;}
+.skyline .sky-temp .c{font-weight:400; color:var(--faint); margin-left:5px;}
+.skyline .sky-sun{white-space:nowrap; color:#4a4f7a;}
+.skyline .sky-sun .sep{margin:0 5px; color:var(--birch);}
+.skyline .sky-place{font-size:9px; letter-spacing:.18em; text-transform:uppercase; color:var(--faint);}
+@media (max-width:900px){ .skyline{display:none;} }
 /* Search overlay: drops from the header, anchored to it, over the map. */
 #searchbar{
   display:none; position:absolute; top:100%; left:0; right:0; z-index:1999;
@@ -368,70 +385,75 @@ a.weblink:hover{text-decoration:underline;}
    re-pointed to a smoked-parchment + ember palette; the rules below catch the
    hard-coded day colors that the tokens don't reach. */
 html[data-theme="night"]{
-  --ink:#0a0814; --ink2:#120e1e; --ink3:#1d1730;
+  --ink:#00003a; --ink2:#000052; --ink3:#12127a;
   --paper:#f6e7c8;
-  --parchment:#1a1510; --parchment-line:#33291c; --ink-blue:#f0dcb0;
-  --lichen:#e6d7b8; --birch:#b9a27e; --faint:#8a7a5c;
+  --parchment:#00004d; --parchment-line:#26268f; --ink-blue:#f0dcb0;
+  --lichen:#e6d7b8; --birch:#a9b0dd; --faint:#7b82b8;
   --wampum:#ffb347; --wampum-deep:#ff8c1a;
-  --gold:#ffb020; --gold-ink:#1a1208; --gold-dim:#c98a2e;
-  --card:#1a1510; --card-line:#3a2e1e;
+  --gold:#ffb020; --gold-ink:#000080; --gold-dim:#c98a2e;
+  --card:#00004d; --card-line:#2e2ea8;
   --precise:#ffb347; --fair:#ffd27a; --approx:#ff8c1a; --unver:#c0644a;
-  --ember-line:#5a3a14;
+  --ember-line:#2e2ea8;
 }
-html[data-theme="night"] body, html[data-theme="night"] .sitenav, html[data-theme="night"] #sidebar{
+html[data-theme="night"] body, html[data-theme="night"] #sidebar{
   transition:background-color .7s ease, color .7s ease, border-color .7s ease;
 }
-html[data-theme="night"] .betabar{background:#3a2308; color:#ffd9a0;}
-html[data-theme="night"] .sitenav, html[data-theme="night"] #searchbar{
-  border-bottom-color:var(--ember-line); box-shadow:0 2px 10px rgba(0,0,0,.5);
+/* Ticker at night: house dark blue, light text, gold glyph */
+html[data-theme="night"] .betabar{background:#000080; color:#fca315;}
+html[data-theme="night"] .betabar .tg{color:#ffd27a;}
+/* The nav bar stays daytime parchment at night so the logo and links keep their
+   colors — re-declare the day tokens on it so every descendant inherits them. */
+html[data-theme="night"] .sitenav{
+  --parchment:#f4efe1; --parchment-line:#e3dcc8; --ink-blue:#1a1d5c; --paper:#feffff;
+  --gold:#fca315; --gold-ink:#2b2410; --lichen:#dde0f2; --faint:#7b82b8;
 }
-html[data-theme="night"] .sitenav .links a:hover, html[data-theme="night"] .iconbtn:hover{background:rgba(255,176,32,.12);}
-html[data-theme="night"] #searchbar input[type=text]{background:#241d14; border-color:#3a2e1e; color:var(--paper);}
-html[data-theme="night"] #searchbar input[type=text]::placeholder{color:#8a7a5c;}
-html[data-theme="night"] #sidebar{background-image:radial-gradient(rgba(255,176,32,.06) 0.6px, transparent 0.6px); border-right-color:#2b2118;}
+html[data-theme="night"] #sidebar{background-image:radial-gradient(rgba(255,176,32,.06) 0.6px, transparent 0.6px); border-right-color:#26268f;}
 html[data-theme="night"] .planrow{color:var(--birch);}
-html[data-theme="night"] .planrow input[type=date]{background:#241d14; border-color:#3a2e1e; color:var(--paper); color-scheme:dark;}
-html[data-theme="night"] .planrow .btn, html[data-theme="night"] .controls #filtersToggle{background:#241d14; border-color:#3a2e1e; color:var(--lichen);}
+html[data-theme="night"] .planrow input[type=date]{background:#000066; border-color:#2e2ea8; color:var(--paper); color-scheme:dark;}
+html[data-theme="night"] .planrow .btn, html[data-theme="night"] .controls #filtersToggle{background:#000066; border-color:#2e2ea8; color:var(--lichen);}
 html[data-theme="night"] .epigraph, html[data-theme="night"] .controls .epigraph{color:var(--birch);}
 html[data-theme="night"] .catbox:hover{color:#fff6e0;}
 html[data-theme="night"] .catmark.ochre{color:var(--wampum);}
-html[data-theme="night"] #listwrap{scrollbar-color:#4a3a24 transparent;}
-html[data-theme="night"] .grouphead{background:#241c12; color:var(--birch); border-bottom-color:#33291c;}
+html[data-theme="night"] #listwrap{scrollbar-color:#2e2ea8 transparent;}
+html[data-theme="night"] .grouphead{background:#000080; color:var(--birch); border-bottom-color:#26268f;}
 html[data-theme="night"] .card:hover{background:rgba(255,255,255,.035);}
 html[data-theme="night"] .card.active{background:rgba(255,176,32,.12);}
-html[data-theme="night"] .card .meta{color:#9a8a6a;}
+html[data-theme="night"] .card .meta{color:#8a90c0;}
 html[data-theme="night"] .card .meta .nat{color:#d9a24a;}
 html[data-theme="night"] .chip, html[data-theme="night"] .chip.precise, html[data-theme="night"] .chip.fair,
-html[data-theme="night"] .chip.approx, html[data-theme="night"] .chip.none{color:#a08f6e; border-color:#3a2e1e;}
-html[data-theme="night"] .chip.unver{color:#a08f6e; border-color:#6a4a2a;}
-html[data-theme="night"] .btn{border-color:#3a2e1e;}
+html[data-theme="night"] .chip.approx, html[data-theme="night"] .chip.none{color:#8890b0; border-color:#2e2ea8;}
+html[data-theme="night"] .chip.unver{color:#8890b0; border-color:#6a6ad0;}
+html[data-theme="night"] .btn{border-color:#2e2ea8;}
 html[data-theme="night"] .btn.primary:hover{background:#ffc247; border-color:#ffc247;}
 html[data-theme="night"] #detail, html[data-theme="night"] #about, html[data-theme="night"] .detail-head,
 html[data-theme="night"] .srcbox, html[data-theme="night"] .afnote, html[data-theme="night"] .tag,
 html[data-theme="night"] .likebtn, html[data-theme="night"] .pop .others,
 html[data-theme="night"] .maplibregl-popup-content, html[data-theme="night"] #layers,
-html[data-theme="night"] #layersToggle, html[data-theme="night"] #layers hr{border-color:#3a2e1e;}
+html[data-theme="night"] #layersToggle, html[data-theme="night"] #layers hr{border-color:#2e2ea8;}
 html[data-theme="night"] table.hours tr.today td{color:#fff6e0;}
 html[data-theme="night"] .tag:hover{color:#fff6e0;}
-html[data-theme="night"] .popimg, html[data-theme="night"] .dimg img{background:#120e1e;}
-html[data-theme="night"] #map{background:#0b0a12;}
-html[data-theme="night"] #mapnotice{background:#0b0a12 !important;}
+html[data-theme="night"] .popimg, html[data-theme="night"] .dimg img{background:#000052;}
+html[data-theme="night"] #map{background:#00002e;}
+#sparks{position:absolute; inset:0; width:100%; height:100%; z-index:1; pointer-events:none; display:none;}
+html[data-theme="night"] #sparks{display:block;}
+.maplibregl-popup{z-index:2;}   /* keep popups above the sparks canvas */
+html[data-theme="night"] #mapnotice{background:#00002e !important;}
 html[data-theme="night"] #layers, html[data-theme="night"] #layersToggle, html[data-theme="night"] .mapbar .btn,
-html[data-theme="night"] #onlinePill{background:rgba(14,10,22,.92);}
-html[data-theme="night"] #onlinePill:hover{background:rgba(24,18,34,.96);}
+html[data-theme="night"] #onlinePill{background:rgba(0,0,60,.92);}
+html[data-theme="night"] #onlinePill:hover{background:rgba(0,0,80,.96);}
 html[data-theme="night"] #layers label:hover{color:#fff6e0;}
-html[data-theme="night"] #sheetHandle::before{background:#5a4a30;}
-html[data-theme="night"] .maplibregl-ctrl-group{background:#1a1510; box-shadow:0 0 0 1px #3a2e1e;}
+html[data-theme="night"] #sheetHandle::before{background:#4a4ab8;}
+html[data-theme="night"] .maplibregl-ctrl-group{background:#00004d; box-shadow:0 0 0 1px #2e2ea8;}
 html[data-theme="night"] .maplibregl-ctrl-group button{filter:invert(.92) sepia(.4) saturate(.6);}
-html[data-theme="night"] .maplibregl-ctrl-group button + button{border-top-color:#3a2e1e;}
-html[data-theme="night"] .maplibregl-ctrl-attrib{background:rgba(14,10,22,.75); color:var(--birch);}
+html[data-theme="night"] .maplibregl-ctrl-group button + button{border-top-color:#2e2ea8;}
+html[data-theme="night"] .maplibregl-ctrl-attrib{background:rgba(0,0,60,.75); color:var(--birch);}
 html[data-theme="night"] .maplibregl-ctrl-attrib a{color:var(--wampum);}
-html[data-theme="night"] .maplibregl-ctrl-scale{background:rgba(14,10,22,.6); color:var(--lichen); border-color:var(--birch);}
+html[data-theme="night"] .maplibregl-ctrl-scale{background:rgba(0,0,60,.6); color:var(--lichen); border-color:var(--birch);}
 /* sun/moon toggle in the header */
 #modeToggle .moon, #modeToggle .sun{display:none;}
 html:not([data-theme="night"]) #modeToggle .moon{display:block;}
 html[data-theme="night"] #modeToggle .sun{display:block;}
-html[data-theme="night"] #modeToggle{color:var(--gold);}
+html[data-theme="night"] #modeToggle{color:#fca315;}
 </style>
 </head>
 <body>
@@ -457,6 +479,14 @@ html[data-theme="night"] #modeToggle{color:var(--gold);}
     <img src="images/raccoon-mark.svg" alt="">
     <span class="stack"><span class="l1">Hilltowns</span><span class="l2">Folk Atlas</span></span>
   </a>
+  <div class="skyline" id="skyline" title="Current conditions modeled for the Huyck Preserve, Rensselaerville (data: Open-Meteo.com). Sunrise and sunset are today's, Berne time.">
+    <svg class="sky-ico" id="skyIco" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"></svg>
+    <div class="sky-stack">
+      <span class="sky-place">Huyck Preserve</span>
+      <span class="sky-temp" id="skyTemp"></span>
+      <span class="sky-sun" id="skySun"></span>
+    </div>
+  </div>
   <div class="hright">
     <div class="links" id="hnav">
       <a href="index.html" class="active">Atlas</a>
@@ -540,6 +570,7 @@ html[data-theme="night"] #modeToggle{color:var(--gold);}
 
   <div id="mapwrap">
     <div id="map"></div>
+    <canvas id="sparks" aria-hidden="true"></canvas>
     <button id="onlinePill" title="Show online events">&#8907; Online events: <span id="onlineN">0</span></button>
     <button class="btn" id="layersToggle" title="Base map &amp; layers">&#9638; Map</button>
     <div id="layers">
@@ -1194,6 +1225,7 @@ function immScale(r){
   if(days <= 2) return 0.85;              /* starts within 48 hours */
   return 0.72;                            /* 3-7 days out */
 }
+var LAST_FC = null;   /* most recent map feature set; the spark emitter reads folklore pins from it */
 /* deterministic 0–1 phase per pin, so co-located pins don't pulse in lockstep */
 function phaseOf(k){
   var h = 0; k = String(k);
@@ -1209,7 +1241,8 @@ function toFC(list){
       geometry:{type:'Point', coordinates:[r.lng, r.lat]}};
     });
   spreadCollisions(feats);
-  return {type:'FeatureCollection', features:feats};
+  LAST_FC = {type:'FeatureCollection', features:feats};
+  return LAST_FC;
 }
 /* When several pins share (almost) the same coordinate they stack and only the
    top one is clickable — a "crash". We fan co-located pins out around their shared
@@ -1801,6 +1834,68 @@ function glowFrame(ts){
   }
   glowRAF = requestAnimationFrame(glowFrame);
 }
+/* ---- Campfire sparks (night only). A transparent canvas over the map; each
+   frame every on-screen folklore pin is projected to screen space and a few
+   sparks drift up and away from it, fading out. Pure 2D canvas, no GL. ---- */
+var SPARK_MAX = 520, sparks = [], sparkRAF = null, sparkPrev = 0;
+function sparkCanvas(){
+  var c = document.getElementById('sparks'); if(!c) return null;
+  var dpr = window.devicePixelRatio || 1, w = c.clientWidth, h = c.clientHeight;
+  if(c.width !== Math.round(w*dpr) || c.height !== Math.round(h*dpr)){ c.width = Math.round(w*dpr); c.height = Math.round(h*dpr); }
+  return c;
+}
+function spawnSpark(lng, lat){
+  var r = Math.random;
+  sparks.push({lng:lng, lat:lat, born:performance.now(),
+    life: 1100 + r()*1500,            /* ms in the air */
+    vy:   16 + r()*22,                 /* rise, px/s */
+    wind: (r()-0.5)*9,                 /* sideways drift, px/s */
+    sway: 2 + r()*4, swf: 3 + r()*4, swp: r()*6.283,
+    ox: (r()-0.5)*7, oy: (r()-0.5)*4,  /* birth offset from pin centre */
+    sz: 1.3 + r()*1.5});
+}
+function sparkFrame(ts){
+  sparkRAF = null;
+  if(!map || !isNight() || REDUCED_MOTION) return;
+  var c = sparkCanvas(); if(!c){ return; }
+  var dt = Math.min(64, ts - (sparkPrev || ts)); sparkPrev = ts;
+  var dpr = window.devicePixelRatio || 1, W = c.clientWidth, H = c.clientHeight;
+  var x = c.getContext('2d'); x.setTransform(dpr,0,0,dpr,0,0); x.clearRect(0,0,W,H);
+  /* emit: from folklore pins currently on screen, budgeted so a zoomed-out map
+     with hundreds of pins doesn't turn into a blizzard */
+  var pins = (LAST_FC && LAST_FC.features) || [], vis = [];
+  for(var i=0;i<pins.length;i++){
+    var f = pins[i]; if(f.properties.ty !== 'folklore') continue;
+    var pt = map.project(f.geometry.coordinates);
+    if(pt.x < -20 || pt.y < -20 || pt.x > W+20 || pt.y > H+20) continue;
+    vis.push(f);
+  }
+  var rate = Math.min(3.2, 320 / Math.max(1, vis.length));   /* sparks per pin per second */
+  var p = rate * dt / 1000;
+  for(var j=0;j<vis.length && sparks.length < SPARK_MAX;j++){
+    if(Math.random() < p){ var g = vis[j].geometry.coordinates; spawnSpark(g[0], g[1]); }
+  }
+  /* draw + age */
+  var keep = [];
+  for(var k=0;k<sparks.length;k++){
+    var sp = sparks[k], age = ts - sp.born; if(age > sp.life) continue;
+    var t = age/1000, u = age/sp.life;
+    var base = map.project([sp.lng, sp.lat]);
+    var px = base.x + sp.ox + sp.wind*t + sp.sway*Math.sin(t*sp.swf + sp.swp);
+    var py = base.y + sp.oy - sp.vy*t - 6*t*t;              /* rises, easing off like a real ember */
+    var a = (1-u)*(1-u), sz = sp.sz*(1 - 0.5*u);
+    x.beginPath(); x.arc(px, py, sz*2.2, 0, 6.283);           /* soft halo */
+    x.fillStyle = 'rgba(255,150,40,'+(0.28*a).toFixed(3)+')'; x.fill();
+    x.beginPath(); x.arc(px, py, sz, 0, 6.283);               /* the ember */
+    x.fillStyle = u < 0.45 ? 'rgba(255,225,140,'+(0.98*a).toFixed(3)+')' : 'rgba(255,150,50,'+(0.92*a).toFixed(3)+')';
+    x.fill();
+    keep.push(sp);
+  }
+  sparks = keep;
+  sparkRAF = requestAnimationFrame(sparkFrame);
+}
+function startSparks(){ if(map && isNight() && !REDUCED_MOTION && !sparkRAF){ sparkPrev = 0; sparkRAF = requestAnimationFrame(sparkFrame); } }
+function stopSparks(){ if(sparkRAF){ cancelAnimationFrame(sparkRAF); sparkRAF = null; } sparks = []; var c = document.getElementById('sparks'); if(c){ var x=c.getContext('2d'); x.setTransform(1,0,0,1,0,0); x.clearRect(0,0,c.width,c.height); } }
 function startGlow(){ if(map && isNight() && !REDUCED_MOTION && !glowRAF) glowRAF = requestAnimationFrame(glowFrame); }
 function stopGlow(){ if(glowRAF){ cancelAnimationFrame(glowRAF); glowRAF = null; } }
 function applyMapMode(){
@@ -1810,7 +1905,7 @@ function applyMapMode(){
   map.setLayoutProperty('folk-glow','visibility', night?'visible':'none');
   map.setPaintProperty('pin-selected','circle-stroke-color', night ? '#ffb020' : '#39b7ff');
   refreshMapData();                    /* re-stamps the `night` flag so pins swap glyphs */
-  if(night) startGlow(); else stopGlow();
+  if(night){ startGlow(); startSparks(); } else { stopGlow(); stopSparks(); }
 }
 /* Switch the whole page between day and firelight. `auto` = the sun did it
    (not the visitor), in which case a visitor's own filter choices are kept. */
@@ -1832,7 +1927,73 @@ setInterval(function(){                /* re-check the sun once a minute; a page
   var m = effectiveMode();
   if(m !== MODE) applyMode(m, true);
 }, 60000);
-document.addEventListener('visibilitychange', function(){ if(document.hidden) stopGlow(); else startGlow(); });
+document.addEventListener('visibilitychange', function(){ if(document.hidden){ stopGlow(); stopSparks(); } else { startGlow(); startSparks(); } });
+
+/* ============ SKYLINE: weather at the Huyck Preserve + today's sun ============
+   Weather is Open-Meteo's modeled current conditions at the Preserve's own POI
+   coordinates (5052 Delaware Tpke) — the Preserve/UAlbany station itself has no
+   public feed. No key, no build step; refreshed every 15 min; hidden (never
+   faked) if the fetch fails. Sunrise/sunset reuse the night-mode clock. */
+var HUYCK = {lat:42.5155081667906, lng:-74.1401693189751};
+var SKY_ICONS = {   /* simple stroke icons matching the header's search/menu glyphs */
+  sun:   '<circle cx="12" cy="12" r="4.2"/><line x1="12" y1="2.5" x2="12" y2="5"/><line x1="12" y1="19" x2="12" y2="21.5"/><line x1="2.5" y1="12" x2="5" y2="12"/><line x1="19" y1="12" x2="21.5" y2="12"/><line x1="5.3" y1="5.3" x2="7" y2="7"/><line x1="17" y1="17" x2="18.7" y2="18.7"/><line x1="5.3" y1="18.7" x2="7" y2="17"/><line x1="17" y1="7" x2="18.7" y2="5.3"/>',
+  moon:  '<path d="M20 14.5A8.5 8.5 0 0 1 9.5 4a8.5 8.5 0 1 0 10.5 10.5z"/>',
+  psun:  '<circle cx="8" cy="8" r="3.2"/><line x1="8" y1="1.5" x2="8" y2="3"/><line x1="1.5" y1="8" x2="3" y2="8"/><line x1="3.4" y1="3.4" x2="4.5" y2="4.5"/><line x1="11.5" y1="4.5" x2="12.6" y2="3.4"/><path d="M8.5 19.5h9a3.5 3.5 0 0 0 .4-7 5 5 0 0 0-9.6-1.2A4.2 4.2 0 0 0 8.5 19.5z"/>',
+  pmoon: '<path d="M11 6.5A4.5 4.5 0 0 1 6.5 2a4.5 4.5 0 1 0 4.5 4.5z"/><path d="M8.5 19.5h9a3.5 3.5 0 0 0 .4-7 5 5 0 0 0-9.6-1.2A4.2 4.2 0 0 0 8.5 19.5z"/>',
+  cloud: '<path d="M7 18.5h10.5a4 4 0 0 0 .5-8 6 6 0 0 0-11.5-1.5A4.8 4.8 0 0 0 7 18.5z"/>',
+  fog:   '<path d="M7 14h10.5a4 4 0 0 0 .5-8 6 6 0 0 0-11.5-1.5A4.8 4.8 0 0 0 7 14z"/><line x1="5" y1="17.5" x2="19" y2="17.5"/><line x1="7" y1="21" x2="17" y2="21"/>',
+  rain:  '<path d="M7 15h10.5a4 4 0 0 0 .5-8 6 6 0 0 0-11.5-1.5A4.8 4.8 0 0 0 7 15z"/><line x1="8.5" y1="18" x2="7.5" y2="21"/><line x1="12.5" y1="18" x2="11.5" y2="21"/><line x1="16.5" y1="18" x2="15.5" y2="21"/>',
+  snow:  '<path d="M7 14h10.5a4 4 0 0 0 .5-8 6 6 0 0 0-11.5-1.5A4.8 4.8 0 0 0 7 14z"/><circle cx="8" cy="18.5" r=".9"/><circle cx="12" cy="20.5" r=".9"/><circle cx="16" cy="18.5" r=".9"/>',
+  storm: '<path d="M7 14h10.5a4 4 0 0 0 .5-8 6 6 0 0 0-11.5-1.5A4.8 4.8 0 0 0 7 14z"/><polyline points="12.5,14 10,18.5 13,18.5 11,22.5"/>'
+};
+/* WMO weather-interpretation codes → icon key + plain label */
+function skyKind(code, isDay){
+  var d = isDay !== 0;
+  if(code===0)                 return [d?'sun':'moon', d?'Clear':'Clear night'];
+  if(code===1||code===2)       return [d?'psun':'pmoon', 'Partly cloudy'];
+  if(code===3)                 return ['cloud','Overcast'];
+  if(code===45||code===48)     return ['fog','Fog'];
+  if(code>=51&&code<=57)       return ['rain','Drizzle'];
+  if(code>=61&&code<=67)       return ['rain','Rain'];
+  if(code>=71&&code<=77)       return ['snow','Snow'];
+  if(code>=80&&code<=82)       return ['rain','Showers'];
+  if(code===85||code===86)     return ['snow','Snow showers'];
+  if(code>=95)                 return ['storm','Thunderstorm'];
+  return ['cloud','Cloudy'];
+}
+function fmtClock(ms){
+  try{ return new Intl.DateTimeFormat('en-US',{timeZone:'America/New_York',hour:'numeric',minute:'2-digit'}).format(new Date(ms)).toLowerCase(); }
+  catch(e){ var d=new Date(ms); return d.getHours()+':'+('0'+d.getMinutes()).slice(-2); }
+}
+function renderSkySun(){
+  var el = document.getElementById('skySun'); if(!el) return;
+  var st = sunTimes(berneDateISO(), BERNE.lat, BERNE.lng);
+  if(st.polar){ el.textContent = ''; return; }
+  el.innerHTML = '<span title="Sunrise">&#9650;&#8202;'+fmtClock(st.rise)+'</span><span class="sep">&middot;</span><span title="Sunset">&#9660;&#8202;'+fmtClock(st.set)+'</span>';
+}
+function renderSkyWx(cur){
+  var box = document.getElementById('skyline'), ico = document.getElementById('skyIco'), t = document.getElementById('skyTemp');
+  if(!box || !cur || typeof cur.temperature_2m !== 'number'){ if(box) box.classList.remove('has-wx'); return; }
+  var f = Math.round(cur.temperature_2m), c = Math.round((cur.temperature_2m-32)*5/9);
+  var kind = skyKind(cur.weather_code, cur.is_day);
+  ico.innerHTML = SKY_ICONS[kind[0]] || SKY_ICONS.cloud;
+  ico.setAttribute('aria-label', kind[1]);
+  t.innerHTML = f+'&deg;F<span class="c">'+c+'&deg;C</span>';
+  box.title = kind[1]+' at the Huyck Preserve, Rensselaerville \u2014 modeled current conditions (data: Open-Meteo.com). Sunrise and sunset are today\u2019s, Berne time.';
+  box.classList.add('has-wx');
+}
+function fetchSkyWx(){
+  if(!window.fetch || !document.getElementById('skyline')) return;
+  var url = 'https://api.open-meteo.com/v1/forecast?latitude='+HUYCK.lat.toFixed(4)+'&longitude='+HUYCK.lng.toFixed(4)
+          + '&current=temperature_2m,weather_code,is_day&temperature_unit=fahrenheit&timezone=America%2FNew_York';
+  fetch(url, {cache:'no-store'}).then(function(r){ return r.ok ? r.json() : null; })
+    .then(function(j){ renderSkyWx(j && j.current); })
+    .catch(function(){ renderSkyWx(null); });
+}
+renderSkySun();
+fetchSkyWx();
+setInterval(fetchSkyWx, 15*60*1000);
+setInterval(renderSkySun, 60*1000);
 
 /* ============ INIT ============ */
 buildCats();
