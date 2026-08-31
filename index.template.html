@@ -361,6 +361,77 @@ a.weblink:hover{text-decoration:underline;}
 @media (prefers-reduced-motion: reduce){
   #detail{transition:none;} .card,.catbox,.btn{transition:none;}
 }
+
+/* ---------- Night / firelight mode ----------
+   Switched on by <html data-theme="night">, set by the sun clock in the JS
+   (sunset→sunrise at Berne, NY) or by the header sun/moon toggle. Tokens are
+   re-pointed to a smoked-parchment + ember palette; the rules below catch the
+   hard-coded day colors that the tokens don't reach. */
+html[data-theme="night"]{
+  --ink:#0a0814; --ink2:#120e1e; --ink3:#1d1730;
+  --paper:#f6e7c8;
+  --parchment:#1a1510; --parchment-line:#33291c; --ink-blue:#f0dcb0;
+  --lichen:#e6d7b8; --birch:#b9a27e; --faint:#8a7a5c;
+  --wampum:#ffb347; --wampum-deep:#ff8c1a;
+  --gold:#ffb020; --gold-ink:#1a1208; --gold-dim:#c98a2e;
+  --card:#1a1510; --card-line:#3a2e1e;
+  --precise:#ffb347; --fair:#ffd27a; --approx:#ff8c1a; --unver:#c0644a;
+  --ember-line:#5a3a14;
+}
+html[data-theme="night"] body, html[data-theme="night"] .sitenav, html[data-theme="night"] #sidebar{
+  transition:background-color .7s ease, color .7s ease, border-color .7s ease;
+}
+html[data-theme="night"] .betabar{background:#3a2308; color:#ffd9a0;}
+html[data-theme="night"] .sitenav, html[data-theme="night"] #searchbar{
+  border-bottom-color:var(--ember-line); box-shadow:0 2px 10px rgba(0,0,0,.5);
+}
+html[data-theme="night"] .sitenav .links a:hover, html[data-theme="night"] .iconbtn:hover{background:rgba(255,176,32,.12);}
+html[data-theme="night"] #searchbar input[type=text]{background:#241d14; border-color:#3a2e1e; color:var(--paper);}
+html[data-theme="night"] #searchbar input[type=text]::placeholder{color:#8a7a5c;}
+html[data-theme="night"] #sidebar{background-image:radial-gradient(rgba(255,176,32,.06) 0.6px, transparent 0.6px); border-right-color:#2b2118;}
+html[data-theme="night"] .planrow{color:var(--birch);}
+html[data-theme="night"] .planrow input[type=date]{background:#241d14; border-color:#3a2e1e; color:var(--paper); color-scheme:dark;}
+html[data-theme="night"] .planrow .btn, html[data-theme="night"] .controls #filtersToggle{background:#241d14; border-color:#3a2e1e; color:var(--lichen);}
+html[data-theme="night"] .epigraph, html[data-theme="night"] .controls .epigraph{color:var(--birch);}
+html[data-theme="night"] .catbox:hover{color:#fff6e0;}
+html[data-theme="night"] .catmark.ochre{color:var(--wampum);}
+html[data-theme="night"] #listwrap{scrollbar-color:#4a3a24 transparent;}
+html[data-theme="night"] .grouphead{background:#241c12; color:var(--birch); border-bottom-color:#33291c;}
+html[data-theme="night"] .card:hover{background:rgba(255,255,255,.035);}
+html[data-theme="night"] .card.active{background:rgba(255,176,32,.12);}
+html[data-theme="night"] .card .meta{color:#9a8a6a;}
+html[data-theme="night"] .card .meta .nat{color:#d9a24a;}
+html[data-theme="night"] .chip, html[data-theme="night"] .chip.precise, html[data-theme="night"] .chip.fair,
+html[data-theme="night"] .chip.approx, html[data-theme="night"] .chip.none{color:#a08f6e; border-color:#3a2e1e;}
+html[data-theme="night"] .chip.unver{color:#a08f6e; border-color:#6a4a2a;}
+html[data-theme="night"] .btn{border-color:#3a2e1e;}
+html[data-theme="night"] .btn.primary:hover{background:#ffc247; border-color:#ffc247;}
+html[data-theme="night"] #detail, html[data-theme="night"] #about, html[data-theme="night"] .detail-head,
+html[data-theme="night"] .srcbox, html[data-theme="night"] .afnote, html[data-theme="night"] .tag,
+html[data-theme="night"] .likebtn, html[data-theme="night"] .pop .others,
+html[data-theme="night"] .maplibregl-popup-content, html[data-theme="night"] #layers,
+html[data-theme="night"] #layersToggle, html[data-theme="night"] #layers hr{border-color:#3a2e1e;}
+html[data-theme="night"] table.hours tr.today td{color:#fff6e0;}
+html[data-theme="night"] .tag:hover{color:#fff6e0;}
+html[data-theme="night"] .popimg, html[data-theme="night"] .dimg img{background:#120e1e;}
+html[data-theme="night"] #map{background:#0b0a12;}
+html[data-theme="night"] #mapnotice{background:#0b0a12 !important;}
+html[data-theme="night"] #layers, html[data-theme="night"] #layersToggle, html[data-theme="night"] .mapbar .btn,
+html[data-theme="night"] #onlinePill{background:rgba(14,10,22,.92);}
+html[data-theme="night"] #onlinePill:hover{background:rgba(24,18,34,.96);}
+html[data-theme="night"] #layers label:hover{color:#fff6e0;}
+html[data-theme="night"] #sheetHandle::before{background:#5a4a30;}
+html[data-theme="night"] .maplibregl-ctrl-group{background:#1a1510; box-shadow:0 0 0 1px #3a2e1e;}
+html[data-theme="night"] .maplibregl-ctrl-group button{filter:invert(.92) sepia(.4) saturate(.6);}
+html[data-theme="night"] .maplibregl-ctrl-group button + button{border-top-color:#3a2e1e;}
+html[data-theme="night"] .maplibregl-ctrl-attrib{background:rgba(14,10,22,.75); color:var(--birch);}
+html[data-theme="night"] .maplibregl-ctrl-attrib a{color:var(--wampum);}
+html[data-theme="night"] .maplibregl-ctrl-scale{background:rgba(14,10,22,.6); color:var(--lichen); border-color:var(--birch);}
+/* sun/moon toggle in the header */
+#modeToggle .moon, #modeToggle .sun{display:none;}
+html:not([data-theme="night"]) #modeToggle .moon{display:block;}
+html[data-theme="night"] #modeToggle .sun{display:block;}
+html[data-theme="night"] #modeToggle{color:var(--gold);}
 </style>
 </head>
 <body>
@@ -394,6 +465,10 @@ a.weblink:hover{text-decoration:underline;}
       <a href="instagram.html">Instagram</a>
       <a href="about.html">About</a>
     </div>
+    <button class="iconbtn" id="modeToggle" title="Night mode follows sunset and sunrise in Berne, NY. Tap to switch until the next one." aria-label="Toggle night mode" aria-pressed="false">
+      <svg class="moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 14.5A8.5 8.5 0 0 1 9.5 4a8.5 8.5 0 1 0 10.5 10.5z"></path></svg>
+      <svg class="sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="12" cy="12" r="4.2"></circle><line x1="12" y1="2.5" x2="12" y2="5"></line><line x1="12" y1="19" x2="12" y2="21.5"></line><line x1="2.5" y1="12" x2="5" y2="12"></line><line x1="19" y1="12" x2="21.5" y2="12"></line><line x1="5.3" y1="5.3" x2="7" y2="7"></line><line x1="17" y1="17" x2="18.7" y2="18.7"></line><line x1="5.3" y1="18.7" x2="7" y2="17"></line><line x1="17" y1="7" x2="18.7" y2="5.3"></line></svg>
+    </button>
     <button class="iconbtn" id="searchToggle" title="Search the atlas" aria-label="Search" aria-expanded="false">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"></circle><line x1="21" y1="21" x2="16.2" y2="16.2"></line></svg>
     </button>
@@ -473,6 +548,7 @@ a.weblink:hover{text-decoration:underline;}
       <label><input type="radio" name="base" value="usgs"> USGS Topo</label>
       <label><input type="radio" name="base" value="sat"> Satellite</label>
       <label><input type="radio" name="base" value="osm"> Streets</label>
+      <label><input type="radio" name="base" value="night"> Firelight (night)</label>
       <div class="note" id="basenote">Esri global topographic map; sharp to street level worldwide.</div>
       <hr>
       <div class="lh">Overlays</div>
@@ -495,6 +571,55 @@ a.weblink:hover{text-decoration:underline;}
 var ATLAS = window.ATLAS_DATA || {records:[], categories:[]};
 var CATEGORIES = ATLAS.categories || [];
 var HOME = [-74.1436, 42.5145]; /* Rensselaerville, NY (lng,lat) */
+
+/* ============ SUN CLOCK & NIGHT MODE ============
+   The atlas keeps Hilltowns time: night mode runs from sunset to sunrise at
+   Berne, NY for every visitor, wherever they are. Coordinates are Berne Town
+   Hall's own POI row (1656 Helderberg Trail). The sunrise equation below is
+   the standard NOAA/Meeus simplification — dependency-free, ~1–2 min accuracy,
+   which is all a mood switch needs. */
+var BERNE = {lat:42.624848, lng:-74.135036};
+function sunTimes(isoDate, lat, lng){
+  var p = isoDate.split('-').map(Number);
+  var jd0 = Date.UTC(p[0], p[1]-1, p[2]) / 86400000 + 2440587.5;   /* 0h UT that day */
+  var n = Math.round(jd0) - 2451545 + 0.0008;                          /* days since J2000 */
+  var rad = Math.PI/180;
+  var Js = n - lng/360;
+  var M = ((357.5291 + 0.98560028*Js) % 360 + 360) % 360;
+  var C = 1.9148*Math.sin(M*rad) + 0.02*Math.sin(2*M*rad) + 0.0003*Math.sin(3*M*rad);
+  var L = ((M + C + 180 + 102.9372) % 360 + 360) % 360;
+  var Jt = 2451545 + Js + 0.0053*Math.sin(M*rad) - 0.0069*Math.sin(2*L*rad);
+  var sinD = Math.sin(L*rad)*Math.sin(23.4397*rad), D = Math.asin(sinD);
+  var cosW = (Math.sin(-0.833*rad) - Math.sin(lat*rad)*sinD) / (Math.cos(lat*rad)*Math.cos(D));
+  if(cosW >= 1) return {rise:null, set:null, polar:'night'};
+  if(cosW <= -1) return {rise:null, set:null, polar:'day'};
+  var w = Math.acos(cosW)/rad;
+  var toMs = function(j){ return (j - 2440587.5) * 86400000; };
+  return {rise:toMs(Jt - w/360), set:toMs(Jt + w/360), polar:null};
+}
+function berneDateISO(){
+  try{ return new Intl.DateTimeFormat('en-CA',{timeZone:'America/New_York'}).format(new Date()); }
+  catch(e){ return new Date().toISOString().slice(0,10); }
+}
+function autoMode(){
+  var st = sunTimes(berneDateISO(), BERNE.lat, BERNE.lng), now = Date.now();
+  if(st.polar) return st.polar;
+  return (now < st.rise || now >= st.set) ? 'night' : 'day';
+}
+/* A manual toggle sticks only until the sun next crosses the horizon: we store
+   which automatic state it was overriding, and drop it once that state changes. */
+var MODE_KEY = 'nyh-mode-override';
+function readOverride(){ try{ var v = JSON.parse(localStorage.getItem(MODE_KEY)||'null'); return (v && v.mode && v.auto) ? v : null; }catch(e){ return null; } }
+function writeOverride(v){ try{ if(v) localStorage.setItem(MODE_KEY, JSON.stringify(v)); else localStorage.removeItem(MODE_KEY); }catch(e){} }
+function effectiveMode(){
+  var auto = autoMode(), ov = readOverride();
+  if(ov && ov.auto === auto) return ov.mode;
+  if(ov) writeOverride(null);       /* the sun moved on; the override expires */
+  return auto;
+}
+var MODE = effectiveMode();
+var isNight = function(){ return MODE === 'night'; };
+document.documentElement.setAttribute('data-theme', isNight() ? 'night' : '');
 function kmFromHome(lat,lng){
   var R=6371, dLat=(lat-HOME[1])*Math.PI/180, dLng=(lng-HOME[0])*Math.PI/180;
   var a=Math.sin(dLat/2)*Math.sin(dLat/2)
@@ -773,6 +898,35 @@ function glyphImageData(){
   }
   return x.getImageData(0,0,size,size);
 }
+/* Night version of the folklore pin: a hand-drawn spiral in candle-yellow with
+   a baked-in ember glow, no disc. Drawn with canvas paths rather than a font
+   glyph so it looks the same on every device (the 𖦹 day glyph depends on font
+   coverage). Same 88×88 canvas contract as the day glyph. */
+function glyphImageDataNight(){
+  var size=88, c=document.createElement('canvas'); c.width=c.height=size;
+  var x=c.getContext('2d'), cx=size/2, cy=size/2;
+  var g=x.createRadialGradient(cx,cy,3, cx,cy,size/2);
+  g.addColorStop(0,'rgba(255,190,60,0.50)'); g.addColorStop(0.5,'rgba(255,140,26,0.20)'); g.addColorStop(1,'rgba(255,120,20,0)');
+  x.fillStyle=g; x.beginPath(); x.arc(cx,cy,size/2,0,Math.PI*2); x.fill();
+  /* Archimedean spiral, ~2.6 turns, tapering from the hot core outward */
+  x.lineCap='round'; x.lineJoin='round';
+  x.shadowColor='rgba(255,150,40,0.95)'; x.shadowBlur=9;
+  var turns=2.6, steps=160, rmax=27;
+  for(var pass=0; pass<2; pass++){          /* outer soft stroke, then bright core stroke */
+    x.beginPath();
+    for(var i=0;i<=steps;i++){
+      var t=i/steps, a=t*turns*Math.PI*2, r=1.5+t*rmax;
+      var px=cx+r*Math.cos(a), py=cy+r*Math.sin(a);
+      if(i===0) x.moveTo(px,py); else x.lineTo(px,py);
+    }
+    x.strokeStyle = pass===0 ? 'rgba(255,160,50,0.85)' : '#ffd36b';
+    x.lineWidth   = pass===0 ? 6.5 : 3.6;
+    x.stroke();
+  }
+  x.shadowBlur=0; x.fillStyle='#fff1c0';
+  x.beginPath(); x.arc(cx,cy,2.6,0,Math.PI*2); x.fill();   /* the ember at the heart */
+  return x.getImageData(0,0,size,size);
+}
 /* white disc bearing a colored per-row glyph (POIs, Events) */
 function discGlyph(fg, ch){
   var size=88, c=document.createElement('canvas'); c.width=c.height=size;
@@ -860,6 +1014,9 @@ var style = {
     'satlabels': {type:'raster', tiles:['https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}'], tileSize:256, maxzoom:19, attribution:ESRI_ATTR},
     'osm':       {type:'raster', tiles:['https://tile.openstreetmap.org/{z}/{x}/{y}.png'], tileSize:256, maxzoom:19, attribution:'&copy; OpenStreetMap contributors'},
     'hillshade': {type:'raster', tiles:['https://server.arcgisonline.com/ArcGIS/rest/services/Elevation/World_Hillshade/MapServer/tile/{z}/{y}/{x}'], tileSize:256, maxzoom:16, attribution:ESRI_ATTR+' — World Hillshade'},
+    'night':     {type:'raster', tiles:['https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}'], tileSize:256, maxzoom:16, attribution:ESRI_ATTR+' — Dark Gray Canvas'},
+    'nightref':  {type:'raster', tiles:['https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Reference/MapServer/tile/{z}/{y}/{x}'], tileSize:256, maxzoom:16, attribution:ESRI_ATTR},
+    'world':     {type:'geojson', data:{type:'Feature',properties:{},geometry:{type:'Polygon',coordinates:[[[-180,-85],[180,-85],[180,85],[-180,85],[-180,-85]]]}}},
     'folk':  {type:'geojson', data:EMPTY_FC},
     'halo':  {type:'geojson', data:EMPTY_FC}
   },
@@ -868,8 +1025,14 @@ var style = {
     {id:'base-worldtopo', type:'raster', source:'worldtopo', layout:{visibility:'visible'}},
     {id:'base-sat',       type:'raster', source:'sat',       layout:{visibility:'none'}},
     {id:'base-osm',       type:'raster', source:'osm',       layout:{visibility:'none'}},
+    /* Firelight basemap: Esri's dark canvas, hillshade breathed over it for
+       the Helderberg relief, then an ember wash so the gray reads warm. */
+    {id:'base-night',     type:'raster', source:'night',     layout:{visibility:'none'}, paint:{'raster-brightness-max':0.8}},
+    {id:'ov-nightshade',  type:'raster', source:'hillshade', layout:{visibility:'none'}, paint:{'raster-opacity':0.28}},
+    {id:'ov-emberwash',   type:'fill',   source:'world',     layout:{visibility:'none'}, paint:{'fill-color':'#ff8c1a','fill-opacity':0.07}},
     {id:'ov-hillshade',   type:'raster', source:'hillshade', layout:{visibility:'none'}, paint:{'raster-opacity':0.45}},
     {id:'base-satlabels', type:'raster', source:'satlabels', layout:{visibility:'none'}},
+    {id:'base-nightref',  type:'raster', source:'nightref',  layout:{visibility:'none'}, paint:{'raster-opacity':0.75}},
     {id:'halo-fill', type:'fill', source:'halo', paint:{'fill-color':['coalesce',['get','col'],'#888'], 'fill-opacity':0.08}},
     {id:'halo-line', type:'line', source:'halo', paint:{'line-color':['coalesce',['get','col'],'#888'], 'line-width':1.6, 'line-dasharray':[4,3]}},
     {id:'pins', type:'circle', source:'folk',
@@ -879,9 +1042,19 @@ var style = {
         'circle-radius':['interpolate',['linear'],['zoom'], 4,10.5, 9,16.5, 13,21],
         'circle-stroke-color':'#ffffff','circle-stroke-width':2
       }},
+    /* Night-only: a soft ember halo under each folklore pin. Radius and
+       opacity are driven by NIGHT_T (updated by the animation loop) plus a
+       per-pin phase so the field breathes unevenly, like coals. */
+    {id:'folk-glow', type:'circle', source:'folk',
+      filter:['==',['get','ty'],'folklore'], layout:{visibility:'none'},
+      paint:{
+        'circle-color':'#ff9a2e', 'circle-blur':1, 'circle-pitch-alignment':'map',
+        'circle-radius':['interpolate',['linear'],['zoom'], 4,14, 9,22, 13,32],
+        'circle-opacity':0.6
+      }},
     {id:'folk-pins', type:'symbol', source:'folk',
       filter:['==',['get','ty'],'folklore'],
-      layout:{'icon-image':'folkGlyph','icon-allow-overlap':true,'icon-ignore-placement':true,
+      layout:{'icon-image':['case',['==',['get','night'],1],'folkGlyphNight','folkGlyph'],'icon-allow-overlap':true,'icon-ignore-placement':true,
         'icon-size':['interpolate',['linear'],['zoom'], 4,0.32, 9,0.48, 13,0.64]}},
     {id:'disc-pins', type:'symbol', source:'folk',
       filter:['all',['!=',['get','ty'],'folklore'],['!=',['get','cat'],'Points of Interest']],
@@ -938,6 +1111,7 @@ map.addControl(new maplibregl.GeolocateControl({
 map.on('styleimagemissing', function(e){
   if(map.hasImage(e.id)) return;
   if(e.id==='folkGlyph'){ map.addImage(e.id, glyphImageData()); return; }
+  if(e.id==='folkGlyphNight'){ map.addImage(e.id, glyphImageDataNight()); return; }
   var m = e.id.match(/^gd-(#[0-9a-fA-F]{6})-([\s\S]*)$/);
   if(m) map.addImage(e.id, discGlyph(m[1], m[2]));
 });
@@ -1020,12 +1194,18 @@ function immScale(r){
   if(days <= 2) return 0.85;              /* starts within 48 hours */
   return 0.72;                            /* 3-7 days out */
 }
+/* deterministic 0–1 phase per pin, so co-located pins don't pulse in lockstep */
+function phaseOf(k){
+  var h = 0; k = String(k);
+  for(var i=0;i<k.length;i++){ h = (h*31 + k.charCodeAt(i)) | 0; }
+  return ((h >>> 0) % 1000) / 1000;
+}
 function toFC(list){
   var feats = list
     .filter(function(r){return r.tier!=='none';})
     .map(function(r){ return {type:'Feature',
       properties:{k:r._k, tier:r.tier, ty:r.ty, cat:r.cat, g:r.g||'', col:r.col,
-        dim:isDimmed(r)?1:0, imm:immScale(r)},
+        dim:isDimmed(r)?1:0, imm:immScale(r), night:isNight()?1:0, ph:phaseOf(r._k)},
       geometry:{type:'Point', coordinates:[r.lng, r.lat]}};
     });
   spreadCollisions(feats);
@@ -1522,6 +1702,17 @@ function catMark(c){
   var col = c.color || '#fca315';
   return '<span class="catmark disc" style="color:'+esc(col)+'">'+ch+'</span>';
 }
+/* Daytime defaults come from manifest.json (all on but Folklore). At night the
+   map is the folklore's alone: only that layer starts on. */
+var catsTouched = false;
+function catDefault(c){
+  if(isNight()) return c.label === 'Folklore';
+  return c.default_on !== false;
+}
+function resetCatsToDefaults(){
+  catsOn = {}; catsTouched = false;
+  buildCats(); renderList();
+}
 function buildCats(){
   var STORY_LABELS = {'Folklore':1, 'Points of Interest':1};  /* these two sit below the epigraph */
   var main = document.getElementById('catsMain');
@@ -1531,12 +1722,12 @@ function buildCats(){
   records.forEach(function(r){ if(!isExpired(r) && evVisible(r)) liveCounts[r.cat]=(liveCounts[r.cat]||0)+1; });
   CATEGORIES.forEach(function(c){
     if(!liveCounts[c.label]) return; /* nothing to show yet — hide until it has data */
-    if(!(c.label in catsOn)) catsOn[c.label] = (c.default_on !== false);
+    if(!(c.label in catsOn)) catsOn[c.label] = catDefault(c);
     var lb = document.createElement('label'); lb.className='catbox';
     lb.innerHTML = '<input type="checkbox"'+(catsOn[c.label]?' checked':'')+'>'
       + catMark(c) + '<span class="catname">'+esc(c.label)+'</span>';
     var cb = lb.querySelector('input');
-    if(cb) cb.addEventListener('change', function(ev){ catsOn[c.label]=ev.target.checked; renderList(); });
+    if(cb) cb.addEventListener('change', function(ev){ catsOn[c.label]=ev.target.checked; catsTouched=true; renderList(); });
     (STORY_LABELS[c.label] ? story : main).appendChild(lb);
   });
 }
@@ -1546,16 +1737,23 @@ var BASE_NOTES = {
   usgs:'Official USGS cartography. Sharpest to zoom 16; US coverage only.',
   worldtopo:'Esri global topographic map; sharp to street level worldwide.',
   sat:'Esri World Imagery with place labels.',
-  osm:'OpenStreetMap standard; richest address-level street detail.'
+  osm:'OpenStreetMap standard; richest address-level street detail.',
+  night:'Esri dark canvas under a low hillshade and an ember wash — the after-dark map.'
 };
+var BASES = ['usgs','worldtopo','sat','osm','night'];
+var dayBase = 'worldtopo';   /* the visitor's last daytime pick, restored at sunrise */
+function setBase(b){
+  var r = document.querySelector('input[name=base][value="'+b+'"]'); if(r) r.checked = true;
+  document.getElementById('basenote').textContent = BASE_NOTES[b];
+  if(!map) return;
+  BASES.forEach(function(x){ map.setLayoutProperty('base-'+x, 'visibility', x===b?'visible':'none'); });
+  map.setLayoutProperty('base-satlabels', 'visibility', b==='sat'?'visible':'none');
+  ['base-nightref','ov-nightshade','ov-emberwash'].forEach(function(l){ map.setLayoutProperty(l, 'visibility', b==='night'?'visible':'none'); });
+}
 Array.prototype.forEach.call(document.querySelectorAll('input[name=base]'), function(radio){
   radio.addEventListener('change', function(){
-    document.getElementById('basenote').textContent = BASE_NOTES[radio.value];
-    if(!map) return;
-    ['usgs','worldtopo','sat','osm'].forEach(function(b){
-      map.setLayoutProperty('base-'+b, 'visibility', b===radio.value?'visible':'none');
-    });
-    map.setLayoutProperty('base-satlabels', 'visibility', radio.value==='sat'?'visible':'none');
+    if(!isNight()) dayBase = radio.value;
+    setBase(radio.value);
   });
 });
 document.getElementById('ovHillshade').addEventListener('change', function(e){
@@ -1582,9 +1780,63 @@ document.getElementById('layersToggle').onclick = function(){
 };
 document.getElementById('layers').classList.add('collapsed');
 
+/* ============ NIGHT MODE: apply, toggle, clock, glow loop ============ */
+var REDUCED_MOTION = false;
+try{ REDUCED_MOTION = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches; }catch(e){}
+var NIGHT_T = 0, glowRAF = null, glowLast = 0;
+function glowFrame(ts){
+  glowRAF = null;
+  if(!map || !isNight() || REDUCED_MOTION) return;
+  if(ts - glowLast > 45){            /* ~22 fps is plenty for a slow breath, and easy on phones */
+    glowLast = ts;
+    NIGHT_T = (ts / 2600) % 1;       /* one full breath every 2.6 s */
+    var wave = ['sin',['*',6.283185,['+',NIGHT_T,['get','ph']]]];
+    var breath = ['+',1,['*',0.22,wave]];
+    try{
+      /* ["zoom"] must stay the top-level interpolate input; the per-pin breath goes inside each stop */
+      map.setPaintProperty('folk-glow','circle-radius',
+        ['interpolate',['linear'],['zoom'], 4,['*',14,breath], 9,['*',22,breath], 13,['*',32,breath]]);
+      map.setPaintProperty('folk-glow','circle-opacity', ['+',0.56,['*',0.22,wave]]);
+    }catch(e){}
+  }
+  glowRAF = requestAnimationFrame(glowFrame);
+}
+function startGlow(){ if(map && isNight() && !REDUCED_MOTION && !glowRAF) glowRAF = requestAnimationFrame(glowFrame); }
+function stopGlow(){ if(glowRAF){ cancelAnimationFrame(glowRAF); glowRAF = null; } }
+function applyMapMode(){
+  var night = isNight();
+  setBase(night ? 'night' : dayBase);   /* radio + note update even before/without a map */
+  if(!map || !map.getLayer || !map.getLayer('folk-glow')) return;
+  map.setLayoutProperty('folk-glow','visibility', night?'visible':'none');
+  map.setPaintProperty('pin-selected','circle-stroke-color', night ? '#ffb020' : '#39b7ff');
+  refreshMapData();                    /* re-stamps the `night` flag so pins swap glyphs */
+  if(night) startGlow(); else stopGlow();
+}
+/* Switch the whole page between day and firelight. `auto` = the sun did it
+   (not the visitor), in which case a visitor's own filter choices are kept. */
+function applyMode(mode, auto){
+  var changed = mode !== MODE;
+  MODE = mode;
+  document.documentElement.setAttribute('data-theme', isNight() ? 'night' : '');
+  var tb = document.getElementById('modeToggle');
+  if(tb) tb.setAttribute('aria-pressed', isNight() ? 'true' : 'false');
+  if(changed && !(auto && catsTouched)) resetCatsToDefaults();
+  applyMapMode();
+}
+document.getElementById('modeToggle').addEventListener('click', function(){
+  var next = isNight() ? 'day' : 'night';
+  writeOverride({mode:next, auto:autoMode()});
+  applyMode(next, false);
+});
+setInterval(function(){                /* re-check the sun once a minute; a page can outlive a sunset */
+  var m = effectiveMode();
+  if(m !== MODE) applyMode(m, true);
+}, 60000);
+document.addEventListener('visibilitychange', function(){ if(document.hidden) stopGlow(); else startGlow(); });
+
 /* ============ INIT ============ */
 buildCats();
-if(map) map.on('load', function(){ renderList(); applyHash(); });
+if(map) map.on('load', function(){ applyMapMode(); renderList(); applyHash(); });
 setInterval(function(){
   if(map && map.getSource && map.getSource('folk')){
     map.getSource('folk').setData(toFC(currentFilter(true)));
