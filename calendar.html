@@ -269,7 +269,6 @@ h1{font-family:'Montserrat',sans-serif; font-weight:800; text-transform:uppercas
     <a href="instagram.html">Instagram</a>
     <a href="about.html">About</a>
     <a href="https://instagram.com/NYHilltowners" target="_blank" rel="noopener">@NYHilltowners</a>
-    <a href="https://forms.gle/AwjBQ4bjNB9GQJTc7" target="_blank" rel="noopener">Submit an event</a>
   </div>
 </footer>
 
@@ -322,12 +321,14 @@ h1{font-family:'Montserrat',sans-serif; font-weight:800; text-transform:uppercas
 
   // Build the display date for an event: prefer nextOcc (recurring), else d1.
   // A multi-day event (d1..d2) is shown on each day it spans within the visible month.
-  function eventsForRange(startDate, endDate){
+  function eventsForRange(startDate, endDate, agendaOnly){
     // returns map "YYYY-MM-DD" -> [events], for single occurrences within [startDate,endDate]
+    // agendaOnly: skip events the workbook marks Agenda=No (ag:0) — they stay on the month grid and the map
     var byDay = {};
     function push(dstr, ev){ (byDay[dstr] || (byDay[dstr]=[])).push(ev); }
     DATA.forEach(function(ev){
       if(ev.ty !== "events") return;
+      if(agendaOnly && ev.ag === 0) return;
       var d1 = parseISO(ev.nextOcc) || parseISO(ev.d1);
       if(!d1) return;
       var d2 = parseISO(ev.d2) || d1;
@@ -501,7 +502,7 @@ h1{font-family:'Montserrat',sans-serif; font-weight:800; text-transform:uppercas
     var mEnd = new Date(cursor.getFullYear(), cursor.getMonth()+1, 0);
     // Agenda for the visible month, but if it's the current month, start at today
     var from = (cursor.getFullYear()===TODAY.getFullYear() && cursor.getMonth()===TODAY.getMonth()) ? TODAY : mStart;
-    var byDay = eventsForRange(from, mEnd);
+    var byDay = eventsForRange(from, mEnd, true);
     var days = Object.keys(byDay).sort();
     agenda.innerHTML = "";
     if(!days.length){

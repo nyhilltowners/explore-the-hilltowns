@@ -607,6 +607,7 @@ EVT_SPEC = [
     ("cred", r"image\s*credit|^credit$|attribution", False),
     ("notes", r"^notes?$", False),
     ("disp", r"^display$|^show$|^visible$", False),
+    ("ag", r"^agenda", False),     # Agenda view only: No hides from the calendar's agenda list (Laurie, 2026-08-31)
 ]
 
 
@@ -757,6 +758,8 @@ def parse_events(path: Path, label: str, sheet=None):
             "img": norm_image(cell(row, idx, "img"), rw),
             "cred": s(cell(row, idx, "cred")),
         })
+        if s(cell(row, idx, "ag")).lower() in ("no", "n", "false", "0", "hide", "hidden"):
+            out[-1]["ag"] = 0        # only emitted when hidden; absent means "show on agenda"
         ev_web = s(cell(row, idx, "web"))
         if not out[-1]["img"] and ev_web:
             out[-1]["img"] = fetch_site_image(ev_web, rw)
