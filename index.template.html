@@ -87,23 +87,29 @@ body{
 .iconbtn:hover{background:rgba(26,29,92,.07); color:var(--gold);}
 .iconbtn svg{width:22px; height:22px; display:block;}
 #menuToggle{display:none;}
-/* Skyline: current conditions at the Huyck Preserve + today's sunrise/sunset.
-   Desktop header only; hidden under 900px where the nav needs the room. */
+/* Skyline: conditions at the Huyck Preserve · today's sunrise/sunset · moon.
+   Three icon+two-line groups, left to right. Desktop header only. */
 .skyline{
-  display:flex; align-items:center; gap:10px; margin:0 14px; flex:none;
-  font-family:'Montserrat',sans-serif; font-size:11.5px; letter-spacing:.04em; color:var(--ink-blue);
-  line-height:1.2;
+  display:flex; align-items:center; gap:18px; margin:0 14px; flex:none;
+  font-family:'Montserrat',sans-serif; font-size:11px; letter-spacing:.04em; color:var(--ink-blue); line-height:1.2;
 }
-.skyline .sky-ico{width:28px; height:28px; flex:none; display:none; color:var(--ink-blue);}
-.skyline.has-wx .sky-ico{display:block;}
-.skyline .sky-stack{display:flex; flex-direction:column; gap:2px;}
-.skyline .sky-temp{font-weight:700; font-size:13px; letter-spacing:.02em; display:none;}
-.skyline.has-wx .sky-temp{display:block;}
-.skyline .sky-temp .c{font-weight:400; color:var(--faint); margin-left:5px;}
-.skyline .sky-sun{white-space:nowrap; color:#4a4f7a;}
-.skyline .sky-sun .sep{margin:0 5px; color:var(--birch);}
-.skyline .sky-place{font-size:9px; letter-spacing:.18em; text-transform:uppercase; color:var(--faint);}
-@media (max-width:900px){ .skyline{display:none;} }
+.skyline .sky-g{display:flex; align-items:center; gap:7px;}
+.skyline .sky-g + .sky-g{padding-left:18px; border-left:1px solid var(--parchment-line);}
+.skyline svg{width:26px; height:26px; flex:none; color:var(--ink-blue);}
+.skyline .sky-stack{display:flex; flex-direction:column; gap:2px; white-space:nowrap;}
+.skyline .sky-eyebrow{font-size:9px; letter-spacing:.16em; text-transform:uppercase; color:var(--faint);}
+.skyline .sky-val{font-weight:700; font-size:12.5px; letter-spacing:.02em;}
+.skyline .sky-val .c{font-weight:400; color:var(--faint); margin-left:5px;}
+.skyline .sky-val .sep{margin:0 5px; color:var(--birch); font-weight:400;}
+.skyline .sky-sub{font-size:10px; font-style:italic; letter-spacing:.02em; color:#4a4f7a;}
+.skyline .sky-stack{gap:1px;}
+.skyline .sky-wx{display:none;}
+.skyline.has-wx .sky-wx{display:flex;}
+.skyline.has-wx .sky-wx + .sky-g{padding-left:18px; border-left:1px solid var(--parchment-line);}
+.skyline .sky-wx + .sky-g{padding-left:0; border-left:none;}
+#modeToggle{margin-left:4px;}
+@media (max-width:1180px){ .skyline .sky-moon{display:none;} }
+@media (max-width:960px){ .skyline{display:none;} }
 /* Search overlay: drops from the header, anchored to it, over the map. */
 #searchbar{
   display:none; position:absolute; top:100%; left:0; right:0; z-index:1999;
@@ -479,12 +485,18 @@ html[data-theme="night"] #modeToggle{color:#fca315;}
     <img src="images/raccoon-mark.svg" alt="">
     <span class="stack"><span class="l1">Hilltowns</span><span class="l2">Folk Atlas</span></span>
   </a>
-  <div class="skyline" id="skyline" title="Current conditions modeled for the Huyck Preserve, Rensselaerville (data: Open-Meteo.com). Sunrise and sunset are today's, Berne time.">
-    <svg class="sky-ico" id="skyIco" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"></svg>
-    <div class="sky-stack">
-      <span class="sky-place">Huyck Preserve</span>
-      <span class="sky-temp" id="skyTemp"></span>
-      <span class="sky-sun" id="skySun"></span>
+  <div class="skyline" id="skyline">
+    <div class="sky-g sky-wx" id="skyWx">
+      <svg id="skyIco" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"></svg>
+      <div class="sky-stack"><span class="sky-eyebrow">Huyck Preserve</span><span class="sky-val" id="skyTemp"></span></div>
+    </div>
+    <div class="sky-g sky-sun" title="Today's sunrise and sunset, Berne time">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 16a8 8 0 0 1 16 0"/><line x1="2" y1="19.5" x2="22" y2="19.5"/><line x1="12" y1="3" x2="12" y2="5.5"/><line x1="5" y1="6.5" x2="6.6" y2="8.1"/><line x1="19" y1="6.5" x2="17.4" y2="8.1"/></svg>
+      <div class="sky-stack"><span class="sky-eyebrow">Sunrise &middot; Sunset</span><span class="sky-val" id="skySun"></span></div>
+    </div>
+    <div class="sky-g sky-moon" id="skyMoon">
+      <svg id="moonIco" viewBox="0 0 24 24" aria-hidden="true"></svg>
+      <div class="sky-stack"><span class="sky-eyebrow" id="moonPhase"></span><span class="sky-val" id="moonName"></span><span class="sky-sub" id="moonEng"></span></div>
     </div>
   </div>
   <div class="hright">
@@ -1232,6 +1244,13 @@ function phaseOf(k){
   for(var i=0;i<k.length;i++){ h = (h*31 + k.charCodeAt(i)) | 0; }
   return ((h >>> 0) % 1000) / 1000;
 }
+/* Folklore titles are written "Name: long subtitle" — the sidebar and popups show
+   only the part before the first colon; the detail panel keeps the full title. */
+function shortTitle(r){
+  var t = r.t || '';
+  if(r.ty === 'folklore'){ var i = t.indexOf(':'); if(i > 0) return t.slice(0, i).trim(); }
+  return t;
+}
 function toFC(list){
   var feats = list
     .filter(function(r){return r.tier!=='none';})
@@ -1400,7 +1419,7 @@ function renderList(){
   function head(txt){ var g=document.createElement('div'); g.className='grouphead'; g.innerHTML=txt; w.appendChild(g); }
   function card(r, mappedFlag){
     var c=document.createElement('div'); c.className='card'+(r._k===activeId?' active':'');
-    c.innerHTML = '<h3>'+(r.g?'<span class="cg">'+esc(r.g)+'</span>':'')+esc(r.t)+'</h3>'
+    c.innerHTML = '<h3>'+(r.g?'<span class="cg">'+esc(r.g)+'</span>':'')+esc(shortTitle(r))+'</h3>'
       + '<div class="meta">'+cardMeta(r)+'</div>';
     c.onclick=function(){
       if(mappedFlag){
@@ -1458,7 +1477,7 @@ function imgTag(r, cls){
 }
 function popupHtml(rec){
   var sibs = siblingsOf(rec).slice(0,5);
-  var h = '<div class="pop">'+imgTag(rec,'popimg')+'<h4>'+esc(rec.t)+'</h4>'
+  var h = '<div class="pop">'+imgTag(rec,'popimg')+'<h4>'+esc(shortTitle(rec))+'</h4>'
     + popupBody(rec)
     + '<button class="btn" onclick="openDetail(\''+rec._k+'\')">Full entry</button> '
     + likeWidget(rec);
@@ -1469,7 +1488,7 @@ function popupHtml(rec){
   }
   if(sibs.length){
     h += '<div class="others">Also here: ';
-    h += sibs.map(function(s){return '<a onclick="openDetail(\''+s._k+'\')">'+esc(s.t)+'</a>';}).join(' · ');
+    h += sibs.map(function(s){return '<a onclick="openDetail(\''+s._k+'\')">'+esc(shortTitle(s))+'</a>';}).join(' · ');
     h += '</div>';
   }
   return h + '</div>';
@@ -1969,7 +1988,7 @@ function renderSkySun(){
   var el = document.getElementById('skySun'); if(!el) return;
   var st = sunTimes(berneDateISO(), BERNE.lat, BERNE.lng);
   if(st.polar){ el.textContent = ''; return; }
-  el.innerHTML = '<span title="Sunrise">&#9650;&#8202;'+fmtClock(st.rise)+'</span><span class="sep">&middot;</span><span title="Sunset">&#9660;&#8202;'+fmtClock(st.set)+'</span>';
+  el.innerHTML = fmtClock(st.rise)+'<span class="sep">&middot;</span>'+fmtClock(st.set);
 }
 function renderSkyWx(cur){
   var box = document.getElementById('skyline'), ico = document.getElementById('skyIco'), t = document.getElementById('skyTemp');
@@ -1979,7 +1998,7 @@ function renderSkyWx(cur){
   ico.innerHTML = SKY_ICONS[kind[0]] || SKY_ICONS.cloud;
   ico.setAttribute('aria-label', kind[1]);
   t.innerHTML = f+'&deg;F<span class="c">'+c+'&deg;C</span>';
-  box.title = kind[1]+' at the Huyck Preserve, Rensselaerville \u2014 modeled current conditions (data: Open-Meteo.com). Sunrise and sunset are today\u2019s, Berne time.';
+  document.getElementById('skyWx').title = kind[1]+' \u2014 modeled current conditions at the Huyck Preserve, Rensselaerville (not the Preserve\u2019s own station; data: Open-Meteo.com).';
   box.classList.add('has-wx');
 }
 function fetchSkyWx(){
@@ -1990,6 +2009,85 @@ function fetchSkyWx(){
     .then(function(j){ renderSkyWx(j && j.current); })
     .catch(function(){ renderSkyWx(null); });
 }
+/* ---- Moon. Phase from the mean synodic month against a reference new moon
+   (2000-01-06 18:14 UTC); good to within roughly half a day.
+   Names are the Onondaga Nation's thirteen moons, as published with their
+   translations at onondaganation.org/culture/ceremonies (Laurie's choice, Aug 30
+   2026, over the Farmers' Almanac names). The Nation does not tie them to
+   calendar months — the Faith Keepers reckon a 13-moon year beginning at
+   Midwinter — so the anchor used here is the documented Midwinter rule: the
+   lunar year begins at the first new moon after the December solstice, and the
+   names are taken in the order the Nation lists them. Some Longhouses now count
+   from the first new moon after January 1 instead; that reading would shift
+   names by one moon in years like 2026. This is a reckoning, not the Nation's
+   own calendar, and the tooltip says so. ---- */
+var SYNODIC = 29.530588853, NEW_MOON_REF = Date.UTC(2000,0,6,18,14);
+var ONONDAGA_MOONS = [
+  ['Hisatuh',       'Treacherous little winter'],
+  ['Ganahdoha',     'Leaf buds are on the leaves'],
+  ['Ganahdogo:nah', 'Moon of many leaves'],
+  ['Ohiaihah',      'Little ripening of the berries'],
+  ['Ohiaihgo:nah',  'Great ripening of the berries'],
+  ['Saskeh hah',    'Long daylight'],
+  ['Saskego:nah',   'Big, long daylight'],
+  ['Kendenhah',     'Deer has a short tail'],
+  ['Kendenhgo:nah', 'Deer has a long tail'],
+  ['Jotowehhah',    'Return of the little cold'],
+  ['Jotowego:nah',  'Return of the big cold'],
+  ['Disuh',         'Long nights, short days'],
+  ['Disgo:nah',     'Longer nights, shorter days']
+];
+function moonAge(ms){ var d = (ms - NEW_MOON_REF)/86400000; return ((d % SYNODIC) + SYNODIC) % SYNODIC; }
+function newMoonBefore(ms){ return ms - moonAge(ms)*86400000; }           /* start of the current lunation */
+function decSolstice(year){                                                 /* Meeus, Astronomical Algorithms ch. 27 (mean) — minutes-level, ample here */
+  var Y = (year-2000)/1000;
+  var jde = 2451900.05952 + 365242.74049*Y - 0.06223*Y*Y - 0.00823*Y*Y*Y + 0.00032*Y*Y*Y*Y;
+  return (jde - 2440587.5)*86400000;
+}
+function lunarYearStart(ms){                                                /* first new moon after the most recent December solstice */
+  var y = new Date(ms).getUTCFullYear(), sol = decSolstice(y);
+  if(ms < sol) sol = decSolstice(y-1);
+  var nm = newMoonBefore(sol);
+  if(nm <= sol) nm += SYNODIC*86400000;
+  return nm;
+}
+function lunationInfo(ms){
+  var cur = newMoonBefore(ms), start = lunarYearStart(cur);                 /* the lunation belongs to the year whose start precedes ITS new moon */
+  var n = Math.round((cur - start)/(SYNODIC*86400000));                     /* 0-based lunation of the Haudenosaunee year */
+  if(n < 0) n = 0; if(n > 12) n = 12;
+  return {index:n, word:ONONDAGA_MOONS[n][0], english:ONONDAGA_MOONS[n][1], newMoon:cur, yearStart:start};
+}
+function drawMoon(age){
+  var p = age/SYNODIC, k = (1-Math.cos(2*Math.PI*p))/2;         /* illuminated fraction */
+  var r = 10, cx = 12, cy = 12, waxing = p < 0.5;
+  var rx = Math.abs(Math.cos(2*Math.PI*p))*r;                    /* terminator half-width */
+  var lit, dark = 'rgba(26,29,92,.22)', light = '#fca315';   /* lit side gold, night side navy tint, navy limb */
+  if(k < 0.005) lit = '';
+  else if(k > 0.995) lit = '<circle cx="12" cy="12" r="10" fill="'+light+'"/>';
+  else {
+    /* outer limb on the lit side, then the terminator ellipse back */
+    var limbSweep = waxing ? 1 : 0, termSweep = (k > 0.5) ? limbSweep : 1-limbSweep;
+    lit = '<path fill="'+light+'" d="M12 2 A'+r+' '+r+' 0 0 '+limbSweep+' 12 22 A'+rx.toFixed(2)+' '+r+' 0 0 '+termSweep+' 12 2 Z"/>';
+  }
+  return '<circle cx="12" cy="12" r="10" fill="'+dark+'"/>'+lit+'<circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" stroke-width="1.2"/>';
+}
+function phaseLabel(age){
+  var p = age/SYNODIC, k = Math.round(100*(1-Math.cos(2*Math.PI*p))/2);
+  var n = p < 0.02 || p > 0.98 ? 'New Moon' : p < 0.23 ? 'Waxing Crescent' : p < 0.27 ? 'First Quarter' : p < 0.48 ? 'Waxing Gibbous'
+        : p < 0.52 ? 'Full Moon' : p < 0.73 ? 'Waning Gibbous' : p < 0.77 ? 'Last Quarter' : 'Waning Crescent';
+  return n + ' \u00b7 ' + k + '%';
+}
+function renderMoon(){
+  var ico = document.getElementById('moonIco'); if(!ico) return;
+  var now = Date.now(), age = moonAge(now), li = lunationInfo(now);
+  ico.innerHTML = drawMoon(age);
+  document.getElementById('moonPhase').textContent = phaseLabel(age);
+  document.getElementById('moonName').textContent = li.word;
+  document.getElementById('moonEng').textContent = li.english;
+  document.getElementById('skyMoon').title = 'Moon '+(li.index+1)+' of the Haudenosaunee year \u2014 names and translations from the Onondaga Nation (onondaganation.org). Year reckoned from the first new moon after the winter solstice; the Nation\u2019s Faith Keepers set the actual calendar.';
+}
+renderMoon();
+setInterval(renderMoon, 30*60*1000);
 renderSkySun();
 fetchSkyWx();
 setInterval(fetchSkyWx, 15*60*1000);
