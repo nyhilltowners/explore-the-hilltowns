@@ -12,6 +12,7 @@ import json
 import re
 import shutil
 import sys
+import urllib.error
 import urllib.request
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
@@ -839,6 +840,122 @@ def backfill_event_coords_from_poi(all_records):
         print(f"  event→POI coord backfill: filled {filled} event(s) from matching POIs")
 
 
+# ---- Slugs + hearts -------------------------------------------------------------
+# Every record gets a stable slug (`sl`) — the same algorithm index.template.html
+# used to compute client-side, run over the records in data.js order, so existing
+# heart counters (keyed by slug) keep their history. Emitting it from the build
+# lets the directory page share the exact same identity without re-deriving it.
+_SLUG_QUOTES = re.compile("['\u2019\"\u201c\u201d]")
+_SLUG_NONALNUM = re.compile(r"[^a-z0-9]+")
+
+
+def slugify(t):
+    x = _SLUG_QUOTES.sub("", (t or "").lower())
+    x = _SLUG_NONALNUM.sub("-", x).strip("-")[:60]
+    return x or "entry"
+
+
+def assign_slugs(all_records):
+    used = set()
+    for r in all_records:
+        base = slugify(r.get("t", "")); sl = base; n = 2
+        while sl in used:
+            sl = f"{base}-{n}"; n += 1
+        used.add(sl); r["sl"] = sl
+
+
+# Hearts live in Abacus (LIKE_API / LIKE_NS in the pages), one counter per slug,
+# no bulk read, and a 30-requests-per-10-seconds rate limit — far too slow for a
+# browser to fetch ~850 counts on every directory visit. So the build gathers
+# them, politely, and ships a snapshot: `h` on each record in data.js (only when
+# > 0) and site/hearts.json (also the cache the next build seeds from, via the
+# live site, like preview-cache.json). Each build spends at most HEARTS_BUDGET_S
+# seconds: it always re-reads every slug that already has hearts, then works
+# through the rest of the POI slugs from a rotating cursor, so every card is
+# re-checked within a handful of builds. The pages still fetch live counts for
+# the few cards that matter (the hearted section, and anything just tapped).
+HEARTS_API = "https://abacus.jasoncameron.dev"
+HEARTS_NS = "nyhilltowners-explore-hills"
+HEARTS_FILE = "hearts.json"
+HEARTS_URL = "https://nyhilltowners.com/" + HEARTS_FILE
+import os as _os
+HEARTS_BUDGET_S = int(_os.environ.get("HEARTS_BUDGET", "75"))   # seconds; e.g. HEARTS_BUDGET=600 python3 build/build.py for a one-off full sweep
+HEARTS_INTERVAL_S = 0.4          # 2.5 req/s, under the 30/10 s limit
+import time as _time
+
+
+def _hearts_get(slug):
+    req = urllib.request.Request(f"{HEARTS_API}/get/{HEARTS_NS}/{slug}",
+                                 headers={"User-Agent": "Mozilla/5.0 (compatible; AtlasBuild/1.0)"})
+    try:
+        with urllib.request.urlopen(req, timeout=6) as resp:
+            d = json.loads(resp.read().decode("utf-8"))
+        v = d.get("value") if isinstance(d, dict) else None
+        return int(v) if isinstance(v, (int, float)) else 0, None
+    except urllib.error.HTTPError as e:
+        if e.code == 404:
+            return 0, None            # counter never created = no hearts
+        return None, f"HTTP {e.code}"
+    except Exception as e:
+        return None, e.__class__.__name__
+
+
+def refresh_hearts(all_records):
+    cache = {}
+    src = None
+    local = SITE / HEARTS_FILE
+    try:
+        if local.exists():
+            cache = json.loads(local.read_text(encoding="utf-8")); src = "local"
+        else:
+            req = urllib.request.Request(HEARTS_URL, headers={"User-Agent": "Mozilla/5.0 (compatible; AtlasBuild/1.0)"})
+            with urllib.request.urlopen(req, timeout=10) as resp:
+                cache = json.loads(resp.read().decode("utf-8")); src = "live site"
+    except Exception as e:
+        cache = {}; print(f"  hearts: no cache available ({e.__class__.__name__})")
+    if not isinstance(cache, dict):
+        cache = {}
+    counts = {k: v for k, v in cache.get("counts", {}).items() if isinstance(v, int)}
+    cursor = cache.get("cursor", 0) if isinstance(cache.get("cursor", 0), int) else 0
+    if src:
+        print(f"  hearts: {sum(1 for v in counts.values() if v > 0)} hearted slug(s) in cache from {src}")
+
+    poi_slugs = [r["sl"] for r in all_records if r.get("ty") == "poi"]
+    hearted_first = [sl for sl in poi_slugs if counts.get(sl, 0) > 0]
+    rest = [sl for sl in poi_slugs if counts.get(sl, 0) <= 0]
+    if rest:
+        cursor %= len(rest)
+        rest = rest[cursor:] + rest[:cursor]
+    queue = hearted_first + rest
+    t0 = _time.time(); done = 0; errs = 0
+    for sl in queue:
+        if _time.time() - t0 > HEARTS_BUDGET_S:
+            break
+        v, err = _hearts_get(sl)
+        if err:
+            errs += 1
+            if errs >= 5:                      # service down / blocked: stop hammering, keep the cache
+                warn(f"hearts: {err} from {HEARTS_API} — stopped after {done} read(s); using cached counts")
+                break
+        else:
+            counts[sl] = v
+        done += 1
+        _time.sleep(HEARTS_INTERVAL_S)
+    advanced = max(0, done - len(hearted_first))
+    if rest:
+        cursor = (cursor + advanced) % len(rest)
+    print(f"  hearts: refreshed {done} slug(s) in {int(_time.time()-t0)}s; "
+          f"{sum(1 for v in counts.values() if v > 0)} hearted; cursor {cursor}/{len(rest)}")
+    for r in all_records:
+        v = counts.get(r["sl"], 0)
+        if v > 0:
+            r["h"] = v
+    SITE.mkdir(exist_ok=True)
+    (SITE / HEARTS_FILE).write_text(json.dumps({"updated": datetime.datetime.utcnow().strftime("%Y-%m-%d %H:%M UTC"),
+                                                 "cursor": cursor, "counts": counts},
+                                                ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
+
+
 def main() -> int:
     manifest = json.loads((ROOT / "manifest.json").read_text(encoding="utf-8"))
     load_preview_cache()
@@ -868,6 +985,8 @@ def main() -> int:
 
     backfill_event_coords_from_poi(all_records)
     resolve_previews(all_records)
+    assign_slugs(all_records)
+    refresh_hearts(all_records)
 
     print()
     for w in WARNS:
