@@ -1998,13 +1998,20 @@ function renderSkyWx(cur){
   ico.innerHTML = SKY_ICONS[kind[0]] || SKY_ICONS.cloud;
   ico.setAttribute('aria-label', kind[1]);
   t.innerHTML = f+'&deg;F<span class="c">'+c+'&deg;C</span>';
-  document.getElementById('skyWx').title = kind[1]+' \u2014 modeled current conditions at the Huyck Preserve, Rensselaerville (not the Preserve\u2019s own station; data: Open-Meteo.com).';
+  /* Open-Meteo stamps the reading with its model time (local, 15-minute grid) — surface it so a
+     reading that looks stale can be checked at a glance. */
+  var asOf = '';
+  if(cur.time){ var mt = /T(\d{2}):(\d{2})/.exec(cur.time); if(mt){ var hh = +mt[1]; asOf = ' \u00b7 as of '+((hh%12)||12)+':'+mt[2]+(hh<12?' am':' pm'); } }
+  var fetchedAt = new Date().toLocaleTimeString('en-US',{timeZone:'America/New_York',hour:'numeric',minute:'2-digit'}).toLowerCase();
+  document.getElementById('skyWx').title = kind[1]+asOf+' \u2014 modeled current conditions at the Huyck Preserve, Rensselaerville (not the Preserve\u2019s own station; data: Open-Meteo.com). Fetched '+fetchedAt+'; refreshes every 15 min and whenever this tab comes back into focus.';
   box.classList.add('has-wx');
 }
+var skyLastFetch = 0;
 function fetchSkyWx(){
   if(!window.fetch || !document.getElementById('skyline')) return;
   var url = 'https://api.open-meteo.com/v1/forecast?latitude='+HUYCK.lat.toFixed(4)+'&longitude='+HUYCK.lng.toFixed(4)
           + '&current=temperature_2m,weather_code,is_day&temperature_unit=fahrenheit&timezone=America%2FNew_York';
+  skyLastFetch = Date.now();
   fetch(url, {cache:'no-store'}).then(function(r){ return r.ok ? r.json() : null; })
     .then(function(j){ renderSkyWx(j && j.current); })
     .catch(function(){ renderSkyWx(null); });
@@ -2091,6 +2098,8 @@ setInterval(renderMoon, 30*60*1000);
 renderSkySun();
 fetchSkyWx();
 setInterval(fetchSkyWx, 15*60*1000);
+/* a laptop that slept through the timer, or a tab left in the background, refetches on return */
+document.addEventListener('visibilitychange', function(){ if(!document.hidden && Date.now()-skyLastFetch > 60*1000){ skyLastFetch = Date.now(); fetchSkyWx(); renderSkySun(); renderMoon(); } });
 setInterval(renderSkySun, 60*1000);
 
 /* ============ INIT ============ */
