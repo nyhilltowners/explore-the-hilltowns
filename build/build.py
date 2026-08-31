@@ -14,7 +14,7 @@ import shutil
 import sys
 import urllib.request
 from pathlib import Path
-from urllib.parse import urljoin
+from urllib.parse import urljoin, urlparse
 
 from openpyxl import load_workbook
 
@@ -108,8 +108,25 @@ OG_RXS = [
 _og_cache: dict = {}
 
 
+# Hosts whose Open Graph preview is a generic platform/portal image rather than
+# a picture of the place — never auto-fetch a thumbnail from these (Laurie,
+# 2026-08-30). An explicit Image column value still wins as usual.
+NO_PREVIEW_HOSTS = ("instagram.com", "greatnortherncatskills.com")
+
+
+def preview_blocked(url):
+    try:
+        host = urlparse(url if re.match(r"^https?://", url, re.I) else "https://" + url).hostname or ""
+    except Exception:
+        return False
+    host = host.lower()
+    return any(host == h or host.endswith("." + h) for h in NO_PREVIEW_HOSTS)
+
+
 def fetch_site_image(url, where):
     """Fetch a site's Open Graph / Twitter preview image. Warnings only."""
+    if preview_blocked(url):
+        return ""
     if not re.match(r"^https?://", url, re.I):
         url = "https://" + url
     if url in _og_cache:
