@@ -81,7 +81,12 @@ body{
   .sitenav .links a.ig{align-self:flex-start;}
 }
 
-.wrap{max-width:920px; margin:0 auto; padding:40px 24px 72px;}
+.wrap{max-width:1180px; margin:0 auto; padding:40px 24px 72px;}
+/* two columns on wide screens: filters left (sticky), listing right */
+.layout{display:grid; grid-template-columns:240px minmax(0,1fr); gap:0 40px; align-items:start;}
+.layout .side{position:sticky; top:76px;}
+.layout .side .sidehead{font-family:'Montserrat',sans-serif; font-weight:700; font-size:11px; letter-spacing:.16em; text-transform:uppercase; color:var(--faint); margin:6px 0 8px;}
+@media (max-width:900px){ .layout{display:block;} .layout .side{position:static;} .layout .side .sidehead{display:none;} }
 .eyebrow{font-family:'Montserrat',sans-serif; font-weight:700; font-size:12px; letter-spacing:.18em;
   text-transform:uppercase; color:var(--gold); margin-bottom:12px;}
 h1{font-family:'Montserrat',sans-serif; font-weight:800; text-transform:uppercase; letter-spacing:.03em;
@@ -91,8 +96,8 @@ h1{font-family:'Montserrat',sans-serif; font-weight:800; text-transform:uppercas
 
 /* category checkboxes — mirrors the atlas sidebar UX; two tidy columns,
    counts right-aligned so the block reads as one clean table */
-.catchecks{display:grid; grid-template-columns:repeat(2, minmax(0, 300px));
-  gap:3px 36px; margin-bottom:16px;}
+.catchecks{display:grid; grid-template-columns:minmax(0,1fr); gap:3px; margin-bottom:16px;}
+@media (max-width:900px){ .catchecks{grid-template-columns:repeat(2, minmax(0, 300px)); gap:3px 36px;} }
 .catbox{display:flex; align-items:center; gap:10px; cursor:pointer; user-select:none;
   font-family:'Montserrat',sans-serif; font-size:13px; color:var(--ink-blue);
   padding:4px 2px; transition:color .15s; touch-action:manipulation;}
@@ -268,11 +273,17 @@ table.hours tr.today td:first-child{color:var(--gold-ink);}
   <h1>Directory</h1>
   <div class="count" id="count"></div>
 
-  <div class="catchecks" id="catchecks"></div>
-  <div class="tagbar" id="tagbar"></div>
-  <nav class="azbar" id="azbar" aria-label="Jump to letter"></nav>
-
-  <div id="listing"></div>
+  <div class="layout">
+    <aside class="side" aria-label="Filters">
+      <div class="sidehead">Show</div>
+      <div class="catchecks" id="catchecks"></div>
+      <div class="tagbar" id="tagbar"></div>
+    </aside>
+    <div class="mainc">
+      <nav class="azbar" id="azbar" aria-label="Jump to letter"></nav>
+      <div id="listing"></div>
+    </div>
+  </div>
 
   <div class="afnote">
     <p>Please note none of these businesses or organizations are affiliated with us in any way. We just love them and want them to be around for a long long time to come.</p>

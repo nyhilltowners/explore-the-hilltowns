@@ -136,10 +136,11 @@ h1{font-family:'Montserrat',sans-serif; font-weight:800; text-transform:uppercas
 .agenda.on{display:block;}
 .grid-wrap.off{display:none;}
 .daygroup{margin-bottom:8px; background:var(--paper); border:1px solid var(--parchment-line); border-radius:10px; overflow:hidden;}
-.dayhead{display:flex; align-items:baseline; gap:10px; background:#faf7ee; padding:9px 16px; border-bottom:1px solid var(--parchment-line);}
-.dayhead .dd{font-family:'Montserrat',sans-serif; font-weight:800; font-size:15px; color:var(--ink-blue); text-transform:uppercase; letter-spacing:.02em;}
-.dayhead .dw{font-size:13px; color:var(--faint); font-weight:700; text-transform:uppercase; letter-spacing:.05em;}
-.dayhead.istoday .dd{color:var(--gold-ink);}
+.dayhead{display:flex; align-items:baseline; gap:10px; background:#000080; color:#fff; padding:9px 16px; border-bottom:1px solid #26268f;}
+.dayhead .dd{font-family:'Montserrat',sans-serif; font-weight:800; font-size:15px; color:#fff; text-transform:uppercase; letter-spacing:.02em;}
+.dayhead .dw{font-size:13px; color:#b9bee6; font-weight:700; text-transform:uppercase; letter-spacing:.05em;}
+.dayhead.istoday .dd{color:var(--gold);}
+.dayhead.istoday .dw::after{content:"Today"; margin-left:10px; color:var(--gold); font-size:11px; letter-spacing:.12em;}
 .dayhead.istoday::before{content:"Today"; font-family:'Montserrat',sans-serif; font-weight:800; font-size:10px; letter-spacing:.08em;
   text-transform:uppercase; background:var(--gold); color:var(--gold-ink); padding:2px 7px; border-radius:20px; align-self:center;}
 .arow{display:flex; gap:12px; align-items:flex-start; padding:11px 16px; border-bottom:1px solid var(--parchment-line); cursor:pointer; transition:.12s;}
@@ -155,11 +156,16 @@ h1{font-family:'Montserrat',sans-serif; font-weight:800; text-transform:uppercas
 .arow .ameta{font-size:13px; color:var(--faint); margin-top:1px;}
 /* "Nearby & open" — a small dropdown under a list row: pinned places within a
    few miles whose hours overlap the event. The texture of the hamlet. */
-.arow .nearbybtn{flex:none; align-self:center; background:none; border:1px solid var(--parchment-line); border-radius:12px;
-  color:var(--faint); font-family:'Montserrat',sans-serif; font-size:10.5px; letter-spacing:.06em; text-transform:uppercase;
-  padding:3px 9px; cursor:pointer; white-space:nowrap; transition:.12s;}
-.arow .nearbybtn:hover, .arow .nearbybtn.on{border-color:var(--wampum); color:var(--wampum-deep); background:#fff;}
-.arow .nearbybtn .n{font-weight:700; margin-left:4px;}
+/* a tool, not a tag: solid navy pill with a chevron that turns when open */
+.arow .nearbybtn{flex:none; align-self:center; display:inline-flex; align-items:center; gap:6px;
+  background:var(--ink-blue); border:1px solid var(--ink-blue); border-radius:6px; color:var(--paper);
+  font-family:'Montserrat',sans-serif; font-weight:700; font-size:11px; letter-spacing:.04em;
+  padding:6px 10px 6px 11px; cursor:pointer; white-space:nowrap; transition:.12s; box-shadow:0 1px 2px rgba(0,0,0,.15);}
+.arow .nearbybtn:hover{background:#000080; border-color:#000080;}
+.arow .nearbybtn.on{background:var(--gold); border-color:var(--gold); color:var(--gold-ink);}
+.arow .nearbybtn .chev{width:12px; height:12px; transition:transform .15s;}
+.arow .nearbybtn.on .chev{transform:rotate(180deg);}
+.arow .nearbybtn .n{font-weight:800; margin-left:2px; opacity:.85;}
 .nearby{margin:0 16px 12px 132px; padding:8px 12px 6px; background:#fbf8ef; border:1px dashed #d8d1bd; border-radius:8px; font-size:13px;}
 .arow.core + .nearby{margin-left:128px; border-color:rgba(252,163,21,.5);}
 .nearby .nb-head{font-family:'Montserrat',sans-serif; font-size:10px; letter-spacing:.14em; text-transform:uppercase; color:var(--faint); margin-bottom:5px;}
@@ -547,7 +553,7 @@ h1{font-family:'Montserrat',sans-serif; font-weight:800; text-transform:uppercas
           '<div class="atime">'+esc(ev.tm ? shortRange(ev.tm) : "All day")+'</div>'+
           '<div class="amain"><div class="atitle">'+esc(ev.t||"(untitled)")+'</div>'+
           '<div class="ameta">'+esc([ev.ven, townOf(ev.addr)].filter(Boolean).join(" · "))+'</div></div>'+
-          (hasPin ? '<button class="nearbybtn" type="button" title="Places open nearby during this event">Nearby</button>' : '')+
+          (hasPin ? '<button class="nearbybtn" type="button" title="Places open nearby during this event">Explore nearby <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg></button>' : '')+
           (ev.g ? '<div class="aglyph">'+esc(ev.g)+'</div>' : '');
         row.onclick = (function(e){ return function(){ openModal(e); }; })(ev);
         group.appendChild(row);
@@ -558,7 +564,7 @@ h1{font-family:'Montserrat',sans-serif; font-weight:800; text-transform:uppercas
             var open = r.nextElementSibling && r.nextElementSibling.classList.contains("nearby");
             if(open){ r.nextElementSibling.remove(); b.classList.remove("on"); return; }
             var items = nearbyOpen(e, ds);
-            b.innerHTML = 'Nearby<span class="n">'+items.length+'</span>'; b.classList.add("on");
+            b.innerHTML = 'Explore nearby<span class="n">'+items.length+'</span><svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>'; b.classList.add("on");
             r.parentNode.insertBefore(nearbyPanel(items, ds), r.nextSibling);
           }; })(ev, row, btn, dstr);
         }
@@ -574,6 +580,17 @@ h1{font-family:'Montserrat',sans-serif; font-weight:800; text-transform:uppercas
      parseRange() the list uses for event times, so "10am-6pm", "9am-3pm; 5pm-9pm",
      "Open24Hours", "Dawn-Dusk" and "Closed" all behave. */
   var NEARBY_KM = 8, NEARBY_MAX = 7;
+  /* Open but not really a draw — Laurie's exclusions (2026-09-01). Matched
+     case-insensitively as a substring of the POI name. */
+  var NEARBY_EXCLUDE = [
+    "conkling hall","r'ville stage creations","rensselaerville town hall","rudy stempel family sawmill",
+    "more trees co-op","wild ones capital region","commission on economic opportunity","townline equipment",
+    "saranam center","helderberg kiwanis"
+  ].map(function(x){ return x.replace(/\u2019/g,"'"); });
+  function nearbyExcluded(p){
+    var n = String(p.t||"").toLowerCase().replace(/\u2019/g,"'");
+    return NEARBY_EXCLUDE.some(function(x){ return n.indexOf(x) >= 0; });
+  }
   var DOW_KEYS = ["sun","mon","tue","wed","thu","fri","sat"];
   var POIS = DATA.filter(function(r){
     return r.ty === "poi" && typeof r.lat === "number" && typeof r.lng === "number" && r.hrs &&
@@ -615,6 +632,7 @@ h1{font-family:'Montserrat',sans-serif; font-weight:800; text-transform:uppercas
     var dow = DOW_KEYS[parseISO(dstr).getDay()], w = eventWindow(ev), out = [];
     var evName = String(ev.ven||ev.t||"").toLowerCase();
     POIS.forEach(function(p){
+      if(nearbyExcluded(p)) return;
       var km = kmBetween(ev.lat, ev.lng, p.lat, p.lng);
       if(km > NEARBY_KM) return;
       if(km < 0.06 || (evName && p.t && evName.indexOf(p.t.toLowerCase()) >= 0)) return;   /* the venue itself */
