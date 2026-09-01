@@ -613,6 +613,14 @@ EVT_SPEC = [
 
 
 
+# Rows that are scraped web-page furniture rather than events. The workbook keeps
+# them (never delete); the build just refuses to publish and warns. Add patterns
+# as new junk shapes appear. (Laurie, 2026-09-01: newsletter signup forms,
+# "SPOTLIGHT:" grant-list headers.)
+JUNK_TITLE_RX = re.compile(r"^\s*(sign up for our newsletter|subscribe to our|spotlight:\s*create grant)|\(required\)", re.I)
+JUNK_VENUE_RX = re.compile(r"\(required\)\s*\*|^email \(required\)", re.I)
+
+
 # ---- Event glyph auto-fill -------------------------------------------------
 # Applied at build time whenever an event's Glyph cell is blank, so newly
 # scraped events get sensible emojis without manual passes. Ordered: the
@@ -759,6 +767,9 @@ def parse_events(path: Path, label: str, sheet=None):
             "img": norm_image(cell(row, idx, "img"), rw),
             "cred": s(cell(row, idx, "cred")),
         })
+        if JUNK_TITLE_RX.search(out[-1]["t"]) or JUNK_VENUE_RX.search(out[-1].get("ven") or ""):
+            warn(f"{where}: skipped scraped-form/junk row \"{out[-1]['t'][:60]}\" (matches JUNK_TITLE_RX/JUNK_VENUE_RX) — hide it in the sheet or fix the source")
+            out.pop(); continue
         if s(cell(row, idx, "ag")).lower() in ("no", "n", "false", "0", "hide", "hidden"):
             out[-1]["ag"] = 0        # only emitted when hidden; absent means "show on agenda"
         ev_web = s(cell(row, idx, "web"))

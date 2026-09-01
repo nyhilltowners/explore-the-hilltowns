@@ -588,10 +588,15 @@ h1{font-family:'Montserrat',sans-serif; font-weight:800; text-transform:uppercas
     /* 2026-09-01 additions */
     "heap (","snap (","soil & water","soil and water","locust grove","cooksburg lumber","wisdom roots",
     "unlimited metalwork","rheta allen","school of irish dance","cornell cooperative extension","catskill carver",
-    "heldeberg bluestone","helderberg bluestone","board of elections","columbia opportunities"
+    "heldeberg bluestone","helderberg bluestone","board of elections","columbia opportunities",
+    "westerlo town hall","myria emeny","greene county power equipment","hilltown healthcare","uhaul","u-haul"
   ].map(function(x){ return x.replace(/\u2019/g,"'"); });
+  /* exact-name exclusions — for places whose name is a prefix of something
+     that SHOULD show (Hilltown Commons itself is out; The Pub at Hilltown Commons stays) */
+  var NEARBY_EXCLUDE_EXACT = ["hilltown commons"];
   function nearbyExcluded(p){
-    var n = String(p.t||"").toLowerCase().replace(/\u2019/g,"'");
+    var n = String(p.t||"").toLowerCase().replace(/\u2019/g,"'").trim();
+    if(NEARBY_EXCLUDE_EXACT.indexOf(n) >= 0) return true;
     return NEARBY_EXCLUDE.some(function(x){ return n.indexOf(x) >= 0; });
   }
   var DOW_KEYS = ["sun","mon","tue","wed","thu","fri","sat"];
@@ -649,12 +654,22 @@ h1{font-family:'Montserrat',sans-serif; font-weight:800; text-transform:uppercas
     out.sort(function(a,b){ return a.km - b.km; });
     /* one entry per place — the same business can live on two category tabs
        (Be Golden Farms is a restaurant AND a farm stand); keep the first, note both */
+    /* which face a multi-tab place shows here: the "draw" first (a restaurant
+       before its gallery or its rooms) — CAT_LEAD order, lower = leads */
+    var CAT_LEAD = ["Restaurants","Farm Stands","Antiques & Vintage","Flowers & Gifts","Other Necessities","Arts & Entertainment","Adventures","Wellness","Mutual Aid","Lodging"];
+    var lead = function(c){ var i = CAT_LEAD.indexOf(c); return i < 0 ? 99 : i; };
     var byName = {}, dedup = [];
     out.forEach(function(it){
       var k = String(it.p.t||"").toLowerCase();
-      if(byName[k]){ if(byName[k].cats.indexOf(it.p.cat) < 0) byName[k].cats.push(it.p.cat); return; }
+      if(byName[k]){
+        var cur = byName[k];
+        if(cur.cats.indexOf(it.p.cat) < 0) cur.cats.push(it.p.cat);
+        if(lead(it.p.cat) < lead(cur.p.cat)){ cur.p = it.p; cur.hrs = it.hrs; }   /* swap to the better face */
+        return;
+      }
       it.cats = [it.p.cat]; byName[k] = it; dedup.push(it);
     });
+    dedup.forEach(function(it){ it.cats.sort(function(a,b){ return lead(a) - lead(b); }); });
     out = dedup;
     /* variety over proximity: one from each category (nearest first), then
        fill the remaining slots by distance — so a farm stand a mile past the
