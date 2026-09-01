@@ -587,7 +587,8 @@ h1{font-family:'Montserrat',sans-serif; font-weight:800; text-transform:uppercas
     "saranam center","helderberg kiwanis",
     /* 2026-09-01 additions */
     "heap (","snap (","soil & water","soil and water","locust grove","cooksburg lumber","wisdom roots",
-    "unlimited metalwork","rheta allen","school of irish dance","cornell cooperative extension","catskill carver"
+    "unlimited metalwork","rheta allen","school of irish dance","cornell cooperative extension","catskill carver",
+    "heldeberg bluestone","helderberg bluestone","board of elections","columbia opportunities"
   ].map(function(x){ return x.replace(/\u2019/g,"'"); });
   function nearbyExcluded(p){
     var n = String(p.t||"").toLowerCase().replace(/\u2019/g,"'");
@@ -637,12 +638,24 @@ h1{font-family:'Montserrat',sans-serif; font-weight:800; text-transform:uppercas
       if(nearbyExcluded(p)) return;
       var km = kmBetween(ev.lat, ev.lng, p.lat, p.lng);
       if(km > NEARBY_KM) return;
-      if(km < 0.06 || (evName && p.t && evName.indexOf(p.t.toLowerCase()) >= 0)) return;   /* the venue itself */
+      /* skip the venue itself — by NAME only (a co-located business like the Pub
+         at Hilltown Commons must still show for a Commons event) */
+      var pn = String(p.t||"").toLowerCase();
+      if(evName && pn && (evName === pn || evName.indexOf(pn) >= 0 || pn.indexOf(evName) === 0 && pn.length - evName.length < 3)) return;
       var h = poiHours(p.hrs[dow]);
       if(!overlaps(w, h)) return;
       out.push({p:p, km:km, hrs:h.label || ""});
     });
     out.sort(function(a,b){ return a.km - b.km; });
+    /* one entry per place — the same business can live on two category tabs
+       (Be Golden Farms is a restaurant AND a farm stand); keep the first, note both */
+    var byName = {}, dedup = [];
+    out.forEach(function(it){
+      var k = String(it.p.t||"").toLowerCase();
+      if(byName[k]){ if(byName[k].cats.indexOf(it.p.cat) < 0) byName[k].cats.push(it.p.cat); return; }
+      it.cats = [it.p.cat]; byName[k] = it; dedup.push(it);
+    });
+    out = dedup;
     /* variety over proximity: one from each category (nearest first), then
        fill the remaining slots by distance — so a farm stand a mile past the
        village still beats the fourth-closest restaurant. */
@@ -664,7 +677,7 @@ h1{font-family:'Montserrat',sans-serif; font-weight:800; text-transform:uppercas
       h += '<a class="nb-row" href="index.html#'+encodeURIComponent(p.sl||"")+'" title="Open on the map">'
         + '<span class="nb-g">'+esc(p.g||"")+'</span>'
         + '<span class="nb-name">'+esc(p.t)+'</span>'
-        + '<span class="nb-cat">'+esc(p.cat)+'</span>'
+        + '<span class="nb-cat">'+esc((it.cats||[p.cat]).join(" · "))+'</span>'
         + '<span class="nb-hrs">'+esc(it.hrs)+'</span>'
         + '<span class="nb-dist">'+mi+' mi</span></a>';
     });
