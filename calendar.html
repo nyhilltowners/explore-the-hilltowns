@@ -140,7 +140,6 @@ h1{font-family:'Montserrat',sans-serif; font-weight:800; text-transform:uppercas
 .dayhead .dd{font-family:'Montserrat',sans-serif; font-weight:800; font-size:15px; color:#fff; text-transform:uppercase; letter-spacing:.02em;}
 .dayhead .dw{font-size:13px; color:#b9bee6; font-weight:700; text-transform:uppercase; letter-spacing:.05em;}
 .dayhead.istoday .dd{color:var(--gold);}
-.dayhead.istoday .dw::after{content:"Today"; margin-left:10px; color:var(--gold); font-size:11px; letter-spacing:.12em;}
 .dayhead.istoday::before{content:"Today"; font-family:'Montserrat',sans-serif; font-weight:800; font-size:10px; letter-spacing:.08em;
   text-transform:uppercase; background:var(--gold); color:var(--gold-ink); padding:2px 7px; border-radius:20px; align-self:center;}
 .arow{display:flex; gap:12px; align-items:flex-start; padding:11px 16px; border-bottom:1px solid var(--parchment-line); cursor:pointer; transition:.12s;}
@@ -158,10 +157,10 @@ h1{font-family:'Montserrat',sans-serif; font-weight:800; text-transform:uppercas
    few miles whose hours overlap the event. The texture of the hamlet. */
 /* a tool, not a tag: solid navy pill with a chevron that turns when open */
 .arow .nearbybtn{flex:none; align-self:center; display:inline-flex; align-items:center; gap:6px;
-  background:var(--ink-blue); border:1px solid var(--ink-blue); border-radius:6px; color:var(--paper);
+  background:#39b7ff; border:1px solid #39b7ff; border-radius:6px; color:var(--ink-blue);
   font-family:'Montserrat',sans-serif; font-weight:700; font-size:11px; letter-spacing:.04em;
   padding:6px 10px 6px 11px; cursor:pointer; white-space:nowrap; transition:.12s; box-shadow:0 1px 2px rgba(0,0,0,.15);}
-.arow .nearbybtn:hover{background:#000080; border-color:#000080;}
+.arow .nearbybtn:hover{background:#5ec4ff; border-color:#5ec4ff;}
 .arow .nearbybtn.on{background:var(--gold); border-color:var(--gold); color:var(--gold-ink);}
 .arow .nearbybtn .chev{width:12px; height:12px; transition:transform .15s;}
 .arow .nearbybtn.on .chev{transform:rotate(180deg);}
@@ -584,8 +583,11 @@ h1{font-family:'Montserrat',sans-serif; font-weight:800; text-transform:uppercas
      case-insensitively as a substring of the POI name. */
   var NEARBY_EXCLUDE = [
     "conkling hall","r'ville stage creations","rensselaerville town hall","rudy stempel family sawmill",
-    "more trees co-op","wild ones capital region","commission on economic opportunity","townline equipment",
-    "saranam center","helderberg kiwanis"
+    "more trees co-op","wild ones","commission on economic opportunity","townline equipment",
+    "saranam center","helderberg kiwanis",
+    /* 2026-09-01 additions */
+    "heap (","snap (","soil & water","soil and water","locust grove","cooksburg lumber","wisdom roots",
+    "unlimited metalwork","rheta allen","school of irish dance","cornell cooperative extension","catskill carver"
   ].map(function(x){ return x.replace(/\u2019/g,"'"); });
   function nearbyExcluded(p){
     var n = String(p.t||"").toLowerCase().replace(/\u2019/g,"'");
