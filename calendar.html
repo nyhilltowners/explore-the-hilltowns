@@ -153,6 +153,26 @@ h1{font-family:'Montserrat',sans-serif; font-weight:800; text-transform:uppercas
 .arow .amain{flex:1; min-width:0;}
 .arow .atitle{font-weight:700; color:var(--ink-blue); font-size:15px;}
 .arow .ameta{font-size:13px; color:var(--faint); margin-top:1px;}
+/* "Nearby & open" — a small dropdown under a list row: pinned places within a
+   few miles whose hours overlap the event. The texture of the hamlet. */
+.arow .nearbybtn{flex:none; align-self:center; background:none; border:1px solid var(--parchment-line); border-radius:12px;
+  color:var(--faint); font-family:'Montserrat',sans-serif; font-size:10.5px; letter-spacing:.06em; text-transform:uppercase;
+  padding:3px 9px; cursor:pointer; white-space:nowrap; transition:.12s;}
+.arow .nearbybtn:hover, .arow .nearbybtn.on{border-color:var(--wampum); color:var(--wampum-deep); background:#fff;}
+.arow .nearbybtn .n{font-weight:700; margin-left:4px;}
+.nearby{margin:0 16px 12px 132px; padding:8px 12px 6px; background:#fbf8ef; border:1px dashed #d8d1bd; border-radius:8px; font-size:13px;}
+.arow.core + .nearby{margin-left:128px; border-color:rgba(252,163,21,.5);}
+.nearby .nb-head{font-family:'Montserrat',sans-serif; font-size:10px; letter-spacing:.14em; text-transform:uppercase; color:var(--faint); margin-bottom:5px;}
+.nearby .nb-row{display:flex; gap:9px; align-items:baseline; padding:4px 0; border-top:1px solid rgba(0,0,0,.05); text-decoration:none; color:inherit;}
+.nearby .nb-row:first-of-type{border-top:none;}
+.nearby .nb-row:hover .nb-name{color:var(--wampum-deep); text-decoration:underline;}
+.nearby .nb-g{flex:none; width:18px; text-align:center;}
+.nearby .nb-name{font-weight:700; color:var(--ink-blue);}
+.nearby .nb-cat{color:var(--faint); font-size:12px;}
+.nearby .nb-hrs{margin-left:auto; flex:none; color:#4a4f7a; font-size:12px; white-space:nowrap;}
+.nearby .nb-dist{flex:none; color:var(--faint); font-size:11.5px; width:44px; text-align:right;}
+.nearby .nb-none{color:var(--faint); font-style:italic; padding:2px 0 4px;}
+@media (max-width:640px){ .nearby{margin-left:16px;} .arow.core + .nearby{margin-left:12px;} .nearby .nb-cat{display:none;} }
 .arow .aglyph{flex:none; font-size:16px;}
 
 .empty{text-align:center; color:var(--faint); padding:48px 20px; font-size:15px;}
@@ -522,16 +542,115 @@ h1{font-family:'Montserrat',sans-serif; font-weight:800; text-transform:uppercas
       group.appendChild(head);
       byDay[dstr].forEach(function(ev){
         var row = document.createElement("div"); row.className="arow"+(isCoreTown(ev)?" core":"");
+        var hasPin = typeof ev.lat === "number" && typeof ev.lng === "number";
         row.innerHTML =
           '<div class="atime">'+esc(ev.tm ? shortRange(ev.tm) : "All day")+'</div>'+
           '<div class="amain"><div class="atitle">'+esc(ev.t||"(untitled)")+'</div>'+
           '<div class="ameta">'+esc([ev.ven, townOf(ev.addr)].filter(Boolean).join(" · "))+'</div></div>'+
+          (hasPin ? '<button class="nearbybtn" type="button" title="Places open nearby during this event">Nearby</button>' : '')+
           (ev.g ? '<div class="aglyph">'+esc(ev.g)+'</div>' : '');
         row.onclick = (function(e){ return function(){ openModal(e); }; })(ev);
         group.appendChild(row);
+        if(hasPin){
+          var btn = row.querySelector(".nearbybtn");
+          btn.onclick = (function(e, r, b, ds){ return function(click){
+            click.stopPropagation();
+            var open = r.nextElementSibling && r.nextElementSibling.classList.contains("nearby");
+            if(open){ r.nextElementSibling.remove(); b.classList.remove("on"); return; }
+            var items = nearbyOpen(e, ds);
+            b.innerHTML = 'Nearby<span class="n">'+items.length+'</span>'; b.classList.add("on");
+            r.parentNode.insertBefore(nearbyPanel(items, ds), r.nextSibling);
+          }; })(ev, row, btn, dstr);
+        }
       });
       agenda.appendChild(group);
     });
+  }
+
+  /* ===== NEARBY & OPEN =====
+     For an event on day D at time T, find pinned POIs within NEARBY_KM whose
+     hours on D's weekday overlap the event window (event end defaults to
+     start + 2 h; untimed events count as "open that day"). Uses the same
+     parseRange() the list uses for event times, so "10am-6pm", "9am-3pm; 5pm-9pm",
+     "Open24Hours", "Dawn-Dusk" and "Closed" all behave. */
+  var NEARBY_KM = 8, NEARBY_MAX = 7;
+  var DOW_KEYS = ["sun","mon","tue","wed","thu","fri","sat"];
+  var POIS = DATA.filter(function(r){
+    return r.ty === "poi" && typeof r.lat === "number" && typeof r.lng === "number" && r.hrs &&
+           DOW_KEYS.some(function(k){ return r.hrs[k] && !/^closed$/i.test(r.hrs[k]); });
+  });
+  function kmBetween(a,b,c,d){
+    var R=6371, p1=a*Math.PI/180, p2=c*Math.PI/180, dp=(c-a)*Math.PI/180, dl=(d-b)*Math.PI/180;
+    var x=Math.sin(dp/2)*Math.sin(dp/2)+Math.cos(p1)*Math.cos(p2)*Math.sin(dl/2)*Math.sin(dl/2);
+    return 2*R*Math.asin(Math.sqrt(x));
+  }
+  /* -> {segs:[[start,end],...], allDay:bool, note:str|null, closed:bool} */
+  function poiHours(str){
+    var s = String(str||"").trim();
+    if(!s || /^closed$/i.test(s)) return {closed:true};
+    if(/24\s*h|open24/i.test(s)) return {allDay:true, label:"24 hours"};
+    var segs = [], note = null;
+    s.split(/\s*[;,]\s*/).forEach(function(part){
+      var r = parseRange(part);
+      if(r.empty) return;
+      if(r.note!=null){ note = r.note; return; }
+      segs.push([r.start, r.end!=null ? r.end : r.start+60]);
+    });
+    if(!segs.length && note) return {allDay:true, label:note};    /* "Dawn-Dusk" etc: open, hours descriptive */
+    if(!segs.length) return {closed:true};
+    return {segs:segs, label:s.replace(/\s*;\s*/g,"; ")};
+  }
+  function eventWindow(ev){
+    var r = parseRange(ev.tm);
+    if(r.empty || r.note!=null) return null;                 /* untimed → "open that day" */
+    return [r.start, r.end!=null ? r.end : r.start+120];
+  }
+  function overlaps(w, h){
+    if(h.closed) return false;
+    if(!w || h.allDay) return true;
+    return h.segs.some(function(sg){ return sg[0] < w[1] && sg[1] > w[0]; });
+  }
+  function nearbyOpen(ev, dstr){
+    if(typeof ev.lat !== "number" || typeof ev.lng !== "number") return [];
+    var dow = DOW_KEYS[parseISO(dstr).getDay()], w = eventWindow(ev), out = [];
+    var evName = String(ev.ven||ev.t||"").toLowerCase();
+    POIS.forEach(function(p){
+      var km = kmBetween(ev.lat, ev.lng, p.lat, p.lng);
+      if(km > NEARBY_KM) return;
+      if(km < 0.06 || (evName && p.t && evName.indexOf(p.t.toLowerCase()) >= 0)) return;   /* the venue itself */
+      var h = poiHours(p.hrs[dow]);
+      if(!overlaps(w, h)) return;
+      out.push({p:p, km:km, hrs:h.label || ""});
+    });
+    out.sort(function(a,b){ return a.km - b.km; });
+    /* variety over proximity: one from each category (nearest first), then
+       fill the remaining slots by distance — so a farm stand a mile past the
+       village still beats the fourth-closest restaurant. */
+    var byCat = {}, order = [];
+    out.forEach(function(it){ if(!byCat[it.p.cat]){ byCat[it.p.cat] = []; order.push(it.p.cat); } byCat[it.p.cat].push(it); });
+    var picked = [], used = {};
+    order.forEach(function(c){ if(picked.length < NEARBY_MAX){ picked.push(byCat[c][0]); used[byCat[c][0].p.sl] = true; } });
+    out.forEach(function(it){ if(picked.length < NEARBY_MAX && !used[it.p.sl]){ picked.push(it); used[it.p.sl] = true; } });
+    picked.sort(function(a,b){ return a.km - b.km; });
+    return picked;
+  }
+  function nearbyPanel(items, dstr){
+    var box = document.createElement("div"); box.className = "nearby";
+    var d = parseISO(dstr);
+    var h = '<div class="nb-head">Nearby &amp; open '+DOWLONG[d.getDay()]+' \u2014 within 5 miles</div>';
+    if(!items.length){ h += '<div class="nb-none">Nothing with posted hours is open nearby then.</div>'; }
+    items.forEach(function(it){
+      var p = it.p, mi = (it.km*0.621371).toFixed(1);
+      h += '<a class="nb-row" href="index.html#'+encodeURIComponent(p.sl||"")+'" title="Open on the map">'
+        + '<span class="nb-g">'+esc(p.g||"")+'</span>'
+        + '<span class="nb-name">'+esc(p.t)+'</span>'
+        + '<span class="nb-cat">'+esc(p.cat)+'</span>'
+        + '<span class="nb-hrs">'+esc(it.hrs)+'</span>'
+        + '<span class="nb-dist">'+mi+' mi</span></a>';
+    });
+    box.innerHTML = h;
+    box.onclick = function(e){ e.stopPropagation(); };
+    return box;
   }
 
   function townOf(addr){
