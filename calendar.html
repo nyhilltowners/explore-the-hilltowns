@@ -248,7 +248,7 @@ h1{font-family:'Montserrat',sans-serif; font-weight:800; text-transform:uppercas
     </div>
     <div class="viewtoggle">
       <button id="vMonth">Month</button>
-      <button id="vAgenda" class="on">Agenda</button>
+      <button id="vAgenda" class="on">List</button>
     </div>
   </div>
 
@@ -547,7 +547,9 @@ h1{font-family:'Montserrat',sans-serif; font-weight:800; text-transform:uppercas
   // boundaries so "Berne" doesn't match "Bernese" and "Knox" is whole-word.
   var CORE_TOWNS = [
     "Rensselaerville","Berne","Knox","Westerlo","Oak Hill",
-    "Potter Hollow","Medusa","Preston Hollow","Preston-Potter Hollow"
+    "Potter Hollow","Medusa","Preston Hollow","Preston-Potter Hollow",
+    "Voorheesville",  /* added 2026-08-31 per Laurie — picks up Thacher State Park */
+    "Thacher"         /* venue keyword, not a town: catches Thacher rows whose address omits the town */
   ];
   var CORE_RE = new RegExp("\\b(" + CORE_TOWNS.map(function(t){
     return t.replace(/[-\s]/g,"[-\\s]");   // allow hyphen/space variants
