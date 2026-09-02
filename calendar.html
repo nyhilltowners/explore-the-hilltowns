@@ -589,7 +589,7 @@ h1{font-family:'Montserrat',sans-serif; font-weight:800; text-transform:uppercas
     "heap (","snap (","soil & water","soil and water","locust grove","cooksburg lumber","wisdom roots",
     "unlimited metalwork","rheta allen","school of irish dance","cornell cooperative extension","catskill carver",
     "heldeberg bluestone","helderberg bluestone","board of elections","columbia opportunities",
-    "westerlo town hall","myria emeny","greene county power equipment","hilltown healthcare","uhaul","u-haul"
+    "westerlo town hall","knox town hall","myria emeny","greene county power equipment","hilltown healthcare","uhaul","u-haul"
   ].map(function(x){ return x.replace(/\u2019/g,"'"); });
   /* exact-name exclusions — for places whose name is a prefix of something
      that SHOULD show (Hilltown Commons itself is out; The Pub at Hilltown Commons stays) */
@@ -604,6 +604,15 @@ h1{font-family:'Montserrat',sans-serif; font-weight:800; text-transform:uppercas
     return r.ty === "poi" && typeof r.lat === "number" && typeof r.lng === "number" && r.hrs &&
            DOW_KEYS.some(function(k){ return r.hrs[k] && !/^closed$/i.test(r.hrs[k]); });
   });
+  /* Season Start/End are "MM-DD" strings on the POI record (ss/se); blank = year-round.
+     A window that wraps the new year (e.g. 11-01 → 03-31) is handled. */
+  function inSeason(p, mmdd){
+    var a = p.ss || "", b = p.se || "";
+    if(!a && !b) return true;
+    if(a && !b) return mmdd >= a;
+    if(!a && b) return mmdd <= b;
+    return a <= b ? (mmdd >= a && mmdd <= b) : (mmdd >= a || mmdd <= b);
+  }
   function kmBetween(a,b,c,d){
     var R=6371, p1=a*Math.PI/180, p2=c*Math.PI/180, dp=(c-a)*Math.PI/180, dl=(d-b)*Math.PI/180;
     var x=Math.sin(dp/2)*Math.sin(dp/2)+Math.cos(p1)*Math.cos(p2)*Math.sin(dl/2)*Math.sin(dl/2);
@@ -639,8 +648,10 @@ h1{font-family:'Montserrat',sans-serif; font-weight:800; text-transform:uppercas
     if(typeof ev.lat !== "number" || typeof ev.lng !== "number") return [];
     var dow = DOW_KEYS[parseISO(dstr).getDay()], w = eventWindow(ev), out = [];
     var evName = String(ev.ven||ev.t||"").toLowerCase();
+    var mmdd = dstr.slice(5,10);                          /* "MM-DD" of the event day */
     POIS.forEach(function(p){
       if(nearbyExcluded(p)) return;
+      if(!inSeason(p, mmdd)) return;                      /* seasonal stand/market outside its season */
       var km = kmBetween(ev.lat, ev.lng, p.lat, p.lng);
       if(km > NEARBY_KM) return;
       /* skip the venue itself — by NAME only (a co-located business like the Pub

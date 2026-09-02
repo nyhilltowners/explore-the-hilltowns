@@ -406,7 +406,22 @@ POI_SPEC = [
     ("cred", r"image\s*credit|^credit$|attribution", False),
     ("disp", r"^display$|^show$|^visible$", False),
     ("anchor", r"^anchor", False),
+    ("ss", r"season\s*start", False),
+    ("se", r"season\s*end", False),
 ]
+
+
+def norm_mmdd(v, rw, label):
+    """Season bound → 'MM-DD' string ('' when blank). Accepts MM-DD, M/D, or a date cell."""
+    if v is None or str(v).strip() == "":
+        return ""
+    if hasattr(v, "month") and hasattr(v, "day"):
+        return f"{v.month:02d}-{v.day:02d}"
+    m = re.match(r"^\s*(\d{1,2})[-/](\d{1,2})\s*$", str(v))
+    if not m or not (1 <= int(m.group(1)) <= 12 and 1 <= int(m.group(2)) <= 31):
+        warn(f"{rw}: {label} '{v}' not understood (want MM-DD) — ignored")
+        return ""
+    return f"{int(m.group(1)):02d}-{int(m.group(2)):02d}"
 
 
 def name_v_or_title(t):
@@ -456,6 +471,8 @@ def parse_poi(path: Path, label: str, sheet=None):
             "tier": "exact" if (lat is not None and lng is not None) else "none",
             "img": norm_image(cell(row, idx, "img"), rw),
             "cred": s(cell(row, idx, "cred")),
+            "ss": norm_mmdd(cell(row, idx, "ss"), rw, "Season Start"),
+            "se": norm_mmdd(cell(row, idx, "se"), rw, "Season End"),
         })
         if not out[-1]["img"] and web and label != "Points of Interest":
             out[-1]["img"] = fetch_site_image(web, rw)
