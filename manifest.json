@@ -18,7 +18,7 @@
       "workbook": "data/points_of_interest.xlsx",
       "sheet": "Adventures",
       "color": "#00a896",
-      "default_on": true,
+      "default_on": false,
       "glyph": "≋"
     },
     {
@@ -48,7 +48,7 @@
       "workbook": "data/points_of_interest.xlsx",
       "sheet": "Antiques & Vintage",
       "color": "#b08968",
-      "default_on": true,
+      "default_on": false,
       "glyph": "☞"
     },
     {
@@ -58,7 +58,7 @@
       "workbook": "data/points_of_interest.xlsx",
       "sheet": "Arts & Entertainment",
       "color": "#a2c523",
-      "default_on": true,
+      "default_on": false,
       "glyph": "▣"
     },
     {
@@ -68,7 +68,7 @@
       "workbook": "data/points_of_interest.xlsx",
       "sheet": "Lodging",
       "color": "#8e6cf0",
-      "default_on": true,
+      "default_on": false,
       "glyph": "☾"
     },
     {
@@ -78,7 +78,7 @@
       "workbook": "data/points_of_interest.xlsx",
       "sheet": "Flowers & Gifts",
       "color": "#c2185b",
-      "default_on": true,
+      "default_on": false,
       "glyph": "𐫱"
     },
     {
@@ -88,7 +88,7 @@
       "workbook": "data/points_of_interest.xlsx",
       "sheet": "Wellness",
       "color": "#e6b422",
-      "default_on": true,
+      "default_on": false,
       "glyph": "𐘿"
     },
     {
@@ -98,7 +98,7 @@
       "workbook": "data/points_of_interest.xlsx",
       "sheet": "Mutual Aid",
       "color": "#d4519f",
-      "default_on": true,
+      "default_on": false,
       "glyph": "✚"
     },
     {
@@ -108,7 +108,7 @@
       "workbook": "data/points_of_interest.xlsx",
       "sheet": "Other Necessities",
       "color": "#7a8ba6",
-      "default_on": true,
+      "default_on": false,
       "glyph": "⚙"
     },
     {

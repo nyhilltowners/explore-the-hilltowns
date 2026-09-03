@@ -720,6 +720,10 @@ function isExpired(r){
   return end < TODAY_E;
 }
 var planDate = null;   /* ISO yyyy-mm-dd when planning ahead; null = now mode */
+/* 2026-09-03 (Laurie): "now mode" shows only events in the next 24 hours —
+   today and tomorrow, at calendar-day granularity. Was 6 days. Plan-ahead
+   mode is unaffected. */
+var NOW_WINDOW_DAYS = 1;
 /* Which weekdays a continuous run is actually open, read from its Time field
    (preferred) or, failing that, its title ("Medusa Wednesdays: Adult Crafts").
    Handles lists ("Fri–Sat 11:00 AM – 5:00 PM; Sun 11:00 AM – 3:00 PM"), ranges
@@ -775,7 +779,7 @@ function evVisible(r){
   if(!s) return false;
   if(r.nextOcc){
     if(planDate) return r.nextOcc <= planDate && (!e || planDate <= e);
-    return r.nextOcc <= isoAddDays(TODAY_E,6) && r.nextOcc >= TODAY_E;
+    return r.nextOcc <= isoAddDays(TODAY_E,NOW_WINDOW_DAYS) && r.nextOcc >= TODAY_E;
   }
   var ref = planDate || TODAY_E;
   /* A continuous run that has already begun only shows on days it is actually
@@ -791,7 +795,7 @@ function evVisible(r){
     return ref >= s && ref <= e;                          /* visible any open day of its run */
   }
   if(planDate) return s <= planDate && planDate <= e;      /* on the chosen date */
-  return s <= isoAddDays(TODAY_E,6) && e >= TODAY_E;      /* within 6 days */
+  return s <= isoAddDays(TODAY_E,NOW_WINDOW_DAYS) && e >= TODAY_E;   /* today + tomorrow */
 }
 function fmtDate(iso){
   if(!iso) return '';
@@ -1768,7 +1772,8 @@ function catMark(c){
   var col = c.color || '#fca315';
   return '<span class="catmark disc" style="color:'+esc(col)+'">'+ch+'</span>';
 }
-/* Daytime defaults come from manifest.json (all on but Folklore). At night the
+/* Daytime defaults come from manifest.json (2026-09-03: Events, Restaurants,
+   Farm Stands only — everything else off until toggled). At night the
    map is the folklore's alone: only that layer starts on. */
 var catsTouched = false;
 function catDefault(c){
