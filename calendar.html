@@ -602,9 +602,13 @@ h1{font-family:'Montserrat',sans-serif; font-weight:800; text-transform:uppercas
     return NEARBY_EXCLUDE.some(function(x){ return n.indexOf(x) >= 0; });
   }
   var DOW_KEYS = ["sun","mon","tue","wed","thu","fri","sat"];
+  /* 2026-09-04 (Laurie): Lodging joins the pool even without posted hours —
+     a place to stay is "open" for the night regardless of a shop schedule. */
+  function isLodging(r){ return r.cat === "Lodging"; }
   var POIS = DATA.filter(function(r){
-    return r.ty === "poi" && typeof r.lat === "number" && typeof r.lng === "number" && r.hrs &&
-           DOW_KEYS.some(function(k){ return r.hrs[k] && !/^closed$/i.test(r.hrs[k]); });
+    if(r.ty !== "poi" || typeof r.lat !== "number" || typeof r.lng !== "number") return false;
+    if(isLodging(r)) return true;
+    return r.hrs && DOW_KEYS.some(function(k){ return r.hrs[k] && !/^closed$/i.test(r.hrs[k]); });
   });
   /* Season Start/End are "MM-DD" strings on the POI record (ss/se); blank = year-round.
      A window that wraps the new year (e.g. 11-01 → 03-31) is handled. */
@@ -660,7 +664,8 @@ h1{font-family:'Montserrat',sans-serif; font-weight:800; text-transform:uppercas
          at Hilltown Commons must still show for a Commons event) */
       var pn = String(p.t||"").toLowerCase();
       if(evName && pn && (evName === pn || evName.indexOf(pn) >= 0 || pn.indexOf(evName) === 0 && pn.length - evName.length < 3)) return;
-      var h = poiHours(p.hrs[dow]);
+      var h = (p.hrs && p.hrs[dow]) ? poiHours(p.hrs[dow]) : (isLodging(p) ? {allDay:true, label:"stay"} : {closed:true});
+      if(isLodging(p) && h.closed) h = {allDay:true, label:"stay"};   /* lodging never "closes" for the night */
       if(!overlaps(w, h)) return;
       out.push({p:p, km:km, hrs:h.label || ""});
     });
