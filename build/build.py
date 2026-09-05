@@ -342,6 +342,20 @@ def tier_of(cert: str, has_xy: bool) -> str:
     return "unver"
 
 
+
+# ---- "wonder score" for the sidebar sort (2026-09-04, Laurie) ----
+# Surface the weird, supernatural and sci-fi tales, then inspiring history,
+# ahead of whatever merely sits near the map centre. Scored from the text
+# (Tags are too sparse to rank on). Emitted as rec["w"] so it is inspectable.
+_WEIRD = re.compile(r"ghost|haunt|witch|devil|spirit|spectre|specter|phantom|curse|omen|giant|dragon|serpent|monster|little people|pukwudgie|fair(y|ies)|treasure|buried gold|vanish|apparition|headless|weird|myster|\bufo\b|flying saucer|alien|sci-?fi|science fiction|vonnegut|star trek|time travel|enchant|demon|goblin|\bimp\b|sorcer|magic|prophec|drowned|bewitch|supernatural|strange|ghoul|underworld|manitou|thunderbird|horned|shape-?shift|portal|premonition|banshee|werewolf|vampire|sea monster|lake monster|will-o|jack-o|lantern man|hellhound|black dog|wild hunt|skeleton|skull|flying head|rip van winkle|slept for|sleeps for|sighting|dwarf|djogeon|cannibal|transform|turned into|talking (animal|bird|tree|stone)|oracle|dream|vision|charm|medicine|shaman|conjur|\bspell\b|sacred|taboo|thunder|whirlwind|underwater|were-|rose from the|returned from the dead|back from the dead|immortal|stone-thrower|stone thrower|thrown by no one|invisible|wizard|witchcraft|hex|fortune|prophet|miracle|glow|light in the|mysterious light|bottomless|vanished|disappear|never (been )?found|ghost town|lost (mine|village|city)|legend|petrif|origin of|land of souls|fable|lake-lion|lion|creation|first (man|woman|people)|great turtle|sky woman|trickster|mother life|talking|speaking|animal people|duel|feast|omen", re.I)
+_INSPIRE = re.compile(r"uprising|rebellion|anti-rent|freedom|abolition|underground railroad|suffrag|first woman|first black|invent|hero|rescue|escaped|liberat|resist|\bstrike\b|protest|pioneer|revolution|emancipat|courage|defied|defiance|refused|stood up|organiz|peacemaker|elope|treaty|founder|queen|chief|sachem|prophet", re.I)
+def wonder_score(rec) -> int:
+    text = " ".join([rec.get("t",""), rec.get("b",""), rec.get("s",""), " ".join(rec.get("tags",[]))])
+    weird = len(set(m.group(0).lower() for m in _WEIRD.finditer(text)))
+    insp = len(set(m.group(0).lower() for m in _INSPIRE.finditer(text)))
+    tagboost = 3 if any(re.search(r"sci-?fi|science fiction|supernatural|haunted|witch|ghost|star trek", t, re.I) for t in rec.get("tags", [])) else 0
+    return 3 * min(weird, 4) + 2 * min(insp, 3) + tagboost
+
 def parse_folklore(path: Path, label: str, sheet=None):
     where = path.name + (f" [{sheet}]" if sheet else "")
     hdr, rows = read_rows(path, where, sheet)
@@ -379,6 +393,7 @@ def parse_folklore(path: Path, label: str, sheet=None):
         if rec["s"] and rec["s"] == rec["tf"] and rec["b"]:
             rec["s"], rec["b"] = rec["b"], ""
         rec["tier"] = tier_of(rec["c"], lat is not None and lng is not None)
+        rec["w"] = wonder_score(rec)
         out.append(rec)
     check_dupe_ids(out, where)
     if not out:
