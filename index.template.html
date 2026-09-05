@@ -547,21 +547,10 @@ html[data-theme="night"] #modeToggle{color:#fca315;}
 
     <div id="listwrap"></div>
 
-<style>
-.stepnav{display:inline-flex;align-items:center;gap:6px;margin:0 8px}
-.stepnav .btn[disabled]{opacity:.35;cursor:default}
-.stepcount{font-size:.78em;opacity:.7;white-space:nowrap}
-@media (max-width:520px){ .backrow{flex-wrap:wrap;row-gap:6px} }
-</style>
     <div id="detail">
       <div class="detail-head">
         <div class="backrow">
           <button class="btn" id="btnBack">&larr; Back to list</button>
-          <span class="stepnav">
-            <button class="btn" id="btnPrev" title="Previous story in the list">&lsaquo; Prev</button>
-            <span class="stepcount" id="d_count"></span>
-            <button class="btn" id="btnNext" title="Next story in the list">Next &rsaquo;</button>
-          </span>
           <span>
             <button class="btn" id="btnCopyLink">Copy link</button>
             <button class="btn" id="btnFly">View on map</button>
@@ -1440,6 +1429,10 @@ function cmpListOrder(a, b){
      breaks ties — the map centre shouldn't decide which stories lead. */
   var af = a.ty==='folklore', bf = b.ty==='folklore';
   if(af && bf){
+    /* 2026-09-05: Laurie's curated Feature Rank (workbook column) leads;
+       then the wonder score; proximity last. */
+    var fa = (a.fr!=null) ? a.fr : Infinity, fb = (b.fr!=null) ? b.fr : Infinity;
+    if(fa !== fb) return fa - fb;
     var wa = a.w||0, wb = b.w||0;
     if(wa !== wb) return wb - wa;
     return a.dist - b.dist;
@@ -1447,8 +1440,7 @@ function cmpListOrder(a, b){
   if(af !== bf) return af ? -1 : 1;
   return a.dist - b.dist;
 }
-/* the sidebar's current order, for the story prev/next buttons */
-var LIST_ORDER = [];
+var LIST_ORDER = [];   /* sidebar's current order (kept; prev/next removed 2026-09-05) */
 function renderList(){
   updateOnlinePill();
   var list = currentFilter(true);
@@ -1682,14 +1674,6 @@ function openDetail(k){
   document.getElementById('btnFly').onclick = function(){
     closeDetail(); selectRecord(k,{pan:true,popup:true});
   };
-  /* prev / next walk the sidebar's current order (same filters, same sort) */
-  if(!LIST_ORDER.length) renderList();
-  var i = LIST_ORDER.indexOf(k), n = LIST_ORDER.length;
-  var prevB = document.getElementById('btnPrev'), nextB = document.getElementById('btnNext');
-  document.getElementById('d_count').textContent = (i>=0 && n>1) ? ((i+1)+' of '+n) : '';
-  prevB.disabled = !(i>0); nextB.disabled = !(i>=0 && i<n-1);
-  prevB.onclick = function(){ if(i>0) openDetail(LIST_ORDER[i-1]); };
-  nextB.onclick = function(){ if(i<n-1) openDetail(LIST_ORDER[i+1]); };
   document.getElementById('detail').classList.add('open');
 }
 function closeDetail(){ document.getElementById('detail').classList.remove('open'); }

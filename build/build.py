@@ -306,6 +306,7 @@ def check_dupe_ids(recs, where):
 # ---------------- folklore ----------------
 
 FOLK_SPEC = [
+    ("fr", r"^feature\s*rank$", False),
     ("id", r"locked\s*id|^id$", False),
     ("t", r"short\s*title", True),
     ("b", r"tale.*being", False),
@@ -394,6 +395,8 @@ def parse_folklore(path: Path, label: str, sheet=None):
             rec["s"], rec["b"] = rec["b"], ""
         rec["tier"] = tier_of(rec["c"], lat is not None and lng is not None)
         rec["w"] = wonder_score(rec)
+        _fr = s(cell(row, idx, "fr"))
+        rec["fr"] = int(float(_fr)) if re.match(r"^\d+(\.0+)?$", _fr) else None   # Laurie's curated lead order (2026-09-05)
         out.append(rec)
     check_dupe_ids(out, where)
     if not out:
