@@ -734,7 +734,8 @@ h1{font-family:'Montserrat',sans-serif; font-weight:800; text-transform:uppercas
     "Rensselaerville","Berne","Knox","Westerlo","Oak Hill",
     "Potter Hollow","Medusa","Preston Hollow","Preston-Potter Hollow",
     "Voorheesville",  /* added 2026-08-31 per Laurie — picks up Thacher State Park */
-    "Thacher"         /* venue keyword, not a town: catches Thacher rows whose address omits the town */
+    "Thacher",        /* venue keyword, not a town: catches Thacher rows whose address omits the town */
+    "Conkling Hall"   /* 2026-09-06 venue keyword — ingested rows sometimes arrive with no address */
   ];
   var CORE_RE = new RegExp("\\b(" + CORE_TOWNS.map(function(t){
     return t.replace(/[-\s]/g,"[-\\s]");   // allow hyphen/space variants
