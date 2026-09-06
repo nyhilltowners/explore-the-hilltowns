@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hilltowns Bulletin — Hilltowns Folk Atlas</title>
+<meta name="description" content="Hilltowns Bulletin — pin a card for your show, your sale, your haiku or your birthday shoutout.">
+<meta property="og:title" content="Hilltowns Bulletin — Hilltowns Folk Atlas">
+<meta property="og:type" content="website">
+<meta property="og:image" content="images/share-card.png">
+<link rel="icon" href="images/favicon.svg">
+<link rel="apple-touch-icon" href="images/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lato:ital,wght@0,400;0,700;1,400&family=Montserrat:ital,wght@0,400;0,600;0,700;0,800;1,600&family=Libre+Caslon+Text:ital,wght@0,400;0,700;1,400&family=Special+Elite&family=Courier+Prime:ital,wght@0,400;0,700;1,400&family=Cutive+Mono&family=Shrikhand&family=Righteous&family=Monoton&display=swap">
+<style>
+:root{
+  --ink:#00004d; --paper:#feffff; --parchment:#f4efe1; --parchment-line:#e3dcc8;
+  --ink-blue:#1a1d5c; --lichen:#dde0f2; --birch:#a9b0dd; --faint:#7b82b8;
+  --wampum:#39b7ff; --wampum-deep:#000080; --gold:#fca315; --gold-ink:#2b2410;
+  /* board */
+  --cork:#c8985f; --cork-dark:#9d6f3c; --cork-light:#dcb280;
+  --pin-red:#c9322b; --pin-blue:#2c4fa3; --pin-green:#3f7d3a; --pin-yellow:#e2b52c;
+  --type-ink:#2a2622;   /* typewriter ink: warm near-black, never pure */
+}
+*{box-sizing:border-box; margin:0; padding:0;}
+body{
+  font-family:'Lato',ui-sans-serif,system-ui,sans-serif;
+  color:var(--ink-blue); background:var(--parchment);
+  -webkit-font-smoothing:antialiased; line-height:1.6;
+}
+/* ---------- shared chrome (identical to the other pages) ---------- */
+.betabar{background:var(--gold); color:var(--gold-ink);
+  font-family:'Montserrat',sans-serif; font-weight:700; font-size:11px;
+  letter-spacing:.08em; text-transform:uppercase; line-height:1.4;
+  overflow:hidden; white-space:nowrap; position:relative;}
+.betabar .ticker-track{display:inline-block; white-space:nowrap; animation:betabar-scroll 44s linear infinite;}
+.betabar:hover .ticker-track, .betabar:focus-within .ticker-track{animation-play-state:paused;}
+.betabar .ticker-set{display:inline-block;}
+.betabar a{color:inherit; text-decoration:underline; text-underline-offset:2px;}
+.betabar .ticker-track span span{padding:5px 14px; display:inline-block;}
+.betabar .tg{font-size:1.75em; font-weight:900; vertical-align:-4px; display:inline-block; margin-right:1px;}
+@keyframes betabar-scroll{ from{transform:translateX(0);} to{transform:translateX(-50%);} }
+@media (prefers-reduced-motion: reduce){ .betabar{overflow-x:auto;} .betabar .ticker-track{animation:none;} }
+.sitenav{position:sticky; top:0; z-index:100; display:flex; align-items:center; justify-content:space-between;
+  padding:8px 20px; background:var(--parchment); border-bottom:3px solid var(--ink-blue); box-shadow:0 2px 8px rgba(0,0,60,.05);}
+.sitenav .brand{display:flex; align-items:center; gap:8px; text-decoration:none; font-family:'Montserrat',sans-serif;
+  font-weight:800; text-transform:uppercase; letter-spacing:.05em; color:var(--ink-blue);}
+.sitenav .brand img{height:42px; width:auto; flex:none; display:block;}
+.sitenav .brand .stack{display:flex; flex-direction:column; line-height:1.03; margin-left:2px;}
+.sitenav .brand .stack .l1{font-size:16px; display:block;}
+.sitenav .brand .stack .l2{font-size:16px; display:block; transform:scaleX(0.979); transform-origin:left center;}
+.sitenav .links{display:flex; align-items:center; gap:4px;}
+.sitenav .links a{font-family:'Montserrat',sans-serif; font-weight:600; font-size:12.5px; letter-spacing:.08em;
+  text-transform:uppercase; text-decoration:none; color:var(--ink-blue); padding:8px 14px; border-radius:6px; transition:.15s;}
+.sitenav .links a:hover{background:rgba(26,29,92,.07);}
+.sitenav .links a.active{color:var(--gold);}
+.menubtn{display:none; align-items:center; justify-content:center; background:none; border:none; cursor:pointer; padding:8px;
+  border-radius:6px; color:var(--ink-blue); transition:.15s; touch-action:manipulation;}
+.menubtn:hover{background:rgba(26,29,92,.07); color:var(--gold);}
+.menubtn svg{width:24px; height:24px; display:block;}
+@media (max-width:760px){
+  .menubtn{display:flex;}
+  .sitenav .links{display:none; position:absolute; top:100%; left:0; right:0; flex-direction:column; align-items:stretch; gap:0;
+    background:var(--parchment); border-bottom:3px solid var(--ink-blue); box-shadow:0 12px 26px rgba(0,0,60,.18); padding:6px 10px 12px; z-index:101;}
+  .sitenav .links.open{display:flex;}
+  .sitenav .links a{padding:13px 14px; font-size:14px;}
+}
+.foot{background:var(--ink-blue); color:var(--birch); text-align:center; padding:32px 24px; font-size:13px; border-top:3px solid var(--gold);}
+.foot a{color:var(--gold); text-decoration:none; letter-spacing:.06em; font-family:'Montserrat',sans-serif; font-weight:600; font-size:12px;}
+.foot .row{margin-top:10px; display:flex; gap:18px; justify-content:center; flex-wrap:wrap;}
+@media (max-width:560px){ .sitenav{padding:6px 14px;} .sitenav .brand img{height:36px;} .sitenav .brand .stack .l1,.sitenav .brand .stack .l2{font-size:14px;} }
+
+/* ---------- the board ---------- */
+.board{
+  position:relative; min-height:80vh; padding:34px 28px 90px;
+  background-color:var(--cork);
+  background-image:
+    url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='260' height='260'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 .28 0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>"),
+    url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='120' height='120'><filter id='m'><feTurbulence type='fractalNoise' baseFrequency='.045' numOctaves='2' seed='7'/><feColorMatrix values='0 0 0 0 .62  0 0 0 0 .40  0 0 0 0 .18  0 0 0 .55 0'/></filter><rect width='100%25' height='100%25' filter='url(%23m)'/></svg>"),
+    radial-gradient(ellipse at 20% 10%, rgba(255,235,200,.28), transparent 55%),
+    radial-gradient(ellipse at 85% 90%, rgba(60,30,5,.35), transparent 60%);
+  box-shadow:inset 0 0 0 14px #5a3b1c, inset 0 0 0 16px #8a6236, inset 0 0 90px rgba(40,20,0,.45);
+}
+.board::before{ /* wooden frame grain */
+  content:""; position:absolute; inset:0; pointer-events:none;
+  border:14px solid transparent;
+  border-image:repeating-linear-gradient(95deg,#5b3b1b 0 3px,#6b4724 3px 7px,#4f3216 7px 9px) 14;
+}
+/* header sign: a sheet taped to the cork */
+.sign{
+  position:relative; width:min(560px, 92%); margin:0 auto 34px; padding:22px 26px 20px;
+  background:#f7f3e8; color:var(--type-ink); transform:rotate(-1.2deg);
+  box-shadow:0 8px 18px rgba(0,0,0,.35), 0 1px 0 rgba(255,255,255,.6) inset;
+  font-family:'Special Elite','Courier Prime',monospace;
+}
+.sign::before,.sign::after{ /* tape */
+  content:""; position:absolute; top:-12px; width:92px; height:26px; background:rgba(255,248,210,.62);
+  box-shadow:0 1px 3px rgba(0,0,0,.18); transform:rotate(-6deg);
+  background-image:repeating-linear-gradient(90deg, rgba(255,255,255,.35) 0 2px, transparent 2px 5px);
+}
+.sign::before{left:-22px;} .sign::after{right:-22px; transform:rotate(7deg);}
+.sign h1{font-family:'Shrikhand',cursive; font-weight:400; font-size:clamp(30px,6vw,48px); line-height:1; color:#8a2f1e;
+  letter-spacing:.01em; text-shadow:2px 2px 0 #f2c14e;}
+.sign p{margin-top:10px; font-size:15px; line-height:1.5;}
+.sign .rules{margin-top:8px; font-size:13px; color:#5a544c;}
+
+/* the grid: staggered columns so cards read as a scattered board, not a SaaS grid */
+.cards{
+  display:grid; grid-template-columns:repeat(auto-fill, minmax(260px, 1fr)); gap:38px 30px;
+  max-width:1260px; margin:0 auto; align-items:start;
+}
+.card{
+  --rot:0deg; --pin:var(--pin-red);
+  position:relative; padding:30px 22px 20px; min-height:190px;
+  color:var(--type-ink); transform:rotate(var(--rot));
+  box-shadow:1px 2px 2px rgba(0,0,0,.18), 4px 8px 16px rgba(0,0,0,.28), 0 0 0 1px rgba(0,0,0,.06);
+  transition:transform .45s cubic-bezier(.2,.8,.2,1), box-shadow .2s;
+  will-change:transform;
+}
+.card:hover{ box-shadow:2px 4px 4px rgba(0,0,0,.18), 8px 16px 26px rgba(0,0,0,.33); }
+.card:focus-within{ outline:3px solid var(--gold); outline-offset:3px; }
+@media (prefers-reduced-motion: reduce){ .card{transition:none;} }
+/* pushpin */
+.pin{ position:absolute; top:-10px; left:50%; width:22px; height:22px; margin-left:-11px; border-radius:50%;
+  background:radial-gradient(circle at 35% 30%, #fff7 0 12%, transparent 40%), radial-gradient(circle at 50% 50%, var(--pin) 0 60%, color-mix(in srgb, var(--pin) 60%, #000) 100%);
+  box-shadow:0 1px 1px rgba(0,0,0,.4), 0 6px 8px rgba(0,0,0,.35); z-index:2; }
+.pin::after{ content:""; position:absolute; left:50%; top:16px; width:3px; height:12px; margin-left:-1px; background:linear-gradient(#777,#222); transform:rotate(3deg); z-index:-1; }
+.card.pinned-corner .pin{ left:auto; right:18px; margin:0; }
+
+/* text */
+.card h2{ font-size:22px; line-height:1.15; margin:0 0 8px; font-weight:400; word-wrap:break-word; }
+.card .when, .card .where{ font-size:14px; line-height:1.45; }
+.card .when::before{ content:"When: "; opacity:.7; } .card .where::before{ content:"Where: "; opacity:.7; }
+.card .details{ margin-top:10px; font-size:15px; line-height:1.5; white-space:pre-line; word-wrap:break-word; }
+.card .by{ margin-top:14px; font-size:12.5px; opacity:.75; }
+.card a{ color:inherit; text-decoration:underline; text-decoration-thickness:1.5px; text-underline-offset:2px; word-break:break-all; }
+.card .link{ margin-top:8px; font-size:14px; }
+.card.pending{ opacity:.85; padding-bottom:52px; }
+.card.pending .stamp{ position:absolute; right:14px; bottom:14px; padding:4px 8px; border:2px solid #b3261e; color:#b3261e;
+  font-family:'Courier Prime',monospace; font-size:12px; letter-spacing:.06em; transform:rotate(-8deg); background:rgba(255,255,255,.5); }
+
+/* body/headline hands */
+.hand-caslon h2{font-family:'Libre Caslon Text',serif; font-weight:700;} .hand-caslon .details,.hand-caslon .when,.hand-caslon .where,.hand-caslon .by,.hand-caslon .link{font-family:'Libre Caslon Text',serif;}
+.hand-elite h2{font-family:'Special Elite',monospace;} .hand-elite .details,.hand-elite .when,.hand-elite .where,.hand-elite .by,.hand-elite .link{font-family:'Special Elite',monospace;}
+.hand-courier h2{font-family:'Courier Prime',monospace; font-weight:700;} .hand-courier .details,.hand-courier .when,.hand-courier .where,.hand-courier .by,.hand-courier .link{font-family:'Courier Prime',monospace;}
+.hand-cutive h2{font-family:'Cutive Mono',monospace; font-size:20px;} .hand-cutive .details,.hand-cutive .when,.hand-cutive .where,.hand-cutive .by,.hand-cutive .link{font-family:'Cutive Mono',monospace;}
+.hand-shrikhand h2{font-family:'Shrikhand',cursive; font-size:26px; letter-spacing:.01em;} .hand-shrikhand .details,.hand-shrikhand .when,.hand-shrikhand .where,.hand-shrikhand .by,.hand-shrikhand .link{font-family:'Special Elite',monospace;}
+.hand-righteous h2{font-family:'Righteous',cursive; font-size:25px;} .hand-righteous .details,.hand-righteous .when,.hand-righteous .where,.hand-righteous .by,.hand-righteous .link{font-family:'Courier Prime',monospace;}
+.hand-monoton h2{font-family:'Monoton',cursive; font-size:24px; line-height:1.25; letter-spacing:.02em;} .hand-monoton .details,.hand-monoton .when,.hand-monoton .where,.hand-monoton .by,.hand-monoton .link{font-family:'Cutive Mono',monospace;}
+
+/* ---------- the seven stocks ---------- */
+.stock-index{ background:#f8f4e7;
+  background-image:linear-gradient(transparent 33px, #b9cbe3 33px, #b9cbe3 34px), linear-gradient(90deg, transparent 0, transparent 20px, #d98d8a 20px, #d98d8a 21px, transparent 21px);
+  background-size:100% 26px, 100% 100%; background-position:0 44px, 0 0; }
+.stock-index{ background-image:repeating-linear-gradient(transparent 0 25px, #b9cbe3 25px 26px), linear-gradient(#d98d8a,#d98d8a); background-size:100% 26px, 100% 2px; background-position:0 44px, 0 40px; background-repeat:repeat, no-repeat; }
+.stock-graph{ background:#f2f6f9;
+  background-image:linear-gradient(rgba(70,130,190,.28) 1px, transparent 1px), linear-gradient(90deg, rgba(70,130,190,.28) 1px, transparent 1px),
+    linear-gradient(rgba(70,130,190,.55) 1px, transparent 1px), linear-gradient(90deg, rgba(70,130,190,.55) 1px, transparent 1px);
+  background-size:14px 14px, 14px 14px, 70px 70px, 70px 70px; }
+.stock-pink{ background:#f7cfd8; background-image:repeating-linear-gradient(transparent 0 25px, rgba(150,60,90,.28) 25px 26px); background-size:100% 26px; background-position:0 44px; }
+.stock-yellow{ background:#f9ec9c; background-image:repeating-linear-gradient(transparent 0 25px, rgba(120,90,20,.28) 25px 26px); background-size:100% 26px; background-position:0 44px; }
+.stock-recipe{ background:#fbf7ee; padding-top:44px;
+  background-image:linear-gradient(#c8463b,#c8463b), repeating-linear-gradient(transparent 0 25px, #cfc4a8 25px 26px);
+  background-size:100% 30px, 100% 26px; background-position:0 0, 0 56px; background-repeat:no-repeat, repeat; }
+.stock-recipe::before{ content:"From the kitchen of the Hilltowns"; position:absolute; top:7px; left:22px; right:64px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; font-family:'Courier Prime',monospace; font-size:12px; color:#fff; letter-spacing:.08em; }
+.stock-recipe .pin{ top:-8px; }
+.stock-marble{ background:#e9e4f2; color:#221b2a;
+  background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='300' height='300'><filter id='mb' x='0' y='0'><feTurbulence type='turbulence' baseFrequency='.012 .02' numOctaves='3' seed='11'/><feColorMatrix values='0 0 0 0 .55  0 0 0 0 .30  0 0 0 0 .60  0 0 0 -2.2 1.6'/><feGaussianBlur stdDeviation='.6'/></filter><rect width='100%25' height='100%25' fill='%23eee8f3'/><rect width='100%25' height='100%25' filter='url(%23mb)' opacity='.9'/></svg>");
+  background-size:300px 300px; }
+.stock-kraft{ background:#cfae7a; color:#3b2a12;
+  background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='k'><feTurbulence type='fractalNoise' baseFrequency='.7' numOctaves='2' seed='3'/><feColorMatrix values='0 0 0 0 .2  0 0 0 0 .13  0 0 0 0 .05  0 0 0 .18 0'/></filter><rect width='100%25' height='100%25' filter='url(%23k)'/></svg>"),
+    repeating-linear-gradient(112deg, rgba(255,255,255,.05) 0 2px, transparent 2px 9px); }
+.stock-swirl{ color:#3a1d0a;
+  background:
+    repeating-radial-gradient(circle at 18% 22%, #e8712f 0 12px, #f2b53a 12px 24px, #8d9b3a 24px 36px, #7a3b1c 36px 48px),
+    #f2b53a;
+  background-blend-mode:normal; }
+.stock-swirl::before{ content:""; position:absolute; inset:0; pointer-events:none;
+  background:repeating-radial-gradient(circle at 82% 88%, rgba(255,255,255,0) 0 14px, rgba(255,240,200,.35) 14px 20px, rgba(122,59,28,.25) 20px 32px);
+  mix-blend-mode:multiply; }
+.stock-swirl .inner{ position:relative; background:rgba(255,246,222,.86); padding:12px 14px; margin:-6px -6px 0; box-shadow:0 0 0 1px rgba(122,59,28,.35); }
+.stock-swirl h2{ color:#7a2b0e; }
+
+/* votes: a hand-drawn arrow pair clipped to the card's right edge */
+.votes{ position:absolute; right:-14px; top:36px; display:flex; flex-direction:column; align-items:center; gap:2px; z-index:3; }
+.votes button{ width:34px; height:30px; border:none; background:#fff8e6; color:#4a3a1c; cursor:pointer; display:flex; align-items:center; justify-content:center;
+  box-shadow:1px 2px 4px rgba(0,0,0,.3); transform:rotate(calc(var(--rot) * -1)); transition:background .15s; touch-action:manipulation; }
+.votes button:hover{ background:#ffefc2; }
+.votes button:focus-visible{ outline:3px solid var(--gold); outline-offset:2px; }
+.votes button.on{ background:var(--gold); color:#2b2410; }
+.votes button svg{ width:18px; height:18px; display:block; }
+.votes .n{ font-family:'Courier Prime',monospace; font-size:14px; font-weight:700; color:#2a2622; background:#fff8e6; padding:1px 7px; box-shadow:1px 2px 4px rgba(0,0,0,.3); min-width:34px; text-align:center; }
+.votes .n.neg{ color:#9c2b1f; }
+
+/* blank card = the submit affordance */
+.card.blank{ background:#f8f4e7; border:2px dashed rgba(60,40,20,.35); box-shadow:none; cursor:pointer; min-height:190px;
+  display:flex; align-items:center; justify-content:center; text-align:center; --rot:1.5deg; }
+.card.blank .plus{ font-family:'Shrikhand',cursive; font-size:26px; color:#8a2f1e; line-height:1.1; }
+.card.blank small{ display:block; font-family:'Special Elite',monospace; font-size:13px; color:#5a544c; margin-top:6px; }
+.card.blank:hover{ border-color:#8a2f1e; box-shadow:0 0 0 4px rgba(252,163,21,.35); }
+
+.note{ text-align:center; color:#fff3dc; font-family:'Special Elite',monospace; text-shadow:0 1px 2px rgba(0,0,0,.6); margin:0 auto 24px; max-width:640px; font-size:15px; }
+.note.err{ background:rgba(140,30,20,.85); padding:10px 14px; }
+.note a{ color:#ffe08a; }
+
+/* ---------- submit dialog: a fresh index card ---------- */
+dialog.pinform{ border:none; padding:0; background:transparent; max-width:min(560px, 94vw); width:100%; }
+dialog.pinform::backdrop{ background:rgba(30,15,0,.6); backdrop-filter:blur(2px); }
+.formcard{ position:relative; background:#f8f4e7; color:var(--type-ink); padding:36px 26px 24px; transform:rotate(-.6deg);
+  box-shadow:6px 12px 30px rgba(0,0,0,.5); font-family:'Courier Prime',monospace;
+  background-image:repeating-linear-gradient(transparent 0 25px, #b9cbe3 25px 26px), linear-gradient(#d98d8a,#d98d8a); background-size:100% 26px, 100% 2px; background-position:0 60px, 0 56px; background-repeat:repeat, no-repeat; }
+.formcard h2{ font-family:'Shrikhand',cursive; font-weight:400; color:#8a2f1e; font-size:28px; line-height:1; margin-bottom:14px; }
+.formcard label{ display:block; font-size:13px; margin:12px 0 3px; letter-spacing:.04em; }
+.formcard input, .formcard textarea{ width:100%; font:inherit; font-size:15px; color:var(--type-ink); background:rgba(255,255,255,.55); border:none; border-bottom:2px solid #7b82b8; padding:8px 8px; }
+.formcard textarea{ min-height:96px; resize:vertical; }
+.formcard input:focus, .formcard textarea:focus{ outline:none; background:#fff; border-bottom-color:var(--gold); }
+.formcard .row{ display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+@media (max-width:520px){ .formcard .row{ grid-template-columns:1fr; } }
+.formcard .hint{ font-size:12px; color:#5a544c; margin-top:4px; }
+.formcard .actions{ display:flex; gap:12px; justify-content:flex-end; margin-top:20px; align-items:center; }
+.formcard .actions .count{ margin-right:auto; font-size:12px; color:#5a544c; }
+.btn{ font-family:'Montserrat',sans-serif; font-weight:700; font-size:13px; letter-spacing:.06em; text-transform:uppercase; padding:11px 18px; border-radius:8px; border:none; cursor:pointer; }
+.btn.go{ background:var(--ink-blue); color:var(--paper); } .btn.go:hover{ background:#24287a; } .btn.go[disabled]{ opacity:.6; cursor:default; }
+.btn.quiet{ background:transparent; color:var(--ink-blue); }
+.formcard .hp{ position:absolute; left:-9999px; top:-9999px; height:0; width:0; opacity:0; }
+.formcard .err{ color:#b3261e; font-size:13px; margin-top:8px; }
+</style>
+</head>
+<body>
+<div class="betabar" role="region" aria-label="Site announcements">
+  <div class="ticker-track"><span class="ticker-set">
+    <span><span class="tg">𓅓</span> Beta version: please double check all info before hitting the trail</span>
+    <span><span class="tg">𓅓</span> Suggestions? Hit us up NYHilltowners@Gmail.com</span>
+    <span><span class="tg">𓅓</span> Not another dime for corrupt corporations; shop and spend your time and money locally!</span>
+    <span><span class="tg">𓅓</span> Apes together strong.</span>
+    <span><span class="tg">𓅓</span> Do not obey in advance.</span>
+    <span><span class="tg">𓅓</span> Hiring? News to share? Poetry into the void? Email us and we'll share it here (free! not everything needs to be monetized)</span>
+    <span><span class="tg">𓅓</span> Register to vote before October 23: <a href="https://voterlookup.elections.ny.gov/" target="_blank" rel="noopener">voterlookup.elections.ny.gov</a></span>
+    <span><span class="tg">𓅓</span> Do you know who&#8217;s paying your politicians? <a href="https://www.opensecrets.org/" target="_blank" rel="noopener">OpenSecrets.org</a></span>
+  </span><span class="ticker-set" aria-hidden="true">
+    <span><span class="tg">𓅓</span> Beta version: please double check all info before hitting the trail</span>
+    <span><span class="tg">𓅓</span> Suggestions? Hit us up NYHilltowners@Gmail.com</span>
+    <span><span class="tg">𓅓</span> Not another dime for corrupt corporations; shop and spend your time and money locally!</span>
+    <span><span class="tg">𓅓</span> Apes together strong.</span>
+    <span><span class="tg">𓅓</span> Do not obey in advance.</span>
+    <span><span class="tg">𓅓</span> Hiring? News to share? Poetry into the void? Email us and we'll share it here (free! not everything needs to be monetized)</span>
+    <span><span class="tg">𓅓</span> Register to vote before October 23: <a href="https://voterlookup.elections.ny.gov/" target="_blank" rel="noopener">voterlookup.elections.ny.gov</a></span>
+    <span><span class="tg">𓅓</span> Do you know who&#8217;s paying your politicians? <a href="https://www.opensecrets.org/" target="_blank" rel="noopener">OpenSecrets.org</a></span>
+  </span></div>
+</div>
+
+<nav class="sitenav">
+  <a class="brand" href="index.html">
+    <img src="images/raccoon-mark.svg" alt="">
+    <span class="stack"><span class="l1">Hilltowns</span><span class="l2">Folk Atlas</span></span>
+  </a>
+  <div class="links" id="hnav">
+    <a href="index.html">Atlas</a>
+    <a href="calendar.html">Calendar</a>
+    <a href="directory.html">Directory</a>
+    <a href="instagram.html">Instagram</a>
+    <a href="about.html">About</a>
+  </div>
+  <button class="menubtn" id="menuToggle" title="Menu" aria-label="Menu" aria-expanded="false">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="4" y1="7" x2="20" y2="7"></line><line x1="4" y1="12" x2="20" y2="12"></line><line x1="4" y1="17" x2="20" y2="17"></line></svg>
+  </button>
+</nav>
+
+<main class="board">
+  <header class="sign">
+    <h1>Hilltowns Bulletin</h1>
+    <p>Pin a card for your show, your sale, your haiku or your birthday shoutout. No logins, your pin goes up as soon as you submit it.</p>
+    <p class="rules">We&rsquo;re all about free speech and civil discourse. But don&rsquo;t be a d*ck. We also believe in private property, and this is ours, so we&rsquo;ll take it down if you don&rsquo;t keep it civil.</p>
+  </header>
+
+  <div id="note" class="note" hidden></div>
+
+  <section class="cards" id="cards" aria-live="polite" aria-label="Pinned cards">
+    <div class="card blank" id="blank" role="button" tabindex="0" aria-label="Pin a card">
+      <div><div class="plus">+ Pin a card</div><small>free, takes a minute, shows up right away</small></div>
+    </div>
+  </section>
+</main>
+
+<dialog class="pinform" id="pinform" aria-labelledby="pf_title">
+  <form class="formcard" id="pf" method="dialog" novalidate>
+    <h2 id="pf_title">A fresh card</h2>
+    <label for="f_title">What is it?</label>
+    <input id="f_title" name="title" maxlength="90" required placeholder="Fall bulb swap at the grange">
+    <div class="row">
+      <div><label for="f_when">When</label><input id="f_when" name="when" maxlength="60" placeholder="Sat Oct 11, 10am–1pm"></div>
+      <div><label for="f_date">Date (so the card comes down after)</label><input id="f_date" name="date" type="date"></div>
+    </div>
+    <label for="f_where">Where</label>
+    <input id="f_where" name="where" maxlength="90" placeholder="Rensselaerville Grange, 1594 CR 351">
+    <label for="f_details">Details</label>
+    <textarea id="f_details" name="details" maxlength="600" placeholder="Bring bulbs you've divided, take home ones you haven't grown. Coffee on."></textarea>
+    <div class="hint"><span id="f_count">600</span> characters left</div>
+    <label for="f_link">Link (optional)</label>
+    <input id="f_link" name="link" type="url" maxlength="200" placeholder="https://">
+    <div class="row">
+      <div><label for="f_name">Your name (shows on the card)</label><input id="f_name" name="name" maxlength="50" placeholder="Jo, Westerlo"></div>
+      <div><label for="f_contact">Email (only the board keeper sees it)</label><input id="f_contact" name="contact" type="email" maxlength="120" placeholder="you@example.com"></div>
+    </div>
+    <input class="hp" name="website" tabindex="-1" autocomplete="off" aria-hidden="true">
+    <div class="err" id="pf_err" hidden></div>
+    <div class="actions">
+      <span class="count" id="pf_status"></span>
+      <button type="button" class="btn quiet" id="pf_cancel">Never mind</button>
+      <button type="submit" class="btn go" id="pf_go">Pin it</button>
+    </div>
+  </form>
+</dialog>
+
+<footer class="foot">
+  <div>A community project of the NY Hilltowners.</div>
+  <div class="row">
+    <a href="index.html">Atlas</a>
+    <a href="calendar.html">Calendar</a>
+    <a href="directory.html">Directory</a>
+    <a href="https://instagram.com/NYHilltowners" target="_blank" rel="noopener">@NYHilltowners</a>
+  </div>
+</footer>
+
+<script>
+/* ===== CONFIG =====
+   Paste the Apps Script web-app URL (ends in /exec) here after deploying bulletin_backend.gs.
+   While it's empty, the board shows sample cards so the page can be styled and tested. */
+var BULLETIN_API = "https://script.google.com/macros/s/AKfycbxWg5Mj9f15MRIcYMJUZZrlRq8MYhXocizw3C1sqIz2fgichCIvMF3-lmShJA7ZGBbc/exec";
+
+(function(){
+  var nav = document.getElementById("hnav"), btn = document.getElementById("menuToggle");
+  btn.addEventListener("click", function(e){ e.stopPropagation(); var open = nav.classList.toggle("open"); btn.setAttribute("aria-expanded", open ? "true" : "false"); });
+  nav.addEventListener("click", function(){ nav.classList.remove("open"); btn.setAttribute("aria-expanded","false"); });
+  document.addEventListener("click", function(e){ if(nav.classList.contains("open") && !nav.contains(e.target) && !btn.contains(e.target)){ nav.classList.remove("open"); btn.setAttribute("aria-expanded","false"); } });
+})();
+
+(function(){
+  var STOCKS = ["index","graph","pink","yellow","recipe","marble","kraft","swirl"];
+  var HANDS  = ["caslon","elite","courier","cutive","shrikhand","righteous","monoton","elite","courier","caslon"];
+  var PINS   = ["var(--pin-red)","var(--pin-blue)","var(--pin-green)","var(--pin-yellow)"];
+  var cardsEl = document.getElementById("cards"), blank = document.getElementById("blank"), note = document.getElementById("note");
+  var posts = [], myVotes = {};
+
+  /* one device token, one vote per card (changeable) */
+  var TOKEN = (function(){ try{ var t = localStorage.getItem("hb_token"); if(!t){ t = Math.random().toString(36).slice(2) + Date.now().toString(36); localStorage.setItem("hb_token", t); } return t; }catch(e){ return "anon-" + Math.random().toString(36).slice(2); } })();
+  try{ myVotes = JSON.parse(localStorage.getItem("hb_votes") || "{}"); }catch(e){}
+  function saveVotes(){ try{ localStorage.setItem("hb_votes", JSON.stringify(myVotes)); }catch(e){} }
+
+  function hash(s){ var h = 2166136261; for(var i=0;i<s.length;i++){ h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); } return h >>> 0; }
+  function look(p){ var h = hash(String(p.id)); return { stock: STOCKS[h % STOCKS.length], hand: HANDS[(h>>3) % HANDS.length], pin: PINS[(h>>7) % PINS.length], rot: (((h>>11) % 61) - 30) / 10, corner: ((h>>17) % 4) === 0 }; }
+  function esc(s){ return String(s==null?"":s).replace(/[&<>"']/g, function(c){ return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]; }); }
+  function safeUrl(u){ u = String(u||"").trim(); return /^https?:\/\/[^\s]+$/i.test(u) ? u : ""; }
+  function score(p){ return (p.up|0) - (p.down|0); }
+  function sortPosts(){ posts.sort(function(a,b){ var d = score(b) - score(a); if(d) return d; return String(b.posted).localeCompare(String(a.posted)); }); }
+
+  var ARROW_UP = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V6"/><path d="M6 12c2-1.5 4-4 6-6 2 2 4 4.5 6 6"/></svg>';
+  var ARROW_DN = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v13"/><path d="M6 12c2 1.5 4 4 6 6 2-2 4-4.5 6-6"/></svg>';
+
+  function cardEl(p){
+    var L = look(p), c = document.createElement("article");
+    c.className = "card stock-" + L.stock + " hand-" + L.hand + (L.corner ? " pinned-corner" : "") + (p.status === "pending" ? " pending" : "");
+    c.style.setProperty("--rot", L.rot + "deg"); c.style.setProperty("--pin", L.pin);
+    c.dataset.id = p.id; c.tabIndex = -1;
+    var link = safeUrl(p.link), mine = myVotes[p.id] || 0, sc = score(p);
+    var body = '<h2>' + esc(p.title) + '</h2>'
+      + (p.when ? '<div class="when">' + esc(p.when) + '</div>' : '')
+      + (p.where ? '<div class="where">' + esc(p.where) + '</div>' : '')
+      + (p.details ? '<div class="details">' + esc(p.details) + '</div>' : '')
+      + (link ? '<div class="link"><a href="' + esc(link) + '" target="_blank" rel="noopener nofollow">' + esc(link.replace(/^https?:\/\/(www\.)?/,'').replace(/\/$/,'')) + '</a></div>' : '')
+      + (p.name ? '<div class="by">— ' + esc(p.name) + '</div>' : '');
+    c.innerHTML = '<span class="pin" aria-hidden="true"></span>'
+      + (L.stock === "swirl" ? '<div class="inner">' + body + '</div>' : body)
+      + (p.status === "pending" ? '<span class="stamp">waiting for the board keeper</span>' : '')
+      + '<div class="votes" aria-label="Votes">'
+      + '<button type="button" class="up' + (mine===1?' on':'') + '" title="Vote up" aria-label="Vote up" aria-pressed="' + (mine===1) + '">' + ARROW_UP + '</button>'
+      + '<span class="n' + (sc<0?' neg':'') + '">' + sc + '</span>'
+      + '<button type="button" class="dn' + (mine===-1?' on':'') + '" title="Vote down" aria-label="Vote down" aria-pressed="' + (mine===-1) + '">' + ARROW_DN + '</button>'
+      + '</div>';
+    c.querySelector(".up").addEventListener("click", function(){ vote(p, 1); });
+    c.querySelector(".dn").addEventListener("click", function(){ vote(p, -1); });
+    return c;
+  }
+
+  /* FLIP re-render: cards slide to their new slot when the order changes */
+  function render(){
+    sortPosts();
+    var before = {};
+    cardsEl.querySelectorAll(".card[data-id]").forEach(function(el){ before[el.dataset.id] = el.getBoundingClientRect(); });
+    cardsEl.querySelectorAll(".card[data-id]").forEach(function(el){ el.remove(); });
+    posts.forEach(function(p){ cardsEl.appendChild(cardEl(p)); });
+    var reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if(reduce) return;
+    cardsEl.querySelectorAll(".card[data-id]").forEach(function(el){
+      var b = before[el.dataset.id]; if(!b) return;
+      var a = el.getBoundingClientRect(), dx = b.left - a.left, dy = b.top - a.top;
+      if(!dx && !dy) return;
+      var rot = el.style.getPropertyValue("--rot");
+      el.style.transition = "none"; el.style.transform = "translate(" + dx + "px," + dy + "px) rotate(" + rot + ")";
+      requestAnimationFrame(function(){ el.style.transition = ""; el.style.transform = "rotate(" + rot + ")"; });
+    });
+  }
+
+  function say(msg, isErr){ note.hidden = !msg; note.textContent = ""; note.className = "note" + (isErr ? " err" : ""); if(msg){ note.innerHTML = msg; } }
+
+  /* ---- backend ---- */
+  function api(payload){
+    if(!BULLETIN_API) return Promise.reject(new Error("no-api"));
+    return fetch(BULLETIN_API, { method:"POST", body: JSON.stringify(payload) })   /* no custom headers → no CORS preflight */
+      .then(function(r){ return r.json(); })
+      .then(function(j){ if(!j || j.ok === false) throw new Error((j && j.error) || "bad response"); return j; });
+  }
+  function load(){
+    if(!BULLETIN_API){ posts = SAMPLE.slice(); render(); say('Sample cards — the board isn\'t wired to its sheet yet.'); return; }
+    fetch(BULLETIN_API + "?action=list&t=" + Date.now()).then(function(r){ return r.json(); }).then(function(j){
+      posts = (j.posts || []); render(); say("");
+    }).catch(function(){ say("The board couldn't load its cards. Try again in a minute, or email <a href='mailto:NYHilltowners@gmail.com'>NYHilltowners@gmail.com</a>.", true); });
+  }
+
+  function vote(p, dir){
+    var prev = myVotes[p.id] || 0, next = (prev === dir) ? 0 : dir;
+    /* optimistic: adjust counts locally, then tell the sheet */
+    if(prev === 1) p.up = (p.up|0) - 1; if(prev === -1) p.down = (p.down|0) - 1;
+    if(next === 1) p.up = (p.up|0) + 1; if(next === -1) p.down = (p.down|0) + 1;
+    myVotes[p.id] = next; saveVotes(); render();
+    api({ action:"vote", id:p.id, dir:next, token:TOKEN }).then(function(j){
+      if(j.post){ var i = posts.findIndex(function(x){ return x.id === p.id; }); if(i>=0){ posts[i].up = j.post.up; posts[i].down = j.post.down; render(); } }
+    }).catch(function(e){ if(e.message !== "no-api") say("That vote didn't reach the sheet — it still shows here for now.", true); });
+  }
+
+  /* ---- submit ---- */
+  var dlg = document.getElementById("pinform"), form = document.getElementById("pf"), errEl = document.getElementById("pf_err"),
+      goBtn = document.getElementById("pf_go"), det = document.getElementById("f_details"), cnt = document.getElementById("f_count");
+  function openForm(){ errEl.hidden = true; form.reset(); cnt.textContent = "600"; if(typeof dlg.showModal === "function") dlg.showModal(); else dlg.setAttribute("open",""); document.getElementById("f_title").focus(); }
+  blank.addEventListener("click", openForm);
+  blank.addEventListener("keydown", function(e){ if(e.key === "Enter" || e.key === " "){ e.preventDefault(); openForm(); } });
+  document.getElementById("pf_cancel").addEventListener("click", function(){ dlg.close(); });
+  det.addEventListener("input", function(){ cnt.textContent = String(600 - det.value.length); });
+  form.addEventListener("submit", function(e){
+    e.preventDefault();
+    var f = new FormData(form), p = {};
+    ["title","when","date","where","details","link","name","contact","website"].forEach(function(k){ p[k] = String(f.get(k) || "").trim(); });
+    if(!p.title){ errEl.textContent = "Give the card a title so people know what it is."; errEl.hidden = false; return; }
+    if(!p.details && !p.when && !p.where){ errEl.textContent = "Add a when, a where, or a line of details."; errEl.hidden = false; return; }
+    if(p.link && !safeUrl(p.link)){ errEl.textContent = "Links need to start with http:// or https://."; errEl.hidden = false; return; }
+    if(p.website){ dlg.close(); return; }   /* honeypot filled: quietly drop */
+    errEl.hidden = true; goBtn.disabled = true; goBtn.textContent = "Pinning…";
+    p.action = "submit"; p.token = TOKEN;
+    api(p).then(function(j){
+      var post = j.post; posts.unshift(post); render(); dlg.close();
+      say(post.status === "pending" ? "Pinned — the board keeper will put it up shortly." : "Pinned. Neighbors can vote it up from here.");
+      setTimeout(function(){ say(""); }, 6000);
+      var el = cardsEl.querySelector('.card[data-id="' + post.id + '"]'); if(el){ el.scrollIntoView({behavior:"smooth", block:"center"}); }
+    }).catch(function(e){
+      if(e.message === "no-api"){ var fake = { id:"local-"+Date.now(), posted:new Date().toISOString(), status:"live", up:0, down:0, title:p.title, when:p.when, where:p.where, details:p.details, link:p.link, name:p.name };
+        posts.unshift(fake); render(); dlg.close(); say("Pinned locally — sample mode, nothing was sent."); return; }
+      errEl.textContent = (e.message === "rate") ? "Slow down a little — one card every couple of minutes." : "Couldn't pin it just now. Try again, or email NYHilltowners@gmail.com.";
+      errEl.hidden = false;
+    }).finally(function(){ goBtn.disabled = false; goBtn.textContent = "Pin it"; });
+  });
+
+  /* sample cards, shown only until BULLETIN_API is set */
+  var SAMPLE = [
+    { id:"s1", posted:"2026-09-04T12:00:00Z", status:"live", up:7, down:1, title:"Fall bulb swap at the grange", when:"Sat Oct 11, 10am–1pm", where:"Rensselaerville Grange", details:"Bring bulbs you've divided, take home ones you haven't grown. Coffee on. Kids welcome, dogs on leads.", name:"Jo, Westerlo" },
+    { id:"s2", posted:"2026-09-03T12:00:00Z", status:"live", up:4, down:0, title:"Lost: orange tabby, answers to Biscuit", when:"since Tuesday", where:"near Fox Creek Rd, Medusa", details:"Friendly, chipped, one torn ear. Please check sheds and barns.", name:"the Halloran house" },
+    { id:"s3", posted:"2026-09-02T12:00:00Z", status:"live", up:3, down:0, title:"Old Time Fiddle Night", when:"3rd Fridays, 7pm", where:"The Pub at Hilltown Commons", details:"All instruments, all levels. Come play or come listen. Tunes list posted at the bar.", link:"https://example.org", name:"Helderberg Hoedowners" },
+    { id:"s4", posted:"2026-09-01T12:00:00Z", status:"live", up:2, down:2, title:"Chainsaw sharpening, cheap", details:"Chains sharpened while you wait, $8. Also honing axes and mauls. Saturdays only, call first.", where:"Knox", name:"Dale" },
+    { id:"s5", posted:"2026-09-04T09:00:00Z", status:"live", up:1, down:0, title:"Ride share to Albany Med, Thursdays", when:"Thursdays, leaving 8:30am", where:"from the Berne town hall lot", details:"Room for two. Back by 1pm. Gas money appreciated but not required.", name:"Marguerite" },
+    { id:"s6", posted:"2026-09-05T08:00:00Z", status:"live", up:0, down:0, title:"Grandma Pat's zucchini bread", details:"3 eggs, 1 c oil, 2 c sugar, 2 c grated zucchini, 3 c flour, 1 tsp each salt/soda/cinnamon, ¼ tsp baking powder. 350° for 55 min in two loaf pans. Because it's September and you have too much zucchini.", name:"Pat, Preston Hollow" },
+    { id:"s7", posted:"2026-08-30T12:00:00Z", status:"live", up:5, down:3, title:"Free: upright piano, needs love", where:"Potter Hollow", details:"Plays, mostly. You haul. Three strong friends recommended.", name:"Sam" },
+    { id:"s8", posted:"2026-09-05T10:00:00Z", status:"pending", up:0, down:0, title:"Yard sale, three families", when:"Sat & Sun", where:"Cty Rte 353, Westerlo", details:"Tools, kids' bikes, canning jars, a canoe.", name:"the Reillys" }
+  ];
+
+  load();
+})();
+</script>
+<script data-goatcounter="https://nyhilltowners.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
+</body>
+</html>

@@ -1078,6 +1078,8 @@ def main() -> int:
     # Standalone Instagram feed page (static; embed widget added separately).
     if (ROOT / "instagram.html").exists():
         shutil.copyfile(ROOT / "instagram.html", SITE / "instagram.html")
+    if (ROOT / "bulletin.html").exists():
+        shutil.copyfile(ROOT / "bulletin.html", SITE / "bulletin.html")
     if (ROOT / "images").exists():
         shutil.copytree(ROOT / "images", SITE / "images", dirs_exist_ok=True)
     if (ROOT / "fonts").exists():
