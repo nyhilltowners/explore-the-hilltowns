@@ -177,7 +177,7 @@ h1{font-family:'Montserrat',sans-serif; font-weight:800; text-transform:uppercas
 .nearby .nb-hrs{margin-left:auto; flex:none; color:#4a4f7a; font-size:12px; white-space:nowrap;}
 .nearby .nb-dist{flex:none; color:var(--faint); font-size:11.5px; width:44px; text-align:right;}
 .nearby .nb-far{margin-top:6px; padding-top:6px; border-top:1px dashed var(--parchment-line);}
-.nearby .nb-farrow .nb-cat{color:var(--gold-ink); font-style:italic;}
+
 .nearby .nb-none{color:var(--faint); font-style:italic; padding:2px 0 4px;}
 @media (max-width:640px){ .nearby{margin-left:16px;} .arow.core + .nearby{margin-left:12px;} .nearby .nb-cat{display:none;} }
 .arow .aglyph{flex:none; font-size:16px;}
@@ -581,6 +581,7 @@ h1{font-family:'Montserrat',sans-serif; font-weight:800; text-transform:uppercas
      parseRange() the list uses for event times, so "10am-6pm", "9am-3pm; 5pm-9pm",
      "Open24Hours", "Dawn-Dusk" and "Closed" all behave. */
   var NEARBY_KM = 8, NEARBY_MAX = 7;
+  var NEARBY_FAR_KM = 24.14;   /* 15 mi — 2026-09-06 (Laurie): the guaranteed classes never reach beyond this; if nothing qualifies within 15 mi, nothing shows */
   /* Open but not really a draw — Laurie's exclusions (2026-09-01). Matched
      case-insensitively as a substring of the POI name. */
   var NEARBY_EXCLUDE = [
@@ -723,24 +724,24 @@ h1{font-family:'Montserrat',sans-serif; font-weight:800; text-transform:uppercas
     order.forEach(function(c){ if(picked.length < NEARBY_MAX){ picked.push(byCat[c][0]); used[byCat[c][0].p.sl] = true; } });
     [0,1,2].forEach(function(t){ out.forEach(function(it){ if(it.tier === t && picked.length < NEARBY_MAX && !used[it.p.sl]){ picked.push(it); used[it.p.sl] = true; } }); });
     picked.sort(function(a,b){ return (a.tier - b.tier) || (a.km - b.km); });   /* demoted places sink to the bottom */
-    /* 2026-09-06 (Laurie): if the 5-mile list has no restaurant, no coffee shop, or
-       no place to stay, add the nearest open one of each from beyond the radius,
-       flagged so the panel can say "nearest" and show the real distance. */
+    /* 2026-09-06 (Laurie): every panel carries a restaurant, a coffee shop and a
+       non-camping place to stay. Take the nearest open one from inside the radius
+       first (even if it was crowded out of the slots), else the nearest beyond it. */
     var isCoffee = function(p){ return p.cat === "Restaurants" && /\b(coffee|caf[eé]|espresso|coffeehouse)\b/i.test((p.tags||[]).join(" ") + " " + (p.t||"")); };
+    var isCamping = function(p){ return /\b(camp|camping|campground|glamp|glamping|yurt|tent|rv)\b/i.test((p.tags||[]).join(" ") + " " + (p.t||"")); };
+    var isRoom = function(p){ return isLodging(p) && !isCamping(p); };
     var CLASSES = [
-      { key:"restaurant", label:"nearest restaurant", test:function(p){ return p.cat === "Restaurants"; } },
-      { key:"coffee",     label:"nearest coffee",     test:isCoffee },
-      { key:"stay",       label:"nearest place to stay", test:isLodging }
+      { test:function(p){ return p.cat === "Restaurants"; } },
+      { test:isCoffee },
+      { test:isRoom }
     ];
     far.sort(function(a,b){ return a.km - b.km; });
     CLASSES.forEach(function(c){
-      /* "already within 5 miles" is judged on everything eligible in the radius (out),
-         not just the 7 picked — a coffee shop crowded out of the slots still counts */
-      var have = out.some(function(it){ return c.test(it.p) || (it.cats||[]).some(function(cat){ return c.test({cat:cat, tags:it.p.tags, t:it.p.t}); }); });
-      if(have) return;
-      var f = far.find(function(it){ return c.test(it.p) && !used[it.p.sl]; });
-      if(f){ used[f.p.sl] = true; f.far = c.label; f.cats = [f.p.cat]; picked.push(f); }
+      if(picked.some(function(it){ return c.test(it.p); })) return;
+      var f = out.find(function(it){ return c.test(it.p) && !used[it.p.sl]; }) || far.find(function(it){ return c.test(it.p) && !used[it.p.sl] && it.km <= NEARBY_FAR_KM; });
+      if(f){ used[f.p.sl] = true; if(f.km > NEARBY_KM) f.far = true; f.cats = f.cats || [f.p.cat]; picked.push(f); }
     });
+    picked.sort(function(a,b){ return ((a.far?1:0) - (b.far?1:0)) || (a.tier - b.tier) || (a.km - b.km); });
     return picked;
   }
   function nearbyPanel(items, dstr){
@@ -755,7 +756,7 @@ h1{font-family:'Montserrat',sans-serif; font-weight:800; text-transform:uppercas
       h += '<a class="nb-row'+(it.far?' nb-farrow':'')+'" href="index.html#'+encodeURIComponent(p.sl||"")+'" title="Open on the map">'
         + '<span class="nb-g">'+esc(p.g||"")+'</span>'
         + '<span class="nb-name">'+esc(p.t)+'</span>'
-        + '<span class="nb-cat">'+esc(it.far ? it.far : (it.cats||[p.cat]).join(" · "))+'</span>'
+        + '<span class="nb-cat">'+esc((it.cats||[p.cat]).join(" · "))+'</span>'
         + '<span class="nb-hrs">'+esc(it.hrs)+'</span>'
         + '<span class="nb-dist">'+mi+' mi</span></a>';
     });
