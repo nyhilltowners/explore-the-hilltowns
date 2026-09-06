@@ -741,7 +741,10 @@ h1{font-family:'Montserrat',sans-serif; font-weight:800; text-transform:uppercas
       var f = out.find(function(it){ return c.test(it.p) && !used[it.p.sl]; }) || far.find(function(it){ return c.test(it.p) && !used[it.p.sl] && it.km <= NEARBY_FAR_KM; });
       if(f){ used[f.p.sl] = true; if(f.km > NEARBY_KM) f.far = true; f.cats = f.cats || [f.p.cat]; picked.push(f); }
     });
-    picked.sort(function(a,b){ return ((a.far?1:0) - (b.far?1:0)) || (a.tier - b.tier) || (a.km - b.km); });
+    /* 2026-09-06 (Laurie): display strictly by distance — demotion only affects
+       whether a place makes the cut, not where it sits once it has. (Far rows are
+       >5 mi by definition, so they still fall after the near ones.) */
+    picked.sort(function(a,b){ return a.km - b.km; });
     return picked;
   }
   function nearbyPanel(items, dstr){
