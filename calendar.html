@@ -176,6 +176,8 @@ h1{font-family:'Montserrat',sans-serif; font-weight:800; text-transform:uppercas
 .nearby .nb-cat{color:var(--faint); font-size:12px;}
 .nearby .nb-hrs{margin-left:auto; flex:none; color:#4a4f7a; font-size:12px; white-space:nowrap;}
 .nearby .nb-dist{flex:none; color:var(--faint); font-size:11.5px; width:44px; text-align:right;}
+.nearby .nb-far{margin-top:6px; padding-top:6px; border-top:1px dashed var(--parchment-line);}
+.nearby .nb-farrow .nb-cat{color:var(--gold-ink); font-style:italic;}
 .nearby .nb-none{color:var(--faint); font-style:italic; padding:2px 0 4px;}
 @media (max-width:640px){ .nearby{margin-left:16px;} .arow.core + .nearby{margin-left:12px;} .nearby .nb-cat{display:none;} }
 .arow .aglyph{flex:none; font-size:16px;}
@@ -591,11 +593,31 @@ h1{font-family:'Montserrat',sans-serif; font-weight:800; text-transform:uppercas
     "heldeberg bluestone","helderberg bluestone","board of elections","columbia opportunities",
     "westerlo town hall","knox town hall","myria emeny","greene county power equipment","hilltown healthcare","uhaul","u-haul",
     /* 2026-09-03 additions — destination-only venues (you go for a specific show/reason, not to browse) */
-    "bridge street theat","orsini park"
+    "bridge street theat","orsini park",
+    /* 2026-09-06 — niche needs, not a stop */
+    "scrub co car wash","foreland"
   ].map(function(x){ return x.replace(/\u2019/g,"'"); });
   /* exact-name exclusions — for places whose name is a prefix of something
      that SHOULD show (Hilltown Commons itself is out; The Pub at Hilltown Commons stays) */
   var NEARBY_EXCLUDE_EXACT = ["hilltown commons"];
+  /* 2026-09-06 (Laurie): places that are fine to show but shouldn't beat better
+     stops for a slot. Tier 1 fills only after every un-demoted candidate;
+     tier 2 (Maple on the Lake) only after tier 1. Matched on name substring. */
+  var NEARBY_DEMOTE = [
+    "maple hill syrup","the paradise inn","catskill mountain springs","narnia escapes","thompsons lake state campground",
+    "helderberg true value","kaaterskill & east jewett","thunderhart golf","helder herdwyck","everyday's restaurant",
+    "winter clove inn","mine kill state park pool","deer mountain inn","hotel mountain brook","the shell inn",
+    "the tasting lab","seec","penny lane ices","vosburgh swamp","unbridled sanctuary","variety video",
+    "westerlo library","medusa branch library","greenville public library","corner gateway printing",
+    "windham mountain club","windham mountain outfitters","restaurant matilda","wild hudson valley","2 twisted ladies"
+  ];
+  var NEARBY_DEMOTE_LAST = ["maple on the lake"];
+  function demoteTier(p){
+    var n = String(p.t||"").toLowerCase();
+    if(NEARBY_DEMOTE_LAST.some(function(f){ return n.indexOf(f) >= 0; })) return 2;
+    if(NEARBY_DEMOTE.some(function(f){ return n === f || n.indexOf(f) >= 0; })) return 1;
+    return 0;
+  }
   function nearbyExcluded(p){
     var n = String(p.t||"").toLowerCase().replace(/\u2019/g,"'").trim();
     if(NEARBY_EXCLUDE_EXACT.indexOf(n) >= 0) return true;
@@ -655,11 +677,11 @@ h1{font-family:'Montserrat',sans-serif; font-weight:800; text-transform:uppercas
     var dow = DOW_KEYS[parseISO(dstr).getDay()], w = eventWindow(ev), out = [];
     var evName = String(ev.ven||ev.t||"").toLowerCase();
     var mmdd = dstr.slice(5,10);                          /* "MM-DD" of the event day */
+    var far = [];                                         /* eligible but beyond NEARBY_KM — for the nearest-of-class fallback */
     POIS.forEach(function(p){
       if(nearbyExcluded(p)) return;
-      if(!inSeason(p, mmdd)) return;                      /* seasonal stand/market outside its season */
+      if(!inSeason(p, mmdd)) return;                      /* seasonal stand/market/campground outside its season */
       var km = kmBetween(ev.lat, ev.lng, p.lat, p.lng);
-      if(km > NEARBY_KM) return;
       /* skip the venue itself — by NAME only (a co-located business like the Pub
          at Hilltown Commons must still show for a Commons event) */
       var pn = String(p.t||"").toLowerCase();
@@ -667,7 +689,7 @@ h1{font-family:'Montserrat',sans-serif; font-weight:800; text-transform:uppercas
       var h = (p.hrs && p.hrs[dow]) ? poiHours(p.hrs[dow]) : (isLodging(p) ? {allDay:true, label:"stay"} : {closed:true});
       if(isLodging(p) && h.closed) h = {allDay:true, label:"stay"};   /* lodging never "closes" for the night */
       if(!overlaps(w, h)) return;
-      out.push({p:p, km:km, hrs:h.label || ""});
+      (km > NEARBY_KM ? far : out).push({p:p, km:km, hrs:h.label || ""});
     });
     out.sort(function(a,b){ return a.km - b.km; });
     /* one entry per place — the same business can live on two category tabs
@@ -692,25 +714,48 @@ h1{font-family:'Montserrat',sans-serif; font-weight:800; text-transform:uppercas
     /* variety over proximity: one from each category (nearest first), then
        fill the remaining slots by distance — so a farm stand a mile past the
        village still beats the fourth-closest restaurant. */
+    /* demoted places wait their turn: the variety pass and the distance fill use
+       tier 0 first, then tier 1, then tier 2 — so they still appear when there's room */
+    out.forEach(function(it){ it.tier = demoteTier(it.p); });
     var byCat = {}, order = [];
-    out.forEach(function(it){ if(!byCat[it.p.cat]){ byCat[it.p.cat] = []; order.push(it.p.cat); } byCat[it.p.cat].push(it); });
+    out.filter(function(it){ return it.tier === 0; }).forEach(function(it){ if(!byCat[it.p.cat]){ byCat[it.p.cat] = []; order.push(it.p.cat); } byCat[it.p.cat].push(it); });
     var picked = [], used = {};
     order.forEach(function(c){ if(picked.length < NEARBY_MAX){ picked.push(byCat[c][0]); used[byCat[c][0].p.sl] = true; } });
-    out.forEach(function(it){ if(picked.length < NEARBY_MAX && !used[it.p.sl]){ picked.push(it); used[it.p.sl] = true; } });
-    picked.sort(function(a,b){ return a.km - b.km; });
+    [0,1,2].forEach(function(t){ out.forEach(function(it){ if(it.tier === t && picked.length < NEARBY_MAX && !used[it.p.sl]){ picked.push(it); used[it.p.sl] = true; } }); });
+    picked.sort(function(a,b){ return (a.tier - b.tier) || (a.km - b.km); });   /* demoted places sink to the bottom */
+    /* 2026-09-06 (Laurie): if the 5-mile list has no restaurant, no coffee shop, or
+       no place to stay, add the nearest open one of each from beyond the radius,
+       flagged so the panel can say "nearest" and show the real distance. */
+    var isCoffee = function(p){ return p.cat === "Restaurants" && /\b(coffee|caf[eé]|espresso|coffeehouse)\b/i.test((p.tags||[]).join(" ") + " " + (p.t||"")); };
+    var CLASSES = [
+      { key:"restaurant", label:"nearest restaurant", test:function(p){ return p.cat === "Restaurants"; } },
+      { key:"coffee",     label:"nearest coffee",     test:isCoffee },
+      { key:"stay",       label:"nearest place to stay", test:isLodging }
+    ];
+    far.sort(function(a,b){ return a.km - b.km; });
+    CLASSES.forEach(function(c){
+      /* "already within 5 miles" is judged on everything eligible in the radius (out),
+         not just the 7 picked — a coffee shop crowded out of the slots still counts */
+      var have = out.some(function(it){ return c.test(it.p) || (it.cats||[]).some(function(cat){ return c.test({cat:cat, tags:it.p.tags, t:it.p.t}); }); });
+      if(have) return;
+      var f = far.find(function(it){ return c.test(it.p) && !used[it.p.sl]; });
+      if(f){ used[f.p.sl] = true; f.far = c.label; f.cats = [f.p.cat]; picked.push(f); }
+    });
     return picked;
   }
   function nearbyPanel(items, dstr){
     var box = document.createElement("div"); box.className = "nearby";
     var d = parseISO(dstr);
     var h = '<div class="nb-head">Nearby &amp; open '+DOWLONG[d.getDay()]+' \u2014 within 5 miles</div>';
-    if(!items.length){ h += '<div class="nb-none">Nothing with posted hours is open nearby then.</div>'; }
+    var near = items.filter(function(it){ return !it.far; }), farItems = items.filter(function(it){ return it.far; });
+    if(!near.length){ h += '<div class="nb-none">Nothing with posted hours is open within 5 miles then.</div>'; }
     items.forEach(function(it){
       var p = it.p, mi = (it.km*0.621371).toFixed(1);
-      h += '<a class="nb-row" href="index.html#'+encodeURIComponent(p.sl||"")+'" title="Open on the map">'
+      if(it.far && it === farItems[0]) h += '<div class="nb-head nb-far">Farther afield</div>';
+      h += '<a class="nb-row'+(it.far?' nb-farrow':'')+'" href="index.html#'+encodeURIComponent(p.sl||"")+'" title="Open on the map">'
         + '<span class="nb-g">'+esc(p.g||"")+'</span>'
         + '<span class="nb-name">'+esc(p.t)+'</span>'
-        + '<span class="nb-cat">'+esc((it.cats||[p.cat]).join(" · "))+'</span>'
+        + '<span class="nb-cat">'+esc(it.far ? it.far : (it.cats||[p.cat]).join(" · "))+'</span>'
         + '<span class="nb-hrs">'+esc(it.hrs)+'</span>'
         + '<span class="nb-dist">'+mi+' mi</span></a>';
     });
