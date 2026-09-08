@@ -625,6 +625,9 @@ h1{font-family:'Montserrat',sans-serif; font-weight:800; text-transform:uppercas
     return NEARBY_EXCLUDE.some(function(x){ return n.indexOf(x) >= 0; });
   }
   var DOW_KEYS = ["sun","mon","tue","wed","thu","fri","sat"];
+  /* 2026-09-06 (Laurie): near a recovery/support-group event, don't surface
+     bars or substance-adjacent stops. Matched by the establishment's glyph. */
+  var SUBSTANCE_GLYPHS = {"\uD83E\uDD43":1,"\uD83C\uDF7A":1,"\uD83C\uDF7B":1,"\uD83C\uDF77":1,"\uD83C\uDF78":1,"\uD83C\uDF3F":1,"\uD83D\uDC8A":1};
   /* 2026-09-04 (Laurie): Lodging joins the pool even without posted hours —
      a place to stay is "open" for the night regardless of a shop schedule. */
   function isLodging(r){ return r.cat === "Lodging"; }
@@ -677,10 +680,12 @@ h1{font-family:'Montserrat',sans-serif; font-weight:800; text-transform:uppercas
     if(typeof ev.lat !== "number" || typeof ev.lng !== "number") return [];
     var dow = DOW_KEYS[parseISO(dstr).getDay()], w = eventWindow(ev), out = [];
     var evName = String(ev.ven||ev.t||"").toLowerCase();
+    var sensitive = /support\s*group/i.test(ev.t||"");   /* recovery/support-group event: hide bars & substance-adjacent stops */
     var mmdd = dstr.slice(5,10);                          /* "MM-DD" of the event day */
     var far = [];                                         /* eligible but beyond NEARBY_KM — for the nearest-of-class fallback */
     POIS.forEach(function(p){
       if(nearbyExcluded(p)) return;
+      if(sensitive && SUBSTANCE_GLYPHS[p.g]) return;
       if(!inSeason(p, mmdd)) return;                      /* seasonal stand/market/campground outside its season */
       var km = kmBetween(ev.lat, ev.lng, p.lat, p.lng);
       /* skip the venue itself — by NAME only (a co-located business like the Pub
