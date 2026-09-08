@@ -1211,17 +1211,26 @@ function _parseTimes(str){
   return out;
 }
 function isClosedNow(r){
-  if(!r.hrs) return false;
+  /* Food trucks are mobile: don't treat "no posted hours" as open — they only
+     read as open during a real, confirmed window. (Laurie, 2026-09-06) */
+  var isTruck = (r.tags||[]).some(function(t){ return /food\s*truck|food\s*cart/i.test(t); })
+             || /food\s*truck|foodtruck|food\s*cart/i.test(r.t||'');
+  if(!r.hrs) return isTruck;
   if(planDate){                                 /* planning mode: day-level only */
     var pc=(r.hrs[DOW_KEYS[new Date(planDate+'T12:00:00').getDay()]]||'').trim();
+    if(isTruck){                                /* trucks: dim unless a real window that day */
+      if(!pc || /closed/i.test(pc)) return true;
+      if(/24\s*hours|open\s*24|always\s*open/i.test(pc)) return false;
+      return _parseTimes(pc).length < 2;
+    }
     return /closed/i.test(pc);                  /* dim only a stated Closed day */
   }
   var cell=(r.hrs[DOW_KEYS[new Date().getDay()]]||'').trim();
-  if(!cell) return false;                       /* unknown hours: never dim */
+  if(!cell) return isTruck;                     /* trucks w/o today's hours → dim; others → open */
   if(/closed/i.test(cell)) return true;
   if(/24\s*hours|open\s*24|always\s*open/i.test(cell)) return false;
   var ts=_parseTimes(cell);
-  if(ts.length<2) return false;                 /* unparseable: don't punish */
+  if(ts.length<2) return isTruck;               /* unparseable: trucks dim, others don't */
   var now=new Date(), nm=now.getHours()*60+now.getMinutes();
   for(var i=0;i+1<ts.length;i+=2){
     var s=ts[i], e=ts[i+1];
