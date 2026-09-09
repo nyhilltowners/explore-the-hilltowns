@@ -918,21 +918,37 @@ function charSupported(ch){
     return pix(ch)!==blank && pix(ch)!==pix('\u0378');
   }catch(e){ return false; }
 }
-/* 𖦹 on a white disc; hand-drawn ring-and-rays replica if the font is missing */
+/* Trail-marker pin background: a rounded-top, pointed-bottom shield (NPS-arrowhead
+   style), white fill + thin navy edge, on the 88×88 canvas. Replaces the old disc.
+   (Laurie, 2026-09-06) */
+function markerBg(x, size){
+  var cx=size/2, top=7, left=8, right=size-8, r=16, shoulder=size*0.60, tip=size-4;
+  x.beginPath();
+  x.moveTo(left, top+r);
+  x.quadraticCurveTo(left, top, left+r, top);          /* top-left corner */
+  x.lineTo(right-r, top);
+  x.quadraticCurveTo(right, top, right, top+r);        /* top-right corner */
+  x.lineTo(right, shoulder);                            /* right shoulder */
+  x.quadraticCurveTo(right, tip-6, cx, tip);           /* curve to bottom point */
+  x.quadraticCurveTo(left, tip-6, left, shoulder);     /* curve back up left */
+  x.closePath();
+  x.fillStyle='#ffffff'; x.fill();
+  x.lineWidth=2.5; x.strokeStyle='rgba(10,10,70,0.3)'; x.stroke();
+}
+var GLYPH_CY = 88*0.43;   /* glyph sits in the wide upper part of the shield */
+/* 𖦹 on a trail-marker shield; hand-drawn ring-and-rays replica if the font is missing */
 function glyphImageData(){
   var size=88, c=document.createElement('canvas'); c.width=c.height=size;
   var x=c.getContext('2d');
-  x.beginPath(); x.arc(size/2,size/2,size/2-3,0,Math.PI*2);
-  x.fillStyle='#ffffff'; x.fill();
-  x.lineWidth=2.5; x.strokeStyle='rgba(10,10,70,0.3)'; x.stroke();
+  markerBg(x, size);
   var ch='𖦹';
   x.fillStyle='#000080';
   if(charSupported(ch)){
-    x.font='68px "Noto Sans Mende Kikakui",sans-serif';
+    x.font='60px "Noto Sans Mende Kikakui",sans-serif';
     x.textAlign='center'; x.textBaseline='middle';
-    x.fillText(ch, size/2, size/2+1);
+    x.fillText(ch, size/2, GLYPH_CY+1);
   } else {
-    var cx=size/2, cy=size/2;
+    var cx=size/2, cy=GLYPH_CY;
     x.strokeStyle='#000080'; x.lineCap='round';
     x.lineWidth=6;
     x.beginPath(); x.arc(cx,cy,17,0,Math.PI*2); x.stroke();
@@ -980,14 +996,12 @@ function glyphImageDataNight(){
 function discGlyph(fg, ch){
   var size=88, c=document.createElement('canvas'); c.width=c.height=size;
   var x=c.getContext('2d');
-  x.beginPath(); x.arc(size/2,size/2,size/2-3,0,Math.PI*2);
-  x.fillStyle='#ffffff'; x.fill();
-  x.lineWidth=2.5; x.strokeStyle='rgba(10,10,70,0.3)'; x.stroke();
+  markerBg(x, size);
   ch = (ch && ch.trim()) ? ch.trim() : '●';
   if(!charSupported(ch)) ch='●';
   x.fillStyle=fg; x.textAlign='center'; x.textBaseline='middle';
-  x.font='58px "Montserrat","Noto Sans",sans-serif';
-  x.fillText(ch, size/2, size/2+2);
+  x.font='52px "Montserrat","Noto Sans",sans-serif';
+  x.fillText(ch, size/2, GLYPH_CY+2);
   return x.getImageData(0,0,size,size);
 }
 
@@ -1213,7 +1227,7 @@ function _parseTimes(str){
 function isClosedNow(r){
   /* Food trucks are mobile: don't treat "no posted hours" as open — they only
      read as open during a real, confirmed window. (Laurie, 2026-09-06) */
-  var isTruck = (r.tags||[]).some(function(t){ return /food\s*truck|food\s*cart/i.test(t); })
+  var isTruck = (r.tags||[]).some(function(t){ return /food\s*truck|food\s*cart|mobile|pop.?up|nature\s*bus\s*stop/i.test(t); })
              || /food\s*truck|foodtruck|food\s*cart/i.test(r.t||'');
   if(!r.hrs) return isTruck;
   if(planDate){                                 /* planning mode: day-level only */
