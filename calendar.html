@@ -353,14 +353,47 @@ h1{font-family:'Montserrat',sans-serif; font-weight:800; text-transform:uppercas
 
   // Build the display date for an event: prefer nextOcc (recurring), else d1.
   // A multi-day event (d1..d2) is shown on each day it spans within the visible month.
+  // ===== Structured recurrence (2026-09-10, Laurie) =====
+  // Records carrying Recur Weeks/Days/Except ("rw"/"rd"/"rx") — events AND
+  // recurring POIs such as a Legion post's monthly meeting — are placed on
+  // EVERY matching day in the visible range (a weekly class fills each week;
+  // a "2nd Tue" meeting lands once a month), instead of only their next date.
+  var _RG_DOW=['sun','mon','tue','wed','thu','fri','sat'];
+  var _RG_MON=['jan','feb','mar','apr','may','jun','jul','aug','sep','oct','nov','dec'];
+  function _rgToks(s){ return String(s||'').toLowerCase().split(/[;,\s]+/).map(function(x){return x.slice(0,3);}).filter(Boolean); }
+  function recurMatchesDate(r, d){
+    var days=_rgToks(r.rd); if(days.indexOf(_RG_DOW[d.getDay()])<0) return false;
+    if(_rgToks(r.rx).indexOf(_RG_MON[d.getMonth()])>=0) return false;
+    var rw=String(r.rw||'').toLowerCase().trim();
+    if(rw==='all') return true;
+    var nth=Math.floor((d.getDate()-1)/7)+1;
+    var lastDay=new Date(d.getFullYear(), d.getMonth()+1, 0).getDate();
+    var isLast=(d.getDate()+7>lastDay);
+    return rw.split(/[;,\s]+/).some(function(t){ return t===String(nth) || (t==='last'&&isLast); });
+  }
   function eventsForRange(startDate, endDate, agendaOnly){
     // returns map "YYYY-MM-DD" -> [events], for single occurrences within [startDate,endDate]
     // agendaOnly: skip events the workbook marks Agenda=No (ag:0) — they stay on the month grid and the map
     var byDay = {};
     function push(dstr, ev){ (byDay[dstr] || (byDay[dstr]=[])).push(ev); }
     DATA.forEach(function(ev){
-      if(ev.ty !== "events") return;
+      var recurringPoi = (ev.ty === "poi" && !!ev.rw);
+      if(ev.ty !== "events" && !recurringPoi) return;
       if(agendaOnly && ev.ag === 0) return;
+      if(ev.rw){
+        // series bounds: events use Start/End Date; a POI's standing meeting has none
+        var lo = ev.ty === "events" ? parseISO(ev.d1) : null;
+        var hi = ev.ty === "events" ? parseISO(ev.d2) : null;
+        var day = new Date(startDate);
+        while(day <= endDate){
+          if((!lo || day >= lo) && (!hi || day <= hi) && recurMatchesDate(ev, day)){
+            // per-day copy so the card's "When" shows THIS occurrence, not the soonest one
+            push(ymd(day), Object.assign({}, ev, {nextOcc: ymd(day)}));
+          }
+          day.setDate(day.getDate()+1);
+        }
+        return;
+      }
       var d1 = parseISO(ev.nextOcc) || parseISO(ev.d1);
       if(!d1) return;
       var d2 = parseISO(ev.d2) || d1;

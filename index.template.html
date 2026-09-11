@@ -1260,6 +1260,37 @@ function isDimmed(r){
   }
   return isClosedNow(r);
 }
+/* ===== Recurrence gate (2026-09-10, Laurie) =====
+   A POI with a standing meeting but no regular hours (e.g. a Legion post that
+   meets "2nd Tue 7:30 PM, except Jul & Aug") is only ON the map while that
+   meeting is actually happening; otherwise it is absent entirely — not faded.
+   Computed client-side from the record's Recur Weeks/Days/Except/Time so it is
+   correct even when the site hasn't been rebuilt today. Plan-ahead mode gates
+   at day granularity (is the planned date a meeting day?). */
+var _RG_DOW=['sun','mon','tue','wed','thu','fri','sat'];
+var _RG_MON=['jan','feb','mar','apr','may','jun','jul','aug','sep','oct','nov','dec'];
+function _rgToks(s){ return String(s||'').toLowerCase().split(/[;,\s]+/).map(function(x){return x.slice(0,3);}).filter(Boolean); }
+function recurMatchesDate(r, d){
+  var days=_rgToks(r.rd); if(days.indexOf(_RG_DOW[d.getDay()])<0) return false;
+  if(_rgToks(r.rx).indexOf(_RG_MON[d.getMonth()])>=0) return false;
+  var rw=String(r.rw||'').toLowerCase().trim();
+  if(rw==='all') return true;
+  var nth=Math.floor((d.getDate()-1)/7)+1;
+  var lastDay=new Date(d.getFullYear(), d.getMonth()+1, 0).getDate();
+  var isLast=(d.getDate()+7>lastDay);
+  return rw.split(/[;,\s]+/).some(function(t){ return t===String(nth) || (t==='last'&&isLast); });
+}
+var RG_BEFORE_MIN=30, RG_AFTER_MIN=150;   /* shown from 30 min before the meeting to 2.5 h after it starts */
+function recurActiveNow(r){
+  if(planDate) return recurMatchesDate(r, new Date(planDate+'T12:00:00'));
+  var now=new Date();
+  if(!recurMatchesDate(r, now)) return false;
+  var m=/(\d{1,2})(?::(\d{2}))?\s*(am|pm)/i.exec(r.rt||'');
+  if(!m) return true;                                   /* no time given: whole meeting day */
+  var h=parseInt(m[1],10)%12 + (m[3].toLowerCase()==='pm'?12:0), mi=parseInt(m[2]||'0',10);
+  var start=h*60+mi, cur=now.getHours()*60+now.getMinutes();
+  return cur>=start-RG_BEFORE_MIN && cur<=start+RG_AFTER_MIN;
+}
 /* Event marker imminence within the 6-day visible window:
    active now = full size; within 48h = 0.5; else (3-7 days out) = 0.36. */
 function immScale(r){
@@ -1359,6 +1390,9 @@ function currentFilter(ignoreDateWindow){
   var bypass = ignoreDateWindow && !!q;
   return records.filter(function(r){
     if(isExpired(r)) return false;
+    /* recurrence-gated POI: off the map/list outside its meeting window.
+       A typed search still reaches it (bypass), mirroring out-of-window events. */
+    if(r.rgate && !bypass && !recurActiveNow(r)) return false;
     if(!bypass && !evVisible(r)) return false;
     if(!catsOn[r.cat]) return false;
     if(!q) return true;
@@ -1831,7 +1865,7 @@ function buildCats(){
   var story = document.getElementById('catsStory');
   main.innerHTML=''; story.innerHTML='';
   var liveCounts = {};
-  records.forEach(function(r){ if(!isExpired(r) && evVisible(r)) liveCounts[r.cat]=(liveCounts[r.cat]||0)+1; });
+  records.forEach(function(r){ if(!isExpired(r) && evVisible(r) && !(r.rgate && !recurActiveNow(r))) liveCounts[r.cat]=(liveCounts[r.cat]||0)+1; });
   CATEGORIES.forEach(function(c){
     if(!liveCounts[c.label]) return; /* nothing to show yet — hide until it has data */
     if(!(c.label in catsOn)) catsOn[c.label] = catDefault(c);

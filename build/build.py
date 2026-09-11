@@ -426,6 +426,11 @@ POI_SPEC = [
     ("anchor", r"^anchor", False),
     ("ss", r"season\s*start", False),
     ("se", r"season\s*end", False),
+    # Structured recurrence (2026-09-10): "Recur Weeks/Days/Except/Time".
+    ("rw", r"^recur\s*weeks?$", False),
+    ("rd", r"^recur\s*days?$", False),
+    ("rx", r"^recur\s*except", False),
+    ("rt", r"^recur\s*time", False),
 ]
 
 
@@ -480,7 +485,17 @@ def parse_poi(path: Path, label: str, sheet=None):
         # markers (the base "Points of Interest" layer) don't have hours by design
         raw_tags = s(cell(row, idx, "tags"))
         tags = [x.strip() for x in re.split(r"[;,]", raw_tags) if x.strip()]
-        out.append({
+        # Structured recurrence (2026-09-10): a POI with a standing meeting
+        # (e.g. a Legion post's "2nd Tue 7:30 PM") gets a nextOcc so the
+        # calendar lists it. If it has NO regular hours, it is also
+        # recurrence-gated: the map shows it only during the meeting window
+        # (client-side, from rw/rd/rx/rt) and hides it entirely otherwise.
+        rw_, rd_, rx_, rt_ = (s(cell(row, idx, k)) for k in ("rw", "rd", "rx", "rt"))
+        nocc = next_occurrence_structured(rw_, rd_, rx_, "", "", datetime.date.today().isoformat()) if rw_ else None
+        if rw_ and not nocc:
+            warn(f"{rw}: {title} has Recur Weeks '{rw_}' but no computable next occurrence — check Recur Days/Except")
+        has_hours = any((v or "").strip() for v in hrs.values())
+        rec = {
             "ty": "poi", "cat": label, "id": rid, "t": title or "(unnamed)",
             "tags": tags, "addr": s(cell(row, idx, "addr")),
             "lat": lat, "lng": lng, "s": s(cell(row, idx, "stry")),
@@ -491,7 +506,13 @@ def parse_poi(path: Path, label: str, sheet=None):
             "cred": s(cell(row, idx, "cred")),
             "ss": norm_mmdd(cell(row, idx, "ss"), rw, "Season Start"),
             "se": norm_mmdd(cell(row, idx, "se"), rw, "Season End"),
-        })
+        }
+        if nocc:
+            rec.update({"nextOcc": nocc, "rw": rw_, "rd": rd_, "rx": rx_, "rt": rt_,
+                        # calendar compatibility: it renders ven/tm like an event
+                        "ven": title or "", "tm": rt_,
+                        "rgate": 0 if has_hours else 1})
+        out.append(rec)
         if not out[-1]["img"] and web and label != "Points of Interest":
             out[-1]["img"] = fetch_site_image(web, rw)
     check_dupe_ids(out, where)
@@ -625,6 +646,88 @@ def next_occurrence(notes, start, end, today, time_field=""):
     return min(cands).isoformat() if cands else None
 
 
+# ---- Structured recurrence (2026-09-10) ----------------------------------
+# Reads the "Recur Weeks / Recur Days / Recur Except / Recur Time" columns that
+# replaced the free-text 'Recurring — …' Notes grammar. Same date math as
+# next_occurrence(), plus month exclusions ("Jul;Aug"). The legacy Notes parser
+# is kept as a fallback for rows that haven't been migrated yet.
+_MON3 = {m: i + 1 for i, m in enumerate(
+    ["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"])}
+
+
+def parse_recur_cols(rw, rd, rx):
+    """-> (weeks, days, except_months) or None if rw is blank.
+    weeks: 'all' or sorted list of ints (0 = last). days: list of weekday ints.
+    except_months: set of month ints to skip."""
+    rw = (rw or "").strip().lower()
+    if not rw:
+        return None
+    if rw == "all":
+        weeks = "all"
+    else:
+        weeks = []
+        for tok in re.split(r"[;,\s]+", rw):
+            if tok == "last":
+                weeks.append(0)
+            elif tok.isdigit() and 1 <= int(tok) <= 5:
+                weeks.append(int(tok))
+        if not weeks:
+            return None
+    days = [_WD[t[:3]] for t in re.split(r"[;,\s]+", (rd or "").lower()) if t[:3] in _WD]
+    if not days:
+        return None
+    exc = {_MON3[t[:3]] for t in re.split(r"[;,\s]+", (rx or "").lower()) if t[:3] in _MON3}
+    return weeks, days, exc
+
+
+def next_occurrence_structured(rw, rd, rx, start, end, today):
+    """Soonest date >= max(today, start) (and <= end, if given) matching the
+    structured recurrence, skipping excluded months. ISO string or None."""
+    parsed = parse_recur_cols(rw, rd, rx)
+    if not parsed:
+        return None
+    weeks, days, exc = parsed
+
+    def iso2d(x):
+        try:
+            return datetime.date.fromisoformat(x[:10])
+        except Exception:
+            return None
+    tdy = iso2d(today)
+    st = iso2d(start) if start else None
+    en = iso2d(end) if end else None
+    lo = max(st, tdy) if st else tdy
+    if lo is None:
+        return None
+
+    def within(d):
+        return d is not None and d >= lo and (en is None or d <= en) and d.month not in exc
+    cands = []
+    if weeks == "all":
+        for wd in days:
+            d = _next_weekday(lo, wd)
+            for _ in range(60):            # step past excluded months
+                if within(d):
+                    cands.append(d)
+                    break
+                if en and d > en:
+                    break
+                d += datetime.timedelta(days=7)
+    else:
+        for wd in days:
+            for nth in weeks:
+                probe = datetime.date(lo.year, lo.month, 1)
+                for _ in range(15):        # up to ~14 months ahead
+                    d = _nth_weekday_of_month(probe.year, probe.month, wd, nth)
+                    if within(d):
+                        cands.append(d)
+                        break
+                    if en and probe > en:
+                        break
+                    probe = (probe.replace(day=28) + datetime.timedelta(days=7)).replace(day=1)
+    return min(cands).isoformat() if cands else None
+
+
 EVT_SPEC = [
     ("id", r"^id$", False),
     ("t", r"event\s*name|^name$|^title", True),
@@ -644,6 +747,11 @@ EVT_SPEC = [
     ("notes", r"^notes?$", False),
     ("disp", r"^display$|^show$|^visible$", False),
     ("ag", r"^agenda", False),     # Agenda view only: No hides from the calendar's agenda list (Laurie, 2026-08-31)
+    # Structured recurrence (2026-09-10): preferred over the legacy 'Recurring — …' Notes grammar.
+    ("rw", r"^recur\s*weeks?$", False),
+    ("rd", r"^recur\s*days?$", False),
+    ("rx", r"^recur\s*except", False),
+    ("rt", r"^recur\s*time", False),
 ]
 
 
@@ -780,8 +888,10 @@ def parse_events(path: Path, label: str, sheet=None):
         if d1 and d2 and d2 < d1:
             fail(f"{rw}: End Date {d2} is before Start Date {d1}")
         notes = s(cell(row, idx, "notes"))
-        nocc = next_occurrence(notes, d1, d2, today,
-                               time_field=s(cell(row, idx, "tm")))  # ISO string or None
+        rw_, rd_, rx_, rt_ = (s(cell(row, idx, k)) for k in ("rw", "rd", "rx", "rt"))
+        # Structured columns win; the legacy 'Recurring — …' Notes grammar is the fallback.
+        nocc = (next_occurrence_structured(rw_, rd_, rx_, d1, d2, today) if rw_ else
+                next_occurrence(notes, d1, d2, today, time_field=s(cell(row, idx, "tm"))))  # ISO string or None
         end = d2 or d1
         if end and end < today and not nocc:
             skipped_past[0] += 1
@@ -798,6 +908,7 @@ def parse_events(path: Path, label: str, sheet=None):
             "d1": d1, "d2": d2 or "", "tm": s(cell(row, idx, "tm")),
             "web": s(cell(row, idx, "web")), "g": auto_glyph(title, s(cell(row, idx, "ven")), s(cell(row, idx, "g")), is_online),
             "online": is_online, "nextOcc": nocc or "",
+            "rw": rw_, "rd": rd_, "rx": rx_, "rt": rt_,
             "tier": "exact" if (lat is not None and lng is not None) else "none",
             "img": norm_image(cell(row, idx, "img"), rw),
             "cred": s(cell(row, idx, "cred")),
