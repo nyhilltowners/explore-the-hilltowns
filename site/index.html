@@ -1,0 +1,2280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hilltowns Folk Atlas — NY Helderberg-Hudson Hilltowns</title>
+<meta name="description" content="An interactive atlas of folklore, history, and daily life in the NY Helderberg-Hudson Hilltowns — Berne, Knox, Rensselaerville, and Westerlo.">
+<meta property="og:title" content="Hilltowns Folk Atlas">
+<meta property="og:description" content="Folklore, history &amp; daily life in the NY Helderberg-Hudson Hilltowns — mapped.">
+<meta property="og:image" content="https://nyhilltowners.github.io/explore-the-hilltowns/images/share-card.png">
+<meta property="og:url" content="https://nyhilltowners.github.io/explore-the-hilltowns/">
+<meta property="og:type" content="website">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="theme-color" content="#00004d">
+<link rel="icon" type="image/svg+xml" href="images/favicon.svg">
+<link rel="icon" type="image/png" sizes="32x32" href="images/favicon-32.png">
+<link rel="apple-touch-icon" sizes="180x180" href="images/apple-touch-icon.png">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/maplibre-gl/4.7.1/maplibre-gl.min.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lato:ital,wght@0,400;0,700;1,400&family=Montserrat:ital,wght@0,400;0,600;0,700;1,600&display=swap">
+<style>
+:root{
+  --ink:#00004d; --ink2:#000066; --ink3:#12127a;
+  --paper:#feffff;
+  --parchment:#f4efe1; --parchment-line:#e3dcc8; --ink-blue:#1a1d5c;
+  --lichen:#dde0f2; --birch:#a9b0dd; --faint:#7b82b8;
+  --wampum:#39b7ff; --wampum-deep:#000080;
+  --gold:#fca315; --gold-ink:#2b2410; --gold-dim:#c7a24a;
+  --coral:#ff6f5e; --coral-dim:#e0574a;
+  --card:#0a0a5c; --card-line:#2a2a9e;
+  --precise:#000080; --fair:#39b7ff; --approx:#fca315; --unver:#b25b45;
+}
+*{box-sizing:border-box; margin:0; padding:0;}
+html,body{height:100%;}
+body{
+  font-family:'Lato',ui-sans-serif,system-ui,sans-serif;
+  background:var(--ink); color:var(--lichen); overflow:hidden;
+  display:flex; flex-direction:column;
+}
+.app{display:flex; flex:1 1 auto; min-height:0; width:100vw;}
+
+/* ---------- Universal header (shared house style across all pages) ---------- */
+.betabar{flex:none; background:var(--gold); color:var(--gold-ink);
+  font-family:'Montserrat',ui-sans-serif,system-ui,sans-serif; font-weight:700; font-size:11px;
+  letter-spacing:.08em; text-transform:uppercase; line-height:1.4;
+  overflow:hidden; white-space:nowrap; position:relative;}
+.betabar .ticker-track{display:inline-block; white-space:nowrap; animation:betabar-scroll 44s linear infinite;}
+.betabar:hover .ticker-track, .betabar:focus-within .ticker-track{animation-play-state:paused;}
+.betabar .ticker-set{display:inline-block;}
+.betabar a{color:inherit; text-decoration:underline; text-underline-offset:2px;}
+.betabar .ticker-track span span{padding:5px 14px; display:inline-block;}
+.betabar .tg{font-size:1.75em; font-weight:900; vertical-align:-4px; display:inline-block; margin-right:1px;}
+@keyframes betabar-scroll{ from{transform:translateX(0);} to{transform:translateX(-50%);} }
+@media (prefers-reduced-motion: reduce){
+  .betabar{overflow-x:auto;}
+  .betabar .ticker-track{animation:none;}
+}
+.sitenav{
+  position:relative; z-index:2500; flex:none;   /* above #mapnotice(2000); below mobile full-screen #detail(3000) */
+  display:flex; align-items:center; justify-content:space-between;
+  padding:8px 20px; background:var(--parchment);
+  border-bottom:3px solid var(--ink-blue); box-shadow:0 2px 8px rgba(0,0,60,.15);
+}
+.sitenav .brand{
+  display:flex; align-items:center; gap:8px; text-decoration:none;
+  font-family:'Montserrat',sans-serif; font-weight:800; text-transform:uppercase;
+  letter-spacing:.05em; color:var(--ink-blue);
+}
+.sitenav .brand img{height:42px; width:auto; flex:none; display:block;}
+.sitenav .brand .stack{display:flex; flex-direction:column; line-height:1.03; margin-left:2px;}
+.sitenav .brand .stack .l1{font-size:16px; display:block;}
+.sitenav .brand .stack .l2{font-size:16px; display:block; transform:scaleX(0.979); transform-origin:left center;}
+.sitenav .hright{display:flex; align-items:center; gap:2px;}
+.sitenav .links{display:flex; align-items:center; gap:4px;}
+.sitenav .links a{
+  font-family:'Montserrat',sans-serif; font-weight:600; font-size:12.5px;
+  letter-spacing:.08em; text-transform:uppercase; text-decoration:none;
+  color:var(--ink-blue); padding:8px 14px; border-radius:6px; transition:.15s;
+}
+.sitenav .links a:hover{background:rgba(26,29,92,.07);}
+.sitenav .links a.active{color:var(--gold);}
+.sitenav .links a.ig{display:flex; align-items:center; justify-content:center; padding:7px; margin-left:2px; color:var(--ink-blue);}
+.sitenav .links a.ig:hover{background:rgba(26,29,92,.07); color:var(--gold);}
+.sitenav .links a.ig svg{width:22px; height:22px; display:block;}
+.iconbtn{display:flex; align-items:center; justify-content:center; background:none; border:none;
+  cursor:pointer; padding:8px; border-radius:6px; color:var(--ink-blue); transition:.15s;}
+.iconbtn:hover{background:rgba(26,29,92,.07); color:var(--gold);}
+.iconbtn svg{width:22px; height:22px; display:block;}
+#menuToggle{display:none;}
+/* Skyline: current conditions · today's sunrise/sunset · moon.
+   Three icon+two-line groups, left to right. Desktop header only. */
+.skyline{
+  display:flex; align-items:center; gap:18px; margin:0 14px; flex:none;
+  font-family:'Montserrat',sans-serif; font-size:11px; letter-spacing:.04em; color:var(--ink-blue); line-height:1.2;
+}
+.skyline .sky-g{display:flex; align-items:center; gap:7px;}
+.skyline .sky-g + .sky-g{padding-left:18px; border-left:1px solid var(--parchment-line);}
+.skyline svg{width:26px; height:26px; flex:none; color:var(--ink-blue);}
+.skyline .sky-stack{display:flex; flex-direction:column; gap:2px; white-space:nowrap;}
+.skyline .sky-eyebrow{font-size:9px; letter-spacing:.16em; text-transform:uppercase; color:var(--faint);}
+.skyline .sky-val{font-weight:700; font-size:12.5px; letter-spacing:.02em;}
+.skyline .sky-val .c{font-weight:400; color:var(--faint); margin-left:5px;}
+.skyline .sky-val .sep{margin:0 5px; color:var(--birch); font-weight:400;}
+.skyline .sky-sub{font-size:10px; font-style:italic; letter-spacing:.02em; color:#4a4f7a;}
+.skyline .sky-stack{gap:1px;}
+.skyline .sky-wx{display:none;}
+.skyline.has-wx .sky-wx{display:flex;}
+.skyline.has-wx .sky-wx + .sky-g{padding-left:18px; border-left:1px solid var(--parchment-line);}
+.skyline .sky-wx + .sky-g{padding-left:0; border-left:none;}
+#modeToggle{margin-left:4px;}
+@media (max-width:1180px){ .skyline .sky-moon{display:none;} }
+@media (max-width:960px){ .skyline{display:none;} }
+/* Search overlay: drops from the header, anchored to it, over the map. */
+#searchbar{
+  display:none; position:absolute; top:100%; left:0; right:0; z-index:1999;
+  padding:10px 20px 12px; background:var(--parchment);
+  border-bottom:3px solid var(--ink-blue); box-shadow:0 10px 24px rgba(0,0,60,.18);
+  align-items:center; gap:10px;
+}
+#searchbar.open{display:flex;}
+#searchbar input[type=text]{
+  flex:1; background:#fff; border:2px solid var(--parchment-line); color:var(--ink-blue);
+  border-radius:8px; padding:9px 13px; font-size:15px; font-family:inherit; outline:none;
+}
+#searchbar input[type=text]::placeholder{color:#9a937c;}
+#searchbar input[type=text]:focus{border-color:var(--gold);}
+#searchClose{font-size:22px; line-height:1; color:var(--ink-blue); flex:none;}
+@media (max-width:760px){
+  .sitenav .brand img{height:36px;}
+  .sitenav .brand .stack .l1, .sitenav .brand .stack .l2{font-size:14px;}
+  .sitenav{padding:6px 12px;}
+  #menuToggle{display:flex;}
+  .sitenav .links{
+    display:none; position:absolute; top:100%; left:0; right:0;
+    flex-direction:column; align-items:stretch; gap:0;
+    background:var(--parchment); border-bottom:3px solid var(--ink-blue);
+    box-shadow:0 12px 26px rgba(0,0,60,.22); padding:6px 10px 12px; z-index:2001;
+  }
+  .sitenav .links.open{display:flex;}
+  .sitenav .links a{padding:13px 14px; font-size:14px;}
+  .sitenav .links a.ig{align-self:flex-start;}
+  #searchbar{padding:8px 12px 10px;}
+}
+#sheetHandle{display:none;}   /* mobile-only; shown in the max-width:760px query */
+
+/* ---------- Sidebar ---------- */
+#sidebar{
+  width:392px; min-width:392px; height:100%; display:flex; flex-direction:column;
+  background:var(--parchment);
+  background-image:radial-gradient(rgba(180,168,132,.10) 0.6px, transparent 0.6px);
+  background-size:7px 7px;
+  border-right:1px solid #26268f; position:relative; z-index:1000;
+}
+.eyebrow{
+  font-family:'Montserrat',ui-sans-serif,system-ui,sans-serif;
+  font-size:10px; letter-spacing:.22em; text-transform:uppercase; color:var(--birch);
+}
+/* "Plan ahead" look-ahead picker — lives in the filters area with the categories */
+.planrow{display:flex; align-items:center; gap:8px; margin:8px 0 4px;
+  font-family:'Montserrat',ui-sans-serif,system-ui,sans-serif; font-size:11px; color:#4a4f7a;}
+.planrow input[type=date]{flex:1; background:#fff; border:1px solid #c9cdec; border-radius:7px;
+  color:var(--ink-blue); padding:5px 8px; font-family:inherit; font-size:12px;}
+.planrow input[type=date].active{border-color:var(--gold);}
+.planrow .btn{padding:4px 9px; background:#eef0fb; border-color:#c9cdec; color:#2b2f57;}
+
+.controls{padding:12px 22px 12px; border-bottom:1px solid var(--parchment-line); background:transparent;}
+.epigraph{font-size:12px; font-style:italic; color:#6b6552; line-height:1.5; margin:11px 1px 3px;}
+.controls .epigraph{color:#4a4f7a;}
+.controls #filtersToggle{background:#eef0fb; border-color:#c9cdec; color:#2b2f57;}
+.controls.fcollapsed .cats, .controls.fcollapsed .epigraph, .controls.fcollapsed .planrow{display:none;}
+.controls #filtersToggle:hover{border-color:var(--gold);}
+.cats{display:flex; flex-direction:column; gap:0; margin-top:6px;}
+.catbox{display:flex; align-items:center; gap:10px; cursor:pointer; user-select:none;
+  font-family:'Montserrat',ui-sans-serif,system-ui,sans-serif; font-size:12.5px; color:var(--ink-blue);
+  padding:2px 4px; border:none; border-radius:0; background:transparent; transition:color .15s;}
+.catbox:hover{color:#000; background:transparent;}
+.catbox input{accent-color:var(--gold); width:15px; height:15px; flex:none;}
+.catname{flex:1;}
+.catmark{font-size:20px; line-height:1; width:26px; display:inline-flex; align-items:center; justify-content:center; flex:none;}
+.catmark.ochre{color:#000080; background:transparent;}
+.catmark.disc{background:transparent; font-size:19px;}
+.catmark.poi{color:var(--wampum); font-size:18px;}
+
+#listwrap{flex:1; overflow-y:auto; background:transparent; scrollbar-width:thin; scrollbar-color:#c9bfa0 transparent;}
+.grouphead{
+  position:sticky; top:0; background:var(--ink-blue); z-index:2;
+  padding:9px 22px 7px; font-family:'Montserrat',ui-sans-serif,system-ui,sans-serif;
+  font-size:10px; letter-spacing:.2em; text-transform:uppercase; color:var(--parchment);
+  border-bottom:1px solid var(--ink-blue);
+}
+.card{padding:12px 22px 13px; border-bottom:1px solid var(--parchment-line); cursor:pointer; transition:background .12s;}
+.card:hover{background:rgba(255,255,255,.45);}
+.card.active{background:rgba(252,163,21,.14); box-shadow:inset 3px 0 0 var(--gold);}
+.card h3{font-size:13.5px; font-weight:600; line-height:1.3; color:var(--ink-blue); font-family:'Montserrat',ui-sans-serif,system-ui,sans-serif;}
+.card h3 .cg{margin-right:7px; font-size:14px; vertical-align:-1px;}
+.card .meta{
+  display:flex; align-items:baseline; gap:8px; margin-top:4px; flex-wrap:wrap;
+  font-family:'Montserrat',ui-sans-serif,system-ui,sans-serif; font-size:10.5px; color:#7a7460; letter-spacing:.03em;
+}
+.card .meta .nat{color:#8a6d1f;}
+.chip{
+  display:inline-block; padding:1px 7px; border-radius:9px; font-size:9px; letter-spacing:.06em;
+  text-transform:uppercase; font-weight:500; background:transparent; color:#8890b0;
+  border:1px solid #d3d7ec;
+}
+.chip.precise{color:#6b7194; border-color:#d3d7ec;}
+.chip.fair{color:#6b7194; border-color:#d3d7ec;}
+.chip.approx{color:#8890b0; border-color:#d3d7ec;}
+.chip.unver{color:#8890b0; border:1px dashed #cdb98a;}
+.chip.none{color:#8890b0; border:1px solid #d3d7ec;}
+.empty{padding:26px 22px; color:var(--faint); font-size:13px; font-style:italic; line-height:1.5;}
+
+.btn{
+  background:var(--ink3); border:1px solid #2e2ea8; color:var(--lichen); border-radius:6px;
+  padding:6px 11px; font-size:11.5px; cursor:pointer; letter-spacing:.03em;
+  font-family:'Montserrat',ui-sans-serif,system-ui,sans-serif;
+  transition:border-color .15s;
+}
+.btn:hover{border-color:var(--gold);}
+.btn.primary{background:var(--gold); border-color:var(--gold); color:var(--gold-ink); font-weight:700;}
+.btn.primary:hover{background:#ffb733; border-color:#ffb733;}
+
+/* ---------- Detail panel ---------- */
+#detail{
+  position:absolute; inset:0; background:var(--ink2); z-index:1500;
+  transform:translateX(-102%); transition:transform .25s ease; display:flex; flex-direction:column;
+  border-right:1px solid #26268f;
+}
+#detail.open{transform:translateX(0);}
+#about{position:absolute; inset:0; background:var(--ink2); z-index:1600;
+  transform:translateX(-102%); transition:transform .25s ease; display:flex; flex-direction:column;
+  border-right:1px solid #26268f;}
+#about.open{transform:translateX(0);}
+.detail-head{padding:16px 22px 12px; border-bottom:1px solid #26268f;}
+.detail-head .backrow{display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;}
+.detail-body{flex:1; overflow-y:auto; padding:18px 22px 30px; scrollbar-width:thin;}
+.detail-body h2{font-size:18px; line-height:1.25; font-weight:600; margin-bottom:10px; color:var(--paper); font-family:'Montserrat',ui-sans-serif,system-ui,sans-serif;}
+.field{margin-bottom:14px;}
+.field .fl{
+  font-family:'Montserrat',ui-sans-serif,system-ui,sans-serif; font-size:9.5px; letter-spacing:.2em;
+  text-transform:uppercase; color:var(--faint); margin-bottom:3px;
+}
+.field .fv{font-size:13.5px; line-height:1.55; color:var(--paper);}
+.field .fv.story{font-size:14.5px; line-height:1.62;}
+.certline{display:flex; gap:8px; align-items:center; margin:8px 0 14px; flex-wrap:wrap;}
+.certnote{font-size:12px; color:var(--birch); font-style:italic; line-height:1.4;}
+.srcbox{background:var(--ink); border:1px solid #26268f; border-radius:8px; padding:12px 14px; margin-top:6px;}
+.afnote{margin-top:18px; padding-top:12px; border-top:1px solid #26268f; font-size:11.5px; line-height:1.5; color:var(--birch);}
+.afnote p{margin:0 0 8px;}
+.afnote p:last-child{margin-bottom:0;}
+.srcbox .field{margin-bottom:9px;} .srcbox .field:last-child{margin-bottom:0;}
+table.hours{border-collapse:collapse; font-size:13px; margin-top:2px;}
+table.hours td{padding:2.5px 14px 2.5px 0; color:var(--lichen);}
+table.hours td:first-child{color:var(--birch); padding-right:22px;}
+table.hours tr.today td{color:#fff; font-weight:700;}
+table.hours tr.today td:first-child{color:var(--approx);}
+a.weblink{color:var(--wampum); text-decoration:none; word-break:break-all;}
+a.weblink:hover{text-decoration:underline;}
+.likebtn{background:none; border:1px solid #2e2ea8; border-radius:14px; color:#e0526e;
+  font-size:12px; padding:2px 10px; cursor:pointer; font-family:'Montserrat',ui-sans-serif,sans-serif;
+  transition:transform .1s, border-color .15s; vertical-align:middle;}
+.likebtn:hover{border-color:#e0526e;}
+.likebtn.mine{background:rgba(224,82,110,.14); border-color:#e0526e;}
+.likebtn:active{transform:scale(1.25);}
+.likebtn .lc{color:var(--birch); margin-left:3px; font-size:11px;}
+#filtersToggle{display:block; width:100%; margin-top:0; margin-bottom:2px;}
+@media (max-width:760px){
+  #filtersToggle{display:block;}
+}
+.tag{display:inline-block; padding:2px 9px; margin:0 4px 4px 0; border-radius:11px;
+  border:1px solid #2e2ea8; color:var(--birch); font-size:9.5px; letter-spacing:.05em;
+  text-transform:uppercase; font-family:'Montserrat',ui-sans-serif,system-ui,sans-serif;
+  cursor:pointer; transition:border-color .12s, color .12s;}
+.tagrow{flex-basis:100%; margin-top:5px;}
+.tag:hover{border-color:var(--wampum); color:#fff;}
+.popimg{margin:-13px -16px 10px; height:118px; overflow:hidden; border-radius:8px 8px 0 0; background:#0a0a45;}
+.popimg img{width:100%; height:100%; object-fit:cover; display:block;}
+.dimg{margin-bottom:14px;}
+.dimg img{width:100%; max-height:260px; object-fit:cover; display:block; border-radius:10px; background:#0a0a45;}
+.dimg .cap{font-family:'Montserrat',ui-sans-serif,system-ui,sans-serif; font-size:10px; color:var(--faint); margin-top:5px; line-height:1.4;}
+
+/* ---------- Map ---------- */
+#mapwrap{flex:1; position:relative;}
+#map{position:absolute; inset:0; background:#dfe3da;}
+.maplibregl-popup-content{
+  background:var(--ink2); color:var(--lichen); border-radius:9px; border:1px solid #2e2ea8;
+  box-shadow:0 6px 24px rgba(0,0,0,.45); padding:13px 16px; max-width:280px;
+  font-family:'Lato',ui-sans-serif,system-ui,sans-serif;
+}
+.maplibregl-popup-tip{border-top-color:var(--ink2) !important; border-bottom-color:var(--ink2) !important;}
+.maplibregl-popup-close-button{color:var(--birch); font-size:18px; right:4px; top:2px;}
+.pop h4{font-size:13.5px; font-weight:600; margin-bottom:3px; line-height:1.3; font-family:'Montserrat',ui-sans-serif,system-ui,sans-serif;}
+.pop .pm{font-family:'Montserrat',ui-sans-serif,system-ui,sans-serif; font-size:10.5px; color:var(--birch); margin-bottom:5px;}
+.whenrange{opacity:0.62; font-weight:400; white-space:nowrap;}
+.pop .ps{font-size:12.5px; color:var(--lichen); margin:6px 0 9px; line-height:1.45;
+  display:-webkit-box; -webkit-line-clamp:4; -webkit-box-orient:vertical; overflow:hidden;}
+.pop .others{font-family:'Montserrat',ui-sans-serif,system-ui,sans-serif; font-size:10.5px; color:var(--faint); margin-top:8px; border-top:1px solid #26268f; padding-top:7px; line-height:1.6;}
+.pop .others a{color:var(--wampum); cursor:pointer; text-decoration:none;}
+.pop .others a:hover{text-decoration:underline;}
+
+/* layer switcher */
+#layers{
+  position:absolute; bottom:52px; right:12px; z-index:900;
+  background:rgba(0,0,77,.9); border:1px solid #2e2ea8; border-radius:8px;
+  padding:8px 11px 9px; font-family:'Montserrat',ui-sans-serif,system-ui,sans-serif;
+  box-shadow:0 2px 8px rgba(0,0,0,.3); min-width:148px;
+}
+#layers.collapsed{display:none;}
+#layers .lh{font-size:8.5px; letter-spacing:.2em; text-transform:uppercase; color:var(--faint); margin-bottom:6px;}
+#layers label{display:flex; align-items:center; gap:6px; font-size:11px; color:var(--lichen); padding:3px 0; cursor:pointer;}
+#layers label:hover{color:#fff;}
+#layers hr{border:none; border-top:1px solid #26268f; margin:6px 0 5px;}
+#layers input{accent-color:var(--wampum);}
+#layers .note{font-size:8.5px; color:var(--faint); margin-top:2px; line-height:1.35;}
+#layersToggle{position:absolute; bottom:12px; right:12px; z-index:901; display:block;
+  background:rgba(0,0,77,.82); border:1px solid #2e2ea8; box-shadow:0 2px 8px rgba(0,0,0,.3);
+  font-size:11px; padding:6px 11px; opacity:.85;}
+#layersToggle:hover{opacity:1; border-color:var(--gold);}
+
+#onlinePill{position:absolute; bottom:26px; left:12px; z-index:900; display:none;
+  background:rgba(0,0,77,.9); border:1px solid var(--coral); border-radius:16px; color:var(--coral);
+  font-family:'Montserrat',ui-sans-serif,system-ui,sans-serif; font-size:11px; padding:6px 12px;
+  cursor:pointer;}
+#onlinePill:hover{background:rgba(0,0,102,.95);}
+.card .onlinechip{display:inline-block; padding:1px 8px; border-radius:10px; border:1px solid var(--coral);
+  color:var(--coral); font-size:9px; letter-spacing:.08em; text-transform:uppercase;
+  font-family:'Montserrat',ui-sans-serif,system-ui,sans-serif;}
+.mapbar{
+  position:absolute; top:12px; right:12px; z-index:900; display:flex; flex-direction:column; gap:8px;
+}
+.mapbar .btn{box-shadow:0 2px 8px rgba(0,0,0,.35); background:rgba(0,0,77,.9);}
+
+@media (max-width:760px){
+  .app{flex-direction:column;}
+  /* Sidebar becomes a draggable bottom sheet overlaid on the map. Its height is
+     driven by the --sheet CSS var (set by drag JS); it can be pulled up over the
+     map for free list scrolling, or down to a peek. */
+  #mapwrap{height:100%; order:1;}
+  #sidebar{
+    position:fixed; left:0; right:0; bottom:0; z-index:1500;
+    width:100%; min-width:0;
+    height:var(--sheet, 46vh);
+    order:2; border-right:none; border-top:none;
+    border-top-left-radius:16px; border-top-right-radius:16px;
+    box-shadow:0 -6px 24px rgba(0,0,0,.28);
+    transition:height .18s ease;
+  }
+  #sidebar.dragging{transition:none;}   /* no lag while a finger is moving it */
+  /* Drag handle (the grab bar) */
+  #sheetHandle{
+    display:block; position:relative; flex:none;
+    height:22px; cursor:grab; touch-action:none;
+    border-top-left-radius:16px; border-top-right-radius:16px;
+  }
+  #sheetHandle::before{
+    content:''; position:absolute; top:8px; left:50%; transform:translateX(-50%);
+    width:40px; height:4px; border-radius:2px; background:#b9b09a;
+  }
+  .controls,.card,.grouphead{padding-left:16px; padding-right:16px;}
+  /* On the mobile bottom-sheet the category list can be taller than the sheet.
+     Let .controls take the available height and scroll internally so every
+     checkbox (through Points of Interest) is reachable. #listwrap yields. */
+  .controls{flex:1 1 auto; min-height:0; overflow-y:auto; -webkit-overflow-scrolling:touch; overscroll-behavior:contain;}
+  #listwrap{flex:0 1 34%; min-height:0;}
+  /* collapsed filters shrink to their button; the list takes the freed room */
+  .controls.fcollapsed{flex:0 0 auto;}
+  .controls.fcollapsed + #listwrap{flex:1 1 auto;}
+  #sidebar{min-height:0;}
+  #layers{bottom:12px; right:auto; left:12px;}
+  #layersToggle{display:block; position:absolute; bottom:12px; left:12px; z-index:901;
+    background:rgba(0,0,77,.9); box-shadow:0 2px 8px rgba(0,0,0,.35);}
+  #layers.collapsed{display:none;}
+  .mapbar{top:auto; bottom:12px;}
+  /* Clear the phone's home indicator so the last list rows stay reachable. */
+  #listwrap{padding-bottom:env(safe-area-inset-bottom, 12px);}
+
+  /* Detail & About break out to full-screen on mobile so the scroll area is
+     tall enough to reach bottom links. */
+  #detail, #about{position:fixed; inset:0; z-index:3000; border-right:none; border-radius:0;}
+  #detail .detail-body, #about .detail-body{
+    -webkit-overflow-scrolling:touch; overscroll-behavior:contain;
+    padding-bottom:calc(64px + env(safe-area-inset-bottom, 0px)); max-height:none;
+  }
+}
+@media (prefers-reduced-motion: reduce){
+  #detail{transition:none;} .card,.catbox,.btn{transition:none;}
+}
+
+/* ---------- Night / firelight mode ----------
+   Switched on by <html data-theme="night">, set by the sun clock in the JS
+   (sunset→sunrise at Berne, NY) or by the header sun/moon toggle. Tokens are
+   re-pointed to a smoked-parchment + ember palette; the rules below catch the
+   hard-coded day colors that the tokens don't reach. */
+html[data-theme="night"]{
+  --ink:#00003a; --ink2:#000052; --ink3:#12127a;
+  --paper:#f6e7c8;
+  --parchment:#00004d; --parchment-line:#26268f; --ink-blue:#f0dcb0;
+  --lichen:#e6d7b8; --birch:#a9b0dd; --faint:#7b82b8;
+  --wampum:#ffb347; --wampum-deep:#ff8c1a;
+  --gold:#ffb020; --gold-ink:#000080; --gold-dim:#c98a2e;
+  --card:#00004d; --card-line:#2e2ea8;
+  --precise:#ffb347; --fair:#ffd27a; --approx:#ff8c1a; --unver:#c0644a;
+  --ember-line:#2e2ea8;
+}
+html[data-theme="night"] body, html[data-theme="night"] #sidebar{
+  transition:background-color .7s ease, color .7s ease, border-color .7s ease;
+}
+/* Ticker at night: house dark blue, light text, gold glyph */
+html[data-theme="night"] .betabar{background:#000080; color:#fca315;}
+html[data-theme="night"] .betabar .tg{color:#ffd27a;}
+/* The nav bar stays daytime parchment at night so the logo and links keep their
+   colors — re-declare the day tokens on it so every descendant inherits them. */
+html[data-theme="night"] .sitenav{
+  --parchment:#f4efe1; --parchment-line:#e3dcc8; --ink-blue:#1a1d5c; --paper:#feffff;
+  --gold:#fca315; --gold-ink:#2b2410; --lichen:#dde0f2; --faint:#7b82b8;
+}
+html[data-theme="night"] #sidebar{background-image:radial-gradient(rgba(255,176,32,.06) 0.6px, transparent 0.6px); border-right-color:#26268f;}
+html[data-theme="night"] .planrow{color:var(--birch);}
+html[data-theme="night"] .planrow input[type=date]{background:#000066; border-color:#2e2ea8; color:var(--paper); color-scheme:dark;}
+html[data-theme="night"] .planrow .btn, html[data-theme="night"] .controls #filtersToggle{background:#000066; border-color:#2e2ea8; color:var(--lichen);}
+html[data-theme="night"] .epigraph, html[data-theme="night"] .controls .epigraph{color:var(--birch);}
+html[data-theme="night"] .catbox:hover{color:#fff6e0;}
+html[data-theme="night"] .catmark.ochre{color:var(--wampum);}
+html[data-theme="night"] #listwrap{scrollbar-color:#2e2ea8 transparent;}
+html[data-theme="night"] .grouphead{background:#000080; color:var(--birch); border-bottom-color:#26268f;}
+html[data-theme="night"] .card:hover{background:rgba(255,255,255,.035);}
+html[data-theme="night"] .card.active{background:rgba(255,176,32,.12);}
+html[data-theme="night"] .card .meta{color:#8a90c0;}
+html[data-theme="night"] .card .meta .nat{color:#d9a24a;}
+html[data-theme="night"] .chip, html[data-theme="night"] .chip.precise, html[data-theme="night"] .chip.fair,
+html[data-theme="night"] .chip.approx, html[data-theme="night"] .chip.none{color:#8890b0; border-color:#2e2ea8;}
+html[data-theme="night"] .chip.unver{color:#8890b0; border-color:#6a6ad0;}
+html[data-theme="night"] .btn{border-color:#2e2ea8;}
+html[data-theme="night"] .btn.primary:hover{background:#ffc247; border-color:#ffc247;}
+html[data-theme="night"] #detail, html[data-theme="night"] #about, html[data-theme="night"] .detail-head,
+html[data-theme="night"] .srcbox, html[data-theme="night"] .afnote, html[data-theme="night"] .tag,
+html[data-theme="night"] .likebtn, html[data-theme="night"] .pop .others,
+html[data-theme="night"] .maplibregl-popup-content, html[data-theme="night"] #layers,
+html[data-theme="night"] #layersToggle, html[data-theme="night"] #layers hr{border-color:#2e2ea8;}
+html[data-theme="night"] table.hours tr.today td{color:#fff6e0;}
+html[data-theme="night"] .tag:hover{color:#fff6e0;}
+html[data-theme="night"] .popimg, html[data-theme="night"] .dimg img{background:#000052;}
+html[data-theme="night"] #map{background:#00002e;}
+#sparks{position:absolute; inset:0; width:100%; height:100%; z-index:1; pointer-events:none; display:none;}
+html[data-theme="night"] #sparks{display:block;}
+.maplibregl-popup{z-index:2;}   /* keep popups above the sparks canvas */
+html[data-theme="night"] #mapnotice{background:#00002e !important;}
+html[data-theme="night"] #layers, html[data-theme="night"] #layersToggle, html[data-theme="night"] .mapbar .btn,
+html[data-theme="night"] #onlinePill{background:rgba(0,0,60,.92);}
+html[data-theme="night"] #onlinePill:hover{background:rgba(0,0,80,.96);}
+html[data-theme="night"] #layers label:hover{color:#fff6e0;}
+html[data-theme="night"] #sheetHandle::before{background:#4a4ab8;}
+html[data-theme="night"] .maplibregl-ctrl-group{background:#00004d; box-shadow:0 0 0 1px #2e2ea8;}
+html[data-theme="night"] .maplibregl-ctrl-group button{filter:invert(.92) sepia(.4) saturate(.6);}
+html[data-theme="night"] .maplibregl-ctrl-group button + button{border-top-color:#2e2ea8;}
+html[data-theme="night"] .maplibregl-ctrl-attrib{background:rgba(0,0,60,.75); color:var(--birch);}
+html[data-theme="night"] .maplibregl-ctrl-attrib a{color:var(--wampum);}
+html[data-theme="night"] .maplibregl-ctrl-scale{background:rgba(0,0,60,.6); color:var(--lichen); border-color:var(--birch);}
+/* sun/moon toggle in the header */
+#modeToggle .moon, #modeToggle .sun{display:none;}
+html:not([data-theme="night"]) #modeToggle .moon{display:block;}
+html[data-theme="night"] #modeToggle .sun{display:block;}
+html[data-theme="night"] #modeToggle{color:#fca315;}
+</style>
+</head>
+<body>
+<div class="betabar" role="region" aria-label="Site announcements">
+  <div class="ticker-track"><span class="ticker-set">
+    <span><span class="tg">𓅓</span> Beta version: please double check all info before hitting the trail</span>
+    <span><span class="tg">𓅓</span> Suggestions? Hit us up NYHilltowners@Gmail.com</span>
+    <span><span class="tg">𓅓</span> Not another dime for corrupt corporations; shop and spend your time and money locally!</span>
+    <span><span class="tg">𓅓</span> Apes together strong.</span>
+    <span><span class="tg">𓅓</span> Do not obey in advance.</span>
+    <span><span class="tg">𓅓</span> Hiring? News to share? Poetry into the void? Email us and we'll share it here (free! not everything needs to be monetized)</span>
+    <span><span class="tg">𓅓</span> Register to vote before October 23: <a href="https://voterlookup.elections.ny.gov/" target="_blank" rel="noopener">voterlookup.elections.ny.gov</a></span>
+    <span><span class="tg">𓅓</span> Do you know who&#8217;s paying your politicians? <a href="https://www.opensecrets.org/" target="_blank" rel="noopener">OpenSecrets.org</a></span>
+  </span><span class="ticker-set" aria-hidden="true">
+    <span><span class="tg">𓅓</span> Beta version: please double check all info before hitting the trail</span>
+    <span><span class="tg">𓅓</span> Suggestions? Hit us up NYHilltowners@Gmail.com</span>
+    <span><span class="tg">𓅓</span> Not another dime for corrupt corporations; shop and spend your time and money locally!</span>
+    <span><span class="tg">𓅓</span> Apes together strong.</span>
+    <span><span class="tg">𓅓</span> Do not obey in advance.</span>
+    <span><span class="tg">𓅓</span> Hiring? News to share? Poetry into the void? Email us and we'll share it here (free! not everything needs to be monetized)</span>
+    <span><span class="tg">𓅓</span> Register to vote before October 23: <a href="https://voterlookup.elections.ny.gov/" target="_blank" rel="noopener">voterlookup.elections.ny.gov</a></span>
+    <span><span class="tg">𓅓</span> Do you know who&#8217;s paying your politicians? <a href="https://www.opensecrets.org/" target="_blank" rel="noopener">OpenSecrets.org</a></span>
+  </span></div>
+</div>
+<nav class="sitenav">
+  <a class="brand" href="index.html">
+    <img src="images/raccoon-mark.svg" alt="">
+    <span class="stack"><span class="l1">Hilltowns</span><span class="l2">Folk Atlas</span></span>
+  </a>
+  <div class="skyline" id="skyline">
+    <div class="sky-g sky-wx" id="skyWx">
+      <svg id="skyIco" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"></svg>
+      <div class="sky-stack"><span class="sky-eyebrow" id="skyCond"></span><span class="sky-val" id="skyTemp"></span></div>
+    </div>
+    <div class="sky-g sky-sun" title="Today's sunrise and sunset, Berne time">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 16a8 8 0 0 1 16 0"/><line x1="2" y1="19.5" x2="22" y2="19.5"/><line x1="12" y1="3" x2="12" y2="5.5"/><line x1="5" y1="6.5" x2="6.6" y2="8.1"/><line x1="19" y1="6.5" x2="17.4" y2="8.1"/></svg>
+      <div class="sky-stack"><span class="sky-eyebrow">Sunrise &middot; Sunset</span><span class="sky-val" id="skySun"></span></div>
+    </div>
+    <div class="sky-g sky-moon" id="skyMoon">
+      <svg id="moonIco" viewBox="0 0 24 24" aria-hidden="true"></svg>
+      <div class="sky-stack"><span class="sky-eyebrow" id="moonPhase"></span><span class="sky-val" id="moonName"></span><span class="sky-sub" id="moonEng"></span></div>
+    </div>
+  </div>
+  <div class="hright">
+    <div class="links" id="hnav">
+      <a href="index.html" class="active">Atlas</a>
+      <a href="calendar.html">Calendar</a>
+      <a href="directory.html">Directory</a>
+      <a href="instagram.html">Instagram</a>
+      <a href="about.html">About</a>
+    </div>
+    <button class="iconbtn" id="modeToggle" title="Night mode follows sunset and sunrise in Berne, NY. Tap to switch until the next one." aria-label="Toggle night mode" aria-pressed="false">
+      <svg class="moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 14.5A8.5 8.5 0 0 1 9.5 4a8.5 8.5 0 1 0 10.5 10.5z"></path></svg>
+      <svg class="sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="12" cy="12" r="4.2"></circle><line x1="12" y1="2.5" x2="12" y2="5"></line><line x1="12" y1="19" x2="12" y2="21.5"></line><line x1="2.5" y1="12" x2="5" y2="12"></line><line x1="19" y1="12" x2="21.5" y2="12"></line><line x1="5.3" y1="5.3" x2="7" y2="7"></line><line x1="17" y1="17" x2="18.7" y2="18.7"></line><line x1="5.3" y1="18.7" x2="7" y2="17"></line><line x1="17" y1="7" x2="18.7" y2="5.3"></line></svg>
+    </button>
+    <button class="iconbtn" id="searchToggle" title="Search the atlas" aria-label="Search" aria-expanded="false">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"></circle><line x1="21" y1="21" x2="16.2" y2="16.2"></line></svg>
+    </button>
+    <button class="iconbtn" id="menuToggle" title="Menu" aria-label="Menu" aria-expanded="false">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="4" y1="7" x2="20" y2="7"></line><line x1="4" y1="12" x2="20" y2="12"></line><line x1="4" y1="17" x2="20" y2="17"></line></svg>
+    </button>
+  </div>
+  <div id="searchbar">
+    <input type="text" id="q" placeholder="Search the atlas &mdash; places, events, stories&hellip;" autocomplete="off">
+    <button class="iconbtn" id="searchClose" title="Clear search and close" aria-label="Clear search and close">&times;</button>
+  </div>
+</nav>
+<div class="app">
+  <div id="sidebar">
+    <div id="sheetHandle" aria-hidden="true"></div>
+
+    <div class="controls">
+      <button class="btn" id="filtersToggle" title="Collapse filters to browse the map">Hide filters &#9652;</button>
+      <div class="planrow">
+        <label for="planPick">Plan ahead:</label>
+        <input type="date" id="planPick">
+        <button class="btn" id="planClear" title="Back to today" style="display:none;">&times;</button>
+      </div>
+      <div class="cats" id="catsMain"></div>
+      <div class="epigraph">People have been sharing stories in these hills since long before you were here, and will be long after you&#8217;re gone&#8230;</div>
+      <div class="cats" id="catsStory"></div>
+    </div>
+
+    <div id="listwrap"></div>
+
+    <div id="detail">
+      <div class="detail-head">
+        <div class="backrow">
+          <button class="btn" id="btnBack">&larr; Back to list</button>
+          <span>
+            <button class="btn" id="btnCopyLink">Copy link</button>
+            <button class="btn" id="btnFly">View on map</button>
+          </span>
+        </div>
+        <div class="eyebrow" id="d_eyebrow"></div>
+      </div>
+      <div class="detail-body" id="d_body"></div>
+    </div>
+
+    <div id="about">
+      <div class="detail-head">
+        <div class="backrow">
+          <button class="btn" id="btnAboutBack">&larr; Back</button>
+        </div>
+        <div class="eyebrow">About this atlas</div>
+      </div>
+      <div class="detail-body">
+        <h2>Hilltowns Folk Atlas</h2>
+        <div class="field"><div class="fv story">A living atlas of the NY Helderberg-Hudson
+        Hilltowns &mdash; folklore and legends gathered from historical sources, alongside
+        the people making and telling stories today. Every tale lists its original teller
+        and source, stories are only as reliable as their tellers.</div></div>
+        <div class="field"><div class="fv story">Additions, suggestions, corrections,
+        complaints about the universe? Message us on Instagram at
+        <a class="weblink" href="https://instagram.com/NYHilltowners" target="_blank"
+        rel="noopener">@NYHilltowners</a></div></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="mapwrap">
+    <div id="map"></div>
+    <canvas id="sparks" aria-hidden="true"></canvas>
+    <button id="onlinePill" title="Show online events">&#8907; Online events: <span id="onlineN">0</span></button>
+    <button class="btn" id="layersToggle" title="Base map &amp; layers">&#9638; Map</button>
+    <div id="layers">
+      <div class="lh">Base map</div>
+      <label><input type="radio" name="base" value="worldtopo" checked> World Topo</label>
+      <label><input type="radio" name="base" value="usgs"> USGS Topo</label>
+      <label><input type="radio" name="base" value="sat"> Satellite</label>
+      <label><input type="radio" name="base" value="osm"> Streets</label>
+      <label><input type="radio" name="base" value="night"> Firelight (night)</label>
+      <div class="note" id="basenote">Esri global topographic map; sharp to street level worldwide.</div>
+      <hr>
+      <div class="lh">Overlays</div>
+      <label><input type="checkbox" id="ovHillshade"> Hillshade</label>
+      <label><input type="checkbox" id="ovTerrain"> 3D terrain</label>
+      <div class="note">With 3D on, drag with right-click (or two fingers) to tilt.</div>
+    </div>
+    <div class="mapbar">
+      <button class="btn" id="btnNorth" title="Reset rotation and tilt">Reset view</button>
+    </div>
+  </div>
+</div>
+
+<script src="data.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/maplibre-gl/4.7.1/maplibre-gl.min.js" crossorigin="anonymous"></script>
+<script>
+/* ============ DATA ============ */
+/* Loaded from data.js, generated by build/build.py from the workbooks in data/.
+   Internal ids are never rendered; Notes columns are never shipped. */
+var ATLAS = window.ATLAS_DATA || {records:[], categories:[]};
+var CATEGORIES = ATLAS.categories || [];
+var HOME = [-74.1436, 42.5145]; /* Rensselaerville, NY (lng,lat) */
+
+/* ============ SUN CLOCK & NIGHT MODE ============
+   The atlas keeps Hilltowns time: night mode runs from sunset to sunrise at
+   Berne, NY for every visitor, wherever they are. Coordinates are Berne Town
+   Hall's own POI row (1656 Helderberg Trail). The sunrise equation below is
+   the standard NOAA/Meeus simplification — dependency-free, ~1–2 min accuracy,
+   which is all a mood switch needs. */
+var BERNE = {lat:42.624848, lng:-74.135036};
+function sunTimes(isoDate, lat, lng){
+  var p = isoDate.split('-').map(Number);
+  var jd0 = Date.UTC(p[0], p[1]-1, p[2]) / 86400000 + 2440587.5;   /* 0h UT that day */
+  var n = Math.round(jd0) - 2451545 + 0.0008;                          /* days since J2000 */
+  var rad = Math.PI/180;
+  var Js = n - lng/360;
+  var M = ((357.5291 + 0.98560028*Js) % 360 + 360) % 360;
+  var C = 1.9148*Math.sin(M*rad) + 0.02*Math.sin(2*M*rad) + 0.0003*Math.sin(3*M*rad);
+  var L = ((M + C + 180 + 102.9372) % 360 + 360) % 360;
+  var Jt = 2451545 + Js + 0.0053*Math.sin(M*rad) - 0.0069*Math.sin(2*L*rad);
+  var sinD = Math.sin(L*rad)*Math.sin(23.4397*rad), D = Math.asin(sinD);
+  var cosW = (Math.sin(-0.833*rad) - Math.sin(lat*rad)*sinD) / (Math.cos(lat*rad)*Math.cos(D));
+  if(cosW >= 1) return {rise:null, set:null, polar:'night'};
+  if(cosW <= -1) return {rise:null, set:null, polar:'day'};
+  var w = Math.acos(cosW)/rad;
+  var toMs = function(j){ return (j - 2440587.5) * 86400000; };
+  return {rise:toMs(Jt - w/360), set:toMs(Jt + w/360), polar:null};
+}
+function berneDateISO(){
+  try{ return new Intl.DateTimeFormat('en-CA',{timeZone:'America/New_York'}).format(new Date()); }
+  catch(e){ return new Date().toISOString().slice(0,10); }
+}
+function autoMode(){
+  var st = sunTimes(berneDateISO(), BERNE.lat, BERNE.lng), now = Date.now();
+  if(st.polar) return st.polar;
+  return (now < st.rise || now >= st.set) ? 'night' : 'day';
+}
+/* A manual toggle sticks only until the sun next crosses the horizon: we store
+   which automatic state it was overriding, and drop it once that state changes. */
+var MODE_KEY = 'nyh-mode-override';
+function readOverride(){ try{ var v = JSON.parse(localStorage.getItem(MODE_KEY)||'null'); return (v && v.mode && v.auto) ? v : null; }catch(e){ return null; } }
+function writeOverride(v){ try{ if(v) localStorage.setItem(MODE_KEY, JSON.stringify(v)); else localStorage.removeItem(MODE_KEY); }catch(e){} }
+function effectiveMode(){
+  var auto = autoMode(), ov = readOverride();
+  if(ov && ov.auto === auto) return ov.mode;
+  if(ov) writeOverride(null);       /* the sun moved on; the override expires */
+  return auto;
+}
+var MODE = effectiveMode();
+var isNight = function(){ return MODE === 'night'; };
+document.documentElement.setAttribute('data-theme', isNight() ? 'night' : '');
+function kmFromHome(lat,lng){
+  var R=6371, dLat=(lat-HOME[1])*Math.PI/180, dLng=(lng-HOME[0])*Math.PI/180;
+  var a=Math.sin(dLat/2)*Math.sin(dLat/2)
+      + Math.cos(HOME[1]*Math.PI/180)*Math.cos(lat*Math.PI/180)
+      * Math.sin(dLng/2)*Math.sin(dLng/2);
+  return 2*R*Math.asin(Math.sqrt(a));
+}
+var CAT_COLOR = {};
+CATEGORIES.forEach(function(c){ if(c.color) CAT_COLOR[c.label]=c.color; });
+var records = (ATLAS.records || []).map(function(d,i){
+  d._k='r'+i;
+  d.dist = (d.lat!=null && d.lng!=null) ? kmFromHome(d.lat, d.lng) : Infinity;
+  d.col = CAT_COLOR[d.cat] || (d.ty==='events' ? '#ff6f5e' : '#fca315');
+  if(!d.g && d.ty==='events') d.g='✦';
+  if(typeof d.tags==='string') d.tags = d.tags.split(/[;,]/).map(function(x){return x.trim();}).filter(Boolean);
+  if(!Array.isArray(d.tags)) d.tags = [];
+  return d;
+});
+
+/* ============ HELPERS ============ */
+function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g, function(c){
+  return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
+
+var TIER_LABEL = {precise:'Precise', fair:'Fairly precise', approx:'Approximate', unver:'Unverified pin', none:'Unplaced'};
+var TIER_COLOR = {precise:'#000080', fair:'#39b7ff', approx:'#fca315', unver:'#b25b45'};
+var HALO_M = {precise:0, fair:2500, approx:9000, unver:18000};
+
+/* "today" pinned to the atlas's home timezone so events expire on Catskill time */
+var TODAY_E = (function(){
+  try{ return new Intl.DateTimeFormat('en-CA',{timeZone:'America/New_York'}).format(new Date()); }
+  catch(e){ return new Date().toISOString().slice(0,10); }
+})();
+var TODAY_DOW = (function(){
+  try{ return new Intl.DateTimeFormat('en-US',{timeZone:'America/New_York',weekday:'short'})
+        .format(new Date()).toLowerCase().slice(0,3); }
+  catch(e){ return ['sun','mon','tue','wed','thu','fri','sat'][new Date().getDay()]; }
+})();
+
+/* An "overnight" event spans exactly two calendar dates only because its time
+   range crosses midnight (a 10:00 PM – 12:00 AM gig stored as Fri→Sat). It is
+   really a single evening on d1: it ranks, displays, and expires as one day. */
+function crossesMidnight(r){
+  if(!(r.d1 && r.d2) || r.d2===r.d1) return false;
+  if(daysBetween(r.d1, r.d2) !== 1) return false;
+  var ts = _parseTimes(r.tm||'');
+  return ts.length>=2 && ts[ts.length-1] <= ts[0];
+}
+function isExpired(r){
+  if(r.ty!=='events') return false;
+  if(r.nextOcc) return r.nextOcc < TODAY_E;   /* recurring: honor next occurrence */
+  var end = crossesMidnight(r) ? r.d1 : (r.d2 || r.d1);
+  if(!end) return false;
+  return end < TODAY_E;
+}
+var planDate = null;   /* ISO yyyy-mm-dd when planning ahead; null = now mode */
+/* 2026-09-03 (Laurie): "now mode" shows only events in the next 24 hours —
+   today and tomorrow, at calendar-day granularity. Was 6 days. Plan-ahead
+   mode is unaffected. */
+var NOW_WINDOW_DAYS = 1;
+/* Which weekdays a continuous run is actually open, read from its Time field
+   (preferred) or, failing that, its title ("Medusa Wednesdays: Adult Crafts").
+   Handles lists ("Fri–Sat 11:00 AM – 5:00 PM; Sun 11:00 AM – 3:00 PM"), ranges
+   ("Wed–Sun", "Friday through Sunday"), and "daily"/"every day". Returns null
+   when no weekday is named — such runs stay visible on every day of their span
+   rather than us guessing an open schedule that isn't in the data. */
+function openDaysOf(r){
+  var IDX = {sun:0,mon:1,tue:2,wed:3,thu:4,fri:5,sat:6};
+  function scan(text){
+    if(!text) return null;
+    var t = String(text);
+    if(/\bdaily\b|\bevery\s?day\b|\b7 days\b/i.test(t)) return {0:1,1:1,2:1,3:1,4:1,5:1,6:1};
+    var rx = /\b(sun(?:day)?|mon(?:day)?|tue(?:s(?:day)?)?|wed(?:nesday)?|thu(?:r(?:s(?:day)?)?)?|fri(?:day)?|sat(?:urday)?)s?\b/gi;
+    var out = null, m, prev = null;
+    while((m = rx.exec(t))){
+      var d = IDX[m[1].slice(0,3).toLowerCase()];
+      out = out || {};
+      if(prev !== null){
+        var between = t.slice(prev.end, m.index);
+        if(/^\s*(?:[-–—]|to|through|thru)\s*$/i.test(between)){
+          for(var i = prev.d; i !== d; i = (i+1)%7){ out[i] = 1; }
+        }
+      }
+      out[d] = 1;
+      prev = {d:d, end:rx.lastIndex};
+    }
+    return out;
+  }
+  return scan(r.tm) || scan(r.t);
+}
+function isoAddDays(iso, n){
+  var d = new Date(iso+'T12:00:00'); d.setDate(d.getDate()+n);
+  return d.toISOString().slice(0,10);
+}
+/* Classify an event so routine things don't crowd out unique programming:
+   'recurring' = repeats (has a next-occurrence rule),
+   'longrun'   = a continuous run longer than a week (gallery/exhibit/season),
+   'oneoff'    = a single day or a short multi-day festival (<= 7 days).
+   Short festivals stay 'oneoff' so they show throughout their brief run. */
+function daysBetween(a, b){
+  return Math.round((new Date(b+'T12:00:00') - new Date(a+'T12:00:00'))/86400000);
+}
+function evClass(r){
+  if(r.ty!=='events') return 'oneoff';
+  if(r.nextOcc) return 'recurring';
+  var s = r.d1, e = r.d2 || r.d1;
+  if(s && e && daysBetween(s, e) > 7) return 'longrun';
+  return 'oneoff';
+}
+function evVisible(r){
+  if(r.ty!=='events') return true;
+  var s = r.d1, e = r.d2 || r.d1;
+  if(!s) return false;
+  if(r.nextOcc){
+    if(planDate) return r.nextOcc <= planDate && (!e || planDate <= e);
+    return r.nextOcc <= isoAddDays(TODAY_E,NOW_WINDOW_DAYS) && r.nextOcc >= TODAY_E;
+  }
+  var ref = planDate || TODAY_E;
+  /* A continuous run that has already begun only shows on days it is actually
+     OPEN, when its Time field (or title) names weekdays — a gallery open
+     Fri–Sun disappears from Monday's list instead of sitting there stale.
+     Runs that name no weekdays keep showing (we don't guess), but sink to the
+     bottom of the list via evStartKey. */
+  if(e !== s && s <= ref && !crossesMidnight(r)){
+    var od = openDaysOf(r);
+    if(od && !od[new Date(ref+'T12:00:00').getDay()]) return false;
+  }
+  if(evClass(r)==='longrun'){
+    return ref >= s && ref <= e;                          /* visible any open day of its run */
+  }
+  if(planDate) return s <= planDate && planDate <= e;      /* on the chosen date */
+  return s <= isoAddDays(TODAY_E,NOW_WINDOW_DAYS) && e >= TODAY_E;   /* today + tomorrow */
+}
+function fmtDate(iso){
+  if(!iso) return '';
+  var d = new Date(iso+'T12:00:00');
+  return d.toLocaleDateString('en-US',{weekday:'short', month:'short', day:'numeric', year:'numeric'});
+}
+var DOW_FULL=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+var DOW_RE=/\b(mon|tues?|wed(?:nes)?|thur?s?|fri|satur?|sun)(day)?s?\b/i;
+var DOW_CANON={mon:'Monday',tue:'Tuesday',tues:'Tuesday',wed:'Wednesday',wednes:'Wednesday',
+  thu:'Thursday',thur:'Thursday',thurs:'Thursday',fri:'Friday',satur:'Saturday',sat:'Saturday',sun:'Sunday'};
+/* Recurrence weekday for a long-run event, or '' if it can't be known honestly.
+   Precedence: (1) an explicit weekday stated in the Time or title — the maintainer's
+   own word; (2) a weekday COMPUTED from d1 only when d1 and d2 fall on the SAME
+   weekday (self-verifying: a true weekly series' endpoints share a weekday). A lone
+   d1 is not trusted — season boundaries like Jan 1 are placeholders, not occurrences. */
+function recurWeekday(r){
+  var hay=((r.tm||'')+' '+(r.t||''));
+  var m=hay.match(DOW_RE);
+  if(m){ var key=m[1].toLowerCase(); if(DOW_CANON[key]) return DOW_CANON[key]; }
+  // Fallback: compute from endpoints, but ONLY for a bounded seasonal run (roughly a
+  // single season, < 300 days). A full-calendar-year placeholder (Jan 1 – Dec 31)
+  // has coincidentally-equal endpoint weekdays yet tells us nothing about the real
+  // meeting day, so we refuse to guess it. Truth over a plausible fabrication.
+  if(r.d1 && r.d2 && r.d2!==r.d1){
+    var span=Math.round((new Date(r.d2+'T12:00:00')-new Date(r.d1+'T12:00:00'))/86400000);
+    if(span<300){
+      var w1=new Date(r.d1+'T12:00:00').getDay(), w2=new Date(r.d2+'T12:00:00').getDay();
+      if(w1===w2) return DOW_FULL[w1];
+    }
+  }
+  return '';
+}
+/* Does the Time string carry an ordinal recurrence ("1st & 3rd Tuesdays")? Those are
+   not simple weeklies — we show the tm verbatim and never prepend a bare weekday. */
+function isOrdinalRecur(tm){
+  return /\b(1st|2nd|3rd|4th|first|second|third|fourth|last)\b/i.test(tm||'');
+}
+/* Strip a leading weekday token from a Time string so we don't print the day twice
+   once recurWeekday() has surfaced it. "Fridays, 6:30 PM" -> "6:30 PM". Ordinal
+   patterns ("1st & 3rd Tuesdays") are left intact — they're not simple weeklies. */
+function timeSansWeekday(tm){
+  if(!tm) return '';
+  if(/\b(1st|2nd|3rd|4th|first|second|third|fourth|last)\b/i.test(tm)) return tm;
+  return tm.replace(/^\s*(?:mon|tues?|wed(?:nes)?|thur?s?|fri|satur?|sun)(?:day)?s?\s*[,·—–-]?\s*/i,'').trim() || tm;
+}
+function fmtRange(r){
+  if(!r.d1) return '';
+  // Recurring/seasonal events: show the NEXT actual occurrence (computed at build
+  // time as nextOcc), not the raw season range — far more useful at a glance.
+  // Plain-text marker (no HTML) so it renders safely whether the caller escapes it,
+  // sets textContent, or injects as innerHTML.
+  if(r.nextOcc){
+    return fmtDate(r.nextOcc) + ' · recurring';
+  }
+  if(!r.d2 || r.d2===r.d1) return fmtDate(r.d1);
+  if(crossesMidnight(r)) return fmtDate(r.d1);   /* overnight gig: one evening, one date */
+  return fmtDate(r.d1)+' – '+fmtDate(r.d2);
+}
+/* The "When" line for events. Long seasonal series lead with the day-of-week and
+   time (what a user acts on) and trail the full run as a freshness signal:
+       Wednesdays · 4:00–7:00 PM   (through Oct 28, 2026)
+   Everything else keeps the plain date (+ time). */
+function whenLine(r){
+  var isRange = r.d1 && r.d2 && r.d2!==r.d1;
+  var spanDays = isRange ? Math.round((new Date(r.d2+'T12:00:00')-new Date(r.d1+'T12:00:00'))/86400000) : 0;
+  /* A run whose Time field names several weekdays ("Fri–Sat 11:00 AM – 5:00 PM;
+     Sun 11:00 AM – 3:00 PM") shows that schedule verbatim — never a computed
+     single weekday, which would misstate the schedule. */
+  if(!r.nextOcc && spanDays>1 && r.tm){
+    var dtoks = r.tm.match(/\b(sun|mon|tue|wed|thu|fri|sat)/gi);
+    if(dtoks && dtoks.length>=2){
+      return esc(r.tm)+' <span class="whenrange">(through '+esc(fmtDate(r.d2))+')</span>';
+    }
+  }
+  if(!r.nextOcc && spanDays>7){
+    // Ordinal series ("1st & 3rd Tuesdays"): show the maintainer's phrasing as-is,
+    // just moved ahead of the range. No computed weekday, no de-duping.
+    if(isOrdinalRecur(r.tm)){
+      return esc(r.tm)+' <span class="whenrange">(through '+esc(fmtDate(r.d2))+')</span>';
+    }
+    var wd=recurWeekday(r);
+    if(wd){
+      var t=timeSansWeekday(r.tm);
+      var lead=wd+'s'+(t?' · '+esc(t):'');
+      return lead+' <span class="whenrange">(through '+esc(fmtDate(r.d2))+')</span>';
+    }
+  }
+  return esc(fmtRange(r))+(r.tm?' · '+esc(r.tm):'');
+}
+function searchText(r){
+  if(r.ty==='poi') return [r.t,r.tags.join(' '),r.addr,r.s].join(' ');
+  if(r.ty==='events') return [r.t,r.ven,r.addr,r.s,(r.tags?r.tags.join(' '):''),(r.online?'online':'')].join(' ');
+  return [r.t,r.b,r.n,r.p,r.s,r.rb,(r.tags?r.tags.join(' '):'')].join(' ');
+}
+
+/* geodesic-ish circle polygon for uncertainty halos */
+function circlePoly(lat, lng, meters){
+  var pts=[], n=72;
+  var dLat = meters/111320;
+  var dLng = meters/(111320*Math.cos(lat*Math.PI/180));
+  for(var i=0;i<=n;i++){
+    var a = 2*Math.PI*i/n;
+    pts.push([lng + dLng*Math.cos(a), lat + dLat*Math.sin(a)]);
+  }
+  return {type:'Feature', properties:{}, geometry:{type:'Polygon', coordinates:[pts]}};
+}
+var EMPTY_FC = {type:'FeatureCollection', features:[]};
+
+/* ---- marker images (drawn to canvas so every OS renders identically) ---- */
+function charSupported(ch){
+  try{
+    function pix(chr){
+      var tc=document.createElement('canvas'); tc.width=tc.height=32;
+      var tx=tc.getContext('2d'); tx.font='24px sans-serif';
+      tx.textAlign='center'; tx.textBaseline='middle'; tx.fillStyle='#000';
+      tx.fillText(chr,16,16);
+      return tx.getImageData(0,0,32,32).data.join(',');
+    }
+    var blank=pix(' ');
+    return pix(ch)!==blank && pix(ch)!==pix('\u0378');
+  }catch(e){ return false; }
+}
+/* Trail-marker pin background: a rounded-top, pointed-bottom shield (NPS-arrowhead
+   style), white fill + thin navy edge, on the 88×88 canvas. Replaces the old disc.
+   (Laurie, 2026-09-06) */
+function markerBg(x, size){
+  var cx=size/2, top=7, left=8, right=size-8, r=16, shoulder=size*0.60, tip=size-4;
+  x.beginPath();
+  x.moveTo(left, top+r);
+  x.quadraticCurveTo(left, top, left+r, top);          /* top-left corner */
+  x.lineTo(right-r, top);
+  x.quadraticCurveTo(right, top, right, top+r);        /* top-right corner */
+  x.lineTo(right, shoulder);                            /* right shoulder */
+  x.quadraticCurveTo(right, tip-6, cx, tip);           /* curve to bottom point */
+  x.quadraticCurveTo(left, tip-6, left, shoulder);     /* curve back up left */
+  x.closePath();
+  x.fillStyle='#ffffff'; x.fill();
+  x.lineWidth=2.5; x.strokeStyle='rgba(10,10,70,0.3)'; x.stroke();
+}
+var GLYPH_CY = 88*0.43;   /* glyph sits in the wide upper part of the shield */
+/* 𖦹 on a trail-marker shield; hand-drawn ring-and-rays replica if the font is missing */
+function glyphImageData(){
+  var size=88, c=document.createElement('canvas'); c.width=c.height=size;
+  var x=c.getContext('2d');
+  markerBg(x, size);
+  var ch='𖦹';
+  x.fillStyle='#000080';
+  if(charSupported(ch)){
+    x.font='60px "Noto Sans Mende Kikakui",sans-serif';
+    x.textAlign='center'; x.textBaseline='middle';
+    x.fillText(ch, size/2, GLYPH_CY+1);
+  } else {
+    var cx=size/2, cy=GLYPH_CY;
+    x.strokeStyle='#000080'; x.lineCap='round';
+    x.lineWidth=6;
+    x.beginPath(); x.arc(cx,cy,17,0,Math.PI*2); x.stroke();
+    x.lineWidth=5.5;
+    for(var i=0;i<8;i++){
+      var a=i*Math.PI/4;
+      x.beginPath();
+      x.moveTo(cx+24*Math.cos(a), cy+24*Math.sin(a));
+      x.lineTo(cx+35*Math.cos(a), cy+35*Math.sin(a));
+      x.stroke();
+    }
+  }
+  return x.getImageData(0,0,size,size);
+}
+/* Night version of the folklore pin: a hand-drawn spiral in candle-yellow with
+   a baked-in ember glow, no disc. Drawn with canvas paths rather than a font
+   glyph so it looks the same on every device (the 𖦹 day glyph depends on font
+   coverage). Same 88×88 canvas contract as the day glyph. */
+function glyphImageDataNight(){
+  var size=88, c=document.createElement('canvas'); c.width=c.height=size;
+  var x=c.getContext('2d'), cx=size/2, cy=size/2;
+  var g=x.createRadialGradient(cx,cy,3, cx,cy,size/2);
+  g.addColorStop(0,'rgba(255,190,60,0.50)'); g.addColorStop(0.5,'rgba(255,140,26,0.20)'); g.addColorStop(1,'rgba(255,120,20,0)');
+  x.fillStyle=g; x.beginPath(); x.arc(cx,cy,size/2,0,Math.PI*2); x.fill();
+  /* Archimedean spiral, ~2.6 turns, tapering from the hot core outward */
+  x.lineCap='round'; x.lineJoin='round';
+  x.shadowColor='rgba(255,150,40,0.95)'; x.shadowBlur=9;
+  var turns=2.6, steps=160, rmax=27;
+  for(var pass=0; pass<2; pass++){          /* outer soft stroke, then bright core stroke */
+    x.beginPath();
+    for(var i=0;i<=steps;i++){
+      var t=i/steps, a=t*turns*Math.PI*2, r=1.5+t*rmax;
+      var px=cx+r*Math.cos(a), py=cy+r*Math.sin(a);
+      if(i===0) x.moveTo(px,py); else x.lineTo(px,py);
+    }
+    x.strokeStyle = pass===0 ? 'rgba(255,160,50,0.85)' : '#ffd36b';
+    x.lineWidth   = pass===0 ? 6.5 : 3.6;
+    x.stroke();
+  }
+  x.shadowBlur=0; x.fillStyle='#fff1c0';
+  x.beginPath(); x.arc(cx,cy,2.6,0,Math.PI*2); x.fill();   /* the ember at the heart */
+  return x.getImageData(0,0,size,size);
+}
+/* white disc bearing a colored per-row glyph (POIs, Events) */
+function discGlyph(fg, ch){
+  var size=88, c=document.createElement('canvas'); c.width=c.height=size;
+  var x=c.getContext('2d');
+  markerBg(x, size);
+  ch = (ch && ch.trim()) ? ch.trim() : '●';
+  if(!charSupported(ch)) ch='●';
+  x.fillStyle=fg; x.textAlign='center'; x.textBaseline='middle';
+  x.font='52px "Montserrat","Noto Sans",sans-serif';
+  x.fillText(ch, size/2, GLYPH_CY+2);
+  return x.getImageData(0,0,size,size);
+}
+
+/* ============ SLUGS, DEEP LINKS & HEARTS ============ */
+var SLUG_OF = {}, KEY_OF = {};
+function slugify(x){
+  return x.toLowerCase().replace(/['\u2019"\u201c\u201d]/g,'')
+    .replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'').slice(0,60) || 'entry';
+}
+(function buildSlugs(){
+  /* build.py now emits `sl` per record (same algorithm, same order); the
+     client-side computation stays only as a fallback for an older data.js */
+  var used = {};
+  records.forEach(function(r){
+    var sl = r.sl;
+    if(!sl){
+      var base = slugify(r.t); sl = base; var n = 2;
+      while(used[sl]){ sl = base + '-' + (n++); }
+    }
+    used[sl] = true;
+    SLUG_OF[r._k] = sl; KEY_OF[sl] = r._k;
+  });
+})();
+function setHash(k){
+  try{ history.replaceState(null, '', '#' + (SLUG_OF[k]||'')); }catch(e){}
+}
+function applyHash(){
+  var sl = decodeURIComponent((location.hash||'').replace(/^#/,''));
+  if(!sl || !(sl in KEY_OF)) return;
+  var k = KEY_OF[sl];
+  var r = records.find(function(x){return x._k===k;});
+  if(!r) return;
+  if(r.tier==='none' || !map) openDetail(k);
+  else selectRecord(k, {pan:true, popup:true});
+}
+window.addEventListener('hashchange', applyHash);
+
+var LIKE_API = 'https://abacus.jasoncameron.dev';
+var LIKE_NS = 'nyhilltowners-explore-hills';
+/* Hearts you've left yourself are remembered in this browser so the button
+   shows as yours on the atlas AND the directory; the count itself is global. */
+var MINE_KEY = 'nyh-hearted';
+function myHearts(){ try{ return JSON.parse(localStorage.getItem(MINE_KEY)||'[]'); }catch(e){ return []; } }
+function rememberHeart(sl){ try{ var m = myHearts(); if(m.indexOf(sl)<0){ m.push(sl); localStorage.setItem(MINE_KEY, JSON.stringify(m.slice(-500))); } }catch(e){} }
+function likeWidget(r){
+  var sl = SLUG_OF[r._k], mine = myHearts().indexOf(sl) >= 0, h = r.h || 0;
+  return '<button class="likebtn'+(mine?' mine':'')+'" data-slug="'+esc(sl)+'" '
+    + 'onclick="likeHit(this)" title="'+(mine?'You left a heart here':'Leave a heart')+'">&#9829;<span class="lc">'+(h>0?' '+h:'&nbsp;')+'</span></button>';
+}
+function loadLikes(scope){
+  var els = (scope||document).querySelectorAll ? (scope||document).querySelectorAll('.likebtn') : [];
+  Array.prototype.forEach.call(els, function(el){
+    var sl = el.getAttribute('data-slug');
+    fetch(LIKE_API+'/get/'+LIKE_NS+'/'+encodeURIComponent(sl))
+      .then(function(r){return r.json();})
+      .then(function(d){ if(d && typeof d.value==='number' && d.value>0)
+        el.querySelector('.lc').textContent = ' '+d.value; })
+      .catch(function(){});
+  });
+}
+function likeHit(el){
+  var sl = el.getAttribute('data-slug');
+  var lc = el.querySelector('.lc');
+  var cur = parseInt((lc.textContent||'').trim(),10) || 0;
+  lc.textContent = ' '+(cur+1); /* optimistic — the fun must not lag */
+  rememberHeart(sl); el.classList.add('mine'); el.title = 'You left a heart here';
+  fetch(LIKE_API+'/hit/'+LIKE_NS+'/'+encodeURIComponent(sl))
+    .then(function(r){return r.json();})
+    .then(function(d){ if(d && typeof d.value==='number') lc.textContent=' '+d.value; })
+    .catch(function(){});
+}
+
+/* ============ STATE ============ */
+var activeId=null, currentPopup=null;
+var catsOn = {};
+
+/* ============ MAP STYLE ============ */
+var ESRI_ATTR = 'Tiles &copy; Esri';
+var style = {
+  version: 8,
+  sources: {
+    'usgs':      {type:'raster', tiles:['https://basemap.nationalmap.gov/arcgis/rest/services/USGSTopo/MapServer/tile/{z}/{y}/{x}'], tileSize:256, maxzoom:16, attribution:'USGS The National Map'},
+    'worldtopo': {type:'raster', tiles:['https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}'], tileSize:256, maxzoom:19, attribution:ESRI_ATTR+' — World Topographic Map'},
+    'sat':       {type:'raster', tiles:['https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'], tileSize:256, maxzoom:19, attribution:ESRI_ATTR+' — World Imagery'},
+    'satlabels': {type:'raster', tiles:['https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}'], tileSize:256, maxzoom:19, attribution:ESRI_ATTR},
+    'osm':       {type:'raster', tiles:['https://tile.openstreetmap.org/{z}/{x}/{y}.png'], tileSize:256, maxzoom:19, attribution:'&copy; OpenStreetMap contributors'},
+    'hillshade': {type:'raster', tiles:['https://server.arcgisonline.com/ArcGIS/rest/services/Elevation/World_Hillshade/MapServer/tile/{z}/{y}/{x}'], tileSize:256, maxzoom:16, attribution:ESRI_ATTR+' — World Hillshade'},
+    'night':     {type:'raster', tiles:['https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}'], tileSize:256, maxzoom:16, attribution:ESRI_ATTR+' — Dark Gray Canvas'},
+    'nightref':  {type:'raster', tiles:['https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Reference/MapServer/tile/{z}/{y}/{x}'], tileSize:256, maxzoom:16, attribution:ESRI_ATTR},
+    'world':     {type:'geojson', data:{type:'Feature',properties:{},geometry:{type:'Polygon',coordinates:[[[-180,-85],[180,-85],[180,85],[-180,85],[-180,-85]]]}}},
+    'folk':  {type:'geojson', data:EMPTY_FC},
+    'halo':  {type:'geojson', data:EMPTY_FC}
+  },
+  layers: [
+    {id:'base-usgs',      type:'raster', source:'usgs',      layout:{visibility:'none'}},
+    {id:'base-worldtopo', type:'raster', source:'worldtopo', layout:{visibility:'visible'}},
+    {id:'base-sat',       type:'raster', source:'sat',       layout:{visibility:'none'}},
+    {id:'base-osm',       type:'raster', source:'osm',       layout:{visibility:'none'}},
+    /* Firelight basemap: Esri's dark canvas, hillshade breathed over it for
+       the Helderberg relief, then an ember wash so the gray reads warm. */
+    {id:'base-night',     type:'raster', source:'night',     layout:{visibility:'none'}, paint:{'raster-brightness-max':0.8}},
+    {id:'ov-nightshade',  type:'raster', source:'hillshade', layout:{visibility:'none'}, paint:{'raster-opacity':0.28}},
+    {id:'ov-emberwash',   type:'fill',   source:'world',     layout:{visibility:'none'}, paint:{'fill-color':'#ff8c1a','fill-opacity':0.07}},
+    {id:'ov-hillshade',   type:'raster', source:'hillshade', layout:{visibility:'none'}, paint:{'raster-opacity':0.45}},
+    {id:'base-satlabels', type:'raster', source:'satlabels', layout:{visibility:'none'}},
+    {id:'base-nightref',  type:'raster', source:'nightref',  layout:{visibility:'none'}, paint:{'raster-opacity':0.75}},
+    {id:'halo-fill', type:'fill', source:'halo', paint:{'fill-color':['coalesce',['get','col'],'#888'], 'fill-opacity':0.08}},
+    {id:'halo-line', type:'line', source:'halo', paint:{'line-color':['coalesce',['get','col'],'#888'], 'line-width':1.6, 'line-dasharray':[4,3]}},
+    {id:'pins', type:'circle', source:'folk',
+      filter:['==',['get','ty'],'other'],
+      paint:{
+        'circle-color':'#000080',
+        'circle-radius':['interpolate',['linear'],['zoom'], 4,10.5, 9,16.5, 13,21],
+        'circle-stroke-color':'#ffffff','circle-stroke-width':2
+      }},
+    /* Night-only: a soft ember halo under each folklore pin. Radius and
+       opacity are driven by NIGHT_T (updated by the animation loop) plus a
+       per-pin phase so the field breathes unevenly, like coals. */
+    {id:'folk-glow', type:'circle', source:'folk',
+      filter:['==',['get','ty'],'folklore'], layout:{visibility:'none'},
+      paint:{
+        'circle-color':'#ff9a2e', 'circle-blur':1, 'circle-pitch-alignment':'map',
+        'circle-radius':['interpolate',['linear'],['zoom'], 4,14, 9,22, 13,32],
+        'circle-opacity':0.6
+      }},
+    {id:'folk-pins', type:'symbol', source:'folk',
+      filter:['==',['get','ty'],'folklore'],
+      layout:{'icon-image':['case',['==',['get','night'],1],'folkGlyphNight','folkGlyph'],'icon-allow-overlap':true,'icon-ignore-placement':true,
+        'icon-size':['interpolate',['linear'],['zoom'], 4,0.32, 9,0.48, 13,0.64]}},
+    {id:'disc-pins', type:'symbol', source:'folk',
+      filter:['all',['!=',['get','ty'],'folklore'],['!=',['get','cat'],'Points of Interest']],
+      layout:{'icon-image':['concat','gd-',['case',['all',['==',['get','dim'],1],['!=',['get','ty'],'events']],'#9aa0a6',['get','col']],'-',['get','g']],'icon-allow-overlap':true,'icon-ignore-placement':true,
+        'symbol-sort-key':['case',['all',['==',['get','dim'],1],['!=',['get','ty'],'events']],0,1],
+        'icon-size':['interpolate',['linear'],['zoom'], 4,['*',['coalesce',['get','imm'],1],0.32], 9,['*',['coalesce',['get','imm'],1],0.48], 13,['*',['coalesce',['get','imm'],1],0.64]]},
+      paint:{'icon-opacity':['case',['all',['==',['get','dim'],1],['!=',['get','ty'],'events']],0.55,1]}},
+    {id:'poi-pins', type:'symbol', source:'folk',
+      filter:['==',['get','cat'],'Points of Interest'],
+      layout:{'icon-image':['concat','gd-',['case',['==',['get','dim'],1],'#9aa0a6',['get','col']],'-',['get','g']],'icon-allow-overlap':true,'icon-ignore-placement':true,
+        'symbol-sort-key':['case',['==',['get','dim'],1],0,1],
+        'icon-size':['interpolate',['linear'],['zoom'], 4,0.24, 9,0.36, 13,0.48]},
+      paint:{'icon-opacity':['case',['==',['get','dim'],1],0.55,1]}},
+    {id:'pin-selected', type:'circle', source:'folk', filter:['==',['get','k'],'__none__'],
+      paint:{
+        'circle-color':'rgba(0,0,0,0)',
+        'circle-radius':['interpolate',['linear'],['zoom'], 4,18, 9,26, 13,33],
+        'circle-stroke-color':'#39b7ff', 'circle-stroke-width':2.5
+      }}
+  ]
+};
+
+/* ============ MAP INIT (guarded) ============ */
+function showMapNotice(title, body){
+  var w = document.getElementById('mapwrap');
+  var n = document.getElementById('mapnotice');
+  if(!n){
+    n = document.createElement('div');
+    n.id = 'mapnotice';
+    n.style.cssText = 'position:absolute;inset:0;z-index:2000;display:flex;align-items:center;justify-content:center;padding:30px;background:#dfe3da;';
+    w.appendChild(n);
+  }
+  n.innerHTML = '<div style="max-width:460px;background:#00004d;color:#dde0f2;border:1px solid #2e2ea8;border-radius:12px;padding:22px 26px;box-shadow:0 8px 30px rgba(0,0,0,.35);line-height:1.55;">'
+    + '<div style="font-family:Montserrat,ui-sans-serif,system-ui,sans-serif;font-size:10px;letter-spacing:.22em;text-transform:uppercase;color:#a9b0dd;margin-bottom:6px;">Map cannot draw here</div>'
+    + '<div style="font-size:16px;font-weight:600;margin-bottom:8px;">'+title+'</div>'
+    + '<div style="font-size:13.5px;color:#c3c8e8;">'+body+'</div></div>';
+}
+var IN_SANDBOX = /claudeusercontent|claude\.ai/i.test(location.hostname);
+var map = null, tileErrors = 0, noticeShown = false;
+
+if(typeof maplibregl === 'undefined'){
+  showMapNotice('The map engine could not load.',
+    'The MapLibre library was blocked or unreachable. If you are viewing this inside a restricted preview, <b>open the published site or the file directly in your browser</b>. The catalog list is still fully browsable.');
+  noticeShown = true;
+} else {
+try{
+map = new maplibregl.Map({
+  container:'map', style:style, center:HOME, zoom:10.9,   /* regional default: Cobleskill–Hudson River, Central Bridge–Windham (Laurie, Aug 29) */
+  maxZoom:19, minZoom:3, attributionControl:{compact:true}
+});
+map.addControl(new maplibregl.NavigationControl({visualizePitch:true}), 'top-left');
+map.addControl(new maplibregl.ScaleControl({unit:'imperial'}), 'bottom-left');
+map.addControl(new maplibregl.GeolocateControl({
+  positionOptions:{enableHighAccuracy:true}, trackUserLocation:true, showUserHeading:true
+}), 'top-left');
+map.on('styleimagemissing', function(e){
+  if(map.hasImage(e.id)) return;
+  if(e.id==='folkGlyph'){ map.addImage(e.id, glyphImageData()); return; }
+  if(e.id==='folkGlyphNight'){ map.addImage(e.id, glyphImageDataNight()); return; }
+  var m = e.id.match(/^gd-(#[0-9a-fA-F]{6})-([\s\S]*)$/);
+  if(m) map.addImage(e.id, discGlyph(m[1], m[2]));
+});
+map.on('error', function(){
+  tileErrors++;
+  if(!noticeShown && (IN_SANDBOX || tileErrors > 6)){
+    noticeShown = true;
+    showMapNotice('Map tiles are being blocked.',
+      (IN_SANDBOX ? 'This preview sandbox blocks the USGS, Esri, and OpenStreetMap tile servers, so the map stays blank. '
+                  : 'Repeated tile requests are failing — check your connection or firewall. ')
+      + '<b>Open the published site (or this file) directly in your browser</b>; the full map works there. The catalog list remains browsable meanwhile.');
+  }
+});
+}catch(err){
+  showMapNotice('The map engine failed to start.',
+    'Error: '+esc(err.message||String(err))+'. If you are viewing this inside a restricted preview, open the published site directly in your browser.');
+  map = null; noticeShown = true;
+}
+}
+if(IN_SANDBOX && map && !noticeShown){
+  noticeShown = true;
+  showMapNotice('This preview cannot show the live map.',
+    'The preview sandbox blocks the map tile servers. <b>Open the published site (or this file) directly in your browser</b> — the full map, 3D terrain, and layers all work there. The catalog list is still browsable here.');
+}
+
+/* ============ GEOJSON BUILD ============ */
+var DOW_KEYS=['sun','mon','tue','wed','thu','fri','sat'];
+function _parseTimes(str){
+  var out=[], rx=/(\d{1,2})(?::(\d{2}))?\s*([AP])\.?\s*M/gi, m;
+  while((m=rx.exec(str))){
+    var h=parseInt(m[1],10)%12; if(m[3].toUpperCase()==='P') h+=12;
+    out.push(h*60+(m[2]?parseInt(m[2],10):0));
+  }
+  return out;
+}
+function isClosedNow(r){
+  /* Food trucks are mobile: don't treat "no posted hours" as open — they only
+     read as open during a real, confirmed window. (Laurie, 2026-09-06) */
+  var isTruck = (r.tags||[]).some(function(t){ return /food\s*truck|food\s*cart|mobile|pop.?up|nature\s*bus\s*stop/i.test(t); })
+             || /food\s*truck|foodtruck|food\s*cart/i.test(r.t||'');
+  if(!r.hrs) return isTruck;
+  if(planDate){                                 /* planning mode: day-level only */
+    var pc=(r.hrs[DOW_KEYS[new Date(planDate+'T12:00:00').getDay()]]||'').trim();
+    if(isTruck){                                /* trucks: dim unless a real window that day */
+      if(!pc || /closed/i.test(pc)) return true;
+      if(/24\s*hours|open\s*24|always\s*open/i.test(pc)) return false;
+      return _parseTimes(pc).length < 2;
+    }
+    return /closed/i.test(pc);                  /* dim only a stated Closed day */
+  }
+  var cell=(r.hrs[DOW_KEYS[new Date().getDay()]]||'').trim();
+  if(!cell) return isTruck;                     /* trucks w/o today's hours → dim; others → open */
+  if(/closed/i.test(cell)) return true;
+  if(/24\s*hours|open\s*24|always\s*open/i.test(cell)) return false;
+  var ts=_parseTimes(cell);
+  if(ts.length<2) return isTruck;               /* unparseable: trucks dim, others don't */
+  var now=new Date(), nm=now.getHours()*60+now.getMinutes();
+  for(var i=0;i+1<ts.length;i+=2){
+    var s=ts[i], e=ts[i+1];
+    if(e<=s){ if(nm>=s || nm<e) return false; } /* overnight range */
+    else if(nm>=s && nm<e) return false;
+  }
+  return true;
+}
+function isDimmed(r){
+  if(r.ty==='events'){
+    var ref = planDate || TODAY_E;
+    return r.d1 > ref;         /* announced but not yet begun: gray */
+  }
+  return isClosedNow(r);
+}
+/* ===== Recurrence gate (2026-09-10, Laurie) =====
+   A POI with a standing meeting but no regular hours (e.g. a Legion post that
+   meets "2nd Tue 7:30 PM, except Jul & Aug") is only ON the map while that
+   meeting is actually happening; otherwise it is absent entirely — not faded.
+   Computed client-side from the record's Recur Weeks/Days/Except/Time so it is
+   correct even when the site hasn't been rebuilt today. Plan-ahead mode gates
+   at day granularity (is the planned date a meeting day?). */
+var _RG_DOW=['sun','mon','tue','wed','thu','fri','sat'];
+var _RG_MON=['jan','feb','mar','apr','may','jun','jul','aug','sep','oct','nov','dec'];
+function _rgToks(s){ return String(s||'').toLowerCase().split(/[;,\s]+/).map(function(x){return x.slice(0,3);}).filter(Boolean); }
+function recurMatchesDate(r, d){
+  var days=_rgToks(r.rd); if(days.indexOf(_RG_DOW[d.getDay()])<0) return false;
+  if(_rgToks(r.rx).indexOf(_RG_MON[d.getMonth()])>=0) return false;
+  var rw=String(r.rw||'').toLowerCase().trim();
+  if(rw==='all') return true;
+  var nth=Math.floor((d.getDate()-1)/7)+1;
+  var lastDay=new Date(d.getFullYear(), d.getMonth()+1, 0).getDate();
+  var isLast=(d.getDate()+7>lastDay);
+  return rw.split(/[;,\s]+/).some(function(t){ return t===String(nth) || (t==='last'&&isLast); });
+}
+var RG_BEFORE_MIN=30, RG_AFTER_MIN=150;   /* shown from 30 min before the meeting to 2.5 h after it starts */
+function recurActiveNow(r){
+  if(planDate) return recurMatchesDate(r, new Date(planDate+'T12:00:00'));
+  var now=new Date();
+  if(!recurMatchesDate(r, now)) return false;
+  var m=/(\d{1,2})(?::(\d{2}))?\s*(am|pm)/i.exec(r.rt||'');
+  if(!m) return true;                                   /* no time given: whole meeting day */
+  var h=parseInt(m[1],10)%12 + (m[3].toLowerCase()==='pm'?12:0), mi=parseInt(m[2]||'0',10);
+  var start=h*60+mi, cur=now.getHours()*60+now.getMinutes();
+  return cur>=start-RG_BEFORE_MIN && cur<=start+RG_AFTER_MIN;
+}
+/* Event marker imminence within the 6-day visible window:
+   active now = full size; within 48h = 0.5; else (3-7 days out) = 0.36. */
+function immScale(r){
+  if(r.ty!=='events') return 1;
+  var ref = planDate || TODAY_E;
+  var start = r.nextOcc || r.d1;
+  if(!start || start <= ref){
+    /* Active/ongoing. A long-run outside its opening/closing 2-day windows is
+       scenery rather than news: slightly smaller, matching its list demotion. */
+    if(evClass(r)==='longrun' && !longrunAtEdge(r, ref)) return 0.85;
+    return 1;
+  }
+  var MS=86400000;
+  var days = Math.round((new Date(start+'T12:00:00') - new Date(ref+'T12:00:00'))/MS);
+  /* Three legible tiers: active=1.0, within 48h=0.85, 3-7 days out=0.72.
+     The floor stays high enough that even the smallest pin renders as a full
+     disc (~30px at regional zoom) rather than a bare glyph. */
+  if(days <= 2) return 0.85;              /* starts within 48 hours */
+  return 0.72;                            /* 3-7 days out */
+}
+var LAST_FC = null;   /* most recent map feature set; the spark emitter reads folklore pins from it */
+/* deterministic 0–1 phase per pin, so co-located pins don't pulse in lockstep */
+function phaseOf(k){
+  var h = 0; k = String(k);
+  for(var i=0;i<k.length;i++){ h = (h*31 + k.charCodeAt(i)) | 0; }
+  return ((h >>> 0) % 1000) / 1000;
+}
+/* Folklore titles are written "Name: long subtitle" — the sidebar and popups show
+   only the part before the first colon; the detail panel keeps the full title. */
+function shortTitle(r){
+  var t = r.t || '';
+  if(r.ty === 'folklore'){ var i = t.indexOf(':'); if(i > 0) return t.slice(0, i).trim(); }
+  return t;
+}
+function toFC(list){
+  var feats = list
+    .filter(function(r){return r.tier!=='none';})
+    .map(function(r){ return {type:'Feature',
+      properties:{k:r._k, tier:r.tier, ty:r.ty, cat:r.cat, g:r.g||'', col:r.col,
+        dim:isDimmed(r)?1:0, imm:immScale(r), night:isNight()?1:0, ph:phaseOf(r._k)},
+      geometry:{type:'Point', coordinates:[r.lng, r.lat]}};
+    });
+  spreadCollisions(feats);
+  LAST_FC = {type:'FeatureCollection', features:feats};
+  return LAST_FC;
+}
+/* When several pins share (almost) the same coordinate they stack and only the
+   top one is clickable — a "crash". We fan co-located pins out around their shared
+   point in a small ring so each is reachable. The offset is deterministic (keyed by
+   the stable feature id) so a given event always lands in the same spot, and tiny
+   (a few meters) so the cluster still reads as one place. */
+function spreadCollisions(feats){
+  var groups = {};
+  feats.forEach(function(f){
+    // key by ~11m grid so near-identical points (e.g. two library events) group together
+    var key = f.geometry.coordinates[1].toFixed(4)+','+f.geometry.coordinates[0].toFixed(4);
+    (groups[key] || (groups[key] = [])).push(f);
+  });
+  Object.keys(groups).forEach(function(key){
+    var g = groups[key];
+    if(g.length < 2) return;
+    // sort by id for stable ordering, then fan out on a ring
+    g.sort(function(a,b){ return a.properties.k < b.properties.k ? -1 : 1; });
+    var lat = g[0].geometry.coordinates[1];
+    // ~0.00016 deg latitude ≈ 18m; scale longitude by cos(lat) so the ring stays round
+    var R = 0.00016, cos = Math.cos(lat*Math.PI/180) || 1;
+    // rings of up to 8; grow radius for larger stacks so they don't overlap
+    g.forEach(function(f, i){
+      if(i === 0) return;            // leave the first pin on the true point
+      var ring = Math.ceil(i/8), idx = (i-1) % 8;
+      var ang = (idx/8) * 2*Math.PI + ring*0.4;   // offset each ring's phase
+      var rad = R * ring;
+      f.geometry.coordinates = [
+        f.geometry.coordinates[0] + (rad*Math.cos(ang))/cos,
+        f.geometry.coordinates[1] +  rad*Math.sin(ang)
+      ];
+    });
+  });
+}
+function refreshMapData(){
+  if(!map) return;
+  var src = map.getSource('folk');
+  // Mirror the list: while a query is active, draw the matching pins even if they
+  // fall outside the 6-day window. The query bounds the count, so no flood. With no
+  // query, the window still keeps the map to the near-term set.
+  if(src) src.setData(toFC(currentFilter(true)));
+}
+
+/* ============ FILTER / LIST ============ */
+function currentFilter(ignoreDateWindow){
+  var q = document.getElementById('q').value.trim().toLowerCase();
+  // When the user is actively searching, the list should reach the WHOLE corpus,
+  // not just the next-6-days window that keeps the map uncluttered. Callers that
+  // draw pins (the map) never pass this flag; the list passes it while a query is
+  // present so a search for a September festival surfaces even in July. Expired
+  // events are still excluded — search finds upcoming things, not the past.
+  var bypass = ignoreDateWindow && !!q;
+  return records.filter(function(r){
+    if(isExpired(r)) return false;
+    /* recurrence-gated POI: off the map/list outside its meeting window.
+       A typed search still reaches it (bypass), mirroring out-of-window events. */
+    if(r.rgate && !bypass && !recurActiveNow(r)) return false;
+    if(!bypass && !evVisible(r)) return false;
+    if(!catsOn[r.cat]) return false;
+    if(!q) return true;
+    return searchText(r).toLowerCase().indexOf(q)>=0;
+  });
+}
+
+function tagChips(r){
+  if(!r.tags || !r.tags.length) return '';
+  return r.tags.map(function(tg){
+    return '<span class="tag" data-tag="'+esc(tg)+'" '
+      + 'onclick="event.stopPropagation();searchTag(this.dataset.tag)">'+esc(tg)+'</span>';
+  }).join('');
+}
+function searchTag(tg){
+  closeDetail();
+  if(currentPopup) currentPopup.remove();
+  var q = document.getElementById('q');
+  q.value = tg;
+  openSearch();   /* the query must stay visible while it filters */
+  renderList();
+}
+function cardMeta(r){
+  if(r.ty==='poi'){
+    return (r.tags.length ? tagChips(r) : '<span class="nat">Point of interest</span>')
+      + (r.addr?'<span>'+esc(r.addr)+'</span>':'');
+  }
+  if(r.ty==='events'){
+    return '<span class="nat">'+esc(fmtRange(r))+'</span>'
+      + (r.online?'<span class="onlinechip">Online</span>':'')
+      + (r.ven && !r.online?'<span>'+esc(r.ven)+'</span>':'');
+  }
+  return '<span class="nat">'+esc(r.n||'—')+'</span>'
+    + (r.p?'<span>'+esc(r.p)+'</span>':'')
+    + '<span class="chip '+r.tier+'">'+TIER_LABEL[r.tier]+'</span>'
+    + (r.tags && r.tags.length ? '<span class="tagrow">'+tagChips(r)+'</span>' : '');
+}
+
+function updateOnlinePill(){
+  var el = document.getElementById('onlinePill');
+  if(!el) return;
+  var n = records.filter(function(r){
+    return r.ty==='events' && r.online && !isExpired(r) && evVisible(r)
+      && catsOn['Events'] !== false;
+  }).length;
+  document.getElementById('onlineN').textContent = n;
+  el.style.display = n>0 ? '' : 'none';
+}
+function longrunAtEdge(r, ref){
+  /* First/last 2 days of a long continuous run: the "just opened" and "last
+     chance" windows. Used by MAP PIN sizing only — the list now always sorts
+     multi-day runs to the bottom of their day (Laurie, Aug 29 2026). */
+  var s = r.d1 || '9999-99-99', e = r.d2 || r.d1 || '9999-99-99';
+  return (ref <= isoAddDays(s, 1)) || (ref >= isoAddDays(e, -1));
+}
+function evStartKey(r){
+  /* Rank by the NEXT date you could actually attend, not the arbitrary listed
+     start. Recurring events rank on their true next occurrence. Continuous
+     multi-day runs (festivals, exhibits, seasons) sink below EVERY dated
+     single-day pick — they're available for days, weeks or months, so the list
+     leads with what is unique to a date; within that bottom section the run
+     ENDING soonest comes first (last chance). */
+  var s = r.d1 || '9999-99-99', e = r.d2 || r.d1 || '9999-99-99';
+  var nextDate;
+  if(r.nextOcc){
+    nextDate = r.nextOcc;                          /* real recurrence date */
+  } else {
+    nextDate = (s < TODAY_E) ? TODAY_E : s;        /* clamp past starts to today */
+  }
+  var cls = evClass(r);
+  if(cls !== 'recurring' && r.d1 && r.d2 && r.d2 !== r.d1 && !crossesMidnight(r)){
+    return '2|' + e + '|' + nextDate;              /* all multi-day runs: global bottom */
+  }
+  if(crossesMidnight(r)){                          /* overnight gig = one evening on d1 */
+    nextDate = (s < TODAY_E) ? TODAY_E : s;
+    e = s;
+  }
+  var live = (nextDate <= TODAY_E && e >= TODAY_E) ? 0 : 1;
+  var crank = cls === 'recurring' ? 1 : 0;         /* single-day one-offs lead, then recurrences */
+  return live + '|' + nextDate + '|' + crank + '|' + e;
+}
+function cmpListOrder(a, b){
+  var ae = a.ty==='events', be = b.ty==='events';
+  /* events as a block sort chronologically; non-events by proximity;
+     when mixed, events lead (they're time-sensitive) */
+  if(ae && be){
+    var ka = evStartKey(a), kb = evStartKey(b);
+    return ka < kb ? -1 : ka > kb ? 1 : 0;
+  }
+  if(ae !== be) return ae ? -1 : 1;
+  /* 2026-09-04 (Laurie): folklore surfaces the weird / supernatural / sci-fi and
+     the inspiring history first (build-time "wonder score" r.w), proximity only
+     breaks ties — the map centre shouldn't decide which stories lead. */
+  var af = a.ty==='folklore', bf = b.ty==='folklore';
+  if(af && bf){
+    /* 2026-09-05: Laurie's curated Feature Rank (workbook column) leads;
+       then the wonder score; proximity last. */
+    var fa = (a.fr!=null) ? a.fr : Infinity, fb = (b.fr!=null) ? b.fr : Infinity;
+    if(fa !== fb) return fa - fb;
+    var wa = a.w||0, wb = b.w||0;
+    if(wa !== wb) return wb - wa;
+    return a.dist - b.dist;
+  }
+  if(af !== bf) return af ? -1 : 1;
+  return a.dist - b.dist;
+}
+var LIST_ORDER = [];   /* sidebar's current order (kept; prev/next removed 2026-09-05) */
+function renderList(){
+  updateOnlinePill();
+  var list = currentFilter(true);
+  var mapped = list.filter(function(r){return r.tier!=='none';})
+    .sort(cmpListOrder);
+  var unplaced = list.filter(function(r){return r.tier==='none';});
+  LIST_ORDER = mapped.concat(unplaced).map(function(r){ return r._k; });
+  var w = document.getElementById('listwrap'); w.innerHTML='';
+
+  function head(txt){ var g=document.createElement('div'); g.className='grouphead'; g.innerHTML=txt; w.appendChild(g); }
+  function card(r, mappedFlag){
+    var c=document.createElement('div'); c.className='card'+(r._k===activeId?' active':'');
+    c.innerHTML = '<h3>'+(r.g?'<span class="cg">'+esc(r.g)+'</span>':'')+esc(shortTitle(r))+'</h3>'
+      + '<div class="meta">'+cardMeta(r)+'</div>';
+    c.onclick=function(){
+      if(mappedFlag){
+        // On mobile the sheet covers the map; drop it to the peek so the
+        // pin, pan, and popup are the immediate, visible response.
+        if(window.__sheetIsActive && window.__sheetIsActive() && window.__sheetCollapse) window.__sheetCollapse();
+        selectRecord(r._k,{pan:true,popup:true});
+      } else {
+        openDetail(r._k);
+      }
+    };
+    w.appendChild(c);
+  }
+  head('On the map');
+  if(!mapped.length){ var e=document.createElement('div'); e.className='empty';
+    e.textContent='Nothing on the map matches this search.'; w.appendChild(e); }
+  mapped.forEach(function(r){card(r,true);});
+  if(unplaced.length){
+    head('Unplaced — no locatable site in the source');
+    unplaced.forEach(function(r){card(r,false);});
+  }
+  refreshMapData();
+}
+
+/* ============ POPUPS / SELECTION ============ */
+function siblingsOf(rec){
+  return records.filter(function(x){
+    return x._k!==rec._k && x.tier!=='none' && !isExpired(x) && catsOn[x.cat]
+      && Math.abs(x.lat-rec.lat)<1e-5 && Math.abs(x.lng-rec.lng)<1e-5;
+  });
+}
+function popupBody(r){
+  if(r.ty==='poi'){
+    var today = r.hrs ? r.hrs[TODAY_DOW] : '';
+    return '<div class="pm">'+(r.addr?esc(r.addr):'')+'</div>'
+      + '<div>'+tagChips(r)+'</div>'
+      + (today?'<div class="pm">Today: '+esc(today)+'</div>':'')
+      + '<div class="ps">'+esc(r.s||'')+'</div>';
+  }
+  if(r.ty==='events'){
+    return '<div class="pm">'+whenLine(r)+'</div>'
+      + (r.ven?'<div class="pm">'+esc(r.ven)+'</div>':'')
+      + (r.tags && r.tags.length ? '<div>'+tagChips(r)+'</div>' : '')
+      + '<div class="ps">'+esc(r.s||'')+'</div>';
+  }
+  return '<div class="pm">'+esc(r.n||'—')+(r.p?' · '+esc(r.p):'')+'</div>'
+    + '<span class="chip '+r.tier+'">'+TIER_LABEL[r.tier]+'</span>'
+    + (r.tags && r.tags.length ? '<div>'+tagChips(r)+'</div>' : '')
+    + '<div class="ps">'+esc(r.s||r.b||'')+'</div>';
+}
+function imgTag(r, cls){
+  if(!r.img) return '';
+  return '<div class="'+cls+'"><img src="'+esc(r.img)+'" alt="" loading="lazy" '
+    + 'onerror="this.parentNode.style.display=\'none\'"></div>';
+}
+function popupHtml(rec){
+  var sibs = siblingsOf(rec).slice(0,5);
+  var h = '<div class="pop">'+imgTag(rec,'popimg')+'<h4>'+esc(shortTitle(rec))+'</h4>'
+    + popupBody(rec)
+    + '<button class="btn" onclick="openDetail(\''+rec._k+'\')">Full entry</button> '
+    + likeWidget(rec);
+  if((rec.ty==='poi' || rec.ty==='events' || rec.ty==='folklore') && rec.web){
+    var href = /^https?:\/\//i.test(rec.web) ? rec.web : 'https://'+rec.web;
+    h += ' <a class="btn" style="text-decoration:none;display:inline-block;" href="'
+      + esc(href) + '" target="_blank" rel="noopener">Visit site &rarr;</a>';
+  }
+  if(sibs.length){
+    h += '<div class="others">Also here: ';
+    h += sibs.map(function(s){return '<a onclick="openDetail(\''+s._k+'\')">'+esc(shortTitle(s))+'</a>';}).join(' · ');
+    h += '</div>';
+  }
+  return h + '</div>';
+}
+function showPopup(rec){
+  if(!map) return;
+  if(currentPopup) currentPopup.remove();
+  currentPopup = new maplibregl.Popup({offset:14, maxWidth:'300px'})
+    .setLngLat([rec.lng, rec.lat]).setHTML(popupHtml(rec)).addTo(map);
+  setHash(rec._k);
+  loadLikes(currentPopup.getElement ? currentPopup.getElement() : document);
+}
+
+function selectRecord(k, opts){
+  opts=opts||{};
+  activeId=k;
+  var r = records.find(function(x){return x._k===k;});
+  if(!r) return;
+  renderList();
+  var ac = document.querySelector('.card.active');
+  if(ac) ac.scrollIntoView({block:'nearest'});
+  if(!map){ if(opts.popup) openDetail(k); return; }
+  map.setFilter('pin-selected', ['==',['get','k'],k]);
+  var hs = map.getSource('halo');
+  if(r.ty==='folklore' && r.tier!=='none' && HALO_M[r.tier]>0){
+    var f = circlePoly(r.lat, r.lng, HALO_M[r.tier]);
+    f.properties.col = TIER_COLOR[r.tier];
+    hs.setData({type:'FeatureCollection', features:[f]});
+  } else hs.setData(EMPTY_FC);
+  if(r.tier!=='none' && opts.pan){
+    var z = r.ty!=='folklore' ? 15 : (r.tier==='precise'?15 : r.tier==='fair'?13 : 11);
+    map.flyTo({center:[r.lng,r.lat], zoom:Math.max(map.getZoom(), z), duration:900});
+    if(opts.popup) map.once('moveend', function(){ showPopup(r); });
+  } else if(opts.popup && r.tier!=='none'){
+    showPopup(r);
+  }
+}
+
+if(map){
+['pins','folk-pins','disc-pins','poi-pins'].forEach(function(ly){
+  map.on('click', ly, function(e){
+    var k = e.features[0].properties.k;
+    var r = records.find(function(x){return x._k===k;});
+    if(!r) return;
+    selectRecord(k,{pan:false});
+    showPopup(r);
+  });
+  map.on('mouseenter', ly, function(){ map.getCanvas().style.cursor='pointer'; });
+  map.on('mouseleave', ly, function(){ map.getCanvas().style.cursor=''; });
+});
+}
+
+/* ============ DETAIL ============ */
+function linkify(escaped){
+  return escaped.replace(/(https?:\/\/[^\s<]+[^\s<.,;:)\]])/g,
+    '<a class="weblink" href="$1" target="_blank" rel="noopener">$1</a>');
+}
+function fieldHtml(label, val, cls, rawHtml){
+  if(!val) return '';
+  var body = rawHtml ? val : linkify(esc(val));
+  return '<div class="field"><div class="fl">'+label+'</div><div class="fv '+(cls||'')+'">'+body+'</div></div>';
+}
+function linkHtml(label, url){
+  if(!url) return '';
+  var href = /^https?:\/\//i.test(url) ? url : 'https://'+url;
+  return '<div class="field"><div class="fl">'+label+'</div><div class="fv">'
+    + '<a class="weblink" href="'+esc(href)+'" target="_blank" rel="noopener">'+esc(url)+'</a></div></div>';
+}
+function hoursTable(h){
+  if(!h) return '';
+  var days=[['mon','Monday'],['tue','Tuesday'],['wed','Wednesday'],['thu','Thursday'],
+            ['fri','Friday'],['sat','Saturday'],['sun','Sunday']];
+  if(!days.some(function(d){return h[d[0]];})) return '';
+  var rows = days.map(function(d){
+    var cls = d[0]===TODAY_DOW ? ' class="today"' : '';
+    return '<tr'+cls+'><td>'+d[1]+'</td><td>'+esc(h[d[0]]||'—')+'</td></tr>';
+  }).join('');
+  return '<div class="field"><div class="fl">Hours</div><table class="hours">'+rows+'</table></div>';
+}
+
+function affiliationNote(){
+  return '<div class="afnote">'
+    + '<p>Please note none of these businesses or organizations are affiliated with us '
+    + 'in any way. We just love them and want them to be around for a long long time to come.</p>'
+    + '<p>Do you have an organization, business, or event you want to be included? '
+    + 'Please let us know! [Link to come]</p>'
+    + '</div>';
+}
+function detailBody(r){
+  var b = '<h2>'+esc(r.t)+' '+likeWidget(r)+'</h2>';
+  if(r.img){
+    b += '<div class="dimg"><img src="'+esc(r.img)+'" alt="" loading="lazy" '
+      + 'onerror="this.parentNode.style.display=\'none\'">'
+      + (r.cred?'<div class="cap">Image: '+esc(r.cred)+'</div>':'')
+      + '</div>';
+  }
+  if(r.ty==='poi'){
+    if(r.tags.length) b += '<div class="field"><div class="fl">What</div><div>'+tagChips(r)+'</div></div>';
+    b += fieldHtml('Address', r.addr);
+    b += fieldHtml('About', r.s, 'story');
+    b += hoursTable(r.hrs);
+    b += fieldHtml('Phone', r.ph);
+    b += linkHtml('Website', r.web);
+    b += affiliationNote();
+    return b;
+  }
+  if(r.ty==='events'){
+    b += fieldHtml('When', whenLine(r), '', true);
+    if(r.tags && r.tags.length) b += '<div class="field"><div class="fl">What</div><div>'+tagChips(r)+'</div></div>';
+    b += fieldHtml('Venue', r.ven);
+    b += fieldHtml('Address', r.addr);
+    b += fieldHtml('About', r.s, 'story');
+    b += linkHtml('Website', r.web);
+    b += affiliationNote();
+    return b;
+  }
+  b += '<div class="certline"><span class="chip '+r.tier+'">'+TIER_LABEL[r.tier]+'</span>'
+     + (r.c?'<span class="certnote">'+esc(r.c)+'</span>':'') + '</div>';
+  if(r.tags && r.tags.length) b += '<div class="tagrow">'+tagChips(r)+'</div>';
+  b += fieldHtml('Where', r.p);
+  if(r.b) b += fieldHtml('Tale / being', r.b);
+  b += fieldHtml('The story', r.s, 'story');
+  b += fieldHtml('In-story timeframe', r.tf);
+  b += linkHtml('Website', r.web);
+  b += '<div class="srcbox">'
+    + fieldHtml('Recorded by', r.rb)
+    + fieldHtml('Year recorded', r.yr)
+    + fieldHtml('Original publication', r.pub)
+    + fieldHtml('Source file', r.src)
+    + fieldHtml('Pages', r.pg)
+    + '</div>';
+  return b;
+}
+
+function openDetail(k){
+  var r = records.find(function(x){return x._k===k;});
+  if(!r) return;
+  activeId=k; renderList();
+  if(map) map.setFilter('pin-selected', ['==',['get','k'],k]);
+  var eyebrow = r.cat;
+  if(r.ty==='folklore') eyebrow += ' · ' + TIER_LABEL[r.tier];
+  if(r.ty==='events' && r.d1) eyebrow += ' · ' + fmtRange(r);
+  document.getElementById('d_eyebrow').textContent = eyebrow;
+  setHash(k);
+  document.getElementById('d_body').innerHTML = detailBody(r);
+  document.getElementById('d_body').scrollTop = 0;
+  loadLikes(document.getElementById('d_body'));
+  document.getElementById('btnFly').style.display = (r.tier==='none')?'none':'';
+  document.getElementById('btnFly').onclick = function(){
+    closeDetail(); selectRecord(k,{pan:true,popup:true});
+  };
+  document.getElementById('detail').classList.add('open');
+}
+function closeDetail(){ document.getElementById('detail').classList.remove('open'); }
+document.getElementById('btnBack').onclick = closeDetail;
+
+/* ============ CONTROLS ============ */
+document.getElementById('q').addEventListener('input', renderList);
+
+/* --- universal header: mobile menu + search overlay --- */
+var _hnav = document.getElementById('hnav');
+var _menuT = document.getElementById('menuToggle');
+var _sbar = document.getElementById('searchbar');
+var _sT = document.getElementById('searchToggle');
+var _sX = document.getElementById('searchClose');
+var _qEl = document.getElementById('q');
+_menuT.style.touchAction = 'manipulation';
+_sT.style.touchAction = 'manipulation';
+_menuT.addEventListener('click', function(e){
+  e.stopPropagation();
+  var open = _hnav.classList.toggle('open');
+  _menuT.setAttribute('aria-expanded', open ? 'true' : 'false');
+  if(open) closeSearch(false);   /* one dropdown at a time */
+});
+_hnav.addEventListener('click', function(){ _hnav.classList.remove('open'); _menuT.setAttribute('aria-expanded','false'); });
+document.addEventListener('click', function(e){
+  if(_hnav.classList.contains('open') && !_hnav.contains(e.target) && e.target!==_menuT && !_menuT.contains(e.target)){
+    _hnav.classList.remove('open'); _menuT.setAttribute('aria-expanded','false');
+  }
+});
+function openSearch(){
+  _sbar.classList.add('open');
+  _sT.setAttribute('aria-expanded','true');
+  _hnav.classList.remove('open'); _menuT.setAttribute('aria-expanded','false');
+  setTimeout(function(){ try{ _qEl.focus(); }catch(e){} }, 30);
+}
+/* Closing always clears the query — an invisible active filter would silently
+   empty the map. clearQ:false is only for the menu-open swap (no query yet). */
+function closeSearch(clearQ){
+  _sbar.classList.remove('open');
+  _sT.setAttribute('aria-expanded','false');
+  if(clearQ !== false && _qEl.value){ _qEl.value=''; renderList(); }
+}
+_sT.addEventListener('click', function(e){
+  e.stopPropagation();
+  if(_sbar.classList.contains('open')) closeSearch(true); else openSearch();
+});
+_sX.addEventListener('click', function(){ closeSearch(true); });
+_qEl.addEventListener('keydown', function(e){ if(e.key==='Escape') closeSearch(true); });
+document.getElementById('btnNorth').onclick = function(){ if(map) map.easeTo({pitch:0, bearing:0, duration:500}); };
+document.getElementById('btnAboutBack').onclick = function(){ document.getElementById('about').classList.remove('open'); };
+document.getElementById('btnCopyLink').onclick = function(){
+  var b = document.getElementById('btnCopyLink');
+  function done(){ b.textContent='Copied!'; setTimeout(function(){ b.textContent='Copy link'; }, 1400); }
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(location.href).then(done).catch(function(){});
+  } else { try{ prompt('Copy this link:', location.href); }catch(e){} }
+};
+var _pp = document.getElementById('planPick');
+var _pc = document.getElementById('planClear');
+_pp.min = TODAY_E;
+_pp.addEventListener('change', function(){
+  planDate = _pp.value || null;
+  if(planDate && planDate < TODAY_E){ planDate = null; _pp.value=''; }
+  _pp.classList.toggle('active', !!planDate);
+  _pc.style.display = planDate ? '' : 'none';
+  renderList();
+});
+document.getElementById('onlinePill').onclick = function(){
+  var q=document.getElementById('q'); q.value='online'; openSearch(); renderList();
+};
+_pc.onclick = function(){
+  planDate = null; _pp.value=''; _pp.classList.remove('active');
+  _pc.style.display='none'; renderList();
+};
+var _fc = document.getElementById('filtersToggle');
+if(window.matchMedia('(max-width:760px)').matches){
+  document.querySelector('.controls').classList.add('fcollapsed');
+  _fc.innerHTML = 'Show filters &#9662;';
+}
+function _fcToggle(){
+  var c = document.querySelector('.controls');
+  c.classList.toggle('fcollapsed');
+  _fc.innerHTML = c.classList.contains('fcollapsed') ? 'Show filters &#9662;' : 'Hide filters &#9652;';
+}
+// On touch devices a plain click can be swallowed or delayed (feels like it takes
+// two taps or sticks). Fire on a clean tap: pointerup with negligible movement,
+// with a click fallback for mouse/keyboard. touch-action:manipulation drops the
+// 300ms delay. We guard against double-firing (pointer + click) with a timestamp.
+_fc.style.touchAction = 'manipulation';
+var _fcLast = 0;
+function _fcFire(){
+  var now = Date.now();
+  if(now - _fcLast < 400) return;   // ignore the paired click after a pointer tap
+  _fcLast = now;
+  _fcToggle();
+}
+if(window.PointerEvent){
+  var _px=0,_py=0,_pmoved=false;
+  _fc.addEventListener('pointerdown', function(e){ _px=e.clientX; _py=e.clientY; _pmoved=false; }, {passive:true});
+  _fc.addEventListener('pointermove', function(e){
+    if(Math.abs(e.clientX-_px)>8 || Math.abs(e.clientY-_py)>8) _pmoved=true;
+  }, {passive:true});
+  _fc.addEventListener('pointerup', function(e){ if(!_pmoved) _fcFire(); });
+  _fc.addEventListener('click', function(e){ e.preventDefault(); _fcFire(); });
+} else {
+  _fc.addEventListener('click', _fcFire);
+}
+
+function catMark(c){
+  if(c.schema==='folklore') return '<span class="catmark ochre">𖦹</span>';
+  var ch = c.glyph || (c.schema==='events' ? '✦' : '●');
+  var col = c.color || '#fca315';
+  return '<span class="catmark disc" style="color:'+esc(col)+'">'+ch+'</span>';
+}
+/* Daytime defaults come from manifest.json (2026-09-03: Events, Restaurants,
+   Farm Stands only — everything else off until toggled). At night the
+   map is the folklore's alone: only that layer starts on. */
+var catsTouched = false;
+function catDefault(c){
+  if(isNight()) return c.label === 'Folklore';
+  return c.default_on !== false;
+}
+function resetCatsToDefaults(){
+  catsOn = {}; catsTouched = false;
+  buildCats(); renderList();
+}
+function buildCats(){
+  var STORY_LABELS = {'Folklore':1, 'Points of Interest':1};  /* these two sit below the epigraph */
+  var main = document.getElementById('catsMain');
+  var story = document.getElementById('catsStory');
+  main.innerHTML=''; story.innerHTML='';
+  var liveCounts = {};
+  records.forEach(function(r){ if(!isExpired(r) && evVisible(r) && !(r.rgate && !recurActiveNow(r))) liveCounts[r.cat]=(liveCounts[r.cat]||0)+1; });
+  CATEGORIES.forEach(function(c){
+    if(!liveCounts[c.label]) return; /* nothing to show yet — hide until it has data */
+    if(!(c.label in catsOn)) catsOn[c.label] = catDefault(c);
+    var lb = document.createElement('label'); lb.className='catbox';
+    lb.innerHTML = '<input type="checkbox"'+(catsOn[c.label]?' checked':'')+'>'
+      + catMark(c) + '<span class="catname">'+esc(c.label)+'</span>';
+    var cb = lb.querySelector('input');
+    if(cb) cb.addEventListener('change', function(ev){ catsOn[c.label]=ev.target.checked; catsTouched=true; renderList(); });
+    (STORY_LABELS[c.label] ? story : main).appendChild(lb);
+  });
+}
+
+/* base switcher */
+var BASE_NOTES = {
+  usgs:'Official USGS cartography. Sharpest to zoom 16; US coverage only.',
+  worldtopo:'Esri global topographic map; sharp to street level worldwide.',
+  sat:'Esri World Imagery with place labels.',
+  osm:'OpenStreetMap standard; richest address-level street detail.',
+  night:'Esri dark canvas under a low hillshade and an ember wash — the after-dark map.'
+};
+var BASES = ['usgs','worldtopo','sat','osm','night'];
+var dayBase = 'worldtopo';   /* the visitor's last daytime pick, restored at sunrise */
+function setBase(b){
+  var r = document.querySelector('input[name=base][value="'+b+'"]'); if(r) r.checked = true;
+  document.getElementById('basenote').textContent = BASE_NOTES[b];
+  if(!map) return;
+  BASES.forEach(function(x){ map.setLayoutProperty('base-'+x, 'visibility', x===b?'visible':'none'); });
+  map.setLayoutProperty('base-satlabels', 'visibility', b==='sat'?'visible':'none');
+  ['base-nightref','ov-nightshade','ov-emberwash'].forEach(function(l){ map.setLayoutProperty(l, 'visibility', b==='night'?'visible':'none'); });
+}
+Array.prototype.forEach.call(document.querySelectorAll('input[name=base]'), function(radio){
+  radio.addEventListener('change', function(){
+    if(!isNight()) dayBase = radio.value;
+    setBase(radio.value);
+  });
+});
+document.getElementById('ovHillshade').addEventListener('change', function(e){
+  if(map) map.setLayoutProperty('ov-hillshade', 'visibility', e.target.checked?'visible':'none');
+});
+document.getElementById('ovTerrain').addEventListener('change', function(e){
+  if(!map) return;
+  if(e.target.checked){
+    if(!map.getSource('dem')){
+      map.addSource('dem', {type:'raster-dem',
+        tiles:['https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png'],
+        encoding:'terrarium', tileSize:256, maxzoom:15,
+        attribution:'Terrain: Mapzen/AWS Open Data'});
+    }
+    map.setTerrain({source:'dem', exaggeration:1.5});
+    if(map.getPitch()<10) map.easeTo({pitch:55, duration:700});
+  } else {
+    map.setTerrain(null);
+    map.easeTo({pitch:0, duration:500});
+  }
+});
+document.getElementById('layersToggle').onclick = function(){
+  document.getElementById('layers').classList.toggle('collapsed');
+};
+document.getElementById('layers').classList.add('collapsed');
+
+/* ============ NIGHT MODE: apply, toggle, clock, glow loop ============ */
+var REDUCED_MOTION = false;
+try{ REDUCED_MOTION = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches; }catch(e){}
+var NIGHT_T = 0, glowRAF = null, glowLast = 0;
+function glowFrame(ts){
+  glowRAF = null;
+  if(!map || !isNight() || REDUCED_MOTION) return;
+  if(ts - glowLast > 45){            /* ~22 fps is plenty for a slow breath, and easy on phones */
+    glowLast = ts;
+    NIGHT_T = (ts / 2600) % 1;       /* one full breath every 2.6 s */
+    var wave = ['sin',['*',6.283185,['+',NIGHT_T,['get','ph']]]];
+    var breath = ['+',1,['*',0.22,wave]];
+    try{
+      /* ["zoom"] must stay the top-level interpolate input; the per-pin breath goes inside each stop */
+      map.setPaintProperty('folk-glow','circle-radius',
+        ['interpolate',['linear'],['zoom'], 4,['*',14,breath], 9,['*',22,breath], 13,['*',32,breath]]);
+      map.setPaintProperty('folk-glow','circle-opacity', ['+',0.56,['*',0.22,wave]]);
+    }catch(e){}
+  }
+  glowRAF = requestAnimationFrame(glowFrame);
+}
+/* ---- Campfire sparks (night only). A transparent canvas over the map; each
+   frame every on-screen folklore pin is projected to screen space and a few
+   sparks drift up and away from it, fading out. Pure 2D canvas, no GL. ---- */
+var SPARK_MAX = 520, sparks = [], sparkRAF = null, sparkPrev = 0;
+function sparkCanvas(){
+  var c = document.getElementById('sparks'); if(!c) return null;
+  var dpr = window.devicePixelRatio || 1, w = c.clientWidth, h = c.clientHeight;
+  if(c.width !== Math.round(w*dpr) || c.height !== Math.round(h*dpr)){ c.width = Math.round(w*dpr); c.height = Math.round(h*dpr); }
+  return c;
+}
+function spawnSpark(lng, lat){
+  var r = Math.random;
+  sparks.push({lng:lng, lat:lat, born:performance.now(),
+    life: 1100 + r()*1500,            /* ms in the air */
+    vy:   16 + r()*22,                 /* rise, px/s */
+    wind: (r()-0.5)*9,                 /* sideways drift, px/s */
+    sway: 2 + r()*4, swf: 3 + r()*4, swp: r()*6.283,
+    ox: (r()-0.5)*7, oy: (r()-0.5)*4,  /* birth offset from pin centre */
+    sz: 1.3 + r()*1.5});
+}
+function sparkFrame(ts){
+  sparkRAF = null;
+  if(!map || !isNight() || REDUCED_MOTION) return;
+  var c = sparkCanvas(); if(!c){ return; }
+  var dt = Math.min(64, ts - (sparkPrev || ts)); sparkPrev = ts;
+  var dpr = window.devicePixelRatio || 1, W = c.clientWidth, H = c.clientHeight;
+  var x = c.getContext('2d'); x.setTransform(dpr,0,0,dpr,0,0); x.clearRect(0,0,W,H);
+  /* emit: from folklore pins currently on screen, budgeted so a zoomed-out map
+     with hundreds of pins doesn't turn into a blizzard */
+  var pins = (LAST_FC && LAST_FC.features) || [], vis = [];
+  for(var i=0;i<pins.length;i++){
+    var f = pins[i]; if(f.properties.ty !== 'folklore') continue;
+    var pt = map.project(f.geometry.coordinates);
+    if(pt.x < -20 || pt.y < -20 || pt.x > W+20 || pt.y > H+20) continue;
+    vis.push(f);
+  }
+  var rate = Math.min(3.2, 320 / Math.max(1, vis.length));   /* sparks per pin per second */
+  var p = rate * dt / 1000;
+  for(var j=0;j<vis.length && sparks.length < SPARK_MAX;j++){
+    if(Math.random() < p){ var g = vis[j].geometry.coordinates; spawnSpark(g[0], g[1]); }
+  }
+  /* draw + age */
+  var keep = [];
+  for(var k=0;k<sparks.length;k++){
+    var sp = sparks[k], age = ts - sp.born; if(age > sp.life) continue;
+    var t = age/1000, u = age/sp.life;
+    var base = map.project([sp.lng, sp.lat]);
+    var px = base.x + sp.ox + sp.wind*t + sp.sway*Math.sin(t*sp.swf + sp.swp);
+    var py = base.y + sp.oy - sp.vy*t - 6*t*t;              /* rises, easing off like a real ember */
+    var a = (1-u)*(1-u), sz = sp.sz*(1 - 0.5*u);
+    x.beginPath(); x.arc(px, py, sz*2.2, 0, 6.283);           /* soft halo */
+    x.fillStyle = 'rgba(255,150,40,'+(0.28*a).toFixed(3)+')'; x.fill();
+    x.beginPath(); x.arc(px, py, sz, 0, 6.283);               /* the ember */
+    x.fillStyle = u < 0.45 ? 'rgba(255,225,140,'+(0.98*a).toFixed(3)+')' : 'rgba(255,150,50,'+(0.92*a).toFixed(3)+')';
+    x.fill();
+    keep.push(sp);
+  }
+  sparks = keep;
+  sparkRAF = requestAnimationFrame(sparkFrame);
+}
+function startSparks(){ if(map && isNight() && !REDUCED_MOTION && !sparkRAF){ sparkPrev = 0; sparkRAF = requestAnimationFrame(sparkFrame); } }
+function stopSparks(){ if(sparkRAF){ cancelAnimationFrame(sparkRAF); sparkRAF = null; } sparks = []; var c = document.getElementById('sparks'); if(c){ var x=c.getContext('2d'); x.setTransform(1,0,0,1,0,0); x.clearRect(0,0,c.width,c.height); } }
+function startGlow(){ if(map && isNight() && !REDUCED_MOTION && !glowRAF) glowRAF = requestAnimationFrame(glowFrame); }
+function stopGlow(){ if(glowRAF){ cancelAnimationFrame(glowRAF); glowRAF = null; } }
+function applyMapMode(){
+  var night = isNight();
+  setBase(night ? 'night' : dayBase);   /* radio + note update even before/without a map */
+  if(!map || !map.getLayer || !map.getLayer('folk-glow')) return;
+  map.setLayoutProperty('folk-glow','visibility', night?'visible':'none');
+  map.setPaintProperty('pin-selected','circle-stroke-color', night ? '#ffb020' : '#39b7ff');
+  refreshMapData();                    /* re-stamps the `night` flag so pins swap glyphs */
+  if(night){ startGlow(); startSparks(); } else { stopGlow(); stopSparks(); }
+}
+/* Switch the whole page between day and firelight. `auto` = the sun did it
+   (not the visitor), in which case a visitor's own filter choices are kept. */
+function applyMode(mode, auto){
+  var changed = mode !== MODE;
+  MODE = mode;
+  document.documentElement.setAttribute('data-theme', isNight() ? 'night' : '');
+  var tb = document.getElementById('modeToggle');
+  if(tb) tb.setAttribute('aria-pressed', isNight() ? 'true' : 'false');
+  if(changed && !(auto && catsTouched)) resetCatsToDefaults();
+  applyMapMode();
+}
+document.getElementById('modeToggle').addEventListener('click', function(){
+  var next = isNight() ? 'day' : 'night';
+  writeOverride({mode:next, auto:autoMode()});
+  applyMode(next, false);
+});
+setInterval(function(){                /* re-check the sun once a minute; a page can outlive a sunset */
+  var m = effectiveMode();
+  if(m !== MODE) applyMode(m, true);
+}, 60000);
+document.addEventListener('visibilitychange', function(){ if(document.hidden){ stopGlow(); stopSparks(); } else { startGlow(); startSparks(); } });
+
+/* ============ SKYLINE: Hilltowns weather + today's sun ============
+   Weather is Open-Meteo's modeled current conditions, sampled at the Huyck
+   Preserve's coordinates (a central Hilltowns point; the Preserve isn't named
+   in the UI and isn't affiliated). No key, no build step; refreshed every 15
+   min; hidden (never faked) if the fetch fails. Sunrise/sunset reuse the
+   night-mode clock. */
+var HUYCK = {lat:42.5155081667906, lng:-74.1401693189751};
+var SKY_ICONS = {   /* simple stroke icons matching the header's search/menu glyphs */
+  sun:   '<circle cx="12" cy="12" r="4.2"/><line x1="12" y1="2.5" x2="12" y2="5"/><line x1="12" y1="19" x2="12" y2="21.5"/><line x1="2.5" y1="12" x2="5" y2="12"/><line x1="19" y1="12" x2="21.5" y2="12"/><line x1="5.3" y1="5.3" x2="7" y2="7"/><line x1="17" y1="17" x2="18.7" y2="18.7"/><line x1="5.3" y1="18.7" x2="7" y2="17"/><line x1="17" y1="7" x2="18.7" y2="5.3"/>',
+  moon:  '<path d="M20 14.5A8.5 8.5 0 0 1 9.5 4a8.5 8.5 0 1 0 10.5 10.5z"/>',
+  psun:  '<circle cx="8" cy="8" r="3.2"/><line x1="8" y1="1.5" x2="8" y2="3"/><line x1="1.5" y1="8" x2="3" y2="8"/><line x1="3.4" y1="3.4" x2="4.5" y2="4.5"/><line x1="11.5" y1="4.5" x2="12.6" y2="3.4"/><path d="M8.5 19.5h9a3.5 3.5 0 0 0 .4-7 5 5 0 0 0-9.6-1.2A4.2 4.2 0 0 0 8.5 19.5z"/>',
+  pmoon: '<path d="M11 6.5A4.5 4.5 0 0 1 6.5 2a4.5 4.5 0 1 0 4.5 4.5z"/><path d="M8.5 19.5h9a3.5 3.5 0 0 0 .4-7 5 5 0 0 0-9.6-1.2A4.2 4.2 0 0 0 8.5 19.5z"/>',
+  cloud: '<path d="M7 18.5h10.5a4 4 0 0 0 .5-8 6 6 0 0 0-11.5-1.5A4.8 4.8 0 0 0 7 18.5z"/>',
+  fog:   '<path d="M7 14h10.5a4 4 0 0 0 .5-8 6 6 0 0 0-11.5-1.5A4.8 4.8 0 0 0 7 14z"/><line x1="5" y1="17.5" x2="19" y2="17.5"/><line x1="7" y1="21" x2="17" y2="21"/>',
+  rain:  '<path d="M7 15h10.5a4 4 0 0 0 .5-8 6 6 0 0 0-11.5-1.5A4.8 4.8 0 0 0 7 15z"/><line x1="8.5" y1="18" x2="7.5" y2="21"/><line x1="12.5" y1="18" x2="11.5" y2="21"/><line x1="16.5" y1="18" x2="15.5" y2="21"/>',
+  snow:  '<path d="M7 14h10.5a4 4 0 0 0 .5-8 6 6 0 0 0-11.5-1.5A4.8 4.8 0 0 0 7 14z"/><circle cx="8" cy="18.5" r=".9"/><circle cx="12" cy="20.5" r=".9"/><circle cx="16" cy="18.5" r=".9"/>',
+  storm: '<path d="M7 14h10.5a4 4 0 0 0 .5-8 6 6 0 0 0-11.5-1.5A4.8 4.8 0 0 0 7 14z"/><polyline points="12.5,14 10,18.5 13,18.5 11,22.5"/>'
+};
+/* WMO weather-interpretation codes → icon key + plain label */
+function skyKind(code, isDay){
+  var d = isDay !== 0;
+  if(code===0)                 return [d?'sun':'moon', d?'Clear':'Clear night'];
+  if(code===1||code===2)       return [d?'psun':'pmoon', 'Partly cloudy'];
+  if(code===3)                 return ['cloud','Overcast'];
+  if(code===45||code===48)     return ['fog','Fog'];
+  if(code>=51&&code<=57)       return ['rain','Drizzle'];
+  if(code>=61&&code<=67)       return ['rain','Rain'];
+  if(code>=71&&code<=77)       return ['snow','Snow'];
+  if(code>=80&&code<=82)       return ['rain','Showers'];
+  if(code===85||code===86)     return ['snow','Snow showers'];
+  if(code>=95)                 return ['storm','Thunderstorm'];
+  return ['cloud','Cloudy'];
+}
+function fmtClock(ms){
+  try{ return new Intl.DateTimeFormat('en-US',{timeZone:'America/New_York',hour:'numeric',minute:'2-digit'}).format(new Date(ms)).toLowerCase(); }
+  catch(e){ var d=new Date(ms); return d.getHours()+':'+('0'+d.getMinutes()).slice(-2); }
+}
+function renderSkySun(){
+  var el = document.getElementById('skySun'); if(!el) return;
+  var st = sunTimes(berneDateISO(), BERNE.lat, BERNE.lng);
+  if(st.polar){ el.textContent = ''; return; }
+  el.innerHTML = fmtClock(st.rise)+'<span class="sep">&middot;</span>'+fmtClock(st.set);
+}
+function renderSkyWx(cur){
+  var box = document.getElementById('skyline'), ico = document.getElementById('skyIco'), t = document.getElementById('skyTemp');
+  if(!box || !cur || typeof cur.temperature_2m !== 'number'){ if(box) box.classList.remove('has-wx'); return; }
+  var f = Math.round(cur.temperature_2m), c = Math.round((cur.temperature_2m-32)*5/9);
+  var kind = skyKind(cur.weather_code, cur.is_day);
+  ico.innerHTML = SKY_ICONS[kind[0]] || SKY_ICONS.cloud;
+  ico.setAttribute('aria-label', kind[1]);
+  document.getElementById('skyCond').textContent = kind[1];
+  t.innerHTML = f+'&deg;F<span class="c">'+c+'&deg;C</span>';
+  /* Open-Meteo stamps the reading with its model time (local, 15-minute grid) — surface it so a
+     reading that looks stale can be checked at a glance. */
+  var asOf = '';
+  if(cur.time){ var mt = /T(\d{2}):(\d{2})/.exec(cur.time); if(mt){ var hh = +mt[1]; asOf = ' \u00b7 as of '+((hh%12)||12)+':'+mt[2]+(hh<12?' am':' pm'); } }
+  var fetchedAt = new Date().toLocaleTimeString('en-US',{timeZone:'America/New_York',hour:'numeric',minute:'2-digit'}).toLowerCase();
+  document.getElementById('skyWx').title = kind[1]+asOf+' \u2014 modeled current conditions for the Hilltowns (data: Open-Meteo.com). Fetched '+fetchedAt+'; refreshes every 15 min and whenever this tab comes back into focus.';
+  box.classList.add('has-wx');
+}
+var skyLastFetch = 0;
+function fetchSkyWx(){
+  if(!window.fetch || !document.getElementById('skyline')) return;
+  var url = 'https://api.open-meteo.com/v1/forecast?latitude='+HUYCK.lat.toFixed(4)+'&longitude='+HUYCK.lng.toFixed(4)
+          + '&current=temperature_2m,weather_code,is_day&temperature_unit=fahrenheit&timezone=America%2FNew_York';
+  skyLastFetch = Date.now();
+  fetch(url, {cache:'no-store'}).then(function(r){ return r.ok ? r.json() : null; })
+    .then(function(j){ renderSkyWx(j && j.current); })
+    .catch(function(){ renderSkyWx(null); });
+}
+/* ---- Moon. Phase from the mean synodic month against a reference new moon
+   (2000-01-06 18:14 UTC); good to within roughly half a day.
+   Names are the Onondaga Nation's thirteen moons, as published with their
+   translations at onondaganation.org/culture/ceremonies (Laurie's choice, Aug 30
+   2026, over the Farmers' Almanac names). The Nation does not tie them to
+   calendar months — the Faith Keepers reckon a 13-moon year beginning at
+   Midwinter — so the anchor used here is the documented Midwinter rule: the
+   lunar year begins at the first new moon after the December solstice, and the
+   names are taken in the order the Nation lists them. Some Longhouses now count
+   from the first new moon after January 1 instead; that reading would shift
+   names by one moon in years like 2026. This is a reckoning, not the Nation's
+   own calendar, and the tooltip says so. ---- */
+var SYNODIC = 29.530588853, NEW_MOON_REF = Date.UTC(2000,0,6,18,14);
+var ONONDAGA_MOONS = [
+  ['Hisatuh',       'Treacherous little winter'],
+  ['Ganahdoha',     'Leaf buds are on the leaves'],
+  ['Ganahdogo:nah', 'Moon of many leaves'],
+  ['Ohiaihah',      'Little ripening of the berries'],
+  ['Ohiaihgo:nah',  'Great ripening of the berries'],
+  ['Saskeh hah',    'Long daylight'],
+  ['Saskego:nah',   'Big, long daylight'],
+  ['Kendenhah',     'Deer has a short tail'],
+  ['Kendenhgo:nah', 'Deer has a long tail'],
+  ['Jotowehhah',    'Return of the little cold'],
+  ['Jotowego:nah',  'Return of the big cold'],
+  ['Disuh',         'Long nights, short days'],
+  ['Disgo:nah',     'Longer nights, shorter days']
+];
+function moonAge(ms){ var d = (ms - NEW_MOON_REF)/86400000; return ((d % SYNODIC) + SYNODIC) % SYNODIC; }
+function newMoonBefore(ms){ return ms - moonAge(ms)*86400000; }           /* start of the current lunation */
+function decSolstice(year){                                                 /* Meeus, Astronomical Algorithms ch. 27 (mean) — minutes-level, ample here */
+  var Y = (year-2000)/1000;
+  var jde = 2451900.05952 + 365242.74049*Y - 0.06223*Y*Y - 0.00823*Y*Y*Y + 0.00032*Y*Y*Y*Y;
+  return (jde - 2440587.5)*86400000;
+}
+function lunarYearStart(ms){                                                /* first new moon after the most recent December solstice */
+  var y = new Date(ms).getUTCFullYear(), sol = decSolstice(y);
+  if(ms < sol) sol = decSolstice(y-1);
+  var nm = newMoonBefore(sol);
+  if(nm <= sol) nm += SYNODIC*86400000;
+  return nm;
+}
+function lunationInfo(ms){
+  var cur = newMoonBefore(ms), start = lunarYearStart(cur);                 /* the lunation belongs to the year whose start precedes ITS new moon */
+  var n = Math.round((cur - start)/(SYNODIC*86400000));                     /* 0-based lunation of the Haudenosaunee year */
+  if(n < 0) n = 0; if(n > 12) n = 12;
+  return {index:n, word:ONONDAGA_MOONS[n][0], english:ONONDAGA_MOONS[n][1], newMoon:cur, yearStart:start};
+}
+function drawMoon(age){
+  var p = age/SYNODIC, k = (1-Math.cos(2*Math.PI*p))/2;         /* illuminated fraction */
+  var r = 10, cx = 12, cy = 12, waxing = p < 0.5;
+  var rx = Math.abs(Math.cos(2*Math.PI*p))*r;                    /* terminator half-width */
+  var lit, dark = 'rgba(26,29,92,.22)', light = '#fca315';   /* lit side gold, night side navy tint, navy limb */
+  if(k < 0.005) lit = '';
+  else if(k > 0.995) lit = '<circle cx="12" cy="12" r="10" fill="'+light+'"/>';
+  else {
+    /* outer limb on the lit side, then the terminator ellipse back */
+    var limbSweep = waxing ? 1 : 0, termSweep = (k > 0.5) ? limbSweep : 1-limbSweep;
+    lit = '<path fill="'+light+'" d="M12 2 A'+r+' '+r+' 0 0 '+limbSweep+' 12 22 A'+rx.toFixed(2)+' '+r+' 0 0 '+termSweep+' 12 2 Z"/>';
+  }
+  return '<circle cx="12" cy="12" r="10" fill="'+dark+'"/>'+lit+'<circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" stroke-width="1.2"/>';
+}
+function phaseLabel(age){
+  var p = age/SYNODIC, k = Math.round(100*(1-Math.cos(2*Math.PI*p))/2);
+  var n = p < 0.02 || p > 0.98 ? 'New Moon' : p < 0.23 ? 'Waxing Crescent' : p < 0.27 ? 'First Quarter' : p < 0.48 ? 'Waxing Gibbous'
+        : p < 0.52 ? 'Full Moon' : p < 0.73 ? 'Waning Gibbous' : p < 0.77 ? 'Last Quarter' : 'Waning Crescent';
+  return n + ' \u00b7 ' + k + '%';
+}
+function renderMoon(){
+  var ico = document.getElementById('moonIco'); if(!ico) return;
+  var now = Date.now(), age = moonAge(now), li = lunationInfo(now);
+  ico.innerHTML = drawMoon(age);
+  document.getElementById('moonPhase').textContent = phaseLabel(age);
+  document.getElementById('moonName').textContent = li.word;
+  document.getElementById('moonEng').textContent = li.english;
+  document.getElementById('skyMoon').title = 'Moon '+(li.index+1)+' of the Haudenosaunee year \u2014 names and translations from the Onondaga Nation (onondaganation.org). Year reckoned from the first new moon after the winter solstice; the Nation\u2019s Faith Keepers set the actual calendar.';
+}
+renderMoon();
+setInterval(renderMoon, 30*60*1000);
+renderSkySun();
+fetchSkyWx();
+setInterval(fetchSkyWx, 15*60*1000);
+/* a laptop that slept through the timer, or a tab left in the background, refetches on return */
+document.addEventListener('visibilitychange', function(){ if(!document.hidden && Date.now()-skyLastFetch > 60*1000){ skyLastFetch = Date.now(); fetchSkyWx(); renderSkySun(); renderMoon(); } });
+setInterval(renderSkySun, 60*1000);
+
+/* ============ INIT ============ */
+buildCats();
+if(map) map.on('load', function(){ applyMapMode(); renderList(); applyHash(); });
+setInterval(function(){
+  if(map && map.getSource && map.getSource('folk')){
+    map.getSource('folk').setData(toFC(currentFilter(true)));
+  }
+}, 300000);
+renderList(); /* list renders immediately; map data attaches once loaded */
+if(!map) applyHash();
+
+/* ============ MOBILE BOTTOM SHEET (drag to pull the list up over the map) ============ */
+(function(){
+  var handle = document.getElementById('sheetHandle');
+  var sheet  = document.getElementById('sidebar');
+  if(!handle || !sheet) return;
+
+  // Snap stops as fractions of the *visible* viewport: peek, mid (default), tall.
+  // Tall is capped at 0.85 so the map always peeks and the handle stays reachable.
+  // Height is applied in px from window.innerHeight (mobile 100vh includes the
+  // browser chrome, which is what let the handle escape off-screen).
+  var STOPS = [0.30, 0.46, 0.85];
+  var current = 0.46;
+  function vh(){ return window.innerHeight || document.documentElement.clientHeight; }
+  function apply(frac){ current = frac; sheet.style.setProperty('--sheet', Math.round(frac*vh())+'px'); }
+  window.addEventListener('resize', function(){ apply(current); });
+  window.__sheetCollapse = function(){ apply(STOPS[0]); };
+  window.__sheetIsActive = function(){ return getComputedStyle(handle).display !== 'none'; };
+  function nearestStop(frac){
+    var best = STOPS[0], d = Math.abs(frac-STOPS[0]);
+    for(var i=1;i<STOPS.length;i++){ var dd=Math.abs(frac-STOPS[i]); if(dd<d){d=dd;best=STOPS[i];} }
+    return best;
+  }
+
+  var dragging=false, startY=0, startFrac=0.46, moved=false;
+  function onDown(e){
+    dragging=true; moved=false;
+    startY = (e.touches?e.touches[0].clientY:e.clientY);
+    startFrac = current;
+    sheet.classList.add('dragging');
+    if(handle.setPointerCapture && e.pointerId!=null){ try{handle.setPointerCapture(e.pointerId);}catch(_){} }
+  }
+  function onMove(e){
+    if(!dragging) return;
+    var y = (e.touches?e.touches[0].clientY:e.clientY);
+    var dy = startY - y;                       // up = positive
+    if(Math.abs(dy)>4) moved=true;
+    var frac = startFrac + dy/vh();
+    frac = Math.max(0.16, Math.min(0.87, frac)); // clamp (map always peeks)
+    sheet.style.setProperty('--sheet', (frac*100).toFixed(2)+'vh');
+    current = frac;
+    if(e.cancelable) e.preventDefault();
+  }
+  function onUp(){
+    if(!dragging) return;
+    dragging=false;
+    sheet.classList.remove('dragging');
+    if(!moved){
+      // A tap toggles between mid and tall for accessibility / no-drag users.
+      apply(current >= 0.66 ? 0.46 : 0.85);
+    } else {
+      apply(nearestStop(current));
+    }
+  }
+
+  handle.addEventListener('pointerdown', onDown);
+  window.addEventListener('pointermove', onMove, {passive:false});
+  window.addEventListener('pointerup', onUp);
+  // Touch fallback for older mobile browsers without pointer events
+  handle.addEventListener('touchstart', onDown, {passive:true});
+  window.addEventListener('touchmove', onMove, {passive:false});
+  window.addEventListener('touchend', onUp);
+
+})();
+</script>
+<!-- GoatCounter: privacy-friendly analytics, no cookies, no personal data -->
+<script data-goatcounter="https://nyhilltowners.goatcounter.com/count"
+        async src="//gc.zgo.at/count.js"></script>
+</body>
+</html>

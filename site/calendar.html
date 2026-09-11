@@ -1,0 +1,909 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Event Calendar — Hilltowns Folk Atlas</title>
+<meta name="description" content="Upcoming events across the NY Helderberg-Hudson Hilltowns — a community event calendar.">
+<meta property="og:title" content="Event Calendar — Hilltowns Folk Atlas">
+<meta property="og:type" content="website">
+<meta property="og:image" content="images/share-card.png">
+<link rel="icon" href="images/favicon.svg">
+<link rel="apple-touch-icon" href="images/apple-touch-icon.png">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lato:ital,wght@0,400;0,700;1,400&family=Montserrat:ital,wght@0,400;0,600;0,700;0,800;1,600&display=swap">
+<style>
+:root{
+  --ink:#00004d; --paper:#feffff; --parchment:#f4efe1; --parchment-line:#e3dcc8;
+  --ink-blue:#1a1d5c; --lichen:#dde0f2; --birch:#a9b0dd; --faint:#7b82b8;
+  --wampum:#39b7ff; --wampum-deep:#000080; --gold:#fca315; --gold-ink:#2b2410;
+}
+*{box-sizing:border-box; margin:0; padding:0;}
+body{
+  font-family:'Lato',ui-sans-serif,system-ui,sans-serif;
+  color:var(--ink-blue); background:var(--parchment);
+  -webkit-font-smoothing:antialiased; line-height:1.6;
+}
+.betabar{background:var(--gold); color:var(--gold-ink);
+  font-family:'Montserrat',sans-serif; font-weight:700; font-size:11px;
+  letter-spacing:.08em; text-transform:uppercase; line-height:1.4;
+  overflow:hidden; white-space:nowrap; position:relative;}
+.betabar .ticker-track{display:inline-block; white-space:nowrap; animation:betabar-scroll 44s linear infinite;}
+.betabar:hover .ticker-track, .betabar:focus-within .ticker-track{animation-play-state:paused;}
+.betabar .ticker-set{display:inline-block;}
+.betabar a{color:inherit; text-decoration:underline; text-underline-offset:2px;}
+.betabar .ticker-track span span{padding:5px 14px; display:inline-block;}
+.betabar .tg{font-size:1.75em; font-weight:900; vertical-align:-4px; display:inline-block; margin-right:1px;}
+@keyframes betabar-scroll{ from{transform:translateX(0);} to{transform:translateX(-50%);} }
+@media (prefers-reduced-motion: reduce){
+  .betabar{overflow-x:auto;}
+  .betabar .ticker-track{animation:none;}
+}
+.sitenav{
+  position:sticky; top:0; z-index:100;
+  display:flex; align-items:center; justify-content:space-between;
+  padding:8px 20px; background:var(--parchment);
+  border-bottom:3px solid var(--ink-blue); box-shadow:0 2px 8px rgba(0,0,60,.05);
+}
+.sitenav .brand{display:flex; align-items:center; gap:8px; text-decoration:none;}
+.sitenav .brand img{height:42px; width:auto; flex:none; display:block;}
+.sitenav .brand .stack{display:flex; flex-direction:column; line-height:1.03; margin-left:2px;}
+.sitenav .brand .stack .l1,.sitenav .brand .stack .l2{
+  font-family:'Montserrat',sans-serif; font-weight:800; text-transform:uppercase;
+  letter-spacing:.05em; color:var(--ink-blue);}
+.sitenav .brand .stack .l1{font-size:16px; display:block;}
+.sitenav .brand .stack .l2{font-size:16px; display:block; transform:scaleX(0.979); transform-origin:left center;}
+.sitenav .links{display:flex; align-items:center; gap:4px;}
+.sitenav .links a{
+  font-family:'Montserrat',sans-serif; font-weight:600; font-size:12.5px;
+  text-transform:uppercase; letter-spacing:.04em; text-decoration:none;
+  color:var(--ink-blue); padding:8px 14px; border-radius:6px; transition:.15s;}
+.sitenav .links a:hover{background:rgba(26,29,92,.07);}
+.sitenav .links a.active{color:var(--gold);}
+.sitenav .links a.ig{display:flex; align-items:center; justify-content:center; padding:7px; margin-left:2px; color:var(--ink-blue);}
+.sitenav .links a.ig:hover{background:rgba(26,29,92,.07); color:var(--gold);}
+.sitenav .links a.ig svg{width:22px; height:22px; display:block;}
+.menubtn{display:none; align-items:center; justify-content:center; background:none; border:none;
+  cursor:pointer; padding:8px; border-radius:6px; color:var(--ink-blue); transition:.15s; touch-action:manipulation;}
+.menubtn:hover{background:rgba(26,29,92,.07); color:var(--gold);}
+.menubtn svg{width:24px; height:24px; display:block;}
+@media (max-width:760px){
+  .menubtn{display:flex;}
+  .sitenav .links{
+    display:none; position:absolute; top:100%; left:0; right:0;
+    flex-direction:column; align-items:stretch; gap:0;
+    background:var(--parchment); border-bottom:3px solid var(--ink-blue);
+    box-shadow:0 12px 26px rgba(0,0,60,.18); padding:6px 10px 12px; z-index:101;
+  }
+  .sitenav .links.open{display:flex;}
+  .sitenav .links a{padding:13px 14px; font-size:14px;}
+  .sitenav .links a.ig{align-self:flex-start;}
+}
+
+.wrap{max-width:920px; margin:0 auto; padding:40px 24px 72px;}
+.eyebrow{font-family:'Montserrat',sans-serif; font-weight:700; font-size:12px; letter-spacing:.18em;
+  text-transform:uppercase; color:var(--gold); margin-bottom:12px;}
+h1{font-family:'Montserrat',sans-serif; font-weight:800; text-transform:uppercase; letter-spacing:.03em;
+  font-size:clamp(26px,5vw,38px); color:var(--ink-blue); line-height:1.08; margin-bottom:10px;}
+.lede{font-size:16px; color:#3a3f6b; margin-bottom:24px; max-width:640px;}
+.lede .corenote{color:var(--gold-ink); font-weight:700; box-shadow:inset 0 -8px 0 rgba(252,163,21,.22);}
+
+/* controls bar */
+.controls{display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px; margin-bottom:22px;}
+.monthnav{display:flex; align-items:center; gap:10px;}
+.monthnav button{
+  font-family:'Montserrat',sans-serif; font-weight:700; font-size:15px; line-height:1;
+  color:var(--ink-blue); background:var(--paper); border:2px solid var(--parchment-line);
+  border-radius:8px; padding:8px 12px; cursor:pointer; transition:.15s;}
+.monthnav button:hover{border-color:var(--gold); background:#fffdf7;}
+.monthlabel{font-family:'Montserrat',sans-serif; font-weight:800; text-transform:uppercase;
+  letter-spacing:.03em; font-size:17px; color:var(--ink-blue); min-width:190px; text-align:center;}
+.viewtoggle{display:flex; gap:0; border:2px solid var(--parchment-line); border-radius:8px; overflow:hidden;}
+.viewtoggle button{
+  font-family:'Montserrat',sans-serif; font-weight:700; font-size:12px; text-transform:uppercase; letter-spacing:.05em;
+  color:var(--faint); background:var(--paper); border:none; padding:9px 16px; cursor:pointer; transition:.15s;}
+.viewtoggle button.on{background:var(--ink-blue); color:var(--paper);}
+.viewtoggle button:not(.on):hover{background:#fffdf7; color:var(--ink-blue);}
+.todaybtn{font-family:'Montserrat',sans-serif; font-weight:700; font-size:12px; text-transform:uppercase; letter-spacing:.05em;
+  color:var(--wampum-deep); background:var(--paper); border:2px solid var(--parchment-line);
+  border-radius:8px; padding:8px 14px; cursor:pointer; transition:.15s;}
+.todaybtn:hover{border-color:var(--gold);}
+
+/* ===== MONTH GRID ===== */
+.grid-wrap{background:var(--paper); border:1px solid var(--parchment-line); border-radius:12px; overflow:hidden; box-shadow:0 2px 10px rgba(0,0,60,.05);}
+.dow{display:grid; grid-template-columns:repeat(7,1fr); background:var(--ink-blue);}
+.dow div{font-family:'Montserrat',sans-serif; font-weight:700; font-size:11px; letter-spacing:.08em; text-transform:uppercase;
+  color:var(--lichen); text-align:center; padding:9px 4px;}
+.grid{display:grid; grid-template-columns:repeat(7,1fr);}
+.cell{min-height:104px; border-right:1px solid var(--parchment-line); border-bottom:1px solid var(--parchment-line);
+  padding:6px 6px 4px; position:relative; overflow:hidden;}
+.cell:nth-child(7n){border-right:none;}
+.cell.blank{background:#faf7ee;}
+.cell .dnum{font-family:'Montserrat',sans-serif; font-weight:700; font-size:12px; color:var(--faint); margin-bottom:3px;}
+.cell.today .dnum{background:var(--gold); color:var(--gold-ink); border-radius:50%; width:22px; height:22px;
+  display:flex; align-items:center; justify-content:center;}
+.evt{display:block; width:100%; text-align:left; background:rgba(255,111,94,.13); border:none; border-left:3px solid #ff6f5e;
+  color:var(--ink-blue); font-size:11.5px; line-height:1.25; padding:3px 5px; margin-bottom:3px; border-radius:0 4px 4px 0;
+  cursor:pointer; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; transition:.12s;}
+.evt:hover{background:rgba(255,111,94,.26);}
+.evt.core{background:rgba(252,163,21,.16); border-left-color:var(--gold);}
+.evt.core:hover{background:rgba(252,163,21,.3);}
+.evt .etime{font-weight:700; color:var(--wampum-deep); margin-right:4px;}
+.more{font-size:10.5px; font-weight:700; color:var(--faint); cursor:pointer; padding:1px 5px;}
+.more:hover{color:var(--gold);}
+
+/* ===== AGENDA ===== */
+.agenda{display:none;}
+.agenda.on{display:block;}
+.grid-wrap.off{display:none;}
+.daygroup{margin-bottom:8px; background:var(--paper); border:1px solid var(--parchment-line); border-radius:10px; overflow:hidden;}
+.dayhead{display:flex; align-items:baseline; gap:10px; background:#000080; color:#fff; padding:9px 16px; border-bottom:1px solid #26268f;}
+.dayhead .dd{font-family:'Montserrat',sans-serif; font-weight:800; font-size:15px; color:#fff; text-transform:uppercase; letter-spacing:.02em;}
+.dayhead .dw{font-size:13px; color:#b9bee6; font-weight:700; text-transform:uppercase; letter-spacing:.05em;}
+.dayhead.istoday .dd{color:var(--gold);}
+.dayhead.istoday::before{content:"Today"; font-family:'Montserrat',sans-serif; font-weight:800; font-size:10px; letter-spacing:.08em;
+  text-transform:uppercase; background:var(--gold); color:var(--gold-ink); padding:2px 7px; border-radius:20px; align-self:center;}
+.arow{display:flex; gap:12px; align-items:flex-start; padding:11px 16px; border-bottom:1px solid var(--parchment-line); cursor:pointer; transition:.12s;}
+.arow:last-child{border-bottom:none;}
+.arow:hover{background:#fffdf7;}
+/* Core-hilltowns events get a gold left bar + faint wash for prominence. */
+.arow.core{border-left:4px solid var(--gold); background:rgba(252,163,21,.06); padding-left:12px;}
+.arow.core:hover{background:rgba(252,163,21,.12);}
+.arow.core .atitle::after{content:"★"; color:var(--gold); font-size:11px; margin-left:7px; vertical-align:2px;}
+.arow .atime{flex:none; width:104px; font-weight:700; color:var(--wampum-deep); font-size:13.5px;}
+.arow .amain{flex:1; min-width:0;}
+.arow .atitle{font-weight:700; color:var(--ink-blue); font-size:15px;}
+.arow .ameta{font-size:13px; color:var(--faint); margin-top:1px;}
+/* "Nearby & open" — a small dropdown under a list row: pinned places within a
+   few miles whose hours overlap the event. The texture of the hamlet. */
+/* a tool, not a tag: solid navy pill with a chevron that turns when open */
+.arow .nearbybtn{flex:none; align-self:center; display:inline-flex; align-items:center; gap:6px;
+  background:#39b7ff; border:1px solid #39b7ff; border-radius:6px; color:var(--ink-blue);
+  font-family:'Montserrat',sans-serif; font-weight:700; font-size:11px; letter-spacing:.04em;
+  padding:6px 10px 6px 11px; cursor:pointer; white-space:nowrap; transition:.12s; box-shadow:0 1px 2px rgba(0,0,0,.15);}
+.arow .nearbybtn:hover{background:#5ec4ff; border-color:#5ec4ff;}
+.arow .nearbybtn.on{background:var(--gold); border-color:var(--gold); color:var(--gold-ink);}
+.arow .nearbybtn .chev{width:12px; height:12px; transition:transform .15s;}
+.arow .nearbybtn.on .chev{transform:rotate(180deg);}
+.arow .nearbybtn .n{font-weight:800; margin-left:2px; opacity:.85;}
+.nearby{margin:0 16px 12px 132px; padding:8px 12px 6px; background:#fbf8ef; border:1px dashed #d8d1bd; border-radius:8px; font-size:13px;}
+.arow.core + .nearby{margin-left:128px; border-color:rgba(252,163,21,.5);}
+.nearby .nb-head{font-family:'Montserrat',sans-serif; font-size:10px; letter-spacing:.14em; text-transform:uppercase; color:var(--faint); margin-bottom:5px;}
+.nearby .nb-row{display:flex; gap:9px; align-items:baseline; padding:4px 0; border-top:1px solid rgba(0,0,0,.05); text-decoration:none; color:inherit;}
+.nearby .nb-row:first-of-type{border-top:none;}
+.nearby .nb-row:hover .nb-name{color:var(--wampum-deep); text-decoration:underline;}
+.nearby .nb-g{flex:none; width:18px; text-align:center;}
+.nearby .nb-name{font-weight:700; color:var(--ink-blue);}
+.nearby .nb-cat{color:var(--faint); font-size:12px;}
+.nearby .nb-hrs{margin-left:auto; flex:none; color:#4a4f7a; font-size:12px; white-space:nowrap;}
+.nearby .nb-dist{flex:none; color:var(--faint); font-size:11.5px; width:44px; text-align:right;}
+.nearby .nb-far{margin-top:6px; padding-top:6px; border-top:1px dashed var(--parchment-line);}
+
+.nearby .nb-none{color:var(--faint); font-style:italic; padding:2px 0 4px;}
+@media (max-width:640px){ .nearby{margin-left:16px;} .arow.core + .nearby{margin-left:12px;} .nearby .nb-cat{display:none;} }
+.arow .aglyph{flex:none; font-size:16px;}
+
+.empty{text-align:center; color:var(--faint); padding:48px 20px; font-size:15px;}
+
+/* ===== DETAIL MODAL ===== */
+.modal{position:fixed; inset:0; z-index:500; background:rgba(0,0,40,.44); display:none; align-items:center; justify-content:center; padding:20px;}
+.modal.on{display:flex;}
+.card{background:var(--paper); border-radius:14px; max-width:460px; width:100%; max-height:86vh; overflow:auto; box-shadow:0 20px 60px rgba(0,0,40,.35);}
+.card .chead{padding:20px 22px 14px; border-bottom:1px solid var(--parchment-line); position:relative;}
+.card .cglyph{font-size:26px; margin-bottom:6px;}
+.card h2{font-family:'Montserrat',sans-serif; font-weight:800; font-size:20px; color:var(--ink-blue); line-height:1.15; padding-right:28px;}
+.card .cclose{position:absolute; top:14px; right:16px; background:none; border:none; font-size:24px; line-height:1; color:var(--faint); cursor:pointer;}
+.card .cclose:hover{color:var(--ink-blue);}
+.card .cbody{padding:16px 22px 22px;}
+.card .crow{display:flex; gap:9px; font-size:14px; color:#3a3f6b; margin-bottom:9px; align-items:flex-start;}
+.card .crow .k{flex:none; font-family:'Montserrat',sans-serif; font-weight:700; font-size:11px; letter-spacing:.05em; text-transform:uppercase;
+  color:var(--faint); width:64px; padding-top:2px;}
+.card .cbody .cdesc{font-size:14px; color:#3a3f6b; margin:4px 0 14px;}
+.card a.weblink{color:var(--wampum-deep); font-weight:700; text-decoration:none; border-bottom:2px solid var(--gold); word-break:break-word;}
+.card a.weblink:hover{background:rgba(252,163,21,.14);}
+.card .cmap{display:inline-block; margin-top:6px; font-family:'Montserrat',sans-serif; font-weight:700; font-size:12px;
+  text-transform:uppercase; letter-spacing:.04em; text-decoration:none; background:var(--ink-blue); color:var(--paper); padding:9px 16px; border-radius:8px;}
+.card .cmap:hover{background:#24287a;}
+
+.backmap{display:inline-block; margin-top:26px; font-family:'Montserrat',sans-serif; font-weight:700;
+  text-transform:uppercase; letter-spacing:.04em; font-size:13px; text-decoration:none;
+  background:var(--ink-blue); color:var(--paper); padding:13px 26px; border-radius:8px;}
+.backmap:hover{background:#24287a;}
+
+.foot{background:var(--ink-blue); color:var(--birch); text-align:center; padding:32px 24px; font-size:13px; border-top:3px solid var(--gold); margin-top:40px;}
+.foot a{color:var(--gold); text-decoration:none; letter-spacing:.06em; font-family:'Montserrat',sans-serif; font-weight:600; font-size:12px;}
+.foot .row{display:flex; gap:18px; justify-content:center; margin-top:10px; flex-wrap:wrap;}
+
+@media (max-width:640px){
+  .cell{min-height:74px;}
+  .cell .dnum{font-size:11px;}
+  .evt{font-size:0; padding:3px; border-left-width:6px; margin-bottom:2px;}
+  .evt .etime{font-size:0;}
+  .evt::after{content:""; }
+  .dow div{font-size:9px;}
+  .arow .atime{width:82px; font-size:12.5px;}
+  .monthlabel{min-width:130px; font-size:15px;}
+}
+</style>
+</head>
+<body>
+<div class="betabar" role="region" aria-label="Site announcements">
+  <div class="ticker-track"><span class="ticker-set">
+    <span><span class="tg">𓅓</span> Beta version: please double check all info before hitting the trail</span>
+    <span><span class="tg">𓅓</span> Suggestions? Hit us up NYHilltowners@Gmail.com</span>
+    <span><span class="tg">𓅓</span> Not another dime for corrupt corporations; shop and spend your time and money locally!</span>
+    <span><span class="tg">𓅓</span> Apes together strong.</span>
+    <span><span class="tg">𓅓</span> Do not obey in advance.</span>
+    <span><span class="tg">𓅓</span> Hiring? News to share? Poetry into the void? Email us and we'll share it here (free! not everything needs to be monetized)</span>
+    <span><span class="tg">𓅓</span> Register to vote before October 23: <a href="https://voterlookup.elections.ny.gov/" target="_blank" rel="noopener">voterlookup.elections.ny.gov</a></span>
+    <span><span class="tg">𓅓</span> Do you know who&#8217;s paying your politicians? <a href="https://www.opensecrets.org/" target="_blank" rel="noopener">OpenSecrets.org</a></span>
+  </span><span class="ticker-set" aria-hidden="true">
+    <span><span class="tg">𓅓</span> Beta version: please double check all info before hitting the trail</span>
+    <span><span class="tg">𓅓</span> Suggestions? Hit us up NYHilltowners@Gmail.com</span>
+    <span><span class="tg">𓅓</span> Not another dime for corrupt corporations; shop and spend your time and money locally!</span>
+    <span><span class="tg">𓅓</span> Apes together strong.</span>
+    <span><span class="tg">𓅓</span> Do not obey in advance.</span>
+    <span><span class="tg">𓅓</span> Hiring? News to share? Poetry into the void? Email us and we'll share it here (free! not everything needs to be monetized)</span>
+    <span><span class="tg">𓅓</span> Register to vote before October 23: <a href="https://voterlookup.elections.ny.gov/" target="_blank" rel="noopener">voterlookup.elections.ny.gov</a></span>
+    <span><span class="tg">𓅓</span> Do you know who&#8217;s paying your politicians? <a href="https://www.opensecrets.org/" target="_blank" rel="noopener">OpenSecrets.org</a></span>
+  </span></div>
+</div>
+
+<nav class="sitenav">
+  <a class="brand" href="index.html">
+    <img src="images/raccoon-mark.svg" alt="">
+    <span class="stack"><span class="l1">Hilltowns</span><span class="l2">Folk Atlas</span></span>
+  </a>
+  <div class="links" id="hnav">
+    <a href="index.html">Atlas</a>
+    <a href="calendar.html" class="active">Calendar</a>
+    <a href="directory.html">Directory</a>
+    <a href="instagram.html">Instagram</a>
+    <a href="about.html">About</a>
+  </div>
+  <button class="menubtn" id="menuToggle" title="Menu" aria-label="Menu" aria-expanded="false">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="4" y1="7" x2="20" y2="7"></line><line x1="4" y1="12" x2="20" y2="12"></line><line x1="4" y1="17" x2="20" y2="17"></line></svg>
+  </button>
+</nav>
+
+<main class="wrap">
+  <div class="controls">
+    <div class="monthnav">
+      <button id="prev" aria-label="Previous month">&larr;</button>
+      <div class="monthlabel" id="mlabel">—</div>
+      <button id="next" aria-label="Next month">&rarr;</button>
+      <button class="todaybtn" id="today">Today</button>
+    </div>
+    <div class="viewtoggle">
+      <button id="vMonth">Month</button>
+      <button id="vAgenda" class="on">List</button>
+    </div>
+  </div>
+
+  <div class="grid-wrap" id="gridWrap">
+    <div class="dow"><div>Sun</div><div>Mon</div><div>Tue</div><div>Wed</div><div>Thu</div><div>Fri</div><div>Sat</div></div>
+    <div class="grid" id="grid"></div>
+  </div>
+
+  <div class="agenda" id="agenda"></div>
+
+  <a class="backmap" href="index.html">Explore the Atlas &rarr;</a>
+</main>
+
+<div class="modal" id="modal">
+  <div class="card" id="card"></div>
+</div>
+
+<footer class="foot">
+  <div>A community project of the NY Hilltowners.</div>
+  <div class="row">
+    <a href="index.html">Atlas</a>
+    <a href="directory.html">Directory</a>
+    <a href="instagram.html">Instagram</a>
+    <a href="about.html">About</a>
+    <a href="https://instagram.com/NYHilltowners" target="_blank" rel="noopener">@NYHilltowners</a>
+  </div>
+</footer>
+
+<script src="data.js"></script>
+<script>
+(function(){
+  "use strict";
+  var DATA = (window.ATLAS_DATA && window.ATLAS_DATA.records) || [];
+  var MONTHS = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+  var DOWLONG = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
+
+  function pad(n){ return (n<10?"0":"")+n; }
+  function ymd(d){ return d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate()); }
+  function parseISO(s){
+    if(!s) return null;
+    var m = String(s).slice(0,10).match(/^(\d{4})-(\d{2})-(\d{2})$/);
+    if(!m) return null;
+    return new Date(+m[1], +m[2]-1, +m[3]);
+  }
+  var TODAY = new Date(); TODAY.setHours(0,0,0,0);
+
+  // Which weekdays a continuous run is open, read from its Time field (preferred)
+  // or title. Mirrors the atlas's openDaysOf: lists ("Fri–Sat …; Sun …"), ranges
+  // ("Wed–Sun", "Friday through Sunday"), "daily". null = no weekdays named, so
+  // the run shows on every day of its span (we don't guess).
+  function openDaysOf(ev){
+    var IDX = {sun:0,mon:1,tue:2,wed:3,thu:4,fri:5,sat:6};
+    function scan(text){
+      if(!text) return null;
+      var t = String(text);
+      if(/\bdaily\b|\bevery\s?day\b|\b7 days\b/i.test(t)) return {0:1,1:1,2:1,3:1,4:1,5:1,6:1};
+      var rx = /\b(sun(?:day)?|mon(?:day)?|tue(?:s(?:day)?)?|wed(?:nesday)?|thu(?:r(?:s(?:day)?)?)?|fri(?:day)?|sat(?:urday)?)s?\b/gi;
+      var out = null, m, prev = null;
+      while((m = rx.exec(t))){
+        var d = IDX[m[1].slice(0,3).toLowerCase()];
+        out = out || {};
+        if(prev !== null){
+          var between = t.slice(prev.end, m.index);
+          if(/^\s*(?:[-–—]|to|through|thru)\s*$/i.test(between)){
+            for(var i = prev.d; i !== d; i = (i+1)%7){ out[i] = 1; }
+          }
+        }
+        out[d] = 1;
+        prev = {d:d, end:rx.lastIndex};
+      }
+      return out;
+    }
+    return scan(ev.tm) || scan(ev.t);
+  }
+
+  // Build the display date for an event: prefer nextOcc (recurring), else d1.
+  // A multi-day event (d1..d2) is shown on each day it spans within the visible month.
+  // ===== Structured recurrence (2026-09-10, Laurie) =====
+  // Records carrying Recur Weeks/Days/Except ("rw"/"rd"/"rx") — events AND
+  // recurring POIs such as a Legion post's monthly meeting — are placed on
+  // EVERY matching day in the visible range (a weekly class fills each week;
+  // a "2nd Tue" meeting lands once a month), instead of only their next date.
+  var _RG_DOW=['sun','mon','tue','wed','thu','fri','sat'];
+  var _RG_MON=['jan','feb','mar','apr','may','jun','jul','aug','sep','oct','nov','dec'];
+  function _rgToks(s){ return String(s||'').toLowerCase().split(/[;,\s]+/).map(function(x){return x.slice(0,3);}).filter(Boolean); }
+  function recurMatchesDate(r, d){
+    var days=_rgToks(r.rd); if(days.indexOf(_RG_DOW[d.getDay()])<0) return false;
+    if(_rgToks(r.rx).indexOf(_RG_MON[d.getMonth()])>=0) return false;
+    var rw=String(r.rw||'').toLowerCase().trim();
+    if(rw==='all') return true;
+    var nth=Math.floor((d.getDate()-1)/7)+1;
+    var lastDay=new Date(d.getFullYear(), d.getMonth()+1, 0).getDate();
+    var isLast=(d.getDate()+7>lastDay);
+    return rw.split(/[;,\s]+/).some(function(t){ return t===String(nth) || (t==='last'&&isLast); });
+  }
+  function eventsForRange(startDate, endDate, agendaOnly){
+    // returns map "YYYY-MM-DD" -> [events], for single occurrences within [startDate,endDate]
+    // agendaOnly: skip events the workbook marks Agenda=No (ag:0) — they stay on the month grid and the map
+    var byDay = {};
+    function push(dstr, ev){ (byDay[dstr] || (byDay[dstr]=[])).push(ev); }
+    DATA.forEach(function(ev){
+      var recurringPoi = (ev.ty === "poi" && !!ev.rw);
+      if(ev.ty !== "events" && !recurringPoi) return;
+      if(agendaOnly && ev.ag === 0) return;
+      if(ev.rw){
+        // series bounds: events use Start/End Date; a POI's standing meeting has none
+        var lo = ev.ty === "events" ? parseISO(ev.d1) : null;
+        var hi = ev.ty === "events" ? parseISO(ev.d2) : null;
+        var day = new Date(startDate);
+        while(day <= endDate){
+          if((!lo || day >= lo) && (!hi || day <= hi) && recurMatchesDate(ev, day)){
+            // per-day copy so the card's "When" shows THIS occurrence, not the soonest one
+            push(ymd(day), Object.assign({}, ev, {nextOcc: ymd(day)}));
+          }
+          day.setDate(day.getDate()+1);
+        }
+        return;
+      }
+      var d1 = parseISO(ev.nextOcc) || parseISO(ev.d1);
+      if(!d1) return;
+      var d2 = parseISO(ev.d2) || d1;
+      if(d2 < d1) d2 = d1;
+      // clamp span; cap at 60 days to avoid runaway "permanent" exhibitions flooding every day
+      var span = Math.round((d2 - d1)/86400000);
+      // An overnight event (time range crossing midnight, e.g. 10:00 PM – 12:00 AM)
+      // spans two dates on paper but is one evening: place it on its start day only.
+      if(span === 1){
+        var rr = parseRange(ev.tm);
+        if(rr.start != null && rr.end != null && rr.end <= rr.start){ d2 = d1; span = 0; }
+      }
+      var multiday = span > 0 && span <= 45;
+      if(multiday){
+        var od = openDaysOf(ev);   // only place a run on days it is actually open
+        var cur = new Date(d1);
+        while(cur <= d2){
+          if(cur >= startDate && cur <= endDate && (!od || od[cur.getDay()])) push(ymd(cur), ev);
+          cur.setDate(cur.getDate()+1);
+        }
+      } else {
+        // single-day (or an open-ended/very-long run: pin to its start only)
+        if(d1 >= startDate && d1 <= endDate) push(ymd(d1), ev);
+      }
+    });
+    // sort each day's events by time then title
+    Object.keys(byDay).forEach(function(k){
+      byDay[k].sort(function(a,b){
+        var ta = timeKey(a.tm), tb = timeKey(b.tm);
+        if(ta !== tb) return ta - tb;
+        return (a.t||"").localeCompare(b.t||"");
+      });
+    });
+    return byDay;
+  }
+
+  // ---- Time normalization ----------------------------------------------
+  // Event `tm` values arrive in many shapes:
+  //   "10:00:00" (24h+seconds, no meridiem), "7:00 PM", "9:00 AM – 2:00 PM",
+  //   "6:00 pm - 8:00 pm", "Thursdays, 5:00–6:00 PM", "Museum hours (seasonal)".
+  // We parse each clock time to minutes-since-midnight, then render a clean,
+  // consistent range like "10am–6pm". Non-numeric notes ("Museum hours…")
+  // pass through as-is so we never fabricate a time.
+  function cleanTime(tm){
+    return String(tm||"").replace(/^\s*(?:mon|tues|tue|wednes|wed|thurs|thur|thu|fri|satur|sat|sun)(?:day)?s?\s*[,:]?\s*/i,"").trim();
+  }
+  // Parse a single clock token -> {min, mer} or null. Handles "10:00:00",
+  // "6:00 pm", "5", "10:30 AM". `ctx` supplies a meridiem when the token omits it.
+  function parseClock(tok){
+    var m = String(tok).trim().match(/^(\d{1,2})(?::(\d{2}))?(?::\d{2})?\s*([ap])\.?m?\.?/i);
+    if(m){
+      var h = +m[1] % 12; if(/p/i.test(m[3])) h += 12;
+      return { min: h*60 + (m[2]?+m[2]:0), hasMer:true };
+    }
+    // 24h or bare number, no meridiem: "10:00:00", "16:00", "10"
+    m = String(tok).trim().match(/^(\d{1,2})(?::(\d{2}))?(?::\d{2})?$/);
+    if(m){
+      var hh = +m[1];
+      return { min: hh*60 + (m[2]?+m[2]:0), hasMer:false, raw24: hh>=13 || hh===0 };
+    }
+    return null;
+  }
+  function minToLabel(min){
+    var h = Math.floor(min/60), mm = min%60;
+    var mer = h>=12 ? "pm" : "am";
+    var h12 = h%12; if(h12===0) h12=12;
+    return h12 + (mm? ":"+(mm<10?"0":"")+mm : "") + mer;
+  }
+  // Full parse of a tm string into {start, end, note}. If it isn't clock-like,
+  // returns {note: <original cleaned text>} so callers can show it verbatim.
+  function parseRange(tm){
+    // A schedule naming several weekdays ("Fri–Sat 11:00 AM – 5:00 PM; Sun …")
+    // is shown verbatim — a single parsed clock time would misstate it.
+    var multi = String(tm||"").match(/\b(sun|mon|tue|wed|thu|fri|sat)/gi);
+    if(multi && multi.length>=2) return {note:String(tm).trim()};
+    var s = cleanTime(tm);
+    if(!s) return {empty:true};
+    // split on dash/en-dash/"to"
+    var parts = s.split(/\s*(?:[–—-]|\bto\b)\s*/i);
+    var a = parseClock(parts[0]);
+    var b = parts.length>1 ? parseClock(parts[1]) : null;
+    if(!a){
+      // not a clock time — a note like "Museum hours (seasonal)". Keep it, but
+      // trim to something short-ish.
+      return {note:s};
+    }
+    // If one side had no meridiem, infer from the side that did.
+    if(b){
+      if(!a.hasMer && b.hasMer){
+        // borrow b's am/pm if a would otherwise be ambiguous & a<12h
+        if(!a.raw24 && a.min < 12*60 && b.min >= 12*60 && a.min+ (12*60) <= b.min) a.min += 12*60;
+      }
+    }
+    return { start:a.min, end: b? b.min : null };
+  }
+  // sort key: minutes of the start; untimed/notes sort last
+  function timeKey(tm){
+    var r = parseRange(tm);
+    if(r.empty) return 99999;
+    if(r.note!=null) return 99990;      // notes after timed, before truly empty
+    return r.start;
+  }
+  // compact single-time for month chips: just the start ("10am")
+  function fmtTime(tm){
+    var r = parseRange(tm);
+    if(r.empty) return "All day";
+    if(r.note!=null) return r.note.length>10 ? r.note.slice(0,10)+"\u2026" : r.note;
+    return minToLabel(r.start);
+  }
+  // full range for agenda/modal ("10am\u20136pm")
+  function shortRange(tm){
+    var r = parseRange(tm);
+    if(r.empty) return "All day";
+    if(r.note!=null) return r.note;
+    return minToLabel(r.start) + (r.end!=null ? "\u2013"+minToLabel(r.end) : "");
+  }
+
+  var view = "agenda";
+  var cursor = new Date(TODAY.getFullYear(), TODAY.getMonth(), 1);
+
+  var grid = document.getElementById("grid");
+  var agenda = document.getElementById("agenda");
+  var mlabel = document.getElementById("mlabel");
+  var gridWrap = document.getElementById("gridWrap");
+
+  function renderMonth(){
+    mlabel.textContent = MONTHS[cursor.getMonth()] + " " + cursor.getFullYear();
+    var first = new Date(cursor.getFullYear(), cursor.getMonth(), 1);
+    var startPad = first.getDay();
+    var gridStart = new Date(first); gridStart.setDate(1 - startPad);
+    var daysInMonth = new Date(cursor.getFullYear(), cursor.getMonth()+1, 0).getDate();
+    var totalCells = Math.ceil((startPad + daysInMonth)/7)*7;
+    var gridEnd = new Date(gridStart); gridEnd.setDate(gridStart.getDate()+totalCells-1);
+    var byDay = eventsForRange(gridStart, gridEnd);
+
+    grid.innerHTML = "";
+    var cur = new Date(gridStart);
+    for(var i=0;i<totalCells;i++){
+      var cell = document.createElement("div");
+      cell.className = "cell";
+      var inMonth = cur.getMonth() === cursor.getMonth();
+      if(!inMonth) cell.className += " blank";
+      var isToday = ymd(cur) === ymd(TODAY);
+      if(isToday) cell.className += " today";
+      var dnum = document.createElement("div"); dnum.className="dnum"; dnum.textContent = cur.getDate();
+      cell.appendChild(dnum);
+      var evs = byDay[ymd(cur)] || [];
+      var shown = evs.slice(0,3);
+      shown.forEach(function(ev){
+        var b = document.createElement("button"); b.className="evt"+(isCoreTown(ev)?" core":"");
+        b.title = ev.t || "";
+        var tspan = ev.tm ? '<span class="etime">'+esc(fmtTime(ev.tm))+'</span>' : '';
+        b.innerHTML = tspan + esc(ev.t||"(untitled)");
+        b.onclick = (function(e){ return function(){ openModal(e); }; })(ev);
+        cell.appendChild(b);
+      });
+      if(evs.length > shown.length){
+        var mo = document.createElement("div"); mo.className="more";
+        mo.textContent = "+"+(evs.length-shown.length)+" more";
+        mo.onclick = (function(dstr){ return function(){ view="agenda"; setView(); scrollToDay(dstr); }; })(ymd(cur));
+        cell.appendChild(mo);
+      }
+      grid.appendChild(cell);
+      cur.setDate(cur.getDate()+1);
+    }
+  }
+
+  function renderAgenda(){
+    mlabel.textContent = MONTHS[cursor.getMonth()] + " " + cursor.getFullYear();
+    var mStart = new Date(cursor.getFullYear(), cursor.getMonth(), 1);
+    var mEnd = new Date(cursor.getFullYear(), cursor.getMonth()+1, 0);
+    // Agenda for the visible month, but if it's the current month, start at today
+    var from = (cursor.getFullYear()===TODAY.getFullYear() && cursor.getMonth()===TODAY.getMonth()) ? TODAY : mStart;
+    var byDay = eventsForRange(from, mEnd, true);
+    var days = Object.keys(byDay).sort();
+    agenda.innerHTML = "";
+    if(!days.length){
+      agenda.innerHTML = '<div class="empty">No events listed for '+MONTHS[cursor.getMonth()]+' '+cursor.getFullYear()+'.<br>Try another month, or check back soon.</div>';
+      return;
+    }
+    days.forEach(function(dstr){
+      var d = parseISO(dstr);
+      var group = document.createElement("div"); group.className="daygroup"; group.id="day-"+dstr;
+      var head = document.createElement("div"); head.className="dayhead"+(dstr===ymd(TODAY)?" istoday":"");
+      head.innerHTML = '<span class="dd">'+MONTHS[d.getMonth()].slice(0,3)+' '+d.getDate()+'</span><span class="dw">'+DOWLONG[d.getDay()]+'</span>';
+      group.appendChild(head);
+      byDay[dstr].forEach(function(ev){
+        var row = document.createElement("div"); row.className="arow"+(isCoreTown(ev)?" core":"");
+        var hasPin = typeof ev.lat === "number" && typeof ev.lng === "number";
+        row.innerHTML =
+          '<div class="atime">'+esc(ev.tm ? shortRange(ev.tm) : "All day")+'</div>'+
+          '<div class="amain"><div class="atitle">'+esc(ev.t||"(untitled)")+'</div>'+
+          '<div class="ameta">'+esc([ev.ven, townOf(ev.addr)].filter(Boolean).join(" · "))+'</div></div>'+
+          (hasPin ? '<button class="nearbybtn" type="button" title="Places open nearby during this event">Explore nearby <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg></button>' : '')+
+          (ev.g ? '<div class="aglyph">'+esc(ev.g)+'</div>' : '');
+        row.onclick = (function(e){ return function(){ openModal(e); }; })(ev);
+        group.appendChild(row);
+        if(hasPin){
+          var btn = row.querySelector(".nearbybtn");
+          btn.onclick = (function(e, r, b, ds){ return function(click){
+            click.stopPropagation();
+            var open = r.nextElementSibling && r.nextElementSibling.classList.contains("nearby");
+            if(open){ r.nextElementSibling.remove(); b.classList.remove("on"); return; }
+            var items = nearbyOpen(e, ds);
+            b.innerHTML = 'Explore nearby<span class="n">'+items.length+'</span><svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>'; b.classList.add("on");
+            r.parentNode.insertBefore(nearbyPanel(items, ds), r.nextSibling);
+          }; })(ev, row, btn, dstr);
+        }
+      });
+      agenda.appendChild(group);
+    });
+  }
+
+  /* ===== NEARBY & OPEN =====
+     For an event on day D at time T, find pinned POIs within NEARBY_KM whose
+     hours on D's weekday overlap the event window (event end defaults to
+     start + 2 h; untimed events count as "open that day"). Uses the same
+     parseRange() the list uses for event times, so "10am-6pm", "9am-3pm; 5pm-9pm",
+     "Open24Hours", "Dawn-Dusk" and "Closed" all behave. */
+  var NEARBY_KM = 8, NEARBY_MAX = 7;
+  var NEARBY_FAR_KM = 24.14;   /* 15 mi — 2026-09-06 (Laurie): the guaranteed classes never reach beyond this; if nothing qualifies within 15 mi, nothing shows */
+  /* Open but not really a draw — Laurie's exclusions (2026-09-01). Matched
+     case-insensitively as a substring of the POI name. */
+  var NEARBY_EXCLUDE = [
+    "conkling hall","r'ville stage creations","rensselaerville town hall","rudy stempel family sawmill",
+    "more trees co-op","wild ones","commission on economic opportunity","townline equipment",
+    "saranam center","helderberg kiwanis",
+    /* 2026-09-01 additions */
+    "heap (","snap (","soil & water","soil and water","locust grove","cooksburg lumber","wisdom roots",
+    "unlimited metalwork","rheta allen","school of irish dance","cornell cooperative extension","catskill carver",
+    "heldeberg bluestone","helderberg bluestone","board of elections","columbia opportunities",
+    "westerlo town hall","knox town hall","myria emeny","greene county power equipment","hilltown healthcare","uhaul","u-haul",
+    /* 2026-09-03 additions — destination-only venues (you go for a specific show/reason, not to browse) */
+    "bridge street theat","orsini park",
+    /* 2026-09-06 — niche needs, not a stop */
+    "scrub co car wash","foreland",
+    /* 2026-09-06 (Laurie) — hidden + kept out of Explore-nearby even if pin is ever re-enabled */
+    "double h ranch"
+  ].map(function(x){ return x.replace(/\u2019/g,"'"); });
+  /* exact-name exclusions — for places whose name is a prefix of something
+     that SHOULD show (Hilltown Commons itself is out; The Pub at Hilltown Commons stays) */
+  var NEARBY_EXCLUDE_EXACT = ["hilltown commons"];
+  /* 2026-09-06 (Laurie): places that are fine to show but shouldn't beat better
+     stops for a slot. Tier 1 fills only after every un-demoted candidate;
+     tier 2 (Maple on the Lake) only after tier 1. Matched on name substring. */
+  var NEARBY_DEMOTE = [
+    "maple hill syrup","the paradise inn","catskill mountain springs","narnia escapes","thompsons lake state campground",
+    "helderberg true value","kaaterskill & east jewett","thunderhart golf","helder herdwyck","everyday's restaurant",
+    "winter clove inn","mine kill state park pool","deer mountain inn","hotel mountain brook","the shell inn",
+    "the tasting lab","seec","penny lane ices","vosburgh swamp","unbridled sanctuary","variety video",
+    "westerlo library","medusa branch library","greenville public library","corner gateway printing",
+    "windham mountain club","windham mountain outfitters","restaurant matilda","wild hudson valley","2 twisted ladies"
+  ];
+  var NEARBY_DEMOTE_LAST = ["maple on the lake"];
+  function demoteTier(p){
+    var n = String(p.t||"").toLowerCase();
+    if(NEARBY_DEMOTE_LAST.some(function(f){ return n.indexOf(f) >= 0; })) return 2;
+    if(NEARBY_DEMOTE.some(function(f){ return n === f || n.indexOf(f) >= 0; })) return 1;
+    return 0;
+  }
+  function nearbyExcluded(p){
+    var n = String(p.t||"").toLowerCase().replace(/\u2019/g,"'").trim();
+    if(NEARBY_EXCLUDE_EXACT.indexOf(n) >= 0) return true;
+    return NEARBY_EXCLUDE.some(function(x){ return n.indexOf(x) >= 0; });
+  }
+  var DOW_KEYS = ["sun","mon","tue","wed","thu","fri","sat"];
+  /* 2026-09-06 (Laurie): near a recovery/support-group event, don't surface
+     bars or substance-adjacent stops. Matched by the establishment's glyph. */
+  var SUBSTANCE_GLYPHS = {"\uD83E\uDD43":1,"\uD83C\uDF7A":1,"\uD83C\uDF7B":1,"\uD83C\uDF77":1,"\uD83C\uDF78":1,"\uD83C\uDF3F":1,"\uD83D\uDC8A":1};
+  /* 2026-09-04 (Laurie): Lodging joins the pool even without posted hours —
+     a place to stay is "open" for the night regardless of a shop schedule. */
+  function isLodging(r){ return r.cat === "Lodging"; }
+  var POIS = DATA.filter(function(r){
+    if(r.ty !== "poi" || typeof r.lat !== "number" || typeof r.lng !== "number") return false;
+    if(isLodging(r)) return true;
+    return r.hrs && DOW_KEYS.some(function(k){ return r.hrs[k] && !/^closed$/i.test(r.hrs[k]); });
+  });
+  /* Season Start/End are "MM-DD" strings on the POI record (ss/se); blank = year-round.
+     A window that wraps the new year (e.g. 11-01 → 03-31) is handled. */
+  function inSeason(p, mmdd){
+    var a = p.ss || "", b = p.se || "";
+    if(!a && !b) return true;
+    if(a && !b) return mmdd >= a;
+    if(!a && b) return mmdd <= b;
+    return a <= b ? (mmdd >= a && mmdd <= b) : (mmdd >= a || mmdd <= b);
+  }
+  function kmBetween(a,b,c,d){
+    var R=6371, p1=a*Math.PI/180, p2=c*Math.PI/180, dp=(c-a)*Math.PI/180, dl=(d-b)*Math.PI/180;
+    var x=Math.sin(dp/2)*Math.sin(dp/2)+Math.cos(p1)*Math.cos(p2)*Math.sin(dl/2)*Math.sin(dl/2);
+    return 2*R*Math.asin(Math.sqrt(x));
+  }
+  /* -> {segs:[[start,end],...], allDay:bool, note:str|null, closed:bool} */
+  function poiHours(str){
+    var s = String(str||"").trim();
+    if(!s || /^closed$/i.test(s)) return {closed:true};
+    if(/24\s*h|open24/i.test(s)) return {allDay:true, label:"24 hours"};
+    var segs = [], note = null;
+    s.split(/\s*[;,]\s*/).forEach(function(part){
+      var r = parseRange(part);
+      if(r.empty) return;
+      if(r.note!=null){ note = r.note; return; }
+      segs.push([r.start, r.end!=null ? r.end : r.start+60]);
+    });
+    if(!segs.length && note) return {allDay:true, label:note};    /* "Dawn-Dusk" etc: open, hours descriptive */
+    if(!segs.length) return {closed:true};
+    return {segs:segs, label:s.replace(/\s*;\s*/g,"; ")};
+  }
+  function eventWindow(ev){
+    var r = parseRange(ev.tm);
+    if(r.empty || r.note!=null) return null;                 /* untimed → "open that day" */
+    return [r.start, r.end!=null ? r.end : r.start+120];
+  }
+  function overlaps(w, h){
+    if(h.closed) return false;
+    if(!w || h.allDay) return true;
+    return h.segs.some(function(sg){ return sg[0] < w[1] && sg[1] > w[0]; });
+  }
+  function nearbyOpen(ev, dstr){
+    if(typeof ev.lat !== "number" || typeof ev.lng !== "number") return [];
+    var dow = DOW_KEYS[parseISO(dstr).getDay()], w = eventWindow(ev), out = [];
+    var evName = String(ev.ven||ev.t||"").toLowerCase();
+    var sensitive = /support\s*group/i.test(ev.t||"");   /* recovery/support-group event: hide bars & substance-adjacent stops */
+    var mmdd = dstr.slice(5,10);                          /* "MM-DD" of the event day */
+    var far = [];                                         /* eligible but beyond NEARBY_KM — for the nearest-of-class fallback */
+    POIS.forEach(function(p){
+      if(nearbyExcluded(p)) return;
+      if(sensitive && SUBSTANCE_GLYPHS[p.g]) return;
+      if(!inSeason(p, mmdd)) return;                      /* seasonal stand/market/campground outside its season */
+      var km = kmBetween(ev.lat, ev.lng, p.lat, p.lng);
+      /* skip the venue itself — by NAME only (a co-located business like the Pub
+         at Hilltown Commons must still show for a Commons event) */
+      var pn = String(p.t||"").toLowerCase();
+      if(evName && pn && (evName === pn || evName.indexOf(pn) >= 0 || pn.indexOf(evName) === 0 && pn.length - evName.length < 3)) return;
+      var h = (p.hrs && p.hrs[dow]) ? poiHours(p.hrs[dow]) : (isLodging(p) ? {allDay:true, label:"stay"} : {closed:true});
+      if(isLodging(p) && h.closed) h = {allDay:true, label:"stay"};   /* lodging never "closes" for the night */
+      if(!overlaps(w, h)) return;
+      (km > NEARBY_KM ? far : out).push({p:p, km:km, hrs:h.label || ""});
+    });
+    out.sort(function(a,b){ return a.km - b.km; });
+    /* one entry per place — the same business can live on two category tabs
+       (Be Golden Farms is a restaurant AND a farm stand); keep the first, note both */
+    /* which face a multi-tab place shows here: the "draw" first (a restaurant
+       before its gallery or its rooms) — CAT_LEAD order, lower = leads */
+    var CAT_LEAD = ["Restaurants","Farm Stands","Antiques & Vintage","Flowers & Gifts","Other Necessities","Arts & Entertainment","Adventures","Wellness","Mutual Aid","Lodging"];
+    var lead = function(c){ var i = CAT_LEAD.indexOf(c); return i < 0 ? 99 : i; };
+    var byName = {}, dedup = [];
+    out.forEach(function(it){
+      var k = String(it.p.t||"").toLowerCase();
+      if(byName[k]){
+        var cur = byName[k];
+        if(cur.cats.indexOf(it.p.cat) < 0) cur.cats.push(it.p.cat);
+        if(lead(it.p.cat) < lead(cur.p.cat)){ cur.p = it.p; cur.hrs = it.hrs; }   /* swap to the better face */
+        return;
+      }
+      it.cats = [it.p.cat]; byName[k] = it; dedup.push(it);
+    });
+    dedup.forEach(function(it){ it.cats.sort(function(a,b){ return lead(a) - lead(b); }); });
+    out = dedup;
+    /* variety over proximity: one from each category (nearest first), then
+       fill the remaining slots by distance — so a farm stand a mile past the
+       village still beats the fourth-closest restaurant. */
+    /* demoted places wait their turn: the variety pass and the distance fill use
+       tier 0 first, then tier 1, then tier 2 — so they still appear when there's room */
+    out.forEach(function(it){ it.tier = demoteTier(it.p); });
+    var byCat = {}, order = [];
+    out.filter(function(it){ return it.tier === 0; }).forEach(function(it){ if(!byCat[it.p.cat]){ byCat[it.p.cat] = []; order.push(it.p.cat); } byCat[it.p.cat].push(it); });
+    var picked = [], used = {};
+    order.forEach(function(c){ if(picked.length < NEARBY_MAX){ picked.push(byCat[c][0]); used[byCat[c][0].p.sl] = true; } });
+    [0,1,2].forEach(function(t){ out.forEach(function(it){ if(it.tier === t && picked.length < NEARBY_MAX && !used[it.p.sl]){ picked.push(it); used[it.p.sl] = true; } }); });
+    picked.sort(function(a,b){ return (a.tier - b.tier) || (a.km - b.km); });   /* demoted places sink to the bottom */
+    /* 2026-09-06 (Laurie): every panel carries a restaurant, a coffee shop and a
+       non-camping place to stay. Take the nearest open one from inside the radius
+       first (even if it was crowded out of the slots), else the nearest beyond it. */
+    var isCoffee = function(p){ return p.cat === "Restaurants" && /\b(coffee|caf[eé]|espresso|coffeehouse)\b/i.test((p.tags||[]).join(" ") + " " + (p.t||"")); };
+    var isCamping = function(p){ return /\b(camp|camping|campground|glamp|glamping|yurt|tent|rv)\b/i.test((p.tags||[]).join(" ") + " " + (p.t||"")); };
+    var isRoom = function(p){ return isLodging(p) && !isCamping(p); };
+    var CLASSES = [
+      { test:function(p){ return p.cat === "Restaurants"; } },
+      { test:isCoffee },
+      { test:isRoom }
+    ];
+    far.sort(function(a,b){ return a.km - b.km; });
+    CLASSES.forEach(function(c){
+      if(picked.some(function(it){ return c.test(it.p); })) return;
+      var f = out.find(function(it){ return c.test(it.p) && !used[it.p.sl]; }) || far.find(function(it){ return c.test(it.p) && !used[it.p.sl] && it.km <= NEARBY_FAR_KM; });
+      if(f){ used[f.p.sl] = true; if(f.km > NEARBY_KM) f.far = true; f.cats = f.cats || [f.p.cat]; picked.push(f); }
+    });
+    /* 2026-09-06 (Laurie): display strictly by distance — demotion only affects
+       whether a place makes the cut, not where it sits once it has. (Far rows are
+       >5 mi by definition, so they still fall after the near ones.) */
+    picked.sort(function(a,b){ return a.km - b.km; });
+    return picked;
+  }
+  function nearbyPanel(items, dstr){
+    var box = document.createElement("div"); box.className = "nearby";
+    var d = parseISO(dstr);
+    var h = '<div class="nb-head">Nearby &amp; open '+DOWLONG[d.getDay()]+' \u2014 within 5 miles</div>';
+    var near = items.filter(function(it){ return !it.far; }), farItems = items.filter(function(it){ return it.far; });
+    if(!near.length){ h += '<div class="nb-none">Nothing with posted hours is open within 5 miles then.</div>'; }
+    items.forEach(function(it){
+      var p = it.p, mi = (it.km*0.621371).toFixed(1);
+      if(it.far && it === farItems[0]) h += '<div class="nb-head nb-far">Farther afield</div>';
+      h += '<a class="nb-row'+(it.far?' nb-farrow':'')+'" href="index.html#'+encodeURIComponent(p.sl||"")+'" title="Open on the map">'
+        + '<span class="nb-g">'+esc(p.g||"")+'</span>'
+        + '<span class="nb-name">'+esc(p.t)+'</span>'
+        + '<span class="nb-cat">'+esc((it.cats||[p.cat]).join(" · "))+'</span>'
+        + '<span class="nb-hrs">'+esc(it.hrs)+'</span>'
+        + '<span class="nb-dist">'+mi+' mi</span></a>';
+    });
+    box.innerHTML = h;
+    box.onclick = function(e){ e.stopPropagation(); };
+    return box;
+  }
+
+  function townOf(addr){
+    if(!addr) return "";
+    var parts = String(addr).split(",");
+    if(parts.length>=3) return parts[parts.length-3].trim() + ", " + parts[parts.length-2].trim().replace(/\s+\d.*$/,"");
+    if(parts.length===2) return parts[0].trim();
+    return "";
+  }
+
+  // Core hilltowns — events in these get a gold highlight bar for prominence.
+  // Matched against the event's address + venue text, case-insensitive, on word
+  // boundaries so "Berne" doesn't match "Bernese" and "Knox" is whole-word.
+  var CORE_TOWNS = [
+    "Rensselaerville","Berne","Knox","Westerlo","Oak Hill",
+    "Potter Hollow","Medusa","Preston Hollow","Preston-Potter Hollow",
+    "Voorheesville",  /* added 2026-08-31 per Laurie — picks up Thacher State Park */
+    "Thacher",        /* venue keyword, not a town: catches Thacher rows whose address omits the town */
+    "Conkling Hall"   /* 2026-09-06 venue keyword — ingested rows sometimes arrive with no address */
+  ];
+  var CORE_RE = new RegExp("\\b(" + CORE_TOWNS.map(function(t){
+    return t.replace(/[-\s]/g,"[-\\s]");   // allow hyphen/space variants
+  }).join("|") + ")\\b", "i");
+  function isCoreTown(ev){
+    return CORE_RE.test(String(ev.addr||"") + " " + String(ev.ven||""));
+  }
+
+  function scrollToDay(dstr){
+    setTimeout(function(){
+      var el = document.getElementById("day-"+dstr);
+      if(el) el.scrollIntoView({behavior:"smooth", block:"start"});
+    }, 40);
+  }
+
+  // ---- detail modal ----
+  var modal = document.getElementById("modal");
+  var card = document.getElementById("card");
+  function openModal(ev){
+    var d1 = parseISO(ev.nextOcc) || parseISO(ev.d1);
+    var dateStr = d1 ? (DOWLONG[d1.getDay()]+", "+MONTHS[d1.getMonth()]+" "+d1.getDate()+", "+d1.getFullYear()) : "";
+    var rows = "";
+    if(dateStr) rows += crow("When", dateStr + (ev.tm ? " · "+shortRange(ev.tm) : ""));
+    if(ev.ven) rows += crow("Where", esc(ev.ven));
+    if(ev.addr) rows += crow("", esc(ev.addr));
+    var body = "";
+    if(ev.s) body += '<div class="cdesc">'+esc(ev.s)+'</div>';
+    body += rows;
+    if(ev.web) body += crow("Link", '<a class="weblink" href="'+esc(ev.web)+'" target="_blank" rel="noopener">'+esc(ev.web.replace(/^https?:\/\//,"").replace(/\/$/,""))+'</a>');
+    card.innerHTML =
+      '<div class="chead">'+(ev.g?'<div class="cglyph">'+esc(ev.g)+'</div>':'')+
+      '<button class="cclose" aria-label="Close">&times;</button>'+
+      '<h2>'+esc(ev.t||"(untitled)")+'</h2></div>'+
+      '<div class="cbody">'+body+'</div>';
+    card.querySelector(".cclose").onclick = closeModal;
+    modal.classList.add("on");
+  }
+  function crow(k,v){ return '<div class="crow"><span class="k">'+esc(k)+'</span><span>'+v+'</span></div>'; }
+  function closeModal(){ modal.classList.remove("on"); }
+  modal.onclick = function(e){ if(e.target===modal) closeModal(); };
+  document.addEventListener("keydown", function(e){ if(e.key==="Escape") closeModal(); });
+
+  function esc(s){ return String(s==null?"":s).replace(/[&<>"']/g, function(c){
+    return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]; }); }
+
+  function render(){ if(view==="month"){ renderMonth(); } else { renderAgenda(); } }
+  function setView(){
+    document.getElementById("vMonth").classList.toggle("on", view==="month");
+    document.getElementById("vAgenda").classList.toggle("on", view==="agenda");
+    gridWrap.classList.toggle("off", view!=="month");
+    agenda.classList.toggle("on", view==="agenda");
+    render();
+  }
+
+  document.getElementById("prev").onclick = function(){ cursor.setMonth(cursor.getMonth()-1); render(); };
+  document.getElementById("next").onclick = function(){ cursor.setMonth(cursor.getMonth()+1); render(); };
+  document.getElementById("today").onclick = function(){ cursor = new Date(TODAY.getFullYear(), TODAY.getMonth(), 1); render(); };
+  document.getElementById("vMonth").onclick = function(){ view="month"; setView(); };
+  document.getElementById("vAgenda").onclick = function(){ view="agenda"; setView(); };
+
+  setView();
+
+  // universal header: mobile hamburger
+  var nav = document.getElementById("hnav"), btn = document.getElementById("menuToggle");
+  btn.addEventListener("click", function(e){
+    e.stopPropagation();
+    var open = nav.classList.toggle("open");
+    btn.setAttribute("aria-expanded", open ? "true" : "false");
+  });
+  nav.addEventListener("click", function(){ nav.classList.remove("open"); btn.setAttribute("aria-expanded","false"); });
+  document.addEventListener("click", function(e){
+    if(nav.classList.contains("open") && !nav.contains(e.target) && !btn.contains(e.target)){
+      nav.classList.remove("open"); btn.setAttribute("aria-expanded","false");
+    }
+  });
+})();
+</script>
+<!-- GoatCounter: privacy-friendly analytics, no cookies, no personal data -->
+<script data-goatcounter="https://nyhilltowners.goatcounter.com/count"
+        async src="//gc.zgo.at/count.js"></script>
+</body>
+</html>
