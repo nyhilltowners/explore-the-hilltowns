@@ -425,6 +425,37 @@ h1{font-family:'Montserrat',sans-serif; font-weight:800; text-transform:uppercas
         if(d1 >= startDate && d1 <= endDate) push(ymd(d1), ev);
       }
     });
+    // ---- Standing features (2026-09-12, Laurie) --------------------------
+    // A few POIs should appear in the calendar/agenda on every day they're open,
+    // as their own standing entry, WITHOUT needing a row in the events sheet or
+    // recurrence columns. Matched by name substring against the POI records.
+    // Real events at the same venue still show separately (no de-dupe by design).
+    var STANDING_FEATURES = ["kuhar family farm","sap bush hollow cafe","heather ridge farm","the pub at hilltown commons"];
+    var _seenStanding = {};
+    DATA.forEach(function(p){
+      if(p.ty !== "poi" || !p.hrs) return;
+      var pn = String(p.t||"").toLowerCase();
+      if(!STANDING_FEATURES.some(function(f){ return pn.indexOf(f) >= 0; })) return;
+      // a place can appear on two category tabs (restaurant + farm stand); inject once
+      if(_seenStanding[pn]) return; _seenStanding[pn] = 1;
+      var day = new Date(startDate);
+      while(day <= endDate){
+        var cell = p.hrs[DOW_KEYS[day.getDay()]];
+        var h = cell ? poiHours(cell) : {closed:true};
+        // Only feature a day with REAL clock hours (segments) or a true 24-hour day.
+        // Note-only cells ("By appointment", "Dawn-Dusk") are not standing open days.
+        var realHours = !h.closed && ((h.segs && h.segs.length) || /24\s*h|open24/i.test(cell||""));
+        if(realHours){
+          push(ymd(day), {
+            ty:"events", cat:p.cat, t:p.t,
+            tm: (h.segs && h.segs.length) ? cell : "",   // timed if parseable; else all-day (24h)
+            ven:p.t, addr:p.addr, g:p.g, lat:p.lat, lng:p.lng,
+            standing:1
+          });
+        }
+        day.setDate(day.getDate()+1);
+      }
+    });
     // sort each day's events by time then title
     Object.keys(byDay).forEach(function(k){
       byDay[k].sort(function(a,b){
@@ -654,8 +685,20 @@ h1{font-family:'Montserrat',sans-serif; font-weight:800; text-transform:uppercas
     "windham mountain club","windham mountain outfitters","restaurant matilda","wild hudson valley","2 twisted ladies"
   ];
   var NEARBY_DEMOTE_LAST = ["maple on the lake"];
+  /* 2026-09-12 (Laurie): priority places get picked into the panel BEFORE everyone
+     else (tier -1), but still display in distance order once shown — the final
+     picked.sort is by km, so priority affects selection, not placement. Matched on
+     name substring; multi-tab places (Heather Ridge, Kuhar, Be Golden, Six Hands,
+     Greenville Arms) match on either tab. */
+  var NEARBY_PRIORITY = [
+    "bitchin' donuts","heather ridge farm","kuhar family farm","be golden farms",
+    "the pub at hilltown commons","the g spot","six hands farm store","the greenville arms",
+    "life by chocolate","the graham & co","gracie's luncheonette","the marketplace east durham",
+    "enoki","the circus family"
+  ].map(function(x){ return x.replace(/\u2019/g,"'"); });
   function demoteTier(p){
-    var n = String(p.t||"").toLowerCase();
+    var n = String(p.t||"").toLowerCase().replace(/\u2019/g,"'");
+    if(NEARBY_PRIORITY.some(function(f){ return n === f || n.indexOf(f) >= 0; })) return -1;
     if(NEARBY_DEMOTE_LAST.some(function(f){ return n.indexOf(f) >= 0; })) return 2;
     if(NEARBY_DEMOTE.some(function(f){ return n === f || n.indexOf(f) >= 0; })) return 1;
     return 0;
@@ -765,10 +808,12 @@ h1{font-family:'Montserrat',sans-serif; font-weight:800; text-transform:uppercas
        tier 0 first, then tier 1, then tier 2 — so they still appear when there's room */
     out.forEach(function(it){ it.tier = demoteTier(it.p); });
     var byCat = {}, order = [];
-    out.filter(function(it){ return it.tier === 0; }).forEach(function(it){ if(!byCat[it.p.cat]){ byCat[it.p.cat] = []; order.push(it.p.cat); } byCat[it.p.cat].push(it); });
+    out.filter(function(it){ return it.tier <= 0; }).forEach(function(it){ if(!byCat[it.p.cat]){ byCat[it.p.cat] = []; order.push(it.p.cat); } byCat[it.p.cat].push(it); });
     var picked = [], used = {};
+    /* within each category the priority places lead (tier -1 before 0), then nearest */
+    order.forEach(function(c){ byCat[c].sort(function(a,b){ return (a.tier - b.tier) || (a.km - b.km); }); });
     order.forEach(function(c){ if(picked.length < NEARBY_MAX){ picked.push(byCat[c][0]); used[byCat[c][0].p.sl] = true; } });
-    [0,1,2].forEach(function(t){ out.forEach(function(it){ if(it.tier === t && picked.length < NEARBY_MAX && !used[it.p.sl]){ picked.push(it); used[it.p.sl] = true; } }); });
+    [-1,0,1,2].forEach(function(t){ out.forEach(function(it){ if(it.tier === t && picked.length < NEARBY_MAX && !used[it.p.sl]){ picked.push(it); used[it.p.sl] = true; } }); });
     picked.sort(function(a,b){ return (a.tier - b.tier) || (a.km - b.km); });   /* demoted places sink to the bottom */
     /* 2026-09-06 (Laurie): every panel carries a restaurant, a coffee shop and a
        non-camping place to stay. Take the nearest open one from inside the radius

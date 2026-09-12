@@ -1134,7 +1134,10 @@ var style = {
     {id:'disc-pins', type:'symbol', source:'folk',
       filter:['all',['!=',['get','ty'],'folklore'],['!=',['get','cat'],'Points of Interest']],
       layout:{'icon-image':['concat','gd-',['case',['all',['==',['get','dim'],1],['!=',['get','ty'],'events']],'#9aa0a6',['get','col']],'-',['get','g']],'icon-allow-overlap':true,'icon-ignore-placement':true,
-        'symbol-sort-key':['case',['all',['==',['get','dim'],1],['!=',['get','ty'],'events']],0,1],
+        'symbol-sort-key':['case',
+          ['in',['get','g'],['literal',['🚉','🚏','🚆','🚌']]],0,
+          ['all',['==',['get','dim'],1],['!=',['get','ty'],'events']],1,
+          2],
         'icon-size':['interpolate',['linear'],['zoom'], 4,['*',['coalesce',['get','imm'],1],0.32], 9,['*',['coalesce',['get','imm'],1],0.48], 13,['*',['coalesce',['get','imm'],1],0.64]]},
       paint:{'icon-opacity':['case',['all',['==',['get','dim'],1],['!=',['get','ty'],'events']],0.55,1]}},
     {id:'poi-pins', type:'symbol', source:'folk',
@@ -1393,6 +1396,9 @@ function currentFilter(ignoreDateWindow){
     /* recurrence-gated POI: off the map/list outside its meeting window.
        A typed search still reaches it (bypass), mirroring out-of-window events. */
     if(r.rgate && !bypass && !recurActiveNow(r)) return false;
+    /* hours-gated POI (e.g. a Legion canteen): on the map only while open,
+       hidden — not dimmed — when closed. A typed search still reaches it. */
+    if(r.hgate && !bypass && isClosedNow(r)) return false;
     if(!bypass && !evVisible(r)) return false;
     if(!catsOn[r.cat]) return false;
     if(!q) return true;
@@ -1865,7 +1871,7 @@ function buildCats(){
   var story = document.getElementById('catsStory');
   main.innerHTML=''; story.innerHTML='';
   var liveCounts = {};
-  records.forEach(function(r){ if(!isExpired(r) && evVisible(r) && !(r.rgate && !recurActiveNow(r))) liveCounts[r.cat]=(liveCounts[r.cat]||0)+1; });
+  records.forEach(function(r){ if(!isExpired(r) && evVisible(r) && !(r.rgate && !recurActiveNow(r)) && !(r.hgate && isClosedNow(r))) liveCounts[r.cat]=(liveCounts[r.cat]||0)+1; });
   CATEGORIES.forEach(function(c){
     if(!liveCounts[c.label]) return; /* nothing to show yet — hide until it has data */
     if(!(c.label in catsOn)) catsOn[c.label] = catDefault(c);

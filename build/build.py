@@ -495,6 +495,13 @@ def parse_poi(path: Path, label: str, sheet=None):
         if rw_ and not nocc:
             warn(f"{rw}: {title} has Recur Weeks '{rw_}' but no computable next occurrence — check Recur Days/Except")
         has_hours = any((v or "").strip() for v in hrs.values())
+        # Hours-gated (2026-09-12, Laurie): a POI tagged "Hours-Gated" that HAS
+        # posted hours appears on the map only while open (client-side isClosedNow),
+        # and is hidden — not merely dimmed — when closed. Independent of the
+        # recurrence gate above: this is for premise POIs with daily hours (e.g. a
+        # Legion post with a posted bar/canteen schedule) rather than a standing
+        # meeting. No effect without hours (nothing to gate on).
+        hours_gated = 1 if (has_hours and any(t.strip().lower() == "hours-gated" for t in tags)) else 0
         rec = {
             "ty": "poi", "cat": label, "id": rid, "t": title or "(unnamed)",
             "tags": tags, "addr": s(cell(row, idx, "addr")),
@@ -507,6 +514,8 @@ def parse_poi(path: Path, label: str, sheet=None):
             "ss": norm_mmdd(cell(row, idx, "ss"), rw, "Season Start"),
             "se": norm_mmdd(cell(row, idx, "se"), rw, "Season End"),
         }
+        if hours_gated:
+            rec["hgate"] = 1
         if nocc:
             rec.update({"nextOcc": nocc, "rw": rw_, "rd": rd_, "rx": rx_, "rt": rt_,
                         # calendar compatibility: it renders ven/tm like an event
