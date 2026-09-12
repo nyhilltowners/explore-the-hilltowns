@@ -380,7 +380,13 @@ h1{font-family:'Montserrat',sans-serif; font-weight:800; text-transform:uppercas
       var recurringPoi = (ev.ty === "poi" && !!ev.rw);
       if(ev.ty !== "events" && !recurringPoi) return;
       if(agendaOnly && ev.ag === 0) return;
-      if(ev.rw){
+      // Model A: dated event rows carry recurrence columns as informational metadata
+      // (for the weekly flyer), NOT as an expansion instruction. Expand ONLY true
+      // aggregates (events with no Start Date) and recurring POIs (standing meetings
+      // with no date). A dated event falls through to render once on its Start Date —
+      // this is what prevents the A1/A2 double-expansion now that the ingestor emits
+      // one dated occurrence row per date.
+      if(ev.rw && (recurringPoi || !ev.d1)){
         // series bounds: events use Start/End Date; a POI's standing meeting has none
         var lo = ev.ty === "events" ? parseISO(ev.d1) : null;
         var hi = ev.ty === "events" ? parseISO(ev.d2) : null;

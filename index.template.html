@@ -932,10 +932,10 @@ function markerBg(x, size){
   x.quadraticCurveTo(right, tip-6, cx, tip);           /* curve to bottom point */
   x.quadraticCurveTo(left, tip-6, left, shoulder);     /* curve back up left */
   x.closePath();
-  x.fillStyle='#ffffff'; x.fill();
+  x.fillStyle='#f4efe1'; x.fill();   /* parchment (matches --parchment token), was #ffffff (Laurie, 2026-09-12) */
   x.lineWidth=2.5; x.strokeStyle='rgba(10,10,70,0.3)'; x.stroke();
 }
-var GLYPH_CY = 88*0.43;   /* glyph sits in the wide upper part of the shield */
+var GLYPH_CY = 88*0.49;   /* glyph seated on the widest part of the shield (belly ~ shoulder at size*0.60); was 0.43 which floated high (Laurie, 2026-09-12) */
 /* 𖦹 on a trail-marker shield; hand-drawn ring-and-rays replica if the font is missing */
 function glyphImageData(){
   var size=88, c=document.createElement('canvas'); c.width=c.height=size;
