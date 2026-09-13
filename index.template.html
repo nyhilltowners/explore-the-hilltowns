@@ -1629,17 +1629,41 @@ function selectRecord(k, opts){
 }
 
 if(map){
-['pins','folk-pins','disc-pins','poi-pins'].forEach(function(ly){
-  map.on('click', ly, function(e){
-    var k = e.features[0].properties.k;
+  var PIN_LAYERS = ['pins','folk-pins','disc-pins','poi-pins'];
+  var TRANSIT_GLYPHS = {'🚉':1,'🚏':1,'🚆':1,'🚌':1};
+  /* Mirror the disc-pins symbol-sort-key so the pin that RECEIVES the click is the
+     same one drawn on top. symbol-sort-key governs draw order only, not hit-testing,
+     and per-layer handlers fire by layer registration order — together they caused
+     clicks to land on the pin visually behind. One handler + explicit ranking fixes it.
+     (2026-09-13) Higher rank = on top = wins the click. */
+  function pinRank(p){
+    if(!p) return -1;
+    if(p.ty === 'events') return 5;
+    if(TRANSIT_GLYPHS[p.g]) return 1;
+    if(p.dim == 1 && p.ty !== 'events') return 2;
+    if(p.cat === 'Restaurants') return 4;
+    return 3;
+  }
+  map.on('click', function(e){
+    var feats = map.queryRenderedFeatures(e.point, {layers: PIN_LAYERS});
+    if(!feats || !feats.length) return;
+    // queryRenderedFeatures returns topmost-drawn first, so on a rank tie keep
+    // the earlier (higher) feature — use strict > to not overwrite on ties.
+    var best = feats[0], bestRank = pinRank(feats[0].properties);
+    for(var i=1;i<feats.length;i++){
+      var rk = pinRank(feats[i].properties);
+      if(rk > bestRank){ best = feats[i]; bestRank = rk; }
+    }
+    var k = best.properties.k;
     var r = records.find(function(x){return x._k===k;});
     if(!r) return;
     selectRecord(k,{pan:false});
     showPopup(r);
   });
-  map.on('mouseenter', ly, function(){ map.getCanvas().style.cursor='pointer'; });
-  map.on('mouseleave', ly, function(){ map.getCanvas().style.cursor=''; });
-});
+  PIN_LAYERS.forEach(function(ly){
+    map.on('mouseenter', ly, function(){ map.getCanvas().style.cursor='pointer'; });
+    map.on('mouseleave', ly, function(){ map.getCanvas().style.cursor=''; });
+  });
 }
 
 /* ============ DETAIL ============ */
