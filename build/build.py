@@ -180,6 +180,17 @@ def load_preview_cache():
         return
     if not isinstance(_preview_cache, dict):
         _preview_cache = {}
+    # Self-heal a poisoned cache: drop empty-image entries so those sites are
+    # re-fetched. Empty entries were historically written for BOTH real "no image"
+    # and transport failures; a no-network build could fill the cache with false
+    # negatives that the fail-TTL then locked in. Re-fetching a genuinely-imageless
+    # site is cheap; keeping a false negative hides a real photo. (2026-09-12)
+    _dropped = [u for u, e in _preview_cache.items()
+                if not (isinstance(e, dict) and e.get("img"))]
+    for u in _dropped:
+        del _preview_cache[u]
+    if _dropped:
+        print(f"  preview cache: dropped {len(_dropped)} empty entries to re-fetch")
     print(f"  preview cache: {len(_preview_cache)} entries loaded from {src}")
 
 
@@ -228,7 +239,16 @@ def resolve_previews(all_records):
                 url, img, err = fut.result()
                 where = _preview_pending[url]
                 if err:
-                    warn(f"{where}: couldn't reach {url} for a preview image ({err}) — no photo this build; retried in {PREVIEW_TTL_FAIL_DAYS} days")
+                    warn(f"{where}: couldn't reach {url} for a preview image ({err}) — no photo this build; retried next build")
+                    # A transport failure (timeout/DNS/connection) is NOT evidence the
+                    # site lacks an image — caching it would suppress re-fetching. Leave
+                    # the URL uncached so the next build (with network) retries it.
+                    # (2026-09-12: fixes a cache poisoned by a no-network build — every
+                    # entry had img="" and the 7-day fail-TTL blocked all re-fetching.)
+                    done += 1
+                    if done % 100 == 0 or done == len(urls):
+                        print(f"  previews: {done}/{len(urls)}")
+                    continue
                 elif not img:
                     warn(f"{where}: no preview image published by {url} — no photo (you can set one explicitly in the Image column)")
                 _preview_cache[url] = {"img": img, "t": today}
