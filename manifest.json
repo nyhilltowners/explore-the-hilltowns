@@ -112,6 +112,16 @@
       "glyph": "⚙"
     },
     {
+      "key": "transportation",
+      "label": "Transportation",
+      "schema": "poi",
+      "workbook": "data/points_of_interest.xlsx",
+      "sheet": "Transportation",
+      "color": "#5b7a99",
+      "default_on": false,
+      "glyph": "🚌"
+    },
+    {
       "key": "folklore",
       "label": "Folklore",
       "schema": "folklore",

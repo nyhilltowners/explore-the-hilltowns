@@ -418,7 +418,7 @@ table.hours tr.today td:first-child{color:var(--gold-ink);}
     CATS.forEach(function(c){
       var n = catCount(c.label);
       if(!n) return;
-      if(!(c.label in catsOn)) catsOn[c.label] = true;
+      if(!(c.label in catsOn)) catsOn[c.label] = (c.default_on !== false);
       var lb = document.createElement("label"); lb.className = "catbox";
       var mark = c.glyph || "●";
       lb.innerHTML = '<input type="checkbox"'+(catsOn[c.label]?' checked':'')+'>'
