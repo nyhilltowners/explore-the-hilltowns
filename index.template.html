@@ -51,6 +51,30 @@ body{
 .betabar a{color:inherit; text-decoration:underline; text-underline-offset:2px;}
 .betabar .ticker-track span span{padding:5px 14px; display:inline-block;}
 .betabar .tg{font-size:1.75em; font-weight:900; vertical-align:-4px; display:inline-block; margin-right:1px;}
+.betabar .share-link{cursor:pointer; font-weight:900;}
+.betabar .ticker-user{font-style:italic;}
+/* Share-to-ticker modal */
+#shareModal{position:fixed; inset:0; z-index:9999; display:none; align-items:center; justify-content:center;
+  background:rgba(10,10,40,.55);}
+#shareModal.open{display:flex;}
+#shareModal .sm-card{background:var(--parchment,#f4efe1); color:#1a1a2e; width:min(92vw,460px);
+  border-radius:14px; padding:20px 22px; box-shadow:0 18px 50px rgba(0,0,0,.35); font-family:inherit;}
+#shareModal h3{margin:0 0 4px; font-size:18px;}
+#shareModal p.sm-sub{margin:0 0 12px; font-size:13px; opacity:.75;}
+#shareModal textarea{width:100%; box-sizing:border-box; min-height:96px; resize:vertical;
+  border:1.5px solid #c9bfa0; border-radius:10px; padding:10px 12px; font:inherit; font-size:15px; background:#fff;}
+#shareModal .sm-row{display:flex; justify-content:space-between; align-items:center; margin-top:10px; gap:10px;}
+#shareModal .sm-count{font-size:12px; opacity:.7;}
+#shareModal .sm-count.over{color:#b3261e; font-weight:700;}
+#shareModal .sm-btns{display:flex; gap:8px;}
+#shareModal button{font:inherit; font-weight:700; border-radius:9px; padding:8px 16px; cursor:pointer; border:1.5px solid transparent;}
+#shareModal .sm-submit{background:var(--gold,#c9a24b); color:var(--gold-ink,#241a00);}
+#shareModal .sm-submit:disabled{opacity:.5; cursor:not-allowed;}
+#shareModal .sm-cancel{background:transparent; border-color:#c9bfa0; color:#1a1a2e;}
+#shareModal .sm-msg{font-size:13px; margin-top:8px; min-height:16px;}
+#shareModal .sm-msg.err{color:#b3261e;}
+#shareModal .sm-msg.ok{color:#1a7f37;}
+#shareModal .sm-hp{position:absolute; left:-9999px; width:1px; height:1px; opacity:0;}
 @keyframes betabar-scroll{ from{transform:translateX(0);} to{transform:translateX(-50%);} }
 @media (prefers-reduced-motion: reduce){
   .betabar{overflow-x:auto;}
@@ -475,6 +499,7 @@ html[data-theme="night"] #modeToggle{color:#fca315;}
     <span><span class="tg">𓅓</span> Hiring? News to share? Poetry into the void? Email us and we'll share it here (free! not everything needs to be monetized)</span>
     <span><span class="tg">𓅓</span> Register to vote before October 23: <a href="https://voterlookup.elections.ny.gov/" target="_blank" rel="noopener">voterlookup.elections.ny.gov</a></span>
     <span><span class="tg">𓅓</span> Do you know who&#8217;s paying your politicians? <a href="https://www.opensecrets.org/" target="_blank" rel="noopener">OpenSecrets.org</a></span>
+    <span class="share-item"><span class="tg">𓅓</span> <a class="share-link" role="button" tabindex="0" onclick="openShare()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openShare();}">Something to share? Add it!</a></span>
   </span><span class="ticker-set" aria-hidden="true">
     <span><span class="tg">𓅓</span> Beta version: please double check all info before hitting the trail</span>
     <span><span class="tg">𓅓</span> Suggestions? Hit us up NYHilltowners@Gmail.com</span>
@@ -484,7 +509,24 @@ html[data-theme="night"] #modeToggle{color:#fca315;}
     <span><span class="tg">𓅓</span> Hiring? News to share? Poetry into the void? Email us and we'll share it here (free! not everything needs to be monetized)</span>
     <span><span class="tg">𓅓</span> Register to vote before October 23: <a href="https://voterlookup.elections.ny.gov/" target="_blank" rel="noopener">voterlookup.elections.ny.gov</a></span>
     <span><span class="tg">𓅓</span> Do you know who&#8217;s paying your politicians? <a href="https://www.opensecrets.org/" target="_blank" rel="noopener">OpenSecrets.org</a></span>
+    <span class="share-item"><span class="tg">𓅓</span> <a class="share-link" role="button" tabindex="0" onclick="openShare()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openShare();}">Something to share? Add it!</a></span>
   </span></div>
+</div>
+<div id="shareModal" role="dialog" aria-modal="true" aria-labelledby="sm-title">
+  <div class="sm-card">
+    <h3 id="sm-title">Something to share?</h3>
+    <p class="sm-sub">Add a note to the scroll. It stays up for 24 hours, then fades away. Be kind &amp; keep it clean.</p>
+    <textarea id="sm-text" maxlength="500" placeholder="What&#8217;s on your mind, neighbor?"></textarea>
+    <input type="text" id="sm-hp" class="sm-hp" tabindex="-1" autocomplete="off" aria-hidden="true">
+    <div class="sm-row">
+      <span class="sm-count" id="sm-count">0 / 500</span>
+      <div class="sm-btns">
+        <button type="button" class="sm-cancel" onclick="closeShare()">Cancel</button>
+        <button type="button" class="sm-submit" id="sm-submit" onclick="submitShare()">Add it</button>
+      </div>
+    </div>
+    <div class="sm-msg" id="sm-msg"></div>
+  </div>
 </div>
 <nav class="sitenav">
   <a class="brand" href="index.html">
@@ -1040,6 +1082,9 @@ function applyHash(){
 window.addEventListener('hashchange', applyHash);
 
 var LIKE_API = 'https://abacus.jasoncameron.dev';
+/* Share-to-ticker backend (Google Apps Script web app — the bulletin backend with
+   ticker support). Paste your deployed /exec URL here. Blank = feature hidden. */
+var SHARE_API = '';
 var LIKE_NS = 'nyhilltowners-explore-hills';
 /* Hearts you've left yourself are remembered in this browser so the button
    shows as yours on the atlas AND the directory; the count itself is global. */
@@ -2304,6 +2349,82 @@ if(!map) applyHash();
   window.addEventListener('touchend', onUp);
 
 })();
+
+/* ============ SHARE TO TICKER ============ */
+(function(){
+  if(!SHARE_API){ document.querySelectorAll('.share-item').forEach(function(el){ el.style.display='none'; }); return; }
+  // device token (reuse a stored one so rate-limit + identity are stable)
+  var TK='hilltowns_share_token';
+  var token = null;
+  try{ token = localStorage.getItem(TK); if(!token){ token = 't'+Date.now().toString(36)+Math.random().toString(36).slice(2,8); localStorage.setItem(TK, token); } }
+  catch(e){ token = 't'+Date.now().toString(36)+Math.random().toString(36).slice(2,8); }
+
+  function esc(x){ return String(x==null?'':x).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];}); }
+
+  // Inject a user message into BOTH ticker sets (so the seamless loop shows it)
+  function injectMessage(text){
+    var html = '<span class="ticker-user"><span class="tg">\U00013153</span> '+esc(text)+'</span>';
+    document.querySelectorAll('.betabar .ticker-set').forEach(function(set){
+      var share = set.querySelector('.share-item');
+      var node = document.createElement('span'); node.className='ticker-user-wrap'; node.innerHTML=html;
+      // place user messages just before the "add it" link
+      if(share) set.insertBefore(node.firstChild, share); else set.appendChild(node.firstChild);
+    });
+  }
+
+  // Fetch current (unexpired) messages on load and inject them
+  function loadTicker(){
+    fetch(SHARE_API+'?action=ticker', {method:'GET'})
+      .then(function(r){ return r.json(); })
+      .then(function(d){ if(d && d.ok && d.messages){ d.messages.slice().reverse().forEach(function(m){ injectMessage(m.text); }); } })
+      .catch(function(){});
+  }
+
+  // Modal wiring
+  var modal = document.getElementById('shareModal');
+  var ta = document.getElementById('sm-text');
+  var count = document.getElementById('sm-count');
+  var msg = document.getElementById('sm-msg');
+  var btn = document.getElementById('sm-submit');
+  var hp = document.getElementById('sm-hp');
+
+  window.openShare = function(){ msg.textContent=''; msg.className='sm-msg'; ta.value=''; updateCount(); modal.classList.add('open'); setTimeout(function(){ ta.focus(); }, 40); };
+  window.closeShare = function(){ modal.classList.remove('open'); };
+  modal.addEventListener('click', function(e){ if(e.target===modal) closeShare(); });
+  document.addEventListener('keydown', function(e){ if(e.key==='Escape' && modal.classList.contains('open')) closeShare(); });
+
+  function updateCount(){ var n=ta.value.length; count.textContent=n+' / 500'; count.className='sm-count'+(n>500?' over':''); }
+  ta.addEventListener('input', updateCount);
+
+  window.submitShare = function(){
+    var text = ta.value.trim();
+    if(!text){ msg.textContent='Type something first.'; msg.className='sm-msg err'; return; }
+    if(text.length>500){ msg.textContent='Too long — 500 characters max.'; msg.className='sm-msg err'; return; }
+    btn.disabled=true; msg.textContent='Adding\u2026'; msg.className='sm-msg';
+    fetch(SHARE_API, {method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'},
+      body: JSON.stringify({ action:'ticker', text:text, token:token, website: hp.value })})
+      .then(function(r){ return r.json(); })
+      .then(function(d){
+        btn.disabled=false;
+        if(d && d.ok){
+          injectMessage(text);                       // optimistic: show immediately
+          msg.textContent='Added! It\u2019s on the scroll for 24 hours.'; msg.className='sm-msg ok';
+          setTimeout(closeShare, 1100);
+        } else {
+          var e = d && d.error;
+          msg.textContent = e==='profanity' ? 'Let\u2019s keep it clean \u2014 please reword.'
+            : e==='rate' ? 'One message at a time \u2014 try again in a few minutes.'
+            : e==='closed' ? 'Sharing is paused right now.'
+            : 'Couldn\u2019t add that \u2014 please try again.';
+          msg.className='sm-msg err';
+        }
+      })
+      .catch(function(){ btn.disabled=false; msg.textContent='Network hiccup \u2014 try again.'; msg.className='sm-msg err'; });
+  };
+
+  loadTicker();
+})();
+
 </script>
 <!-- GoatCounter: privacy-friendly analytics, no cookies, no personal data -->
 <script data-goatcounter="https://nyhilltowners.goatcounter.com/count"

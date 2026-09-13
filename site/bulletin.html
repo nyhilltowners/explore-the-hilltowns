@@ -225,6 +225,30 @@ dialog.pinform::backdrop{ background:rgba(30,15,0,.6); backdrop-filter:blur(2px)
 .btn.quiet{ background:transparent; color:var(--ink-blue); }
 .formcard .hp{ position:absolute; left:-9999px; top:-9999px; height:0; width:0; opacity:0; }
 .formcard .err{ color:#b3261e; font-size:13px; margin-top:8px; }
+
+/* Shared skyline widget */
+.skyline{
+  display:flex; align-items:center; gap:18px; margin:0 14px; flex:none;
+  font-family:'Montserrat',sans-serif; font-size:11px; letter-spacing:.04em; color:var(--ink-blue); line-height:1.2;
+}
+.skyline .sky-g{display:flex; align-items:center; gap:7px;}
+.skyline .sky-g + .sky-g{padding-left:18px; border-left:1px solid var(--parchment-line);}
+.skyline svg{width:26px; height:26px; flex:none; color:var(--ink-blue);}
+.skyline .sky-stack{display:flex; flex-direction:column; gap:2px; white-space:nowrap;}
+.skyline .sky-eyebrow{font-size:9px; letter-spacing:.16em; text-transform:uppercase; color:var(--faint);}
+.skyline .sky-val{font-weight:700; font-size:12.5px; letter-spacing:.02em;}
+.skyline .sky-val .c{font-weight:400; color:var(--faint); margin-left:5px;}
+.skyline .sky-val .sep{margin:0 5px; color:var(--birch); font-weight:400;}
+.skyline .sky-sub{font-size:10px; font-style:italic; letter-spacing:.02em; color:#4a4f7a;}
+.skyline .sky-stack{gap:1px;}
+.skyline .sky-wx{display:none;}
+.skyline.has-wx .sky-wx{display:flex;}
+.skyline.has-wx .sky-wx + .sky-g{padding-left:18px; border-left:1px solid var(--parchment-line);}
+.skyline .sky-wx + .sky-g{padding-left:0; border-left:none;}
+#modeToggle{margin-left:4px;}
+@media (max-width:1180px){ .skyline .sky-moon{display:none;} }
+@media (max-width:960px){ .skyline{display:none;} }
+
 </style>
 </head>
 <body>
@@ -255,6 +279,22 @@ dialog.pinform::backdrop{ background:rgba(30,15,0,.6); backdrop-filter:blur(2px)
     <img src="images/raccoon-mark.svg" alt="">
     <span class="stack"><span class="l1">Hilltowns</span><span class="l2">Folk Atlas</span></span>
   </a>
+  <div class="skyline" id="skyline">
+    <div class="sky-g sky-wx" id="skyWx">
+      <svg id="skyIco" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"></svg>
+      <div class="sky-stack"><span class="sky-eyebrow" id="skyCond"></span><span class="sky-val" id="skyTemp"></span></div>
+    </div>
+    <div class="sky-g sky-sun" title="Today's sunrise and sunset, Berne time">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 16a8 8 0 0 1 16 0"/><line x1="2" y1="19.5" x2="22" y2="19.5"/><line x1="12" y1="3" x2="12" y2="5.5"/><line x1="5" y1="6.5" x2="6.6" y2="8.1"/><line x1="19" y1="6.5" x2="17.4" y2="8.1"/></svg>
+      <div class="sky-stack"><span class="sky-eyebrow">Sunrise &middot; Sunset</span><span class="sky-val" id="skySun"></span></div>
+    </div>
+    <div class="sky-g sky-moon" id="skyMoon">
+      <svg id="moonIco" viewBox="0 0 24 24" aria-hidden="true"></svg>
+      <div class="sky-stack"><span class="sky-eyebrow" id="moonPhase"></span><span class="sky-val" id="moonName"></span><span class="sky-sub" id="moonEng"></span></div>
+    </div>
+  </div>
+  <div class="hright">
+    <div class="links" id="hnav">
   <div class="links" id="hnav">
     <a href="index.html">Atlas</a>
     <a href="calendar.html">Calendar</a>
@@ -476,5 +516,6 @@ var BULLETIN_API = "https://script.google.com/macros/s/AKfycbxWg5Mj9f15MRIcYMJUZ
 })();
 </script>
 <script data-goatcounter="https://nyhilltowners.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
+<script src="skyline.js"></script>
 </body>
 </html>

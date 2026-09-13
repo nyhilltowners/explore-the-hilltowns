@@ -226,6 +226,38 @@ table.hours tr.today td:first-child{color:var(--gold-ink);}
   .org .orgthumb{width:64px; height:64px;}
   .org .facts .frow{flex-wrap:wrap;}
 }
+
+/* Shared skyline widget */
+.skyline{
+  display:flex; align-items:center; gap:18px; margin:0 14px; flex:none;
+  font-family:'Montserrat',sans-serif; font-size:11px; letter-spacing:.04em; color:var(--ink-blue); line-height:1.2;
+}
+.skyline .sky-g{display:flex; align-items:center; gap:7px;}
+.skyline .sky-g + .sky-g{padding-left:18px; border-left:1px solid var(--parchment-line);}
+.skyline svg{width:26px; height:26px; flex:none; color:var(--ink-blue);}
+.skyline .sky-stack{display:flex; flex-direction:column; gap:2px; white-space:nowrap;}
+.skyline .sky-eyebrow{font-size:9px; letter-spacing:.16em; text-transform:uppercase; color:var(--faint);}
+.skyline .sky-val{font-weight:700; font-size:12.5px; letter-spacing:.02em;}
+.skyline .sky-val .c{font-weight:400; color:var(--faint); margin-left:5px;}
+.skyline .sky-val .sep{margin:0 5px; color:var(--birch); font-weight:400;}
+.skyline .sky-sub{font-size:10px; font-style:italic; letter-spacing:.02em; color:#4a4f7a;}
+.skyline .sky-stack{gap:1px;}
+.skyline .sky-wx{display:none;}
+.skyline.has-wx .sky-wx{display:flex;}
+.skyline.has-wx .sky-wx + .sky-g{padding-left:18px; border-left:1px solid var(--parchment-line);}
+.skyline .sky-wx + .sky-g{padding-left:0; border-left:none;}
+#modeToggle{margin-left:4px;}
+@media (max-width:1180px){ .skyline .sky-moon{display:none;} }
+@media (max-width:960px){ .skyline{display:none;} }
+
+
+/* Directory search */
+.sitenav .iconbtn{background:none; border:none; cursor:pointer; padding:7px; color:var(--ink-blue); border-radius:8px; display:inline-flex; align-items:center;}
+.sitenav .iconbtn:hover{background:rgba(26,29,92,.07); color:var(--gold);}
+.sitenav .iconbtn svg{width:22px; height:22px; display:block;}
+#dirSearchbar{position:sticky; top:0; z-index:99; display:flex; align-items:center; gap:8px; padding:8px 16px;
+  background:var(--parchment,#f4efe1); border-bottom:1px solid #c9bfa0;}
+#dirSearchbar input{flex:1; font:inherit; font-size:15px; padding:8px 12px; border:1.5px solid #c9bfa0; border-radius:9px; background:#fff;}
 </style>
 </head>
 <body>
@@ -256,6 +288,22 @@ table.hours tr.today td:first-child{color:var(--gold-ink);}
     <img src="images/raccoon-mark.svg" alt="">
     <span class="stack"><span class="l1">Hilltowns</span><span class="l2">Folk Atlas</span></span>
   </a>
+  <div class="skyline" id="skyline">
+    <div class="sky-g sky-wx" id="skyWx">
+      <svg id="skyIco" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"></svg>
+      <div class="sky-stack"><span class="sky-eyebrow" id="skyCond"></span><span class="sky-val" id="skyTemp"></span></div>
+    </div>
+    <div class="sky-g sky-sun" title="Today's sunrise and sunset, Berne time">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 16a8 8 0 0 1 16 0"/><line x1="2" y1="19.5" x2="22" y2="19.5"/><line x1="12" y1="3" x2="12" y2="5.5"/><line x1="5" y1="6.5" x2="6.6" y2="8.1"/><line x1="19" y1="6.5" x2="17.4" y2="8.1"/></svg>
+      <div class="sky-stack"><span class="sky-eyebrow">Sunrise &middot; Sunset</span><span class="sky-val" id="skySun"></span></div>
+    </div>
+    <div class="sky-g sky-moon" id="skyMoon">
+      <svg id="moonIco" viewBox="0 0 24 24" aria-hidden="true"></svg>
+      <div class="sky-stack"><span class="sky-eyebrow" id="moonPhase"></span><span class="sky-val" id="moonName"></span><span class="sky-sub" id="moonEng"></span></div>
+    </div>
+  </div>
+  <div class="hright">
+    <div class="links" id="hnav">
   <div class="links" id="hnav">
     <a href="index.html">Atlas</a>
     <a href="calendar.html">Calendar</a>
@@ -263,10 +311,18 @@ table.hours tr.today td:first-child{color:var(--gold-ink);}
     <a href="instagram.html">Instagram</a>
     <a href="about.html">About</a>
   </div>
+  <button class="dirsearchbtn iconbtn" id="dirSearchToggle" title="Search the directory" aria-label="Search" aria-expanded="false">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"></circle><line x1="21" y1="21" x2="16.2" y2="16.2"></line></svg>
+  </button>
   <button class="menubtn" id="menuToggle" title="Menu" aria-label="Menu" aria-expanded="false">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="4" y1="7" x2="20" y2="7"></line><line x1="4" y1="12" x2="20" y2="12"></line><line x1="4" y1="17" x2="20" y2="17"></line></svg>
   </button>
 </nav>
+<div id="dirSearchbar" style="display:none;">
+  <input type="text" id="dirQ" placeholder="Search the directory &mdash; name, tag, town&hellip;" autocomplete="off">
+  <button class="iconbtn" id="dirSearchClose" title="Clear and close" aria-label="Clear and close">&times;</button>
+</div>
+
 
 <main class="wrap">
   <div class="eyebrow">The Scrappy Pages</div>
@@ -407,6 +463,7 @@ table.hours tr.today td:first-child{color:var(--gold-ink);}
   /* ---- category checkboxes (atlas idiom: checked = shown) + tag filter ---- */
   var catsOn = {};
   var selTag = null;      /* lowercase tag currently filtered, or null */
+  var searchQ = "";       /* lowercase free-text search, or "" */
   var selTagLabel = "";   /* display casing */
   var ccWrap = document.getElementById("catchecks");
   var tagbar = document.getElementById("tagbar");
@@ -446,9 +503,14 @@ table.hours tr.today td:first-child{color:var(--gold-ink);}
     return orgs.filter(function(o){
       if(!o.cats.some(function(c){ return catsOn[c]; })) return false;
       if(selTag && o.lctags.indexOf(selTag) < 0) return false;
+      if(searchQ){
+        var hay = ((o.t||"") + " " + (o.lctags||[]).join(" ") + " " + (o.addr||"") + " " + (o.s||"") + " " + (o.town||"")).toLowerCase();
+        if(hay.indexOf(searchQ) < 0) return false;
+      }
       return true;
     });
   }
+  window.__dirSetSearch = function(v){ searchQ = v || ""; render(); };
 
   /* ---- rendering ---- */
   var TODAY_DOW = (function(){
@@ -650,5 +712,20 @@ table.hours tr.today td:first-child{color:var(--gold-ink);}
 <!-- GoatCounter: privacy-friendly analytics, no cookies, no personal data -->
 <script data-goatcounter="https://nyhilltowners.goatcounter.com/count"
         async src="//gc.zgo.at/count.js"></script>
+<script src="skyline.js"></script>
+
+<script>
+(function(){
+  var toggle=document.getElementById('dirSearchToggle'), bar=document.getElementById('dirSearchbar'),
+      q=document.getElementById('dirQ'), close=document.getElementById('dirSearchClose');
+  if(!toggle||!bar||!q) return;
+  function open(){ bar.style.display='flex'; toggle.setAttribute('aria-expanded','true'); setTimeout(function(){q.focus();},30); }
+  function shut(){ bar.style.display='none'; toggle.setAttribute('aria-expanded','false'); if(q.value){ q.value=''; window.__dirSetSearch(''); } }
+  toggle.addEventListener('click', function(){ bar.style.display==='flex' ? shut() : open(); });
+  close.addEventListener('click', shut);
+  q.addEventListener('input', function(){ window.__dirSetSearch(q.value.trim().toLowerCase()); });
+  document.addEventListener('keydown', function(e){ if(e.key==='Escape' && bar.style.display==='flex') shut(); });
+})();
+</script>
 </body>
 </html>

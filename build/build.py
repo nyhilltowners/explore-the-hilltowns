@@ -1220,6 +1220,8 @@ def main() -> int:
         shutil.copyfile(ROOT / "instagram.html", SITE / "instagram.html")
     if (ROOT / "bulletin.html").exists():
         shutil.copyfile(ROOT / "bulletin.html", SITE / "bulletin.html")
+    if (ROOT / "skyline.js").exists():
+        shutil.copyfile(ROOT / "skyline.js", SITE / "skyline.js")
     if (ROOT / "images").exists():
         shutil.copytree(ROOT / "images", SITE / "images", dirs_exist_ok=True)
     if (ROOT / "fonts").exists():

@@ -29,9 +29,14 @@
  * Nothing is ever deleted by this script — same house rule as the atlas workbooks.
  */
 
-var SHEET_POSTS = 'Posts', SHEET_VOTES = 'Votes', SHEET_CONFIG = 'Config';
+var SHEET_POSTS = 'Posts', SHEET_VOTES = 'Votes', SHEET_CONFIG = 'Config', SHEET_TICKER = 'Ticker';
 var POST_COLS = ['ID','Posted','Status','Title','When','Date','Where','Details','Link','Name','Contact','Up','Down','Score','Token','Notes'];
 var VOTE_COLS = ['Token','PostID','Dir','Updated'];
+var TICKER_COLS = ['ID','Posted','Status','Text','Token','Notes'];
+var TICKER_MAX = 500;                  // characters
+var TICKER_TTL_HOURS = 24;             // messages expire after this many hours
+var TICKER_RATE_SECONDS = 300;        // one ticker message per device per 5 min
+var TICKER_DEFAULT_BANNED = ['fuck','shit','cunt','bitch','nigger','faggot','retard','rape','kike','spic','whore'];
 var LIMITS = { title:90, when:60, where:90, details:600, link:200, name:50, contact:120 };
 var RATE_SECONDS = 120;               // one card per device per 2 minutes
 var MAX_CARDS_RETURNED = 300;
@@ -40,6 +45,7 @@ function setup(){
   var ss = SpreadsheetApp.getActiveSpreadsheet();
   ensureSheet_(ss, SHEET_POSTS, POST_COLS);
   ensureSheet_(ss, SHEET_VOTES, VOTE_COLS);
+  ensureSheet_(ss, SHEET_TICKER, TICKER_COLS);
   var c = ensureSheet_(ss, SHEET_CONFIG, ['Key','Value','What it does']);
   if(c.getLastRow() < 2){
     c.getRange(2,1,3,3).setValues([
@@ -66,6 +72,7 @@ function config_(){
 function doGet(e){
   var action = (e && e.parameter && e.parameter.action) || 'list';
   if(action === 'list') return json_({ ok:true, posts: listPosts_() });
+  if(action === 'ticker') return json_({ ok:true, messages: listTicker_() });
   return json_({ ok:false, error:'unknown action' });
 }
 function doPost(e){
@@ -75,6 +82,7 @@ function doPost(e){
   try{
     if(body.action === 'submit') return json_(submit_(body));
     if(body.action === 'vote') return json_(vote_(body));
+    if(body.action === 'ticker') return json_(tickerSubmit_(body));
     return json_({ ok:false, error:'unknown action' });
   }catch(err){
     return json_({ ok:false, error: String(err && err.message || err) });
@@ -147,6 +155,46 @@ function vote_(b){
     return { ok:true, post:{ id:id, up:up, down:down } };
   }
   return { ok:false, error:'no such card' };
+}
+
+/* ---------- ticker ---------- */
+function listTicker_(){
+  var sh = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(SHEET_TICKER); if(!sh) return [];
+  var rows = sh.getDataRange().getValues(); if(rows.length < 2) return [];
+  var idx = index_(rows[0]);
+  var cutoff = Date.now() - TICKER_TTL_HOURS * 3600 * 1000;
+  var out = [];
+  for(var i = 1; i < rows.length; i++){
+    var r = rows[i]; if(!r[idx.ID]) continue;
+    if(String(r[idx.Status] || '').toLowerCase() !== 'live') continue;   // backend delete: set Status to anything else
+    var posted = r[idx.Posted] instanceof Date ? r[idx.Posted].getTime() : Date.parse(r[idx.Posted]);
+    if(!posted || posted < cutoff) continue;                            // 24h expiry
+    out.push({ id:String(r[idx.ID]), text:String(r[idx.Text] || ''), posted:isoStr_(r[idx.Posted]) });
+  }
+  out.sort(function(a,b){ return a.posted < b.posted ? 1 : -1; });       // newest first
+  return out;
+}
+function tickerSubmit_(b){
+  var cfg = config_();
+  if(cfg.closed === 'yes') return { ok:false, error:'closed' };
+  if(String(b.website || '').trim()) return { ok:false, error:'spam' };              // honeypot
+  var token = clean_(b.token, 64); if(!token) return { ok:false, error:'no token' };
+  var cache = CacheService.getScriptCache();
+  if(cache.get('trate:' + token)) return { ok:false, error:'rate' };                 // rate limit
+  var text = clean_(b.text, TICKER_MAX);
+  if(!text) return { ok:false, error:'empty' };
+  // profanity filter: default set + any Config banned_words; instant-publish means we REJECT hits
+  var banned = TICKER_DEFAULT_BANNED.concat(
+    (cfg.banned_words || '').split(',').map(function(s){ return s.trim().toLowerCase(); }).filter(String));
+  var hay = ' ' + text.toLowerCase().replace(/[^a-z0-9\s]/g,' ') + ' ';
+  if(banned.some(function(w){ return w && hay.indexOf(' ' + w + ' ') >= 0; })) return { ok:false, error:'profanity' };
+  var sh = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(SHEET_TICKER);
+  if(!sh){ return { ok:false, error:'no ticker sheet — run setup()' }; }
+  var id = 't' + Utilities.formatDate(new Date(), 'America/New_York', 'yyMMddHHmmss') + Math.random().toString(36).slice(2,5);
+  var now = new Date();
+  sh.appendRow([id, now, 'live', text, token, '']);
+  cache.put('trate:' + token, '1', TICKER_RATE_SECONDS);
+  return { ok:true, message:{ id:id, text:text, posted:now.toISOString() } };
 }
 
 /* ---------- helpers ---------- */
