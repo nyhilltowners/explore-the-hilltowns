@@ -1206,7 +1206,7 @@ var style = {
        The shield carries the sort-key so overlapping pins stack correctly; the
        glyph layer mirrors it so glyph and shield never separate. */
     {id:'disc-shield', type:'symbol', source:'folk',
-      filter:['all',['!=',['get','ty'],'folklore'],['!=',['get','cat'],'Points of Interest'],['!',['in',['get','cat'],['literal',['Farm Stands','Flowers & Gifts','Arts & Entertainment','Adventures']]]]],
+      filter:['==',['get','k'],'__noshield__'],
       layout:{'icon-image':'discShield','icon-allow-overlap':true,'icon-ignore-placement':true,
         'symbol-sort-key':['case',
           ['==',['get','ty'],'events'],5,
@@ -1217,7 +1217,7 @@ var style = {
         'icon-size':['interpolate',['linear'],['zoom'], 4,['*',['coalesce',['get','imm'],1],0.32], 9,['*',['coalesce',['get','imm'],1],0.48], 13,['*',['coalesce',['get','imm'],1],0.64]]},
       paint:{'icon-opacity':['case',['all',['==',['get','dim'],1],['!=',['get','ty'],'events']],0.55,1]}},
     {id:'poi-shield', type:'symbol', source:'folk',
-      filter:['==',['get','cat'],'Points of Interest'],
+      filter:['==',['get','k'],'__noshield__'],
       layout:{'icon-image':'discShield','icon-allow-overlap':true,'icon-ignore-placement':true,
         'symbol-sort-key':['case',['==',['get','dim'],1],0,1],
         'icon-size':['interpolate',['linear'],['zoom'], 4,0.24, 9,0.36, 13,0.48]},
@@ -1227,32 +1227,19 @@ var style = {
        neither dimmed nor glowing; a closed shop, off-season stand, or not-yet-
        started event → no glow. So the glow means "you can really go here now."
        (Laurie, 2026-09-14) */
-    /* GLOW COLOR SAMPLER (Laurie, 2026-09-14) — temporarily split by category so
-       several glow colors show at once for comparison. All gated on open=1.
-       Peach=Restaurants · White-daylight=Farm Stands/Flowers · Blue=Arts/Adventures ·
-       Bright bluish-sparkle=everything else. Collapse back to one color once chosen. */
+    /* Day glow: a cool blue bloom on every OPEN pin (open=1), breathing with a
+       pronounced float, no shield behind it. Water-light twinkles (canvas, below)
+       add glints like sun off a stream. (Laurie, 2026-09-14) */
     {id:'disc-glow', type:'circle', source:'folk',
-      filter:['all',['!=',['get','ty'],'folklore'],['!=',['get','cat'],'Points of Interest'],['==',['get','open'],1],['==',['get','cat'],'Restaurants']],
-      paint:{'circle-color':'#ffd9a0', 'circle-blur':0.8, 'circle-pitch-alignment':'map',
-        'circle-radius':['interpolate',['linear'],['zoom'], 4,9, 9,14, 13,20], 'circle-opacity':0.5}},
-    {id:'disc-glow-white', type:'circle', source:'folk',
-      filter:['all',['!=',['get','ty'],'folklore'],['!=',['get','cat'],'Points of Interest'],['==',['get','open'],1],['in',['get','cat'],['literal',['Farm Stands','Flowers & Gifts']]]],
-      paint:{'circle-color':'#f5f8ff', 'circle-blur':0.85, 'circle-pitch-alignment':'map',
-        'circle-radius':['interpolate',['linear'],['zoom'], 4,9, 9,14, 13,20], 'circle-opacity':0.6}},
-    {id:'disc-glow-blue', type:'circle', source:'folk',
-      filter:['all',['!=',['get','ty'],'folklore'],['!=',['get','cat'],'Points of Interest'],['==',['get','open'],1],['in',['get','cat'],['literal',['Arts & Entertainment','Adventures']]]],
-      paint:{'circle-color':'#8fc9ff', 'circle-blur':0.8, 'circle-pitch-alignment':'map',
-        'circle-radius':['interpolate',['linear'],['zoom'], 4,9, 9,14, 13,20], 'circle-opacity':0.6}},
-    {id:'disc-glow-sparkle', type:'circle', source:'folk',
-      filter:['all',['!=',['get','ty'],'folklore'],['!=',['get','cat'],'Points of Interest'],['==',['get','open'],1],['!',['in',['get','cat'],['literal',['Restaurants','Farm Stands','Flowers & Gifts','Arts & Entertainment','Adventures']]]]],
-      paint:{'circle-color':'#bfe6ff', 'circle-blur':0.9, 'circle-pitch-alignment':'map',
-        'circle-radius':['interpolate',['linear'],['zoom'], 4,10, 9,15, 13,21], 'circle-opacity':0.65}},
+      filter:['all',['!=',['get','ty'],'folklore'],['!=',['get','cat'],'Points of Interest'],['==',['get','open'],1]],
+      paint:{'circle-color':'#3d8bff', 'circle-blur':0.9, 'circle-pitch-alignment':'map',
+        'circle-radius':['interpolate',['linear'],['zoom'], 4,14, 9,22, 13,30], 'circle-opacity':0.62}},
     {id:'poi-glow', type:'circle', source:'folk',
       filter:['all',['==',['get','cat'],'Points of Interest'],['==',['get','open'],1]],
       paint:{
-        'circle-color':'#ffd9a0', 'circle-blur':0.8, 'circle-pitch-alignment':'map',
-        'circle-radius':['interpolate',['linear'],['zoom'], 4,7, 9,11, 13,15],
-        'circle-opacity':0.45
+        'circle-color':'#3d8bff', 'circle-blur':0.9, 'circle-pitch-alignment':'map',
+        'circle-radius':['interpolate',['linear'],['zoom'], 4,11, 9,17, 13,24],
+        'circle-opacity':0.55
       }},
     {id:'disc-pins', type:'symbol', source:'folk',
       filter:['all',['!=',['get','ty'],'folklore'],['!=',['get','cat'],'Points of Interest']],
@@ -2141,27 +2128,16 @@ function dayGlowFrame(ts){
   if(!map || isNight() || REDUCED_MOTION) return;
   if(ts - dayGlowLast > 45){
     dayGlowLast = ts;
-    DAY_T = (ts / 3400) % 1;          /* a slower, calmer breath by day — one every 3.4 s */
+    DAY_T = (ts / 3000) % 1;          /* a touch quicker so the float reads */
     var wave = ['sin',['*',6.283185,['+',DAY_T,['get','ph']]]];
-    var breath = ['+',1,['*',0.14,wave]];
+    var breath = ['+',1,['*',0.28,wave]];   /* more pronounced float/bounce */
     try{
       map.setPaintProperty('disc-glow','circle-radius',
-        ['interpolate',['linear'],['zoom'], 4,['*',9,breath], 9,['*',14,breath], 13,['*',20,breath]]);
-      map.setPaintProperty('disc-glow','circle-opacity', ['+',0.44,['*',0.14,wave]]);
-      map.setPaintProperty('disc-glow-white','circle-radius',
-        ['interpolate',['linear'],['zoom'], 4,['*',9,breath], 9,['*',14,breath], 13,['*',20,breath]]);
-      map.setPaintProperty('disc-glow-white','circle-opacity', ['+',0.52,['*',0.16,wave]]);
-      map.setPaintProperty('disc-glow-blue','circle-radius',
-        ['interpolate',['linear'],['zoom'], 4,['*',9,breath], 9,['*',14,breath], 13,['*',20,breath]]);
-      map.setPaintProperty('disc-glow-blue','circle-opacity', ['+',0.52,['*',0.16,wave]]);
-      /* sparkle: a faster, twinklier pulse so that option reads distinctly */
-      var spark = ['sin',['*',6.283185,['+',['*',DAY_T,2.2],['get','ph']]]];
-      map.setPaintProperty('disc-glow-sparkle','circle-radius',
-        ['interpolate',['linear'],['zoom'], 4,['*',10,['+',1,['*',0.22,spark]]], 9,['*',15,['+',1,['*',0.22,spark]]], 13,['*',21,['+',1,['*',0.22,spark]]]]);
-      map.setPaintProperty('disc-glow-sparkle','circle-opacity', ['+',0.55,['*',0.28,spark]]);
+        ['interpolate',['linear'],['zoom'], 4,['*',14,breath], 9,['*',22,breath], 13,['*',30,breath]]);
+      map.setPaintProperty('disc-glow','circle-opacity', ['+',0.56,['*',0.2,wave]]);
       map.setPaintProperty('poi-glow','circle-radius',
-        ['interpolate',['linear'],['zoom'], 4,['*',7,breath], 9,['*',11,breath], 13,['*',15,breath]]);
-      map.setPaintProperty('poi-glow','circle-opacity', ['+',0.4,['*',0.12,wave]]);
+        ['interpolate',['linear'],['zoom'], 4,['*',11,breath], 9,['*',17,breath], 13,['*',24,breath]]);
+      map.setPaintProperty('poi-glow','circle-opacity', ['+',0.5,['*',0.18,wave]]);
     }catch(e){}
   }
   dayGlowRAF = requestAnimationFrame(dayGlowFrame);
@@ -2230,6 +2206,74 @@ function sparkFrame(ts){
 }
 function startSparks(){ if(map && isNight() && !REDUCED_MOTION && !sparkRAF){ sparkPrev = 0; sparkRAF = requestAnimationFrame(sparkFrame); } }
 function stopSparks(){ if(sparkRAF){ cancelAnimationFrame(sparkRAF); sparkRAF = null; } sparks = []; var c = document.getElementById('sparks'); if(c){ var x=c.getContext('2d'); x.setTransform(1,0,0,1,0,0); x.clearRect(0,0,c.width,c.height); } }
+
+/* ============ DAY WATER-LIGHT TWINKLES ============
+   Light glinting off a stream: sparse, cool-white flecks that flash near OPEN
+   pins — fade in quick, hold a moment, fade out — with a gentle drift, not the
+   rising embers of night. Same canvas as the sparks; only one runs at a time
+   (day OR night). (Laurie, 2026-09-14) */
+var twinkles = [], twinkleRAF = null, twinklePrev = 0, TWINKLE_MAX = 90;
+function spawnTwinkle(lng, lat){
+  var r = Math.random;
+  twinkles.push({lng:lng, lat:lat, born:performance.now(),
+    life: 900 + r()*900,               /* short-lived flash */
+    ox:(r()-0.5)*26, oy:(r()-0.5)*20,  /* scattered around the pin, like glints on a surface */
+    drift:(r()-0.5)*7, rise:(r()-0.5)*5,
+    sz: 0.9 + r()*1.7,
+    hue: r()<0.35 ? 'w' : 'b',         /* mostly cool white, some pale blue */
+    twf: 5 + r()*5, twp: r()*6.283});  /* a faint shimmer within the flash */
+}
+function twinkleFrame(ts){
+  twinkleRAF = null;
+  var c = sparkCanvas(); if(!c || isNight() || REDUCED_MOTION){ twinkleRAF = requestAnimationFrame(twinkleFrame); return; }
+  var dt = Math.min(64, ts - (twinklePrev || ts)); twinklePrev = ts;
+  var dpr = window.devicePixelRatio || 1, W = c.clientWidth, H = c.clientHeight;
+  var x = c.getContext('2d'); x.setTransform(dpr,0,0,dpr,0,0); x.clearRect(0,0,W,H);
+  /* emit from OPEN pins on screen (glow means "open now"); budget so a dense
+     downtown doesn't shimmer into noise */
+  var pins = (LAST_FC && LAST_FC.features) || [], vis = [];
+  for(var i=0;i<pins.length;i++){
+    var f = pins[i]; if(f.properties.ty === 'folklore' || f.properties.open !== 1) continue;
+    var pt = map.project(f.geometry.coordinates);
+    if(pt.x < -30 || pt.y < -30 || pt.x > W+30 || pt.y > H+30) continue;
+    vis.push(f);
+  }
+  var rate = Math.min(0.9, 90 / Math.max(1, vis.length));   /* glints per pin per second — sparse */
+  var p = rate * dt / 1000;
+  for(var j=0;j<vis.length && twinkles.length < TWINKLE_MAX;j++){
+    if(Math.random() < p){ var g = vis[j].geometry.coordinates; spawnTwinkle(g[0], g[1]); }
+  }
+  var keep = [];
+  for(var k=0;k<twinkles.length;k++){
+    var tw = twinkles[k], age = ts - tw.born; if(age > tw.life) continue;
+    var u = age/tw.life;
+    /* flash envelope: quick rise, soft fall (sin gives a smooth in-out) */
+    var env = Math.sin(Math.PI*u);
+    var shimmer = 0.75 + 0.25*Math.sin(age/1000*tw.twf + tw.twp);
+    var a = env*shimmer;
+    var base = map.project([tw.lng, tw.lat]);
+    var t = age/1000;
+    var px = base.x + tw.ox + tw.drift*t;
+    var py = base.y + tw.oy + tw.rise*t;
+    var sz = tw.sz*(0.6 + 0.4*env);
+    /* soft cool halo */
+    x.beginPath(); x.arc(px, py, sz*2.4, 0, 6.283);
+    x.fillStyle = (tw.hue==='b' ? 'rgba(150,200,255,' : 'rgba(220,235,255,') + (0.22*a).toFixed(3) + ')'; x.fill();
+    /* bright core — a tiny 4-point star gives the "glint" quality without cheese */
+    x.fillStyle = (tw.hue==='b' ? 'rgba(210,232,255,' : 'rgba(255,255,255,') + (0.95*a).toFixed(3) + ')';
+    x.beginPath(); x.arc(px, py, sz, 0, 6.283); x.fill();
+    if(env > 0.55){                       /* only at the peak of the flash: faint cross-glint */
+      x.strokeStyle = 'rgba(255,255,255,'+(0.5*a).toFixed(3)+')'; x.lineWidth = 0.8;
+      var rr = sz*3.2;
+      x.beginPath(); x.moveTo(px-rr,py); x.lineTo(px+rr,py); x.moveTo(px,py-rr); x.lineTo(px,py+rr); x.stroke();
+    }
+    keep.push(tw);
+  }
+  twinkles = keep;
+  twinkleRAF = requestAnimationFrame(twinkleFrame);
+}
+function startTwinkles(){ if(map && !isNight() && !REDUCED_MOTION && !twinkleRAF){ twinklePrev = 0; twinkleRAF = requestAnimationFrame(twinkleFrame); } }
+function stopTwinkles(){ if(twinkleRAF){ cancelAnimationFrame(twinkleRAF); twinkleRAF = null; } twinkles = []; var c = document.getElementById('sparks'); if(c){ var x=c.getContext('2d'); x.setTransform(1,0,0,1,0,0); x.clearRect(0,0,c.width,c.height); } }
 function startGlow(){ if(map && isNight() && !REDUCED_MOTION && !glowRAF) glowRAF = requestAnimationFrame(glowFrame); }
 function stopGlow(){ if(glowRAF){ cancelAnimationFrame(glowRAF); glowRAF = null; } }
 function applyMapMode(){
@@ -2238,11 +2282,10 @@ function applyMapMode(){
   if(!map || !map.getLayer || !map.getLayer('folk-glow')) return;
   map.setLayoutProperty('folk-glow','visibility', night?'visible':'none');
   if(map.getLayer('disc-glow')) map.setLayoutProperty('disc-glow','visibility', night?'none':'visible');
-  ['disc-glow-white','disc-glow-blue','disc-glow-sparkle'].forEach(function(id){ if(map.getLayer(id)) map.setLayoutProperty(id,'visibility', night?'none':'visible'); });
   if(map.getLayer('poi-glow'))  map.setLayoutProperty('poi-glow','visibility', night?'none':'visible');
   map.setPaintProperty('pin-selected','circle-stroke-color', night ? '#ffb020' : '#39b7ff');
   refreshMapData();                    /* re-stamps the `night` flag so pins swap glyphs */
-  if(night){ startGlow(); startSparks(); stopDayGlow(); } else { stopGlow(); stopSparks(); startDayGlow(); }
+  if(night){ startGlow(); startSparks(); stopDayGlow(); stopTwinkles(); } else { stopGlow(); stopSparks(); startDayGlow(); startTwinkles(); }
 }
 /* Switch the whole page between day and firelight. `auto` = the sun did it
    (not the visitor), in which case a visitor's own filter choices are kept. */
