@@ -253,7 +253,7 @@ h1{font-family:'Montserrat',sans-serif; font-weight:800; text-transform:uppercas
 .sitenav .iconbtn{background:none; border:none; cursor:pointer; padding:7px; color:var(--ink-blue); border-radius:8px; display:inline-flex; align-items:center;}
 .sitenav .iconbtn:hover{background:rgba(26,29,92,.07); color:var(--gold);}
 .sitenav .iconbtn svg{width:22px; height:22px; display:block;}
-#calSearchbar{position:sticky; top:0; z-index:99; display:flex; align-items:center; gap:8px; padding:8px 16px;
+#calSearchbar{position:sticky; top:var(--navh,58px); z-index:99; display:flex; align-items:center; gap:8px; padding:8px 16px;
   background:var(--parchment,#f4efe1); border-bottom:1px solid #c9bfa0;}
 #calSearchbar input{flex:1; font:inherit; font-size:15px; padding:8px 12px; border:1.5px solid #c9bfa0; border-radius:9px; background:#fff;}
 </style>
@@ -1070,6 +1070,19 @@ h1{font-family:'Montserrat',sans-serif; font-weight:800; text-transform:uppercas
   close.addEventListener('click', shut);
   q.addEventListener('input', function(){ window.__calSetSearch(q.value.trim().toLowerCase()); });
   document.addEventListener('keydown', function(e){ if(e.key==='Escape' && bar.style.display==='flex') shut(); });
+})();
+</script>
+<script>
+/* Sticky search bar sits just below the sticky nav — measure the nav's real
+   height into --navh so the search box is never hidden behind it. (2026-09-14) */
+(function(){
+  function setNavH(){
+    var nav=document.querySelector('.sitenav');
+    if(nav) document.documentElement.style.setProperty('--navh', nav.getBoundingClientRect().height+'px');
+  }
+  setNavH();
+  window.addEventListener('resize', setNavH);
+  window.addEventListener('load', setNavH);
 })();
 </script>
 </body>

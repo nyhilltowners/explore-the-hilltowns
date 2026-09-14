@@ -1208,11 +1208,11 @@ var style = {
       filter:['all',['!=',['get','ty'],'folklore'],['!=',['get','cat'],'Points of Interest'],['==',['get','open'],1]],
       layout:{'icon-image':'discShield','icon-allow-overlap':true,'icon-ignore-placement':true,
         'symbol-sort-key':['case',
-          ['==',['get','ty'],'events'],5,
           ['in',['get','g'],['literal',['🚉','🚏','🚆','🚌']]],1,
           ['all',['==',['get','dim'],1],['!=',['get','ty'],'events']],2,
-          ['==',['get','cat'],'Restaurants'],4,
-          3],
+          ['all',['==',['get','open'],1],['==',['get','ty'],'events']],7,
+          ['==',['get','open'],1],6,
+          4],
         'icon-size':['interpolate',['linear'],['zoom'], 4,['*',['coalesce',['get','imm'],1],0.32], 9,['*',['coalesce',['get','imm'],1],0.48], 13,['*',['coalesce',['get','imm'],1],0.64]]},
       paint:{'icon-opacity':['case',['all',['==',['get','dim'],1],['!=',['get','ty'],'events']],0.55,1]}},
     {id:'poi-shield', type:'symbol', source:'folk',
@@ -1244,11 +1244,11 @@ var style = {
       filter:['all',['!=',['get','ty'],'folklore'],['!=',['get','cat'],'Points of Interest']],
       layout:{'icon-image':['concat','gg-',['case',['all',['==',['get','dim'],1],['!=',['get','ty'],'events']],'#9aa0a6',['get','col']],'-',['get','g']],'icon-allow-overlap':true,'icon-ignore-placement':true,
         'symbol-sort-key':['case',
-          ['==',['get','ty'],'events'],5,
           ['in',['get','g'],['literal',['🚉','🚏','🚆','🚌']]],1,
           ['all',['==',['get','dim'],1],['!=',['get','ty'],'events']],2,
-          ['==',['get','cat'],'Restaurants'],4,
-          3],
+          ['all',['==',['get','open'],1],['==',['get','ty'],'events']],7,
+          ['==',['get','open'],1],6,
+          4],
         'icon-size':['interpolate',['linear'],['zoom'], 4,['*',['coalesce',['get','imm'],1],0.32], 9,['*',['coalesce',['get','imm'],1],0.48], 13,['*',['coalesce',['get','imm'],1],0.64]]},
       paint:{'icon-opacity':['case',['all',['==',['get','dim'],1],['!=',['get','ty'],'events']],0.55,1]}},
     {id:'poi-pins', type:'symbol', source:'folk',
@@ -1789,11 +1789,11 @@ if(map){
      (2026-09-13) Higher rank = on top = wins the click. */
   function pinRank(p){
     if(!p) return -1;
-    if(p.ty === 'events') return 5;
-    if(TRANSIT_GLYPHS[p.g]) return 1;
-    if(p.dim == 1 && p.ty !== 'events') return 2;
-    if(p.cat === 'Restaurants') return 4;
-    return 3;
+    if(TRANSIT_GLYPHS[p.g]) return 1;                       /* transit: always back */
+    if(p.dim == 1 && p.ty !== 'events') return 2;           /* faded/closed */
+    if(p.open == 1 && p.ty === 'events') return 7;          /* open event: very top */
+    if(p.open == 1) return 6;                               /* open/glowing: top */
+    return 4;                                               /* neutral */
   }
   map.on('click', function(e){
     var feats = map.queryRenderedFeatures(e.point, {layers: PIN_LAYERS});
