@@ -1205,7 +1205,7 @@ var style = {
        The shield carries the sort-key so overlapping pins stack correctly; the
        glyph layer mirrors it so glyph and shield never separate. */
     {id:'disc-shield', type:'symbol', source:'folk',
-      filter:['==',['get','k'],'__noshield__'],
+      filter:['all',['!=',['get','ty'],'folklore'],['!=',['get','cat'],'Points of Interest'],['==',['get','open'],1]],
       layout:{'icon-image':'discShield','icon-allow-overlap':true,'icon-ignore-placement':true,
         'symbol-sort-key':['case',
           ['==',['get','ty'],'events'],5,
@@ -1216,7 +1216,7 @@ var style = {
         'icon-size':['interpolate',['linear'],['zoom'], 4,['*',['coalesce',['get','imm'],1],0.32], 9,['*',['coalesce',['get','imm'],1],0.48], 13,['*',['coalesce',['get','imm'],1],0.64]]},
       paint:{'icon-opacity':['case',['all',['==',['get','dim'],1],['!=',['get','ty'],'events']],0.55,1]}},
     {id:'poi-shield', type:'symbol', source:'folk',
-      filter:['==',['get','k'],'__noshield__'],
+      filter:['all',['==',['get','cat'],'Points of Interest'],['==',['get','open'],1]],
       layout:{'icon-image':'discShield','icon-allow-overlap':true,'icon-ignore-placement':true,
         'symbol-sort-key':['case',['==',['get','dim'],1],0,1],
         'icon-size':['interpolate',['linear'],['zoom'], 4,0.24, 9,0.36, 13,0.48]},
