@@ -976,8 +976,8 @@ function markerBg(x, size){
   x.quadraticCurveTo(right, tip-6, cx, tip);           /* curve to bottom point */
   x.quadraticCurveTo(left, tip-6, left, shoulder);     /* curve back up left */
   x.closePath();
-  x.fillStyle='#00004d'; x.fill();   /* dark blue shield (Laurie, 2026-09-14) — glow breathes between this and the glyph */
-  x.lineWidth=2.5; x.strokeStyle='rgba(10,10,70,0.5)'; x.stroke();
+  x.fillStyle='#f4efe1'; x.fill();   /* parchment shield (Laurie, 2026-09-14) — reverted from dark blue */
+  x.lineWidth=2.5; x.strokeStyle='rgba(10,10,70,0.3)'; x.stroke();
 }
 /* Shield-only icon (no glyph): the dark-blue base of the 3-layer pin — shield,
    then breathing glow, then glyph on top. (2026-09-14) */
@@ -1206,7 +1206,7 @@ var style = {
        The shield carries the sort-key so overlapping pins stack correctly; the
        glyph layer mirrors it so glyph and shield never separate. */
     {id:'disc-shield', type:'symbol', source:'folk',
-      filter:['all',['!=',['get','ty'],'folklore'],['!=',['get','cat'],'Points of Interest']],
+      filter:['all',['!=',['get','ty'],'folklore'],['!=',['get','cat'],'Points of Interest'],['!',['in',['get','cat'],['literal',['Farm Stands','Flowers & Gifts','Arts & Entertainment','Adventures']]]]],
       layout:{'icon-image':'discShield','icon-allow-overlap':true,'icon-ignore-placement':true,
         'symbol-sort-key':['case',
           ['==',['get','ty'],'events'],5,
@@ -1227,13 +1227,26 @@ var style = {
        neither dimmed nor glowing; a closed shop, off-season stand, or not-yet-
        started event → no glow. So the glow means "you can really go here now."
        (Laurie, 2026-09-14) */
+    /* GLOW COLOR SAMPLER (Laurie, 2026-09-14) — temporarily split by category so
+       several glow colors show at once for comparison. All gated on open=1.
+       Peach=Restaurants · White-daylight=Farm Stands/Flowers · Blue=Arts/Adventures ·
+       Bright bluish-sparkle=everything else. Collapse back to one color once chosen. */
     {id:'disc-glow', type:'circle', source:'folk',
-      filter:['all',['!=',['get','ty'],'folklore'],['!=',['get','cat'],'Points of Interest'],['==',['get','open'],1]],
-      paint:{
-        'circle-color':'#ffd9a0', 'circle-blur':0.8, 'circle-pitch-alignment':'map',
-        'circle-radius':['interpolate',['linear'],['zoom'], 4,9, 9,14, 13,20],
-        'circle-opacity':0.5
-      }},
+      filter:['all',['!=',['get','ty'],'folklore'],['!=',['get','cat'],'Points of Interest'],['==',['get','open'],1],['==',['get','cat'],'Restaurants']],
+      paint:{'circle-color':'#ffd9a0', 'circle-blur':0.8, 'circle-pitch-alignment':'map',
+        'circle-radius':['interpolate',['linear'],['zoom'], 4,9, 9,14, 13,20], 'circle-opacity':0.5}},
+    {id:'disc-glow-white', type:'circle', source:'folk',
+      filter:['all',['!=',['get','ty'],'folklore'],['!=',['get','cat'],'Points of Interest'],['==',['get','open'],1],['in',['get','cat'],['literal',['Farm Stands','Flowers & Gifts']]]],
+      paint:{'circle-color':'#f5f8ff', 'circle-blur':0.85, 'circle-pitch-alignment':'map',
+        'circle-radius':['interpolate',['linear'],['zoom'], 4,9, 9,14, 13,20], 'circle-opacity':0.6}},
+    {id:'disc-glow-blue', type:'circle', source:'folk',
+      filter:['all',['!=',['get','ty'],'folklore'],['!=',['get','cat'],'Points of Interest'],['==',['get','open'],1],['in',['get','cat'],['literal',['Arts & Entertainment','Adventures']]]],
+      paint:{'circle-color':'#8fc9ff', 'circle-blur':0.8, 'circle-pitch-alignment':'map',
+        'circle-radius':['interpolate',['linear'],['zoom'], 4,9, 9,14, 13,20], 'circle-opacity':0.6}},
+    {id:'disc-glow-sparkle', type:'circle', source:'folk',
+      filter:['all',['!=',['get','ty'],'folklore'],['!=',['get','cat'],'Points of Interest'],['==',['get','open'],1],['!',['in',['get','cat'],['literal',['Restaurants','Farm Stands','Flowers & Gifts','Arts & Entertainment','Adventures']]]]],
+      paint:{'circle-color':'#bfe6ff', 'circle-blur':0.9, 'circle-pitch-alignment':'map',
+        'circle-radius':['interpolate',['linear'],['zoom'], 4,10, 9,15, 13,21], 'circle-opacity':0.65}},
     {id:'poi-glow', type:'circle', source:'folk',
       filter:['all',['==',['get','cat'],'Points of Interest'],['==',['get','open'],1]],
       paint:{
@@ -1458,6 +1471,10 @@ function phaseOf(k){
 function shortTitle(r){
   var t = r.t || '';
   if(r.ty === 'folklore'){ var i = t.indexOf(':'); if(i > 0) return t.slice(0, i).trim(); }
+  /* Bus stops read clearer with an explicit label — many are named after a
+     nearby landmark (e.g. "Oak Hill Post Office (Route 706)"). 🚏 = bus stop.
+     (Laurie, 2026-09-14) */
+  if(r.g === '\uD83D\uDE8F' && !/^bus stop:/i.test(t)) return 'Bus Stop: ' + t;
   return t;
 }
 function toFC(list){
@@ -1840,7 +1857,7 @@ function affiliationNote(){
     + '</div>';
 }
 function detailBody(r){
-  var b = '<h2>'+esc(r.t)+' '+likeWidget(r)+'</h2>';
+  var b = '<h2>'+esc(shortTitle(r))+' '+likeWidget(r)+'</h2>';
   if(r.img){
     b += '<div class="dimg"><img src="'+esc(r.img)+'" alt="" loading="lazy" '
       + 'onerror="this.parentNode.style.display=\'none\'">'
@@ -2131,6 +2148,17 @@ function dayGlowFrame(ts){
       map.setPaintProperty('disc-glow','circle-radius',
         ['interpolate',['linear'],['zoom'], 4,['*',9,breath], 9,['*',14,breath], 13,['*',20,breath]]);
       map.setPaintProperty('disc-glow','circle-opacity', ['+',0.44,['*',0.14,wave]]);
+      map.setPaintProperty('disc-glow-white','circle-radius',
+        ['interpolate',['linear'],['zoom'], 4,['*',9,breath], 9,['*',14,breath], 13,['*',20,breath]]);
+      map.setPaintProperty('disc-glow-white','circle-opacity', ['+',0.52,['*',0.16,wave]]);
+      map.setPaintProperty('disc-glow-blue','circle-radius',
+        ['interpolate',['linear'],['zoom'], 4,['*',9,breath], 9,['*',14,breath], 13,['*',20,breath]]);
+      map.setPaintProperty('disc-glow-blue','circle-opacity', ['+',0.52,['*',0.16,wave]]);
+      /* sparkle: a faster, twinklier pulse so that option reads distinctly */
+      var spark = ['sin',['*',6.283185,['+',['*',DAY_T,2.2],['get','ph']]]];
+      map.setPaintProperty('disc-glow-sparkle','circle-radius',
+        ['interpolate',['linear'],['zoom'], 4,['*',10,['+',1,['*',0.22,spark]]], 9,['*',15,['+',1,['*',0.22,spark]]], 13,['*',21,['+',1,['*',0.22,spark]]]]);
+      map.setPaintProperty('disc-glow-sparkle','circle-opacity', ['+',0.55,['*',0.28,spark]]);
       map.setPaintProperty('poi-glow','circle-radius',
         ['interpolate',['linear'],['zoom'], 4,['*',7,breath], 9,['*',11,breath], 13,['*',15,breath]]);
       map.setPaintProperty('poi-glow','circle-opacity', ['+',0.4,['*',0.12,wave]]);
@@ -2210,6 +2238,7 @@ function applyMapMode(){
   if(!map || !map.getLayer || !map.getLayer('folk-glow')) return;
   map.setLayoutProperty('folk-glow','visibility', night?'visible':'none');
   if(map.getLayer('disc-glow')) map.setLayoutProperty('disc-glow','visibility', night?'none':'visible');
+  ['disc-glow-white','disc-glow-blue','disc-glow-sparkle'].forEach(function(id){ if(map.getLayer(id)) map.setLayoutProperty(id,'visibility', night?'none':'visible'); });
   if(map.getLayer('poi-glow'))  map.setLayoutProperty('poi-glow','visibility', night?'none':'visible');
   map.setPaintProperty('pin-selected','circle-stroke-color', night ? '#ffb020' : '#39b7ff');
   refreshMapData();                    /* re-stamps the `night` flag so pins swap glyphs */
