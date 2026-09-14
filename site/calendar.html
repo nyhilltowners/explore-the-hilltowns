@@ -21,8 +21,7 @@
 body{
   font-family:'Lato',ui-sans-serif,system-ui,sans-serif;
   color:var(--ink-blue);
-  background:var(--parchment) url("images/paper-texture.png") repeat;
-  background-size:400px auto;
+  background:var(--ink);
   -webkit-font-smoothing:antialiased; line-height:1.6;
 }
 .betabar{background:var(--gold); color:var(--gold-ink);
@@ -81,7 +80,7 @@ body{
   .sitenav .links a.ig{align-self:flex-start;}
 }
 
-.wrap{max-width:920px; margin:0 auto; padding:40px 24px 72px;}
+.wrap{max-width:920px; margin:0 auto; padding:40px 24px 72px; background:var(--parchment); border-radius:10px; box-shadow:0 8px 30px rgba(0,0,40,.28);}
 .eyebrow{font-family:'Montserrat',sans-serif; font-weight:700; font-size:12px; letter-spacing:.18em;
   text-transform:uppercase; color:var(--gold); margin-bottom:12px;}
 h1{font-family:'Montserrat',sans-serif; font-weight:800; text-transform:uppercase; letter-spacing:.03em;
@@ -761,11 +760,26 @@ h1{font-family:'Montserrat',sans-serif; font-weight:800; text-transform:uppercas
     "life by chocolate","the graham & co","gracie's luncheonette","the marketplace east durham",
     "enoki","the circus family"
   ].map(function(x){ return x.replace(/\u2019/g,"'"); });
+  /* 2026-09-13 (Laurie): down-weight American Legion posts and post offices /
+     mailing / business centers in Explore-nearby — matched by kind (glyph/name/tags)
+     rather than by listing each, since there are many. Tier 1 = demoted (picked after
+     tier 0), same as the name list below. */
+  function isDownweightKind(p){
+    var n = String(p.t||"").toLowerCase();
+    var tg = (p.tags||[]).join(" ").toLowerCase();
+    var g = p.g || "";
+    if(g === "\uD83D\uDE8F") return false;                                               // never demote 🚏 transit stops (some are named "X Post Office")
+    if(g === "\uD83C\uDF96" || n.indexOf("american legion") >= 0) return true;            // 🎖️ Legion posts
+    if(g === "\uD83D\uDCE6") return true;                                                 // 📦 post office / mailing / business center
+    if(/\b(post office|usps|mailing center|business center|pack (and|&) ship|postnet)\b/.test(n + " " + tg)) return true;
+    return false;
+  }
   function demoteTier(p){
     var n = String(p.t||"").toLowerCase().replace(/\u2019/g,"'");
     if(NEARBY_PRIORITY.some(function(f){ return n === f || n.indexOf(f) >= 0; })) return -1;
     if(NEARBY_DEMOTE_LAST.some(function(f){ return n.indexOf(f) >= 0; })) return 2;
     if(NEARBY_DEMOTE.some(function(f){ return n === f || n.indexOf(f) >= 0; })) return 1;
+    if(isDownweightKind(p)) return 1;
     return 0;
   }
   function nearbyExcluded(p){
