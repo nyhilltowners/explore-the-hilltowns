@@ -2137,7 +2137,7 @@ function dayGlowFrame(ts){
   if(!map || isNight() || REDUCED_MOTION) return;
   if(ts - dayGlowLast > 45){
     dayGlowLast = ts;
-    DAY_T = (ts / 3000) % 1;          /* a touch quicker so the float reads */
+    DAY_T = (ts / 7000) % 1;          /* slow, meditative breath — one every 7s (per-pin ph keeps them out of sync) */
     var wave = ['sin',['*',6.283185,['+',DAY_T,['get','ph']]]];
     var breath = ['+',1,['*',0.28,wave]];   /* more pronounced float/bounce */
     try{
