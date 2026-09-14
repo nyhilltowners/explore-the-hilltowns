@@ -974,8 +974,27 @@ function markerBg(x, size){
   x.quadraticCurveTo(right, tip-6, cx, tip);           /* curve to bottom point */
   x.quadraticCurveTo(left, tip-6, left, shoulder);     /* curve back up left */
   x.closePath();
-  x.fillStyle='#f4efe1'; x.fill();   /* parchment (matches --parchment token), was #ffffff (Laurie, 2026-09-12) */
-  x.lineWidth=2.5; x.strokeStyle='rgba(10,10,70,0.3)'; x.stroke();
+  x.fillStyle='#00004d'; x.fill();   /* dark blue shield (Laurie, 2026-09-14) — glow breathes between this and the glyph */
+  x.lineWidth=2.5; x.strokeStyle='rgba(10,10,70,0.5)'; x.stroke();
+}
+/* Shield-only icon (no glyph): the dark-blue base of the 3-layer pin — shield,
+   then breathing glow, then glyph on top. (2026-09-14) */
+function discShield(){
+  var size=88, c=document.createElement('canvas'); c.width=c.height=size;
+  markerBg(c.getContext('2d'), size);
+  return c.getContext('2d').getImageData(0,0,size,size);
+}
+/* Glyph-only icon on a transparent background — sits on TOP of the glow so the
+   warm breath shows in the window between it and the dark shield. */
+function discGlyphOnly(fg, ch){
+  var size=88, c=document.createElement('canvas'); c.width=c.height=size;
+  var x=c.getContext('2d');
+  ch = (ch && ch.trim()) ? ch.trim() : '\u25CF';
+  if(!charSupported(ch)) ch='\u25CF';
+  x.fillStyle=fg; x.textAlign='center'; x.textBaseline='middle';
+  x.font='52px "Montserrat","Noto Sans",sans-serif';
+  x.fillText(ch, size/2, GLYPH_CY+2);
+  return x.getImageData(0,0,size,size);
 }
 var GLYPH_CY = 88*0.49;   /* glyph seated on the widest part of the shield (belly ~ shoulder at size*0.60); was 0.43 which floated high (Laurie, 2026-09-12) */
 /* 𖦹 on a trail-marker shield; hand-drawn ring-and-rays replica if the font is missing */
@@ -1176,28 +1195,50 @@ var style = {
       filter:['==',['get','ty'],'folklore'],
       layout:{'icon-image':['case',['==',['get','night'],1],'folkGlyphNight','folkGlyph'],'icon-allow-overlap':true,'icon-ignore-placement':true,
         'icon-size':['interpolate',['linear'],['zoom'], 4,0.32, 9,0.48, 13,0.64]}},
-    /* Day-mode: a soft warm-white glow under every disc pin, breathing gently
-       like the night firelight — same technique as folk-glow, warm-white instead
-       of ember, and shown in DAY rather than night. Per-pin phase (ph) makes the
-       field breathe unevenly so it feels alive rather than synchronized.
-       (2026-09-14, Laurie) */
+    /* Day pins are now a 3-layer stack so a warm glow can breathe BETWEEN the
+       dark-blue shield and the glyph (Laurie, 2026-09-14):
+         (1) disc-shield / poi-shield — the dark-blue shield base
+         (2) disc-glow / poi-glow    — the breathing amber glow, sized to sit
+                                        INSIDE the shield window
+         (3) disc-pins / poi-pins    — the glyph alone, transparent bg, on top
+       The shield carries the sort-key so overlapping pins stack correctly; the
+       glyph layer mirrors it so glyph and shield never separate. */
+    {id:'disc-shield', type:'symbol', source:'folk',
+      filter:['all',['!=',['get','ty'],'folklore'],['!=',['get','cat'],'Points of Interest']],
+      layout:{'icon-image':'discShield','icon-allow-overlap':true,'icon-ignore-placement':true,
+        'symbol-sort-key':['case',
+          ['==',['get','ty'],'events'],5,
+          ['in',['get','g'],['literal',['🚉','🚏','🚆','🚌']]],1,
+          ['all',['==',['get','dim'],1],['!=',['get','ty'],'events']],2,
+          ['==',['get','cat'],'Restaurants'],4,
+          3],
+        'icon-size':['interpolate',['linear'],['zoom'], 4,['*',['coalesce',['get','imm'],1],0.32], 9,['*',['coalesce',['get','imm'],1],0.48], 13,['*',['coalesce',['get','imm'],1],0.64]]},
+      paint:{'icon-opacity':['case',['all',['==',['get','dim'],1],['!=',['get','ty'],'events']],0.55,1]}},
+    {id:'poi-shield', type:'symbol', source:'folk',
+      filter:['==',['get','cat'],'Points of Interest'],
+      layout:{'icon-image':'discShield','icon-allow-overlap':true,'icon-ignore-placement':true,
+        'symbol-sort-key':['case',['==',['get','dim'],1],0,1],
+        'icon-size':['interpolate',['linear'],['zoom'], 4,0.24, 9,0.36, 13,0.48]},
+      paint:{'icon-opacity':['case',['==',['get','dim'],1],0.55,1]}},
+    /* the breathing glow — sits between shield and glyph, sized to glow within
+       the shield window rather than halo past it */
     {id:'disc-glow', type:'circle', source:'folk',
       filter:['all',['!=',['get','ty'],'folklore'],['!=',['get','cat'],'Points of Interest']],
       paint:{
-        'circle-color':'#ffb347', 'circle-blur':0.9, 'circle-pitch-alignment':'map',
-        'circle-radius':['interpolate',['linear'],['zoom'], 4,22, 9,34, 13,46],
-        'circle-opacity':0.55
+        'circle-color':'#ffb347', 'circle-blur':0.7, 'circle-pitch-alignment':'map',
+        'circle-radius':['interpolate',['linear'],['zoom'], 4,10, 9,16, 13,22],
+        'circle-opacity':0.7
       }},
     {id:'poi-glow', type:'circle', source:'folk',
       filter:['==',['get','cat'],'Points of Interest'],
       paint:{
-        'circle-color':'#ffb347', 'circle-blur':0.9, 'circle-pitch-alignment':'map',
-        'circle-radius':['interpolate',['linear'],['zoom'], 4,18, 9,27, 13,37],
-        'circle-opacity':0.5
+        'circle-color':'#ffb347', 'circle-blur':0.7, 'circle-pitch-alignment':'map',
+        'circle-radius':['interpolate',['linear'],['zoom'], 4,8, 9,12, 13,17],
+        'circle-opacity':0.65
       }},
     {id:'disc-pins', type:'symbol', source:'folk',
       filter:['all',['!=',['get','ty'],'folklore'],['!=',['get','cat'],'Points of Interest']],
-      layout:{'icon-image':['concat','gd-',['case',['all',['==',['get','dim'],1],['!=',['get','ty'],'events']],'#9aa0a6',['get','col']],'-',['get','g']],'icon-allow-overlap':true,'icon-ignore-placement':true,
+      layout:{'icon-image':['concat','gg-',['case',['all',['==',['get','dim'],1],['!=',['get','ty'],'events']],'#9aa0a6',['get','col']],'-',['get','g']],'icon-allow-overlap':true,'icon-ignore-placement':true,
         'symbol-sort-key':['case',
           ['==',['get','ty'],'events'],5,
           ['in',['get','g'],['literal',['🚉','🚏','🚆','🚌']]],1,
@@ -1208,7 +1249,7 @@ var style = {
       paint:{'icon-opacity':['case',['all',['==',['get','dim'],1],['!=',['get','ty'],'events']],0.55,1]}},
     {id:'poi-pins', type:'symbol', source:'folk',
       filter:['==',['get','cat'],'Points of Interest'],
-      layout:{'icon-image':['concat','gd-',['case',['==',['get','dim'],1],'#9aa0a6',['get','col']],'-',['get','g']],'icon-allow-overlap':true,'icon-ignore-placement':true,
+      layout:{'icon-image':['concat','gg-',['case',['==',['get','dim'],1],'#9aa0a6',['get','col']],'-',['get','g']],'icon-allow-overlap':true,'icon-ignore-placement':true,
         'symbol-sort-key':['case',['==',['get','dim'],1],0,1],
         'icon-size':['interpolate',['linear'],['zoom'], 4,0.24, 9,0.36, 13,0.48]},
       paint:{'icon-opacity':['case',['==',['get','dim'],1],0.55,1]}},
@@ -1258,6 +1299,9 @@ map.on('styleimagemissing', function(e){
   if(map.hasImage(e.id)) return;
   if(e.id==='folkGlyph'){ map.addImage(e.id, glyphImageData()); return; }
   if(e.id==='folkGlyphNight'){ map.addImage(e.id, glyphImageDataNight()); return; }
+  if(e.id==='discShield'){ map.addImage(e.id, discShield()); return; }
+  var mg = e.id.match(/^gg-(#[0-9a-fA-F]{6})-([\s\S]*)$/);   /* glyph-only, transparent bg */
+  if(mg){ map.addImage(e.id, discGlyphOnly(mg[1], mg[2])); return; }
   var m = e.id.match(/^gd-(#[0-9a-fA-F]{6})-([\s\S]*)$/);
   if(m) map.addImage(e.id, discGlyph(m[1], m[2]));
 });
@@ -1693,7 +1737,7 @@ function selectRecord(k, opts){
 }
 
 if(map){
-  var PIN_LAYERS = ['pins','folk-pins','disc-pins','poi-pins'];
+  var PIN_LAYERS = ['pins','folk-pins','disc-shield','poi-shield','disc-pins','poi-pins'];
   var TRANSIT_GLYPHS = {'🚉':1,'🚏':1,'🚆':1,'🚌':1};
   /* Mirror the disc-pins symbol-sort-key so the pin that RECEIVES the click is the
      same one drawn on top. symbol-sort-key governs draw order only, not hit-testing,
@@ -2056,11 +2100,11 @@ function dayGlowFrame(ts){
     var breath = ['+',1,['*',0.14,wave]];
     try{
       map.setPaintProperty('disc-glow','circle-radius',
-        ['interpolate',['linear'],['zoom'], 4,['*',22,breath], 9,['*',34,breath], 13,['*',46,breath]]);
-      map.setPaintProperty('disc-glow','circle-opacity', ['+',0.5,['*',0.16,wave]]);
+        ['interpolate',['linear'],['zoom'], 4,['*',10,breath], 9,['*',16,breath], 13,['*',22,breath]]);
+      map.setPaintProperty('disc-glow','circle-opacity', ['+',0.64,['*',0.2,wave]]);
       map.setPaintProperty('poi-glow','circle-radius',
-        ['interpolate',['linear'],['zoom'], 4,['*',18,breath], 9,['*',27,breath], 13,['*',37,breath]]);
-      map.setPaintProperty('poi-glow','circle-opacity', ['+',0.46,['*',0.14,wave]]);
+        ['interpolate',['linear'],['zoom'], 4,['*',8,breath], 9,['*',12,breath], 13,['*',17,breath]]);
+      map.setPaintProperty('poi-glow','circle-opacity', ['+',0.58,['*',0.18,wave]]);
     }catch(e){}
   }
   dayGlowRAF = requestAnimationFrame(dayGlowFrame);
