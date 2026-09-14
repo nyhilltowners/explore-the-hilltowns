@@ -949,7 +949,7 @@ h1{font-family:'Montserrat',sans-serif; font-weight:800; text-transform:uppercas
       if(it.far && it === farItems[0]) h += '<div class="nb-head nb-far">Farther afield</div>';
       h += '<a class="nb-row'+(it.far?' nb-farrow':'')+'" href="index.html#'+encodeURIComponent(p.sl||"")+'" title="Open on the map">'
         + '<span class="nb-g">'+esc(p.g||"")+'</span>'
-        + '<span class="nb-name">'+esc(p.t)+'</span>'
+        + '<span class="nb-name">'+esc((it.transit && p.g === "\uD83D\uDE8F" ? "Bus Stop: " : "") + p.t)+'</span>'
         + '<span class="nb-cat">'+esc((it.cats||[p.cat]).join(" · "))+'</span>'
         + '<span class="nb-hrs">'+esc(it.hrs)+'</span>'
         + '<span class="nb-dist">'+mi+' mi</span></a>';

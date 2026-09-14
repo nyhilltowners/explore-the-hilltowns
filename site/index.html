@@ -1176,6 +1176,25 @@ var style = {
       filter:['==',['get','ty'],'folklore'],
       layout:{'icon-image':['case',['==',['get','night'],1],'folkGlyphNight','folkGlyph'],'icon-allow-overlap':true,'icon-ignore-placement':true,
         'icon-size':['interpolate',['linear'],['zoom'], 4,0.32, 9,0.48, 13,0.64]}},
+    /* Day-mode: a soft warm-white glow under every disc pin, breathing gently
+       like the night firelight — same technique as folk-glow, warm-white instead
+       of ember, and shown in DAY rather than night. Per-pin phase (ph) makes the
+       field breathe unevenly so it feels alive rather than synchronized.
+       (2026-09-14, Laurie) */
+    {id:'disc-glow', type:'circle', source:'folk',
+      filter:['all',['!=',['get','ty'],'folklore'],['!=',['get','cat'],'Points of Interest']],
+      paint:{
+        'circle-color':'#fff6e0', 'circle-blur':1, 'circle-pitch-alignment':'map',
+        'circle-radius':['interpolate',['linear'],['zoom'], 4,11, 9,17, 13,24],
+        'circle-opacity':0.45
+      }},
+    {id:'poi-glow', type:'circle', source:'folk',
+      filter:['==',['get','cat'],'Points of Interest'],
+      paint:{
+        'circle-color':'#fff6e0', 'circle-blur':1, 'circle-pitch-alignment':'map',
+        'circle-radius':['interpolate',['linear'],['zoom'], 4,9, 9,14, 13,20],
+        'circle-opacity':0.4
+      }},
     {id:'disc-pins', type:'symbol', source:'folk',
       filter:['all',['!=',['get','ty'],'folklore'],['!=',['get','cat'],'Points of Interest']],
       layout:{'icon-image':['concat','gd-',['case',['all',['==',['get','dim'],1],['!=',['get','ty'],'events']],'#9aa0a6',['get','col']],'-',['get','g']],'icon-allow-overlap':true,'icon-ignore-placement':true,
@@ -2024,6 +2043,30 @@ function glowFrame(ts){
   }
   glowRAF = requestAnimationFrame(glowFrame);
 }
+/* Day-mode warm-white breath — mirror of glowFrame, runs when NOT night. Breathes
+   disc-glow + poi-glow gently so daytime pins feel as alive as the firelight ones. */
+var dayGlowRAF = null, dayGlowLast = 0, DAY_T = 0;
+function dayGlowFrame(ts){
+  dayGlowRAF = null;
+  if(!map || isNight() || REDUCED_MOTION) return;
+  if(ts - dayGlowLast > 45){
+    dayGlowLast = ts;
+    DAY_T = (ts / 3400) % 1;          /* a slower, calmer breath by day — one every 3.4 s */
+    var wave = ['sin',['*',6.283185,['+',DAY_T,['get','ph']]]];
+    var breath = ['+',1,['*',0.14,wave]];
+    try{
+      map.setPaintProperty('disc-glow','circle-radius',
+        ['interpolate',['linear'],['zoom'], 4,['*',11,breath], 9,['*',17,breath], 13,['*',24,breath]]);
+      map.setPaintProperty('disc-glow','circle-opacity', ['+',0.42,['*',0.16,wave]]);
+      map.setPaintProperty('poi-glow','circle-radius',
+        ['interpolate',['linear'],['zoom'], 4,['*',9,breath], 9,['*',14,breath], 13,['*',20,breath]]);
+      map.setPaintProperty('poi-glow','circle-opacity', ['+',0.37,['*',0.14,wave]]);
+    }catch(e){}
+  }
+  dayGlowRAF = requestAnimationFrame(dayGlowFrame);
+}
+function startDayGlow(){ if(map && !isNight() && !REDUCED_MOTION && !dayGlowRAF) dayGlowRAF = requestAnimationFrame(dayGlowFrame); }
+function stopDayGlow(){ if(dayGlowRAF){ cancelAnimationFrame(dayGlowRAF); dayGlowRAF = null; } }
 /* ---- Campfire sparks (night only). A transparent canvas over the map; each
    frame every on-screen folklore pin is projected to screen space and a few
    sparks drift up and away from it, fading out. Pure 2D canvas, no GL. ---- */
@@ -2093,9 +2136,11 @@ function applyMapMode(){
   setBase(night ? 'night' : dayBase);   /* radio + note update even before/without a map */
   if(!map || !map.getLayer || !map.getLayer('folk-glow')) return;
   map.setLayoutProperty('folk-glow','visibility', night?'visible':'none');
+  if(map.getLayer('disc-glow')) map.setLayoutProperty('disc-glow','visibility', night?'none':'visible');
+  if(map.getLayer('poi-glow'))  map.setLayoutProperty('poi-glow','visibility', night?'none':'visible');
   map.setPaintProperty('pin-selected','circle-stroke-color', night ? '#ffb020' : '#39b7ff');
   refreshMapData();                    /* re-stamps the `night` flag so pins swap glyphs */
-  if(night){ startGlow(); startSparks(); } else { stopGlow(); stopSparks(); }
+  if(night){ startGlow(); startSparks(); stopDayGlow(); } else { stopGlow(); stopSparks(); startDayGlow(); }
 }
 /* Switch the whole page between day and firelight. `auto` = the sun did it
    (not the visitor), in which case a visitor's own filter choices are kept. */
