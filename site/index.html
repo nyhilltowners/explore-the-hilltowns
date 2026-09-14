@@ -316,6 +316,8 @@ a.weblink:hover{text-decoration:underline;}
 .maplibregl-popup-close-button{color:var(--birch); font-size:18px; right:4px; top:2px;}
 .pop h4{font-size:13.5px; font-weight:600; margin-bottom:3px; line-height:1.3; font-family:'Montserrat',ui-sans-serif,system-ui,sans-serif;}
 .pop .pm{font-family:'Montserrat',ui-sans-serif,system-ui,sans-serif; font-size:10.5px; color:var(--birch); margin-bottom:5px;}
+.pop .hourslink{color:var(--wampum); cursor:pointer; white-space:nowrap; font-weight:600;}
+.pop .hourslink:hover{text-decoration:underline;}
 .whenrange{opacity:0.62; font-weight:400; white-space:nowrap;}
 .pop .ps{font-size:12.5px; color:var(--lichen); margin:6px 0 9px; line-height:1.45;
   display:-webkit-box; -webkit-line-clamp:4; -webkit-box-orient:vertical; overflow:hidden;}
@@ -1220,21 +1222,24 @@ var style = {
         'symbol-sort-key':['case',['==',['get','dim'],1],0,1],
         'icon-size':['interpolate',['linear'],['zoom'], 4,0.24, 9,0.36, 13,0.48]},
       paint:{'icon-opacity':['case',['==',['get','dim'],1],0.55,1]}},
-    /* the breathing glow — sits between shield and glyph, sized to glow within
-       the shield window rather than halo past it */
+    /* the breathing glow — sits between shield and glyph, and ONLY on pins that
+       are affirmatively OPEN right now (open=1). A POI with no posted hours is
+       neither dimmed nor glowing; a closed shop, off-season stand, or not-yet-
+       started event → no glow. So the glow means "you can really go here now."
+       (Laurie, 2026-09-14) */
     {id:'disc-glow', type:'circle', source:'folk',
-      filter:['all',['!=',['get','ty'],'folklore'],['!=',['get','cat'],'Points of Interest']],
+      filter:['all',['!=',['get','ty'],'folklore'],['!=',['get','cat'],'Points of Interest'],['==',['get','open'],1]],
       paint:{
-        'circle-color':'#ffb347', 'circle-blur':0.7, 'circle-pitch-alignment':'map',
-        'circle-radius':['interpolate',['linear'],['zoom'], 4,10, 9,16, 13,22],
-        'circle-opacity':0.7
+        'circle-color':'#ffd9a0', 'circle-blur':0.8, 'circle-pitch-alignment':'map',
+        'circle-radius':['interpolate',['linear'],['zoom'], 4,9, 9,14, 13,20],
+        'circle-opacity':0.5
       }},
     {id:'poi-glow', type:'circle', source:'folk',
-      filter:['==',['get','cat'],'Points of Interest'],
+      filter:['all',['==',['get','cat'],'Points of Interest'],['==',['get','open'],1]],
       paint:{
-        'circle-color':'#ffb347', 'circle-blur':0.7, 'circle-pitch-alignment':'map',
-        'circle-radius':['interpolate',['linear'],['zoom'], 4,8, 9,12, 13,17],
-        'circle-opacity':0.65
+        'circle-color':'#ffd9a0', 'circle-blur':0.8, 'circle-pitch-alignment':'map',
+        'circle-radius':['interpolate',['linear'],['zoom'], 4,7, 9,11, 13,15],
+        'circle-opacity':0.45
       }},
     {id:'disc-pins', type:'symbol', source:'folk',
       filter:['all',['!=',['get','ty'],'folklore'],['!=',['get','cat'],'Points of Interest']],
@@ -1373,6 +1378,23 @@ function isDimmed(r){
   }
   return isClosedNow(r);
 }
+/* Affirmatively OPEN right now — the glow signal. Distinct from isDimmed:
+   a POI with NO posted hours is neither dimmed NOR glowing (we can't claim you
+   can walk in). Glow only when we positively know: within posted hours, or a
+   lodging (open for the night), or an event currently happening, or a recurring
+   POI in its meeting window. (Laurie, 2026-09-14) */
+function isLodgingRec(r){ return r.cat === 'Lodging'; }
+function openNow(r){
+  if(r.ty==='events'){
+    var ref = planDate || TODAY_E;
+    return r.d1 <= ref && (!r.d2 || r.d2 >= ref);   /* happening now / today */
+  }
+  if(r.rw) return recurActiveNow(r);                 /* recurring POI: only in its meeting window */
+  if(isLodgingRec(r)) return true;                   /* a place to stay is open for the night */
+  var hasHours = r.hrs && ['mon','tue','wed','thu','fri','sat','sun'].some(function(d){ return r.hrs[d] && r.hrs[d].trim(); });
+  if(!hasHours) return false;                        /* NO hours → neither dimmed nor glowing */
+  return !isClosedNow(r);                            /* has hours → glow only while within them */
+}
 /* ===== Recurrence gate (2026-09-10, Laurie) =====
    A POI with a standing meeting but no regular hours (e.g. a Legion post that
    meets "2nd Tue 7:30 PM, except Jul & Aug") is only ON the map while that
@@ -1443,7 +1465,7 @@ function toFC(list){
     .filter(function(r){return r.tier!=='none';})
     .map(function(r){ return {type:'Feature',
       properties:{k:r._k, tier:r.tier, ty:r.ty, cat:r.cat, g:r.g||'', col:r.col,
-        dim:isDimmed(r)?1:0, imm:immScale(r), night:isNight()?1:0, ph:phaseOf(r._k)},
+        dim:isDimmed(r)?1:0, open:openNow(r)?1:0, imm:immScale(r), night:isNight()?1:0, ph:phaseOf(r._k)},
       geometry:{type:'Point', coordinates:[r.lng, r.lat]}};
     });
   spreadCollisions(feats);
@@ -1662,10 +1684,17 @@ function siblingsOf(rec){
 }
 function popupBody(r){
   if(r.ty==='poi'){
-    var today = r.hrs ? r.hrs[TODAY_DOW] : '';
+    var hasHours = r.hrs && ['mon','tue','wed','thu','fri','sat','sun'].some(function(d){ return r.hrs[d] && r.hrs[d].trim(); });
+    var today = r.hrs ? (r.hrs[TODAY_DOW]||'').trim() : '';
+    var hoursLine = '';
+    if(hasHours){
+      hoursLine = today
+        ? '<div class="pm">Today: '+esc(today)+' <a class="hourslink" onclick="openDetail(\''+r._k+'\')">all hours &rarr;</a></div>'
+        : '<div class="pm">Closed today <a class="hourslink" onclick="openDetail(\''+r._k+'\')">all hours &rarr;</a></div>';
+    }
     return '<div class="pm">'+(r.addr?esc(r.addr):'')+'</div>'
       + '<div>'+tagChips(r)+'</div>'
-      + (today?'<div class="pm">Today: '+esc(today)+'</div>':'')
+      + hoursLine
       + '<div class="ps">'+esc(r.s||'')+'</div>';
   }
   if(r.ty==='events'){
@@ -2100,11 +2129,11 @@ function dayGlowFrame(ts){
     var breath = ['+',1,['*',0.14,wave]];
     try{
       map.setPaintProperty('disc-glow','circle-radius',
-        ['interpolate',['linear'],['zoom'], 4,['*',10,breath], 9,['*',16,breath], 13,['*',22,breath]]);
-      map.setPaintProperty('disc-glow','circle-opacity', ['+',0.64,['*',0.2,wave]]);
+        ['interpolate',['linear'],['zoom'], 4,['*',9,breath], 9,['*',14,breath], 13,['*',20,breath]]);
+      map.setPaintProperty('disc-glow','circle-opacity', ['+',0.44,['*',0.14,wave]]);
       map.setPaintProperty('poi-glow','circle-radius',
-        ['interpolate',['linear'],['zoom'], 4,['*',8,breath], 9,['*',12,breath], 13,['*',17,breath]]);
-      map.setPaintProperty('poi-glow','circle-opacity', ['+',0.58,['*',0.18,wave]]);
+        ['interpolate',['linear'],['zoom'], 4,['*',7,breath], 9,['*',11,breath], 13,['*',15,breath]]);
+      map.setPaintProperty('poi-glow','circle-opacity', ['+',0.4,['*',0.12,wave]]);
     }catch(e){}
   }
   dayGlowRAF = requestAnimationFrame(dayGlowFrame);
