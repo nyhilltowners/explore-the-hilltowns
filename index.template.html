@@ -1184,16 +1184,16 @@ var style = {
     {id:'disc-glow', type:'circle', source:'folk',
       filter:['all',['!=',['get','ty'],'folklore'],['!=',['get','cat'],'Points of Interest']],
       paint:{
-        'circle-color':'#ffb347', 'circle-blur':1, 'circle-pitch-alignment':'map',
-        'circle-radius':['interpolate',['linear'],['zoom'], 4,13, 9,20, 13,28],
-        'circle-opacity':0.6
+        'circle-color':'#ffb347', 'circle-blur':0.9, 'circle-pitch-alignment':'map',
+        'circle-radius':['interpolate',['linear'],['zoom'], 4,22, 9,34, 13,46],
+        'circle-opacity':0.55
       }},
     {id:'poi-glow', type:'circle', source:'folk',
       filter:['==',['get','cat'],'Points of Interest'],
       paint:{
-        'circle-color':'#ffb347', 'circle-blur':1, 'circle-pitch-alignment':'map',
-        'circle-radius':['interpolate',['linear'],['zoom'], 4,11, 9,16, 13,23],
-        'circle-opacity':0.55
+        'circle-color':'#ffb347', 'circle-blur':0.9, 'circle-pitch-alignment':'map',
+        'circle-radius':['interpolate',['linear'],['zoom'], 4,18, 9,27, 13,37],
+        'circle-opacity':0.5
       }},
     {id:'disc-pins', type:'symbol', source:'folk',
       filter:['all',['!=',['get','ty'],'folklore'],['!=',['get','cat'],'Points of Interest']],
@@ -2056,11 +2056,11 @@ function dayGlowFrame(ts){
     var breath = ['+',1,['*',0.14,wave]];
     try{
       map.setPaintProperty('disc-glow','circle-radius',
-        ['interpolate',['linear'],['zoom'], 4,['*',13,breath], 9,['*',20,breath], 13,['*',28,breath]]);
-      map.setPaintProperty('disc-glow','circle-opacity', ['+',0.56,['*',0.18,wave]]);
+        ['interpolate',['linear'],['zoom'], 4,['*',22,breath], 9,['*',34,breath], 13,['*',46,breath]]);
+      map.setPaintProperty('disc-glow','circle-opacity', ['+',0.5,['*',0.16,wave]]);
       map.setPaintProperty('poi-glow','circle-radius',
-        ['interpolate',['linear'],['zoom'], 4,['*',11,breath], 9,['*',16,breath], 13,['*',23,breath]]);
-      map.setPaintProperty('poi-glow','circle-opacity', ['+',0.5,['*',0.16,wave]]);
+        ['interpolate',['linear'],['zoom'], 4,['*',18,breath], 9,['*',27,breath], 13,['*',37,breath]]);
+      map.setPaintProperty('poi-glow','circle-opacity', ['+',0.46,['*',0.14,wave]]);
     }catch(e){}
   }
   dayGlowRAF = requestAnimationFrame(dayGlowFrame);
