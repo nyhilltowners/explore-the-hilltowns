@@ -1390,9 +1390,18 @@ function openNow(r){
     return r.d1 <= ref && (!r.d2 || r.d2 >= ref);   /* happening now / today */
   }
   if(r.rw) return recurActiveNow(r);                 /* recurring POI: only in its meeting window */
-  if(isLodgingRec(r)) return true;                   /* a place to stay is open for the night */
   var hasHours = r.hrs && ['mon','tue','wed','thu','fri','sat','sun'].some(function(d){ return r.hrs[d] && r.hrs[d].trim(); });
   if(!hasHours) return false;                        /* NO hours → neither dimmed nor glowing */
+  /* Unstaffed, always-open outdoor spots (trailheads, preserves, falls, access
+     points) read as "24 hours" but there's no one there to help you — the glow
+     means "you can really go and be received," so these don't glow. Lodging is
+     excluded for the same reason (no staffed welcome implied). (Laurie, 2026-09-14) */
+  var blob = ((r.t||'') + ' ' + (r.tags||[]).join(' ')).toLowerCase();
+  var isUnstaffedOutdoor = /trailhead|trail head|preserve|sanctuary|\bfalls\b|access|state forest|wildlife|overlook|scenic|boat launch|fishing access|rail trail/.test(blob);
+  var todayCell = (r.hrs[DOW_KEYS[new Date().getDay()]]||'').trim();
+  var is24 = /24\s*h|open\s*24|always\s*open/i.test(todayCell);
+  if(r.cat === 'Lodging') return false;              /* a bed for the night ≠ a staffed welcome now */
+  if(is24 && isUnstaffedOutdoor) return false;       /* always-open public land: no glow */
   return !isClosedNow(r);                            /* has hours → glow only while within them */
 }
 /* ===== Recurrence gate (2026-09-10, Laurie) =====
