@@ -468,8 +468,7 @@ html[data-theme="night"] table.hours tr.today td{color:#fff6e0;}
 html[data-theme="night"] .tag:hover{color:#fff6e0;}
 html[data-theme="night"] .popimg, html[data-theme="night"] .dimg img{background:#000052;}
 html[data-theme="night"] #map{background:#00002e;}
-#sparks{position:absolute; inset:0; width:100%; height:100%; z-index:1; pointer-events:none; display:none;}
-html[data-theme="night"] #sparks{display:block;}
+#sparks{position:absolute; inset:0; width:100%; height:100%; z-index:1; pointer-events:none; display:block;}
 .maplibregl-popup{z-index:2;}   /* keep popups above the sparks canvas */
 html[data-theme="night"] #mapnotice{background:#00002e !important;}
 html[data-theme="night"] #layers, html[data-theme="night"] #layersToggle, html[data-theme="night"] .mapbar .btn,
@@ -1359,6 +1358,7 @@ function isClosedNow(r){
   }
   var cell=(r.hrs[DOW_KEYS[new Date().getDay()]]||'').trim();
   if(!cell) return isTruck;                     /* trucks w/o today's hours → dim; others → open */
+  if(/appoint|by appt/i.test(cell)) return true; /* by appointment → faded, not walk-in (Laurie, 2026-09-14) */
   if(/closed/i.test(cell)) return true;
   if(/24\s*hours|open\s*24|always\s*open/i.test(cell)) return false;
   var ts=_parseTimes(cell);
