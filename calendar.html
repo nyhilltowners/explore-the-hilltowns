@@ -799,6 +799,13 @@ h1{font-family:'Montserrat',sans-serif; font-weight:800; text-transform:uppercas
     if(isLodging(r)) return true;
     return r.hrs && DOW_KEYS.some(function(k){ return r.hrs[k] && !/^closed$/i.test(r.hrs[k]); });
   });
+  /* 2026-09-14 (Laurie): transit pool for the guaranteed nearest-stop entry —
+     every bus/train stop with coords, hours irrelevant (a stop is always available).
+     Kept separate from POIS, which requires posted hours. */
+  var TRANSIT_GLYPHS = {"\uD83D\uDE89":1,"\uD83D\uDE8F":1,"\uD83D\uDE86":1,"\uD83D\uDE8C":1};
+  var TRANSIT = DATA.filter(function(r){
+    return r.ty === "poi" && typeof r.lat === "number" && typeof r.lng === "number" && TRANSIT_GLYPHS[r.g];
+  });
   /* Season Start/End are "MM-DD" strings on the POI record (ss/se); blank = year-round.
      A window that wraps the new year (e.g. 11-01 → 03-31) is handled. */
   function inSeason(p, mmdd){
@@ -911,6 +918,20 @@ h1{font-family:'Montserrat',sans-serif; font-weight:800; text-transform:uppercas
       var f = out.find(function(it){ return c.test(it.p) && !used[it.p.sl]; }) || far.find(function(it){ return c.test(it.p) && !used[it.p.sl] && it.km <= NEARBY_FAR_KM; });
       if(f){ used[f.p.sl] = true; if(f.km > NEARBY_KM) f.far = true; f.cats = f.cats || [f.p.cat]; picked.push(f); }
     });
+    /* 2026-09-14 (Laurie): every panel also carries the single NEAREST transit stop
+       (bus OR train), no matter how far — a stop is always "available", so this
+       ignores the distance ceiling and the open/closed logic entirely. */
+    var nearestTransit = null;
+    for(var ti=0; ti<TRANSIT.length; ti++){
+      var tp = TRANSIT[ti];
+      var tkm = kmBetween(ev.lat, ev.lng, tp.lat, tp.lng);
+      if(!nearestTransit || tkm < nearestTransit.km) nearestTransit = { p:tp, km:tkm, hrs:"", cats:[tp.cat], transit:true };
+    }
+    if(nearestTransit && !used[nearestTransit.p.sl]){
+      used[nearestTransit.p.sl] = true;
+      if(nearestTransit.km > NEARBY_KM) nearestTransit.far = true;
+      picked.push(nearestTransit);
+    }
     /* 2026-09-06 (Laurie): display strictly by distance — demotion only affects
        whether a place makes the cut, not where it sits once it has. (Far rows are
        >5 mi by definition, so they still fall after the near ones.) */
