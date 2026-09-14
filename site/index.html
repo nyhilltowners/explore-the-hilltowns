@@ -1399,6 +1399,7 @@ function openNow(r){
   var blob = ((r.t||'') + ' ' + (r.tags||[]).join(' ')).toLowerCase();
   var isUnstaffedOutdoor = /trailhead|trail head|preserve|sanctuary|\bfalls\b|access|state forest|wildlife|overlook|scenic|boat launch|fishing access|rail trail/.test(blob);
   var todayCell = (r.hrs[DOW_KEYS[new Date().getDay()]]||'').trim();
+  if(/appoint|by appt/i.test(todayCell)) return false;   /* "by appointment" ≠ walk in now (Laurie, 2026-09-14) */
   var is24 = /24\s*h|open\s*24|always\s*open/i.test(todayCell);
   if(r.cat === 'Lodging') return false;              /* a bed for the night ≠ a staffed welcome now */
   if(is24 && isUnstaffedOutdoor) return false;       /* always-open public land: no glow */
@@ -2137,7 +2138,7 @@ function dayGlowFrame(ts){
   if(!map || isNight() || REDUCED_MOTION) return;
   if(ts - dayGlowLast > 45){
     dayGlowLast = ts;
-    DAY_T = (ts / 7000) % 1;          /* slow, meditative breath — one every 7s (per-pin ph keeps them out of sync) */
+    DAY_T = (ts / 5500) % 1;          /* calm breath — one every 5.5s (per-pin ph keeps them out of sync) */
     var wave = ['sin',['*',6.283185,['+',DAY_T,['get','ph']]]];
     var breath = ['+',1,['*',0.28,wave]];   /* more pronounced float/bounce */
     try{
