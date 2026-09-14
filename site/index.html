@@ -2248,7 +2248,7 @@ function twinkleFrame(ts){
     if(pt.x < -30 || pt.y < -30 || pt.x > W+30 || pt.y > H+30) continue;
     vis.push(f);
   }
-  var rate = Math.min(0.9, 90 / Math.max(1, vis.length));   /* glints per pin per second — sparse */
+  var rate = Math.min(0.45, 45 / Math.max(1, vis.length));   /* glints per pin per second — sparse (50% fewer, Laurie 2026-09-14) */
   var p = rate * dt / 1000;
   for(var j=0;j<vis.length && twinkles.length < TWINKLE_MAX;j++){
     if(Math.random() < p){ var g = vis[j].geometry.coordinates; spawnTwinkle(g[0], g[1]); }
