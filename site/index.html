@@ -2300,7 +2300,7 @@ function stopTwinkles(){ if(twinkleRAF){ cancelAnimationFrame(twinkleRAF); twink
    the constant ambient twinkle: these are occasional, celebratory puffs, so the
    map feels alive and inviting without being busy. Runs on the same canvas as
    the twinkle; day-only, honors reduced-motion. (Laurie, 2026-09-15) */
-var FLURRY_SHAPE = 'heart';    /* 'heart' or 'bird' */
+var FLURRY_SHAPE = 'bird';    /* 'heart' or 'bird' */
 var flurries = [], FLURRY_MAX = 140, flurryNextAt = 0;
 function spawnFlurry(lng, lat){
   var r = Math.random, n = 4 + Math.floor(r()*4);   /* 4-7 little shapes per burst */
@@ -2346,7 +2346,7 @@ function flurryStep(ts, x, W, H, dpr){
       var pick = vis[Math.floor(Math.random()*vis.length)];
       spawnFlurry(pick.geometry.coordinates[0], pick.geometry.coordinates[1]);
     }
-    flurryNextAt = ts + 2200 + Math.random()*3200;   /* next burst in ~2.2-5.4s (whole map) */
+    flurryNextAt = ts + 1200 + Math.random()*1800;   /* next burst in ~1.2-3.0s (whole map) */
   }
   var keep = [];
   for(var k=0;k<flurries.length;k++){
