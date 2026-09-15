@@ -2482,7 +2482,7 @@ setInterval(function(){
   if(map && map.getSource && map.getSource('folk')){
     map.getSource('folk').setData(toFC(currentFilter(true)));
   }
-}, 300000);
+}, 60000);   /* re-stamp every 60s so open/dim/glow/twinkle track the clock (was 300s — a pin that just closed kept twinkling) */
 renderList(); /* list renders immediately; map data attaches once loaded */
 if(!map) applyHash();
 
