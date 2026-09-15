@@ -1393,6 +1393,10 @@ function openNow(r){
   var todayCell = (r.hrs[DOW_KEYS[new Date().getDay()]]||'').trim();
   if(!todayCell) return false;                        /* has hours on other days but not today → closed today, no glow (Laurie, 2026-09-15) */
   if(/appoint|by appt/i.test(todayCell)) return false;   /* "by appointment" ≠ walk in now (Laurie, 2026-09-14) */
+  /* "Dawn-Dusk" / "daylight hours" = open only while it's actually daytime, and
+     never at night. These are unstaffed outdoor spots (trails, falls, preserves)
+     — we never light them after dark. (Laurie, 2026-09-15) */
+  if(/dawn|dusk|daylight|sunrise|sunset/i.test(todayCell)) return !isNight();
   var is24 = /24\s*h|open\s*24|always\s*open/i.test(todayCell);
   if(r.cat === 'Lodging') return false;              /* a bed for the night ≠ a staffed welcome now */
   if(is24 && isUnstaffedOutdoor) return false;       /* always-open public land: no glow */
@@ -2389,41 +2393,54 @@ function drawBird(x, cx, cy, s, heading, flap, col){
   var faceLeft = Math.cos(heading) < 0;
   var tilt = Math.max(-0.6, Math.min(0.6, Math.sin(heading)*0.5));
   x.save(); x.translate(cx,cy); x.rotate(tilt); if(faceLeft) x.scale(-1,1);
-  var wing = Math.sin(flap);                       /* -1 .. 1 */
-  var lift = 0.20 + 0.30*(wing*0.5+0.5);           /* how high the wings sweep */
+  var wing = Math.sin(flap);                       /* -1 (down-stroke) .. +1 (up-stroke) */
   x.fillStyle = col; x.strokeStyle = col; x.lineJoin='round'; x.lineCap='round';
-  /* far wing (behind body) — pulled in closer/shorter so the bird reads compact */
+  /* The near wing beats through a symmetric arc: the wingtip rises ABOVE the body
+     on the up-stroke and drops BELOW it on the down-stroke, pivoting at the
+     shoulder — a real flap, not a shape that folds into the tail. wty is the
+     vertical position of the wingtip; wsweep is how far back it reaches (the wing
+     is most extended mid-stroke, more tucked at the extremes). */
+  /* Asymmetric beat: the wing rises high and proud on the up-stroke but only
+     dips shallowly on the down-stroke — real birds read this way in silhouette,
+     and it stops the down-stroke wing from spearing out below the body. */
+  var wtipY = wing >= 0 ? (-s*0.10 - wing*s*0.58)      /* up-stroke: high */
+                        : (-s*0.10 - wing*s*0.20);     /* down-stroke: shallow */
+  var wsweep = 0.55 + 0.35*(1 - Math.abs(wing));    /* longer mid-beat, tucked at top/bottom */
+  var wtipX  = -s*wsweep;
+  var lift = 0.20 + 0.30*(wing*0.5+0.5);            /* far wing still uses gentle lift */
+  /* far wing (behind body) — a softer echo of the near wing, always a bit up */
   x.beginPath();
   x.moveTo(-s*0.04, -s*0.05);
-  x.quadraticCurveTo(-s*0.42, -s*lift*1.5, -s*0.80, -s*lift*0.4);   /* shorter far wing */
+  x.quadraticCurveTo(-s*0.42, -s*lift*1.5, -s*0.80, -s*lift*0.4);
   x.quadraticCurveTo(-s*0.42, s*0.10, -s*0.04, s*0.05);
   x.closePath(); x.fill();
-  /* body — a bit rounder/shorter torso */
+  /* body — rounder/shorter torso */
   x.beginPath(); x.ellipse(s*0.04, 0, s*0.38, s*0.22, 0, 0, 6.283); x.fill();
-  /* tail — brought in tighter to the body (was -0.74) */
+  /* tail — tucked to the body */
   x.beginPath();
   x.moveTo(-s*0.30, -s*0.05); x.lineTo(-s*0.56, -s*0.14);
   x.lineTo(-s*0.52, s*0.10); x.closePath(); x.fill();
-  /* head + tiny crest — pulled in toward the body (was +0.42) */
+  /* head + tiny crest */
   x.beginPath(); x.arc(s*0.34, -s*0.10, s*0.19, 0, 6.283); x.fill();
-  x.beginPath();                                    /* little crest */
-  x.moveTo(s*0.32, -s*0.24); x.lineTo(s*0.24, -s*0.38); x.lineTo(s*0.42, -s*0.26); x.closePath(); x.fill();
-  /* beak — closer in */
-  x.beginPath(); x.moveTo(s*0.48, -s*0.11); x.lineTo(s*0.62, -s*0.07); x.lineTo(s*0.48, -s*0.03); x.closePath(); x.fill();
-  /* near wing (over body) — the big showy spread wing, shortened */
   x.beginPath();
-  x.moveTo(s*0.02, -s*0.02);
-  x.quadraticCurveTo(-s*0.36, -s*lift*2.0, -s*0.78, -s*lift*0.7);   /* leading edge up & back */
-  x.quadraticCurveTo(-s*0.42, s*0.02, s*0.02, s*0.06);             /* trailing edge back to body */
+  x.moveTo(s*0.32, -s*0.24); x.lineTo(s*0.24, -s*0.38); x.lineTo(s*0.42, -s*0.26); x.closePath(); x.fill();
+  /* beak */
+  x.beginPath(); x.moveTo(s*0.48, -s*0.11); x.lineTo(s*0.62, -s*0.07); x.lineTo(s*0.48, -s*0.03); x.closePath(); x.fill();
+  /* near wing — pivots at the shoulder (s*0.02,0), tip travels up/down with the beat */
+  x.beginPath();
+  x.moveTo(s*0.04, -s*0.04);                                          /* shoulder, top */
+  x.quadraticCurveTo(wtipX*0.45, wtipY*0.9, wtipX, wtipY);            /* leading edge to wingtip */
+  x.quadraticCurveTo(wtipX*0.5, wtipY*0.55 + s*0.06, s*0.02, s*0.04); /* trailing edge back to body */
   x.closePath(); x.fill();
-  /* pale leading edge + white spots along the near wing (blue-jay cue) */
+  /* pale leading edge + white spots that ride ON the wing (track the wingtip) */
   x.save();
   x.strokeStyle='rgba(220,235,255,0.85)'; x.lineWidth=Math.max(0.8,s/16);
-  x.beginPath();
-  x.moveTo(s*0.02,-s*0.02); x.quadraticCurveTo(-s*0.36,-s*lift*2.0,-s*0.78,-s*lift*0.7); x.stroke();
+  x.beginPath(); x.moveTo(s*0.04,-s*0.04); x.quadraticCurveTo(wtipX*0.45, wtipY*0.9, wtipX, wtipY); x.stroke();
   x.fillStyle='rgba(240,248,255,0.9)';
-  for(var w=0; w<3; w++){ var tt=0.45+w*0.18; var wx=s*0.02 - s*0.80*tt; var wy=-s*lift*(2.0*(1-tt)+0.7*tt)*0.55;
-    x.beginPath(); x.arc(wx, wy, s*0.05, 0, 6.283); x.fill(); }
+  for(var w=0; w<3; w++){ var tt=0.4+w*0.22;
+    var wx = s*0.04 + (wtipX - s*0.04)*tt;
+    var wy = -s*0.04 + (wtipY + s*0.04)*tt;
+    x.beginPath(); x.arc(wx, wy, s*0.038, 0, 6.283); x.fill(); }
   x.restore();
   x.restore();
 }
@@ -2516,7 +2533,12 @@ document.getElementById('modeToggle').addEventListener('click', function(){
 });
 setInterval(function(){                /* re-check the sun once a minute; a page can outlive a sunset */
   var m = effectiveMode();
-  if(m !== MODE) applyMode(m, true);
+  if(m !== MODE){ applyMode(m, true); }
+  else if(m === 'night' && map && map.getLayer && map.getLayer('disc-glow')){
+    /* self-heal: make sure the day-glow stays hidden through the night even if
+       something re-showed it (Laurie, 2026-09-15) */
+    if(map.getLayoutProperty('disc-glow','visibility') !== 'none'){ applyMapMode(); }
+  }
 }, 60000);
 document.addEventListener('visibilitychange', function(){ if(document.hidden){ stopGlow(); stopSparks(); } else { startGlow(); startSparks(); } });
 
