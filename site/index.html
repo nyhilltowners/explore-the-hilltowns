@@ -1204,6 +1204,17 @@ var style = {
          (3) disc-pins / poi-pins    — the glyph alone, transparent bg, on top
        The shield carries the sort-key so overlapping pins stack correctly; the
        glyph layer mirrors it so glyph and shield never separate. */
+    /* Glow renders UNDER the shield (moved 2026-09-15) so the opaque parchment
+       shield covers the center and the blue glow only blooms around its edges —
+       a glowing shield, not a see-through one. Enlarged so it haloes past the shield. */
+    {id:'disc-glow', type:'circle', source:'folk',
+      filter:['all',['!=',['get','ty'],'folklore'],['!=',['get','cat'],'Points of Interest'],['==',['get','open'],1]],
+      paint:{'circle-color':'#3d8bff', 'circle-blur':1, 'circle-pitch-alignment':'map',
+        'circle-radius':['interpolate',['linear'],['zoom'], 4,20, 9,30, 13,42], 'circle-opacity':0.7}},
+    {id:'poi-glow', type:'circle', source:'folk',
+      filter:['all',['==',['get','cat'],'Points of Interest'],['==',['get','open'],1]],
+      paint:{'circle-color':'#3d8bff', 'circle-blur':1, 'circle-pitch-alignment':'map',
+        'circle-radius':['interpolate',['linear'],['zoom'], 4,16, 9,24, 13,34], 'circle-opacity':0.65}},
     {id:'disc-shield', type:'symbol', source:'folk',
       filter:['all',['!=',['get','ty'],'folklore'],['!=',['get','cat'],'Points of Interest'],['==',['get','open'],1]],
       layout:{'icon-image':'discShield','icon-allow-overlap':true,'icon-ignore-placement':true,
@@ -1229,17 +1240,6 @@ var style = {
     /* Day glow: a cool blue bloom on every OPEN pin (open=1), breathing with a
        pronounced float, no shield behind it. Water-light twinkles (canvas, below)
        add glints like sun off a stream. (Laurie, 2026-09-14) */
-    {id:'disc-glow', type:'circle', source:'folk',
-      filter:['all',['!=',['get','ty'],'folklore'],['!=',['get','cat'],'Points of Interest'],['==',['get','open'],1]],
-      paint:{'circle-color':'#3d8bff', 'circle-blur':0.9, 'circle-pitch-alignment':'map',
-        'circle-radius':['interpolate',['linear'],['zoom'], 4,14, 9,22, 13,30], 'circle-opacity':0.62}},
-    {id:'poi-glow', type:'circle', source:'folk',
-      filter:['all',['==',['get','cat'],'Points of Interest'],['==',['get','open'],1]],
-      paint:{
-        'circle-color':'#3d8bff', 'circle-blur':0.9, 'circle-pitch-alignment':'map',
-        'circle-radius':['interpolate',['linear'],['zoom'], 4,11, 9,17, 13,24],
-        'circle-opacity':0.55
-      }},
     {id:'disc-pins', type:'symbol', source:'folk',
       filter:['all',['!=',['get','ty'],'folklore'],['!=',['get','cat'],'Points of Interest']],
       layout:{'icon-image':['concat','gg-',['case',['all',['==',['get','dim'],1],['!=',['get','ty'],'events']],'#9aa0a6',['get','col']],'-',['get','g']],'icon-allow-overlap':true,'icon-ignore-placement':true,
@@ -2152,11 +2152,11 @@ function dayGlowFrame(ts){
     var breath = ['+',1,['*',0.28,wave]];   /* more pronounced float/bounce */
     try{
       map.setPaintProperty('disc-glow','circle-radius',
-        ['interpolate',['linear'],['zoom'], 4,['*',14,breath], 9,['*',22,breath], 13,['*',30,breath]]);
-      map.setPaintProperty('disc-glow','circle-opacity', ['+',0.56,['*',0.2,wave]]);
+        ['interpolate',['linear'],['zoom'], 4,['*',20,breath], 9,['*',30,breath], 13,['*',42,breath]]);
+      map.setPaintProperty('disc-glow','circle-opacity', ['+',0.62,['*',0.18,wave]]);
       map.setPaintProperty('poi-glow','circle-radius',
-        ['interpolate',['linear'],['zoom'], 4,['*',11,breath], 9,['*',17,breath], 13,['*',24,breath]]);
-      map.setPaintProperty('poi-glow','circle-opacity', ['+',0.5,['*',0.18,wave]]);
+        ['interpolate',['linear'],['zoom'], 4,['*',16,breath], 9,['*',24,breath], 13,['*',34,breath]]);
+      map.setPaintProperty('poi-glow','circle-opacity', ['+',0.58,['*',0.16,wave]]);
     }catch(e){}
   }
   dayGlowRAF = requestAnimationFrame(dayGlowFrame);
