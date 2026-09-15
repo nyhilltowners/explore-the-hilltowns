@@ -2307,8 +2307,8 @@ function spawnFlurry(lng, lat){
   /* the whole flock bursts in a roughly shared direction (up & to one side) but
      each bird veers off it — like a startled scatter, not a synchronized fan */
   var flockAng = -Math.PI/2 + (r()-0.5)*1.2;
-  /* blue-toned palette only: slate, navy, blue-grey (crow/bluejay/pigeon), no pink */
-  var PAL = ['40,55,80','55,75,120','70,100,150','90,120,165','50,60,85'];
+  /* blue-jay palette: true jay blues + a couple of slate/greys for variety */
+  var PAL = ['66,110,190','80,130,205','95,150,220','70,95,155','110,135,175'];
   for(var i=0;i<n;i++){
     var ang = flockAng + (r()-0.5)*1.5;              /* each bird's own heading */
     var spd = 55 + r()*70;                            /* fast startle burst (px/s) */
@@ -2316,8 +2316,8 @@ function spawnFlurry(lng, lat){
       life: 1700 + r()*1400,
       vx: Math.cos(ang)*spd, vy: Math.sin(ang)*spd,
       veer: (r()-0.5)*2.2, veerf: 0.6 + r()*1.1,      /* gentle course changes mid-flight */
-      flapf: 11 + r()*8, flapp: r()*6.283,            /* wingbeat speed + phase (fast) */
-      sz: 12 + r()*8,                                 /* bigger */
+      flapf: 9 + r()*6, flapp: r()*6.283,             /* wingbeat speed + phase */
+      sz: 15 + r()*9,                                 /* bigger blue jays */
       col: PAL[Math.floor(r()*PAL.length)],
       delay: r()*140});                                /* slight stagger so they don't all leave at once */
   }
@@ -2332,26 +2332,50 @@ function drawHeart(x, cx, cy, s, rot, col){
   x.closePath(); x.fillStyle=col; x.fill(); x.restore();
 }
 function drawBird(x, cx, cy, s, heading, flap, col){
-  /* A little bird in flight: slim body + two wings that beat (flap drives the
-     wing angle). Banks toward its heading so a flock reads as scattering, not
-     a row of identical m's. (Laurie, 2026-09-15) */
-  x.save(); x.translate(cx,cy); x.rotate(heading);
-  var wing = Math.sin(flap);                 /* -1 (down-stroke) .. 1 (up-stroke) */
-  var up = 0.35 + 0.75*(wing*0.5+0.5);       /* wing raise amount */
-  x.strokeStyle = col; x.fillStyle = col;
-  x.lineWidth = Math.max(1.1, s/7); x.lineCap='round'; x.lineJoin='round';
-  /* body */
-  x.beginPath(); x.ellipse(0, 0, s*0.30, s*0.14, 0, 0, 6.283); x.fill();
-  /* head nub (front = +x) */
-  x.beginPath(); x.arc(s*0.30, -s*0.02, s*0.12, 0, 6.283); x.fill();
-  /* two wings sweeping back from the shoulders, angle set by flap */
-  var wy = -s*up;
+  /* A blue jay in flight — broad swept wings, rounded body, small crested head.
+     Drawn as an elegant spread-wing glider (not a chunky songbird); the flap
+     raises/lowers the wingspan a little so it feels alive. Blue-jay coloring:
+     blue body with a pale leading wing edge + a hint of white spotting.
+     (Laurie, 2026-09-15) */
+  var faceLeft = Math.cos(heading) < 0;
+  var tilt = Math.max(-0.6, Math.min(0.6, Math.sin(heading)*0.5));
+  x.save(); x.translate(cx,cy); x.rotate(tilt); if(faceLeft) x.scale(-1,1);
+  var wing = Math.sin(flap);                       /* -1 .. 1 */
+  var lift = 0.20 + 0.30*(wing*0.5+0.5);           /* how high the wings sweep */
+  x.fillStyle = col; x.strokeStyle = col; x.lineJoin='round'; x.lineCap='round';
+  /* far wing (behind body) — drawn first, a touch darker feel via same col */
   x.beginPath();
-  x.moveTo(-s*0.05, 0);
-  x.quadraticCurveTo(-s*0.30, wy, -s*0.62, wy*0.55);   /* left/upper wing */
-  x.moveTo(-s*0.05, 0);
-  x.quadraticCurveTo(-s*0.30, -wy, -s*0.62, -wy*0.55); /* right/lower wing */
-  x.stroke();
+  x.moveTo(-s*0.05, -s*0.05);
+  x.quadraticCurveTo(-s*0.55, -s*lift*1.5, -s*1.05, -s*lift*0.4);   /* long swept far wing */
+  x.quadraticCurveTo(-s*0.55, s*0.10, -s*0.05, s*0.05);
+  x.closePath(); x.fill();
+  /* body — a smooth rounded torso tapering to a tail */
+  x.beginPath(); x.ellipse(s*0.02, 0, s*0.42, s*0.20, 0, 0, 6.283); x.fill();
+  /* tail sweeping back */
+  x.beginPath();
+  x.moveTo(-s*0.36, -s*0.05); x.lineTo(-s*0.74, -s*0.16);
+  x.lineTo(-s*0.70, s*0.10); x.closePath(); x.fill();
+  /* head + tiny crest up front (+x) */
+  x.beginPath(); x.arc(s*0.42, -s*0.10, s*0.18, 0, 6.283); x.fill();
+  x.beginPath();                                    /* little crest */
+  x.moveTo(s*0.40, -s*0.24); x.lineTo(s*0.30, -s*0.40); x.lineTo(s*0.50, -s*0.26); x.closePath(); x.fill();
+  /* beak */
+  x.beginPath(); x.moveTo(s*0.58, -s*0.11); x.lineTo(s*0.74, -s*0.07); x.lineTo(s*0.58, -s*0.03); x.closePath(); x.fill();
+  /* near wing (over body) — the big showy spread wing */
+  x.beginPath();
+  x.moveTo(0, -s*0.02);
+  x.quadraticCurveTo(-s*0.45, -s*lift*2.0, -s*0.95, -s*lift*0.7);   /* leading edge up & back */
+  x.quadraticCurveTo(-s*0.55, s*0.02, 0, s*0.06);                  /* trailing edge back to body */
+  x.closePath(); x.fill();
+  /* pale leading edge + white spots along the near wing (blue-jay cue) */
+  x.save();
+  x.strokeStyle='rgba(220,235,255,0.85)'; x.lineWidth=Math.max(0.8,s/16);
+  x.beginPath();
+  x.moveTo(0,-s*0.02); x.quadraticCurveTo(-s*0.45,-s*lift*2.0,-s*0.95,-s*lift*0.7); x.stroke();
+  x.fillStyle='rgba(240,248,255,0.9)';
+  for(var w=0; w<3; w++){ var tt=0.45+w*0.18; var wx=-s*0.95*tt - s*0.02*(1-tt); var wy=-s*lift*(2.0*(1-tt)+0.7*tt)*0.55;
+    x.beginPath(); x.arc(wx, wy, s*0.05, 0, 6.283); x.fill(); }
+  x.restore();
   x.restore();
 }
 function flurryStep(ts, x, W, H, dpr){
