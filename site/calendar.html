@@ -776,6 +776,7 @@ h1{font-family:'Montserrat',sans-serif; font-weight:800; text-transform:uppercas
     if(g === "\uD83C\uDF96" || n.indexOf("american legion") >= 0) return true;            // 🎖️ Legion posts
     if(g === "\uD83D\uDCE6") return true;                                                 // 📦 post office / mailing / business center
     if(/\b(post office|usps|mailing center|business center|pack (and|&) ship|postnet)\b/.test(n + " " + tg)) return true;
+    if(p.cat === "Lodging" && /\b(camping|glamping|campsite|campground|tent)\b/.test(tg)) return true;  // 2026-09-15 (Laurie): deprioritize outdoor camping/glamping stays — too cold now
     return false;
   }
   function demoteTier(p){

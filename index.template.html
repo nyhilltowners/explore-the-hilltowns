@@ -746,6 +746,23 @@ var TODAY_DOW = (function(){
   catch(e){ return ['sun','mon','tue','wed','thu','fri','sat'][new Date().getDay()]; }
 })();
 
+/* Current New York wall-clock time as minutes-past-midnight, and the NY day-of-
+   week key — used so "open now" / "event ended" reflect NY time for every
+   viewer, not the browser's local timezone. Recomputed each call (cheap).
+   (Laurie, 2026-09-15) */
+function nyMinutesNow(){
+  try{
+    var p = new Intl.DateTimeFormat('en-US',{timeZone:'America/New_York',hour:'2-digit',minute:'2-digit',hour12:false}).formatToParts(new Date());
+    var hh=0, mm=0;
+    p.forEach(function(x){ if(x.type==='hour') hh=parseInt(x.value,10)%24; if(x.type==='minute') mm=parseInt(x.value,10); });
+    return hh*60+mm;
+  }catch(e){ var d=new Date(); return d.getHours()*60+d.getMinutes(); }
+}
+function nyDowKey(){
+  try{ return new Intl.DateTimeFormat('en-US',{timeZone:'America/New_York',weekday:'short'}).format(new Date()).toLowerCase().slice(0,3); }
+  catch(e){ return ['sun','mon','tue','wed','thu','fri','sat'][new Date().getDay()]; }
+}
+
 /* An "overnight" event spans exactly two calendar dates only because its time
    range crosses midnight (a 10:00 PM – 12:00 AM gig stored as Fri→Sat). It is
    really a single evening on d1: it ranks, displays, and expires as one day. */
@@ -1340,7 +1357,7 @@ function isClosedNow(r){
     }
     return /closed/i.test(pc);                  /* dim only a stated Closed day */
   }
-  var cell=(r.hrs[DOW_KEYS[new Date().getDay()]]||'').trim();
+  var cell=(r.hrs[nyDowKey()]||'').trim();
   if(!cell) return isTruck;                     /* trucks w/o today's hours → dim; others → open */
   if(/appoint|by appt/i.test(cell)) return true; /* by appointment → faded, not walk-in (Laurie, 2026-09-14) */
   if(/closed/i.test(cell)) return true;
@@ -1348,7 +1365,7 @@ function isClosedNow(r){
   if(/24\s*hours|open\s*24|always\s*open/i.test(cell)) return false;
   var ts=_parseTimes(cell);
   if(ts.length<2) return isTruck;               /* unparseable: trucks dim, others don't */
-  var now=new Date(), nm=now.getHours()*60+now.getMinutes();
+  var nm=nyMinutesNow();                          /* NY wall-clock, not the browser's timezone (Laurie, 2026-09-15) */
   for(var i=0;i+1<ts.length;i+=2){
     var s=ts[i], e=ts[i+1];
     if(e<=s){ if(nm>=s || nm<e) return false; } /* overnight range */
@@ -1379,6 +1396,18 @@ function openNow(r){
     if(r.d2 && r.d1){
       var span = (Date.parse(r.d2) - Date.parse(r.d1)) / 86400000;
       if(span > 8) return false;
+    }
+    /* A single-day event (or the day an event falls on) that has a time range in
+       tm ("4:00 PM – 6:00 PM") should only glow BETWEEN its start and end in NY
+       time — an event that ended at noon shouldn't stay lit all afternoon.
+       Only applied when we're viewing the actual day (not planning a future day),
+       and only for same-day events (d2 empty or == d1). (Laurie, 2026-09-15) */
+    if(!planDate && r.d1 === TODAY_E && (!r.d2 || r.d2 === r.d1) && r.tm){
+      var et = _parseTimes(r.tm);
+      if(et.length >= 2){
+        var nowM = nyMinutesNow(), st = et[0], en = et[et.length-1];
+        if(en > st){ return nowM >= (st - 30) && nowM < en; }   /* lit from 30 min before start until it ends */
+      }
     }
     return true;
   }
@@ -2403,9 +2432,15 @@ function drawBird(x, cx, cy, s, heading, flap, col){
   /* Asymmetric beat: the wing rises high and proud on the up-stroke but only
      dips shallowly on the down-stroke — real birds read this way in silhouette,
      and it stops the down-stroke wing from spearing out below the body. */
+  /* Hinge fix (Laurie, 2026-09-15): the wing pivots at a FIXED shoulder and the
+     tip travels mainly up and down. Previously wsweep changed a lot with the
+     beat, so the tip pulled forward as it rose — reading as the wing rowing
+     backward instead of flapping. Now the tip's horizontal reach is nearly
+     constant; only a tiny foreshortening at the extremes (when the wing points
+     more up/down, it reaches slightly less far back). */
   var wtipY = wing >= 0 ? (-s*0.10 - wing*s*0.58)      /* up-stroke: high */
                         : (-s*0.10 - wing*s*0.20);     /* down-stroke: shallow */
-  var wsweep = 0.55 + 0.35*(1 - Math.abs(wing));    /* longer mid-beat, tucked at top/bottom */
+  var wsweep = 0.82 - 0.08*Math.abs(wing);          /* nearly constant reach — small foreshorten at extremes */
   var wtipX  = -s*wsweep;
   var lift = 0.20 + 0.30*(wing*0.5+0.5);            /* far wing still uses gentle lift */
   /* far wing (behind body) — a softer echo of the near wing, always a bit up */
@@ -2432,15 +2467,17 @@ function drawBird(x, cx, cy, s, heading, flap, col){
   x.quadraticCurveTo(wtipX*0.45, wtipY*0.9, wtipX, wtipY);            /* leading edge to wingtip */
   x.quadraticCurveTo(wtipX*0.5, wtipY*0.55 + s*0.06, s*0.02, s*0.04); /* trailing edge back to body */
   x.closePath(); x.fill();
-  /* pale leading edge + white spots that ride ON the wing (track the wingtip) */
+  /* pale leading edge + white spots that ride ON the wing (track the wingtip).
+     Brought back bigger & brighter — the white wing-spotting is the blue-jay
+     tell and gives the bird its personality. (Laurie, 2026-09-15) */
   x.save();
-  x.strokeStyle='rgba(220,235,255,0.85)'; x.lineWidth=Math.max(0.8,s/16);
+  x.strokeStyle='rgba(230,242,255,0.95)'; x.lineWidth=Math.max(1,s/13);
   x.beginPath(); x.moveTo(s*0.04,-s*0.04); x.quadraticCurveTo(wtipX*0.45, wtipY*0.9, wtipX, wtipY); x.stroke();
-  x.fillStyle='rgba(240,248,255,0.9)';
-  for(var w=0; w<3; w++){ var tt=0.4+w*0.22;
+  x.fillStyle='rgba(248,252,255,0.98)';
+  for(var w=0; w<4; w++){ var tt=0.34+w*0.19;
     var wx = s*0.04 + (wtipX - s*0.04)*tt;
     var wy = -s*0.04 + (wtipY + s*0.04)*tt;
-    x.beginPath(); x.arc(wx, wy, s*0.038, 0, 6.283); x.fill(); }
+    x.beginPath(); x.arc(wx, wy, s*0.058, 0, 6.283); x.fill(); }
   x.restore();
   x.restore();
 }
