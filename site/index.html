@@ -1393,10 +1393,11 @@ function openNow(r){
   var todayCell = (r.hrs[DOW_KEYS[new Date().getDay()]]||'').trim();
   if(!todayCell) return false;                        /* has hours on other days but not today → closed today, no glow (Laurie, 2026-09-15) */
   if(/appoint|by appt/i.test(todayCell)) return false;   /* "by appointment" ≠ walk in now (Laurie, 2026-09-14) */
-  /* "Dawn-Dusk" / "daylight hours" = open only while it's actually daytime, and
-     never at night. These are unstaffed outdoor spots (trails, falls, preserves)
-     — we never light them after dark. (Laurie, 2026-09-15) */
-  if(/dawn|dusk|daylight|sunrise|sunset/i.test(todayCell)) return !isNight();
+  /* "Dawn-Dusk" / "daylight hours" = unstaffed outdoor spots (trails, falls,
+     preserves, swamps, wilderness). Per Laurie's safety call these are NEUTRAL
+     and never glow — day or night — so the map never encourages heading into
+     wilderness on the strength of a glowing pin. (Laurie, 2026-09-15) */
+  if(/dawn|dusk|daylight|sunrise|sunset/i.test(todayCell)) return false;
   var is24 = /24\s*h|open\s*24|always\s*open/i.test(todayCell);
   if(r.cat === 'Lodging') return false;              /* a bed for the night ≠ a staffed welcome now */
   if(is24 && isUnstaffedOutdoor) return false;       /* always-open public land: no glow */
