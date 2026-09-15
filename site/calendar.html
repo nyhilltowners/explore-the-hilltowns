@@ -494,7 +494,7 @@ h1{font-family:'Montserrat',sans-serif; font-weight:800; text-transform:uppercas
     // as their own standing entry, WITHOUT needing a row in the events sheet or
     // recurrence columns. Matched by name substring against the POI records.
     // Real events at the same venue still show separately (no de-dupe by design).
-    var STANDING_FEATURES = ["kuhar family farm","sap bush hollow cafe","heather ridge farm","the pub at hilltown commons"];
+    var STANDING_FEATURES = ["kuhar family farm","sap bush hollow cafe","heather ridge farm","the pub at hilltown commons","hilltowns community resource center","gathering hope food pantry"];
     var _seenStanding = {};
     DATA.forEach(function(p){
       if(p.ty !== "poi" || !p.hrs) return;
@@ -509,6 +509,10 @@ h1{font-family:'Montserrat',sans-serif; font-weight:800; text-transform:uppercas
         // Only feature a day with REAL clock hours (segments) or a true 24-hour day.
         // Note-only cells ("By appointment", "Dawn-Dusk") are not standing open days.
         var realHours = !h.closed && ((h.segs && h.segs.length) || /24\s*h|open24/i.test(cell||""));
+        // A cell qualified to specific weeks ("(1st & 3rd Sat)", "2nd Tue", etc.)
+        // can't be honored by this every-week injector — skip it rather than show
+        // it on every occurrence. (Laurie, 2026-09-15)
+        if(realHours && /\b(1st|2nd|3rd|4th|5th|first|second|third|fourth|last)\b/i.test(cell||"")) realHours = false;
         if(realHours){
           push(ymd(day), {
             ty:"events", cat:p.cat, t:p.t,

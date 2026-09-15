@@ -2301,6 +2301,49 @@ function stopTwinkles(){ if(twinkleRAF){ cancelAnimationFrame(twinkleRAF); twink
    map feels alive and inviting without being busy. Runs on the same canvas as
    the twinkle; day-only, honors reduced-motion. (Laurie, 2026-09-15) */
 var FLURRY_SHAPE = 'bird';    /* 'heart' or 'bird' */
+/* Active-pin flourish style: 'birds' = the scattering blue-jay flock;
+   'beam' = a glowing pillar/fountain of light rising from each open pin,
+   with drifting wisps (a 2D-canvas take on the LaserFlow look). Flip to
+   compare. (Laurie, 2026-09-15) */
+var FLURRY_MODE = 'beam';
+var beamWisps = [];   /* rising light motes for the beam mode */
+function drawBeam(x, px, py, s, ts, seed){
+  /* a soft column of light rising from (px,py) upward, tapering + fading,
+     with a bright base glow. Purple/violet like the reference, but tunable. */
+  var H = 120 + s*3;                    /* pillar height in px */
+  var wBase = 5 + s*0.5, wTop = 1.5;    /* width base -> top */
+  var R=207, G=158, B=255;              /* #CF9EFF violet */
+  /* vertical gradient: bright at base, fading up */
+  var grad = x.createLinearGradient(px, py, px, py - H);
+  grad.addColorStop(0.0, 'rgba('+R+','+G+','+B+',0.0)');   /* soft at very bottom */
+  grad.addColorStop(0.12,'rgba('+R+','+G+','+B+',0.55)');  /* bright base */
+  grad.addColorStop(0.5, 'rgba('+R+','+G+','+B+',0.22)');
+  grad.addColorStop(1.0, 'rgba('+R+','+G+','+B+',0.0)');   /* faded top */
+  /* gentle waver so the column breathes */
+  var sway = Math.sin(ts/700 + seed)*3;
+  x.beginPath();
+  x.moveTo(px - wBase, py);
+  x.quadraticCurveTo(px - wTop + sway, py - H*0.6, px + sway, py - H);
+  x.quadraticCurveTo(px + wTop + sway, py - H*0.6, px + wBase, py);
+  x.closePath();
+  x.fillStyle = grad; x.fill();
+  /* bright base bloom */
+  var bg = x.createRadialGradient(px, py, 1, px, py, wBase*2.4);
+  bg.addColorStop(0, 'rgba('+R+','+G+','+B+',0.6)');
+  bg.addColorStop(1, 'rgba('+R+','+G+','+B+',0)');
+  x.beginPath(); x.arc(px, py, wBase*2.4, 0, 6.283); x.fillStyle = bg; x.fill();
+  /* rising wisps inside the column */
+  for(var wi=0; wi<3; wi++){
+    var ph = (ts/1000*0.9 + seed + wi*0.37) % 1;    /* 0..1 travels up */
+    var wy = py - ph*H;
+    var wx = px + Math.sin(ph*6.283 + seed + wi)* (wBase*0.7*(1-ph));
+    var wa = (1-ph) * 0.5;
+    var wr = (1.6 + s*0.12) * (0.5 + 0.5*(1-ph));
+    x.beginPath(); x.arc(wx, wy, wr, 0, 6.283);
+    x.fillStyle = 'rgba('+Math.min(255,R+30)+','+Math.min(255,G+40)+','+B+','+wa.toFixed(3)+')';
+    x.fill();
+  }
+}
 var flurries = [], FLURRY_MAX = 140, flurryNextAt = 0;
 function spawnFlurry(lng, lat){
   var r = Math.random, n = 5 + Math.floor(r()*4);   /* 5-8 birds startle up together */
@@ -2381,6 +2424,20 @@ function drawBird(x, cx, cy, s, heading, flap, col){
 function flurryStep(ts, x, W, H, dpr){
   /* called at the END of twinkleFrame, after the twinkle has drawn, so both
      share one clear-and-draw cycle on the sparks canvas. */
+  if(FLURRY_MODE === 'beam'){
+    /* draw a light pillar on every OPEN, on-screen pin */
+    var pinsB = (LAST_FC && LAST_FC.features) || [];
+    for(var bi=0; bi<pinsB.length; bi++){
+      var fb = pinsB[bi]; if(fb.properties.ty === 'folklore' || fb.properties.open !== 1) continue;
+      var ptb = map.project(fb.geometry.coordinates);
+      if(ptb.x < -40 || ptb.y < -40 || ptb.x > W+40 || ptb.y > H+180) continue;
+      /* stable per-pin seed from key so wisps aren't all in sync */
+      var kk = fb.properties.k || (''+ptb.x), seed = 0;
+      for(var ci=0; ci<kk.length; ci++) seed = (seed*31 + kk.charCodeAt(ci)) % 1000;
+      drawBeam(x, ptb.x, ptb.y, 12, ts, seed/160);
+    }
+    return;   /* beam mode: no bird particles */
+  }
   if(ts >= flurryNextAt){
     var pins = (LAST_FC && LAST_FC.features) || [], vis = [];
     for(var i=0;i<pins.length;i++){
