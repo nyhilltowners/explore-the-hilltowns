@@ -1215,34 +1215,15 @@ var style = {
       filter:['all',['==',['get','cat'],'Points of Interest'],['==',['get','open'],1]],
       paint:{'circle-color':'#3d8bff', 'circle-blur':1, 'circle-pitch-alignment':'map',
         'circle-radius':['interpolate',['linear'],['zoom'], 4,16, 9,24, 13,34], 'circle-opacity':0.65}},
-    {id:'disc-shield', type:'symbol', source:'folk',
-      filter:['all',['!=',['get','ty'],'folklore'],['!=',['get','cat'],'Points of Interest'],['==',['get','open'],1]],
-      layout:{'icon-image':'discShield','icon-allow-overlap':true,'icon-ignore-placement':true,
-        'symbol-sort-key':['case',
-          ['in',['get','g'],['literal',['🚉','🚏','🚆','🚌']]],1,
-          ['all',['==',['get','dim'],1],['!=',['get','ty'],'events']],2,
-          ['all',['==',['get','open'],1],['==',['get','ty'],'events']],7,
-          ['==',['get','open'],1],6,
-          4],
-        'icon-size':['interpolate',['linear'],['zoom'], 4,['*',['coalesce',['get','imm'],1],0.32], 9,['*',['coalesce',['get','imm'],1],0.48], 13,['*',['coalesce',['get','imm'],1],0.64]]},
-      paint:{'icon-opacity':['case',['all',['==',['get','dim'],1],['!=',['get','ty'],'events']],0.55,1]}},
-    {id:'poi-shield', type:'symbol', source:'folk',
-      filter:['all',['==',['get','cat'],'Points of Interest'],['==',['get','open'],1]],
-      layout:{'icon-image':'discShield','icon-allow-overlap':true,'icon-ignore-placement':true,
-        'symbol-sort-key':['case',['==',['get','dim'],1],0,1],
-        'icon-size':['interpolate',['linear'],['zoom'], 4,0.24, 9,0.36, 13,0.48]},
-      paint:{'icon-opacity':['case',['==',['get','dim'],1],0.55,1]}},
-    /* the breathing glow — sits between shield and glyph, and ONLY on pins that
-       are affirmatively OPEN right now (open=1). A POI with no posted hours is
-       neither dimmed nor glowing; a closed shop, off-season stand, or not-yet-
-       started event → no glow. So the glow means "you can really go here now."
-       (Laurie, 2026-09-14) */
-    /* Day glow: a cool blue bloom on every OPEN pin (open=1), breathing with a
-       pronounced float, no shield behind it. Water-light twinkles (canvas, below)
-       add glints like sun off a stream. (Laurie, 2026-09-14) */
+    /* The glow — a cool blue bloom UNDER each OPEN pin (open=1), breathing.
+       Rendered beneath the pin icon so the opaque shield sits solidly on top and
+       the glow haloes around its edges. (Laurie, 2026-09-15) */
     {id:'disc-pins', type:'symbol', source:'folk',
       filter:['all',['!=',['get','ty'],'folklore'],['!=',['get','cat'],'Points of Interest']],
-      layout:{'icon-image':['concat','gg-',['case',['all',['==',['get','dim'],1],['!=',['get','ty'],'events']],'#9aa0a6',['get','col']],'-',['get','g']],'icon-allow-overlap':true,'icon-ignore-placement':true,
+      layout:{'icon-image':['concat',
+          ['case',['==',['get','open'],1],'gd-','gg-'],   /* open → shield+glyph welded; else bare glyph */
+          ['case',['all',['==',['get','dim'],1],['!=',['get','ty'],'events']],'#9aa0a6',['get','col']],'-',['get','g']],
+        'icon-allow-overlap':true,'icon-ignore-placement':true,
         'symbol-sort-key':['case',
           ['in',['get','g'],['literal',['🚉','🚏','🚆','🚌']]],1,
           ['all',['==',['get','dim'],1],['!=',['get','ty'],'events']],2,
@@ -1253,7 +1234,10 @@ var style = {
       paint:{'icon-opacity':['case',['all',['==',['get','dim'],1],['!=',['get','ty'],'events']],0.55,1]}},
     {id:'poi-pins', type:'symbol', source:'folk',
       filter:['==',['get','cat'],'Points of Interest'],
-      layout:{'icon-image':['concat','gg-',['case',['==',['get','dim'],1],'#9aa0a6',['get','col']],'-',['get','g']],'icon-allow-overlap':true,'icon-ignore-placement':true,
+      layout:{'icon-image':['concat',
+          ['case',['==',['get','open'],1],'gd-','gg-'],
+          ['case',['==',['get','dim'],1],'#9aa0a6',['get','col']],'-',['get','g']],
+        'icon-allow-overlap':true,'icon-ignore-placement':true,
         'symbol-sort-key':['case',['==',['get','dim'],1],0,1],
         'icon-size':['interpolate',['linear'],['zoom'], 4,0.24, 9,0.36, 13,0.48]},
       paint:{'icon-opacity':['case',['==',['get','dim'],1],0.55,1]}},
@@ -1789,7 +1773,7 @@ function selectRecord(k, opts){
 }
 
 if(map){
-  var PIN_LAYERS = ['pins','folk-pins','disc-shield','poi-shield','disc-pins','poi-pins'];
+  var PIN_LAYERS = ['pins','folk-pins','disc-pins','poi-pins'];
   var TRANSIT_GLYPHS = {'🚉':1,'🚏':1,'🚆':1,'🚌':1};
   /* Mirror the disc-pins symbol-sort-key so the pin that RECEIVES the click is the
      same one drawn on top. symbol-sort-key governs draw order only, not hit-testing,
@@ -2308,40 +2292,62 @@ var FLURRY_SHAPE = 'bird';    /* 'heart' or 'bird' */
 var FLURRY_MODE = 'beam';
 var beamWisps = [];   /* rising light motes for the beam mode */
 function drawBeam(x, px, py, s, ts, seed){
-  /* a soft column of light rising from (px,py) upward, tapering + fading,
-     with a bright base glow. Purple/violet like the reference, but tunable. */
-  var H = 120 + s*3;                    /* pillar height in px */
-  var wBase = 5 + s*0.5, wTop = 1.5;    /* width base -> top */
-  var R=207, G=158, B=255;              /* #CF9EFF violet */
-  /* vertical gradient: bright at base, fading up */
-  var grad = x.createLinearGradient(px, py, px, py - H);
-  grad.addColorStop(0.0, 'rgba('+R+','+G+','+B+',0.0)');   /* soft at very bottom */
-  grad.addColorStop(0.12,'rgba('+R+','+G+','+B+',0.55)');  /* bright base */
-  grad.addColorStop(0.5, 'rgba('+R+','+G+','+B+',0.22)');
-  grad.addColorStop(1.0, 'rgba('+R+','+G+','+B+',0.0)');   /* faded top */
-  /* gentle waver so the column breathes */
-  var sway = Math.sin(ts/700 + seed)*3;
-  x.beginPath();
-  x.moveTo(px - wBase, py);
-  x.quadraticCurveTo(px - wTop + sway, py - H*0.6, px + sway, py - H);
-  x.quadraticCurveTo(px + wTop + sway, py - H*0.6, px + wBase, py);
-  x.closePath();
-  x.fillStyle = grad; x.fill();
-  /* bright base bloom */
-  var bg = x.createRadialGradient(px, py, 1, px, py, wBase*2.4);
-  bg.addColorStop(0, 'rgba('+R+','+G+','+B+',0.6)');
-  bg.addColorStop(1, 'rgba('+R+','+G+','+B+',0)');
-  x.beginPath(); x.arc(px, py, wBase*2.4, 0, 6.283); x.fillStyle = bg; x.fill();
-  /* rising wisps inside the column */
-  for(var wi=0; wi<3; wi++){
-    var ph = (ts/1000*0.9 + seed + wi*0.37) % 1;    /* 0..1 travels up */
+  /* Aurora over the pin: several soft vertical curtains that wave and shimmer
+     independently, in a shifting green→teal→blue→violet gradient, with light
+     that flows upward. Alive and wispy, not a static triangle. (Laurie 2026-09-15) */
+  var H = 130 + s*3;                     /* aurora height */
+  /* northern-lights palette stops (bottom→top): green, teal, blue, violet */
+  var STOPS = [[120,255,170],[80,220,210],[90,150,255],[180,130,255]];
+  var nCurtain = 4;
+  for(var ci=0; ci<nCurtain; ci++){
+    var cseed = seed + ci*1.7;
+    var t = ts/1000;
+    /* horizontal drift/wave of this curtain */
+    var baseX = px + (ci - (nCurtain-1)/2) * (s*0.55);
+    /* build a wavy ribbon from base up to top */
+    var pts = [], N = 10;
+    for(var j=0;j<=N;j++){
+      var f = j/N;                        /* 0 base .. 1 top */
+      var yy = py - f*H;
+      /* the ribbon sways more toward the top, and the whole thing drifts in time */
+      var wave = Math.sin(t*0.8 + cseed + f*3.2)* (s*0.5 + f*s*0.9)
+               + Math.sin(t*1.7 + cseed*2 + f*6.0)* (f*s*0.5);
+      pts.push([baseX + wave, yy, f]);
+    }
+    /* width of the ribbon tapers with height and pulses a little */
+    var wBot = s*0.7 * (0.8 + 0.2*Math.sin(t*1.3 + cseed));
+    /* draw the ribbon as a filled band (left edge up, right edge down) */
+    x.beginPath();
+    for(var j2=0;j2<=N;j2++){ var w2 = wBot*(1-pts[j2][2]*0.7); x[(j2===0?'moveTo':'lineTo')](pts[j2][0]-w2, pts[j2][1]); }
+    for(var j3=N;j3>=0;j3--){ var w3 = wBot*(1-pts[j3][2]*0.7); x.lineTo(pts[j3][0]+w3, pts[j3][1]); }
+    x.closePath();
+    /* vertical color gradient along the curtain, brightness flowing upward */
+    var flow = (t*0.5 + cseed) % 1;       /* a bright band travels up */
+    var grad = x.createLinearGradient(baseX, py, baseX, py-H);
+    for(var gi=0; gi<STOPS.length; gi++){
+      var stop = gi/(STOPS.length-1);
+      var cc = STOPS[gi];
+      /* brightness bump where the flowing band is */
+      var d = Math.abs(stop - flow); var bump = Math.max(0, 1 - d*3);
+      var a = (0.06 + 0.16*(1-stop) + 0.22*bump);   /* brighter at base + at flow band, fades up */
+      grad.addColorStop(stop, 'rgba('+cc[0]+','+cc[1]+','+cc[2]+','+a.toFixed(3)+')');
+    }
+    x.fillStyle = grad; x.fill();
+  }
+  /* soft base bloom (green-white) */
+  var bg = x.createRadialGradient(px, py, 1, px, py, s*1.8);
+  bg.addColorStop(0, 'rgba(170,255,210,0.5)');
+  bg.addColorStop(1, 'rgba(170,255,210,0)');
+  x.beginPath(); x.arc(px, py, s*1.8, 0, 6.283); x.fillStyle = bg; x.fill();
+  /* a few rising sparkle motes */
+  for(var wi=0; wi<4; wi++){
+    var ph = (ts/1000*0.6 + seed + wi*0.29) % 1;
     var wy = py - ph*H;
-    var wx = px + Math.sin(ph*6.283 + seed + wi)* (wBase*0.7*(1-ph));
-    var wa = (1-ph) * 0.5;
-    var wr = (1.6 + s*0.12) * (0.5 + 0.5*(1-ph));
-    x.beginPath(); x.arc(wx, wy, wr, 0, 6.283);
-    x.fillStyle = 'rgba('+Math.min(255,R+30)+','+Math.min(255,G+40)+','+B+','+wa.toFixed(3)+')';
-    x.fill();
+    var wx = px + Math.sin(ph*6.283 + seed + wi*2)*(s*0.9*(1-ph));
+    var wa = (1-ph)*0.5;
+    var cc2 = STOPS[Math.min(STOPS.length-1, Math.floor(ph*STOPS.length))];
+    x.beginPath(); x.arc(wx, wy, 1.4*(1-ph)+0.6, 0, 6.283);
+    x.fillStyle = 'rgba('+cc2[0]+','+cc2[1]+','+cc2[2]+','+wa.toFixed(3)+')'; x.fill();
   }
 }
 var flurries = [], FLURRY_MAX = 140, flurryNextAt = 0;
@@ -2386,37 +2392,37 @@ function drawBird(x, cx, cy, s, heading, flap, col){
   var wing = Math.sin(flap);                       /* -1 .. 1 */
   var lift = 0.20 + 0.30*(wing*0.5+0.5);           /* how high the wings sweep */
   x.fillStyle = col; x.strokeStyle = col; x.lineJoin='round'; x.lineCap='round';
-  /* far wing (behind body) — drawn first, a touch darker feel via same col */
+  /* far wing (behind body) — pulled in closer/shorter so the bird reads compact */
   x.beginPath();
-  x.moveTo(-s*0.05, -s*0.05);
-  x.quadraticCurveTo(-s*0.55, -s*lift*1.5, -s*1.05, -s*lift*0.4);   /* long swept far wing */
-  x.quadraticCurveTo(-s*0.55, s*0.10, -s*0.05, s*0.05);
+  x.moveTo(-s*0.04, -s*0.05);
+  x.quadraticCurveTo(-s*0.42, -s*lift*1.5, -s*0.80, -s*lift*0.4);   /* shorter far wing */
+  x.quadraticCurveTo(-s*0.42, s*0.10, -s*0.04, s*0.05);
   x.closePath(); x.fill();
-  /* body — a smooth rounded torso tapering to a tail */
-  x.beginPath(); x.ellipse(s*0.02, 0, s*0.42, s*0.20, 0, 0, 6.283); x.fill();
-  /* tail sweeping back */
+  /* body — a bit rounder/shorter torso */
+  x.beginPath(); x.ellipse(s*0.04, 0, s*0.38, s*0.22, 0, 0, 6.283); x.fill();
+  /* tail — brought in tighter to the body (was -0.74) */
   x.beginPath();
-  x.moveTo(-s*0.36, -s*0.05); x.lineTo(-s*0.74, -s*0.16);
-  x.lineTo(-s*0.70, s*0.10); x.closePath(); x.fill();
-  /* head + tiny crest up front (+x) */
-  x.beginPath(); x.arc(s*0.42, -s*0.10, s*0.18, 0, 6.283); x.fill();
+  x.moveTo(-s*0.30, -s*0.05); x.lineTo(-s*0.56, -s*0.14);
+  x.lineTo(-s*0.52, s*0.10); x.closePath(); x.fill();
+  /* head + tiny crest — pulled in toward the body (was +0.42) */
+  x.beginPath(); x.arc(s*0.34, -s*0.10, s*0.19, 0, 6.283); x.fill();
   x.beginPath();                                    /* little crest */
-  x.moveTo(s*0.40, -s*0.24); x.lineTo(s*0.30, -s*0.40); x.lineTo(s*0.50, -s*0.26); x.closePath(); x.fill();
-  /* beak */
-  x.beginPath(); x.moveTo(s*0.58, -s*0.11); x.lineTo(s*0.74, -s*0.07); x.lineTo(s*0.58, -s*0.03); x.closePath(); x.fill();
-  /* near wing (over body) — the big showy spread wing */
+  x.moveTo(s*0.32, -s*0.24); x.lineTo(s*0.24, -s*0.38); x.lineTo(s*0.42, -s*0.26); x.closePath(); x.fill();
+  /* beak — closer in */
+  x.beginPath(); x.moveTo(s*0.48, -s*0.11); x.lineTo(s*0.62, -s*0.07); x.lineTo(s*0.48, -s*0.03); x.closePath(); x.fill();
+  /* near wing (over body) — the big showy spread wing, shortened */
   x.beginPath();
-  x.moveTo(0, -s*0.02);
-  x.quadraticCurveTo(-s*0.45, -s*lift*2.0, -s*0.95, -s*lift*0.7);   /* leading edge up & back */
-  x.quadraticCurveTo(-s*0.55, s*0.02, 0, s*0.06);                  /* trailing edge back to body */
+  x.moveTo(s*0.02, -s*0.02);
+  x.quadraticCurveTo(-s*0.36, -s*lift*2.0, -s*0.78, -s*lift*0.7);   /* leading edge up & back */
+  x.quadraticCurveTo(-s*0.42, s*0.02, s*0.02, s*0.06);             /* trailing edge back to body */
   x.closePath(); x.fill();
   /* pale leading edge + white spots along the near wing (blue-jay cue) */
   x.save();
   x.strokeStyle='rgba(220,235,255,0.85)'; x.lineWidth=Math.max(0.8,s/16);
   x.beginPath();
-  x.moveTo(0,-s*0.02); x.quadraticCurveTo(-s*0.45,-s*lift*2.0,-s*0.95,-s*lift*0.7); x.stroke();
+  x.moveTo(s*0.02,-s*0.02); x.quadraticCurveTo(-s*0.36,-s*lift*2.0,-s*0.78,-s*lift*0.7); x.stroke();
   x.fillStyle='rgba(240,248,255,0.9)';
-  for(var w=0; w<3; w++){ var tt=0.45+w*0.18; var wx=-s*0.95*tt - s*0.02*(1-tt); var wy=-s*lift*(2.0*(1-tt)+0.7*tt)*0.55;
+  for(var w=0; w<3; w++){ var tt=0.45+w*0.18; var wx=s*0.02 - s*0.80*tt; var wy=-s*lift*(2.0*(1-tt)+0.7*tt)*0.55;
     x.beginPath(); x.arc(wx, wy, s*0.05, 0, 6.283); x.fill(); }
   x.restore();
   x.restore();
