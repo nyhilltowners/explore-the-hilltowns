@@ -2385,7 +2385,7 @@ function drawBeam(x, px, py, s, ts, seed){
 }
 var flurries = [], FLURRY_MAX = 140, flurryNextAt = 0;
 function spawnFlurry(lng, lat){
-  var r = Math.random, n = 5 + Math.floor(r()*4);   /* 5-8 birds startle up together */
+  var r = Math.random, n = 2 + Math.floor(r()*3);   /* 2-4 birds — a small flurry, not a big flock (Laurie, 2026-09-15) */
   /* the whole flock bursts in a roughly shared direction (up & to one side) but
      each bird veers off it — like a startled scatter, not a synchronized fan */
   var flockAng = -Math.PI/2 + (r()-0.5)*1.2;
@@ -2399,7 +2399,7 @@ function spawnFlurry(lng, lat){
       vx: Math.cos(ang)*spd, vy: Math.sin(ang)*spd,
       veer: (r()-0.5)*2.2, veerf: 0.6 + r()*1.1,      /* gentle course changes mid-flight */
       flapf: 9 + r()*6, flapp: r()*6.283,             /* wingbeat speed + phase */
-      sz: 15 + r()*9,                                 /* bigger blue jays */
+      sz: 20 + r()*10,                                /* bigger blue jays (Laurie, 2026-09-15) */
       col: PAL[Math.floor(r()*PAL.length)],
       delay: r()*140});                                /* slight stagger so they don't all leave at once */
   }
