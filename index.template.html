@@ -1344,6 +1344,7 @@ function isClosedNow(r){
   if(!cell) return isTruck;                     /* trucks w/o today's hours → dim; others → open */
   if(/appoint|by appt/i.test(cell)) return true; /* by appointment → faded, not walk-in (Laurie, 2026-09-14) */
   if(/closed/i.test(cell)) return true;
+  if(/dawn|dusk|daylight|sunrise|sunset/i.test(cell)) return isNight();  /* dawn-dusk: lit by day, dimmed after dark (Laurie, 2026-09-15) */
   if(/24\s*hours|open\s*24|always\s*open/i.test(cell)) return false;
   var ts=_parseTimes(cell);
   if(ts.length<2) return isTruck;               /* unparseable: trucks dim, others don't */
@@ -1388,20 +1389,18 @@ function openNow(r){
      points) read as "24 hours" but there's no one there to help you — the glow
      means "you can really go and be received," so these don't glow. Lodging is
      excluded for the same reason (no staffed welcome implied). (Laurie, 2026-09-14) */
-  var blob = ((r.t||'') + ' ' + (r.tags||[]).join(' ')).toLowerCase();
-  var isUnstaffedOutdoor = /trailhead|trail head|preserve|sanctuary|\bfalls\b|access|state forest|wildlife|overlook|scenic|boat launch|fishing access|rail trail/.test(blob);
   var todayCell = (r.hrs[DOW_KEYS[new Date().getDay()]]||'').trim();
   if(!todayCell) return false;                        /* has hours on other days but not today → closed today, no glow (Laurie, 2026-09-15) */
   if(/appoint|by appt/i.test(todayCell)) return false;   /* "by appointment" ≠ walk in now (Laurie, 2026-09-14) */
-  /* "Dawn-Dusk" / "daylight hours" = unstaffed outdoor spots (trails, falls,
-     preserves, swamps, wilderness). Per Laurie's safety call these are NEUTRAL
-     and never glow — day or night — so the map never encourages heading into
-     wilderness on the strength of a glowing pin. (Laurie, 2026-09-15) */
+  /* SIMPLIFIED (Laurie, 2026-09-15): anything open "24 hours" or "Dawn-Dusk"
+     (fridges, pantries, trails, outdoor spots) gets a LIT-but-not-glowing glyph
+     while open — the glow is reserved for places with real staffed posted hours.
+     So neither pattern glows. Dawn-Dusk additionally dims after dark (handled in
+     isDimmed); 24-hour stays lit around the clock. */
   if(/dawn|dusk|daylight|sunrise|sunset/i.test(todayCell)) return false;
-  var is24 = /24\s*h|open\s*24|always\s*open/i.test(todayCell);
+  if(/24\s*h|open\s*24|always\s*open/i.test(todayCell)) return false;
   if(r.cat === 'Lodging') return false;              /* a bed for the night ≠ a staffed welcome now */
-  if(is24 && isUnstaffedOutdoor) return false;       /* always-open public land: no glow */
-  return !isClosedNow(r);                            /* has hours → glow only while within them */
+  return !isClosedNow(r);                            /* real posted hours → glow only while within them */
 }
 /* ===== Recurrence gate (2026-09-10, Laurie) =====
    A POI with a standing meeting but no regular hours (e.g. a Legion post that
