@@ -1387,7 +1387,15 @@ function isLodgingRec(r){ return r.cat === 'Lodging'; }
 function openNow(r){
   if(r.ty==='events'){
     var ref = planDate || TODAY_E;
-    return r.d1 <= ref && (!r.d2 || r.d2 >= ref);   /* happening now / today */
+    if(!(r.d1 <= ref && (!r.d2 || r.d2 >= ref))) return false;   /* not in range */
+    /* A long multi-day span (exhibition, class series, festival window) is not
+       "happening right now this hour" — only glow genuinely short/day events so
+       the glow keeps meaning "live now." >8-day span → no glow. (Laurie 2026-09-15) */
+    if(r.d2 && r.d1){
+      var span = (Date.parse(r.d2) - Date.parse(r.d1)) / 86400000;
+      if(span > 8) return false;
+    }
+    return true;
   }
   if(r.rw) return recurActiveNow(r);                 /* recurring POI: only in its meeting window */
   var hasHours = r.hrs && ['mon','tue','wed','thu','fri','sat','sun'].some(function(d){ return r.hrs[d] && r.hrs[d].trim(); });
@@ -1399,6 +1407,7 @@ function openNow(r){
   var blob = ((r.t||'') + ' ' + (r.tags||[]).join(' ')).toLowerCase();
   var isUnstaffedOutdoor = /trailhead|trail head|preserve|sanctuary|\bfalls\b|access|state forest|wildlife|overlook|scenic|boat launch|fishing access|rail trail/.test(blob);
   var todayCell = (r.hrs[DOW_KEYS[new Date().getDay()]]||'').trim();
+  if(!todayCell) return false;                        /* has hours on other days but not today → closed today, no glow (Laurie, 2026-09-15) */
   if(/appoint|by appt/i.test(todayCell)) return false;   /* "by appointment" ≠ walk in now (Laurie, 2026-09-14) */
   var is24 = /24\s*h|open\s*24|always\s*open/i.test(todayCell);
   if(r.cat === 'Lodging') return false;              /* a bed for the night ≠ a staffed welcome now */
@@ -2280,10 +2289,83 @@ function twinkleFrame(ts){
     keep.push(tw);
   }
   twinkles = keep;
+  flurryStep(ts, x, W, H, dpr);   /* draw the heart/bird bursts on top of the twinkle, same cycle */
   twinkleRAF = requestAnimationFrame(twinkleFrame);
 }
 function startTwinkles(){ if(map && !isNight() && !REDUCED_MOTION && !twinkleRAF){ twinklePrev = 0; twinkleRAF = requestAnimationFrame(twinkleFrame); } }
 function stopTwinkles(){ if(twinkleRAF){ cancelAnimationFrame(twinkleRAF); twinkleRAF = null; } twinkles = []; var c = document.getElementById('sparks'); if(c){ var x=c.getContext('2d'); x.setTransform(1,0,0,1,0,0); x.clearRect(0,0,c.width,c.height); } }
+
+/* ============ FLURRIES — periodic bursts of little hearts (or bluebirds) that
+   flutter up and out of an ACTIVE (open/glowing) pin, then fade. Distinct from
+   the constant ambient twinkle: these are occasional, celebratory puffs, so the
+   map feels alive and inviting without being busy. Runs on the same canvas as
+   the twinkle; day-only, honors reduced-motion. (Laurie, 2026-09-15) */
+var FLURRY_SHAPE = 'heart';    /* 'heart' or 'bird' */
+var flurries = [], FLURRY_MAX = 140, flurryNextAt = 0;
+function spawnFlurry(lng, lat){
+  var r = Math.random, n = 4 + Math.floor(r()*4);   /* 4-7 little shapes per burst */
+  for(var i=0;i<n;i++){
+    var ang = -Math.PI/2 + (r()-0.5)*1.9;            /* mostly upward, fanned out */
+    var spd = 16 + r()*26;
+    flurries.push({lng:lng, lat:lat, born:performance.now(),
+      life: 1500 + r()*1200,
+      vx: Math.cos(ang)*spd, vy: Math.sin(ang)*spd,   /* px/sec */
+      sway: (r()-0.5)*1.6, swf: 2 + r()*2.5, swp: r()*6.283,
+      sz: 6 + r()*5, rot:(r()-0.5)*0.6,
+      hue: r()<0.5 ? 0 : 1});                          /* 0=warm pink, 1=soft blue */
+  }
+}
+function drawHeart(x, cx, cy, s, rot, col){
+  x.save(); x.translate(cx,cy); x.rotate(rot); x.scale(s/16, s/16); x.beginPath();
+  x.moveTo(0,4);
+  x.bezierCurveTo(0,0, -8,-2, -8,-7);
+  x.bezierCurveTo(-8,-12, -3,-13, 0,-8);
+  x.bezierCurveTo(3,-13, 8,-12, 8,-7);
+  x.bezierCurveTo(8,-2, 0,0, 0,4);
+  x.closePath(); x.fillStyle=col; x.fill(); x.restore();
+}
+function drawBird(x, cx, cy, s, rot, col){
+  /* a tiny stylized bird: two wing arcs — reads as a bird in flight at small size */
+  x.save(); x.translate(cx,cy); x.rotate(rot); x.strokeStyle=col; x.lineWidth=Math.max(1,s/6);
+  x.lineCap='round'; x.beginPath();
+  x.moveTo(-s/2, 0); x.quadraticCurveTo(-s/4, -s/2.2, 0, 0);
+  x.quadraticCurveTo(s/4, -s/2.2, s/2, 0); x.stroke(); x.restore();
+}
+function flurryStep(ts, x, W, H, dpr){
+  /* called at the END of twinkleFrame, after the twinkle has drawn, so both
+     share one clear-and-draw cycle on the sparks canvas. */
+  if(ts >= flurryNextAt){
+    var pins = (LAST_FC && LAST_FC.features) || [], vis = [];
+    for(var i=0;i<pins.length;i++){
+      var f = pins[i]; if(f.properties.ty === 'folklore' || f.properties.open !== 1) continue;
+      var pt = map.project(f.geometry.coordinates);
+      if(pt.x < 0 || pt.y < 0 || pt.x > W || pt.y > H) continue;
+      vis.push(f);
+    }
+    if(vis.length && flurries.length < FLURRY_MAX){
+      var pick = vis[Math.floor(Math.random()*vis.length)];
+      spawnFlurry(pick.geometry.coordinates[0], pick.geometry.coordinates[1]);
+    }
+    flurryNextAt = ts + 2200 + Math.random()*3200;   /* next burst in ~2.2-5.4s (whole map) */
+  }
+  var keep = [];
+  for(var k=0;k<flurries.length;k++){
+    var fl = flurries[k], age = ts - fl.born; if(age > fl.life) continue;
+    var u = age/fl.life, t = age/1000;
+    var env = u < 0.15 ? (u/0.15) : (1 - (u-0.15)/0.85);
+    var base = map.project([fl.lng, fl.lat]);
+    var px = base.x + fl.vx*t + Math.sin(t*fl.swf + fl.swp)*fl.sway*6;
+    var py = base.y + fl.vy*t + 6*t*t;
+    var col = fl.hue===0 ? 'rgba(255,120,150,'+(0.9*env).toFixed(3)+')'
+                         : 'rgba(120,175,255,'+(0.9*env).toFixed(3)+')';
+    if(FLURRY_SHAPE==='bird') drawBird(x, px, py, fl.sz, fl.rot + Math.sin(t*fl.swf)*0.25, col);
+    else drawHeart(x, px, py, fl.sz*(0.7+0.3*env), fl.rot + Math.sin(t*fl.swf)*0.2, col);
+    keep.push(fl);
+  }
+  flurries = keep;
+}
+function startFlurries(){ flurryNextAt = 0; }   /* driven by twinkleFrame; nothing to schedule */
+function stopFlurries(){ flurries = []; }
 function startGlow(){ if(map && isNight() && !REDUCED_MOTION && !glowRAF) glowRAF = requestAnimationFrame(glowFrame); }
 function stopGlow(){ if(glowRAF){ cancelAnimationFrame(glowRAF); glowRAF = null; } }
 function applyMapMode(){
@@ -2295,7 +2377,7 @@ function applyMapMode(){
   if(map.getLayer('poi-glow'))  map.setLayoutProperty('poi-glow','visibility', night?'none':'visible');
   map.setPaintProperty('pin-selected','circle-stroke-color', night ? '#ffb020' : '#39b7ff');
   refreshMapData();                    /* re-stamps the `night` flag so pins swap glyphs */
-  if(night){ startGlow(); startSparks(); stopDayGlow(); stopTwinkles(); } else { stopGlow(); stopSparks(); startDayGlow(); startTwinkles(); }
+  if(night){ startGlow(); startSparks(); stopDayGlow(); stopTwinkles(); stopFlurries(); } else { stopGlow(); stopSparks(); startDayGlow(); startTwinkles(); startFlurries(); }
 }
 /* Switch the whole page between day and firelight. `auto` = the sun did it
    (not the visitor), in which case a visitor's own filter choices are kept. */
