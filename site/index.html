@@ -2303,16 +2303,23 @@ function stopTwinkles(){ if(twinkleRAF){ cancelAnimationFrame(twinkleRAF); twink
 var FLURRY_SHAPE = 'bird';    /* 'heart' or 'bird' */
 var flurries = [], FLURRY_MAX = 140, flurryNextAt = 0;
 function spawnFlurry(lng, lat){
-  var r = Math.random, n = 4 + Math.floor(r()*4);   /* 4-7 little shapes per burst */
+  var r = Math.random, n = 5 + Math.floor(r()*4);   /* 5-8 birds startle up together */
+  /* the whole flock bursts in a roughly shared direction (up & to one side) but
+     each bird veers off it — like a startled scatter, not a synchronized fan */
+  var flockAng = -Math.PI/2 + (r()-0.5)*1.2;
+  /* blue-toned palette only: slate, navy, blue-grey (crow/bluejay/pigeon), no pink */
+  var PAL = ['40,55,80','55,75,120','70,100,150','90,120,165','50,60,85'];
   for(var i=0;i<n;i++){
-    var ang = -Math.PI/2 + (r()-0.5)*1.9;            /* mostly upward, fanned out */
-    var spd = 16 + r()*26;
+    var ang = flockAng + (r()-0.5)*1.5;              /* each bird's own heading */
+    var spd = 55 + r()*70;                            /* fast startle burst (px/s) */
     flurries.push({lng:lng, lat:lat, born:performance.now(),
-      life: 1500 + r()*1200,
-      vx: Math.cos(ang)*spd, vy: Math.sin(ang)*spd,   /* px/sec */
-      sway: (r()-0.5)*1.6, swf: 2 + r()*2.5, swp: r()*6.283,
-      sz: 6 + r()*5, rot:(r()-0.5)*0.6,
-      hue: r()<0.5 ? 0 : 1});                          /* 0=warm pink, 1=soft blue */
+      life: 1700 + r()*1400,
+      vx: Math.cos(ang)*spd, vy: Math.sin(ang)*spd,
+      veer: (r()-0.5)*2.2, veerf: 0.6 + r()*1.1,      /* gentle course changes mid-flight */
+      flapf: 11 + r()*8, flapp: r()*6.283,            /* wingbeat speed + phase (fast) */
+      sz: 12 + r()*8,                                 /* bigger */
+      col: PAL[Math.floor(r()*PAL.length)],
+      delay: r()*140});                                /* slight stagger so they don't all leave at once */
   }
 }
 function drawHeart(x, cx, cy, s, rot, col){
@@ -2324,12 +2331,28 @@ function drawHeart(x, cx, cy, s, rot, col){
   x.bezierCurveTo(8,-2, 0,0, 0,4);
   x.closePath(); x.fillStyle=col; x.fill(); x.restore();
 }
-function drawBird(x, cx, cy, s, rot, col){
-  /* a tiny stylized bird: two wing arcs — reads as a bird in flight at small size */
-  x.save(); x.translate(cx,cy); x.rotate(rot); x.strokeStyle=col; x.lineWidth=Math.max(1,s/6);
-  x.lineCap='round'; x.beginPath();
-  x.moveTo(-s/2, 0); x.quadraticCurveTo(-s/4, -s/2.2, 0, 0);
-  x.quadraticCurveTo(s/4, -s/2.2, s/2, 0); x.stroke(); x.restore();
+function drawBird(x, cx, cy, s, heading, flap, col){
+  /* A little bird in flight: slim body + two wings that beat (flap drives the
+     wing angle). Banks toward its heading so a flock reads as scattering, not
+     a row of identical m's. (Laurie, 2026-09-15) */
+  x.save(); x.translate(cx,cy); x.rotate(heading);
+  var wing = Math.sin(flap);                 /* -1 (down-stroke) .. 1 (up-stroke) */
+  var up = 0.35 + 0.75*(wing*0.5+0.5);       /* wing raise amount */
+  x.strokeStyle = col; x.fillStyle = col;
+  x.lineWidth = Math.max(1.1, s/7); x.lineCap='round'; x.lineJoin='round';
+  /* body */
+  x.beginPath(); x.ellipse(0, 0, s*0.30, s*0.14, 0, 0, 6.283); x.fill();
+  /* head nub (front = +x) */
+  x.beginPath(); x.arc(s*0.30, -s*0.02, s*0.12, 0, 6.283); x.fill();
+  /* two wings sweeping back from the shoulders, angle set by flap */
+  var wy = -s*up;
+  x.beginPath();
+  x.moveTo(-s*0.05, 0);
+  x.quadraticCurveTo(-s*0.30, wy, -s*0.62, wy*0.55);   /* left/upper wing */
+  x.moveTo(-s*0.05, 0);
+  x.quadraticCurveTo(-s*0.30, -wy, -s*0.62, -wy*0.55); /* right/lower wing */
+  x.stroke();
+  x.restore();
 }
 function flurryStep(ts, x, W, H, dpr){
   /* called at the END of twinkleFrame, after the twinkle has drawn, so both
@@ -2350,16 +2373,25 @@ function flurryStep(ts, x, W, H, dpr){
   }
   var keep = [];
   for(var k=0;k<flurries.length;k++){
-    var fl = flurries[k], age = ts - fl.born; if(age > fl.life) continue;
+    var fl = flurries[k], age = ts - fl.born - fl.delay;
+    if(age < 0){ keep.push(fl); continue; }           /* staggered takeoff */
+    if(age > fl.life) continue;
     var u = age/fl.life, t = age/1000;
-    var env = u < 0.15 ? (u/0.15) : (1 - (u-0.15)/0.85);
+    var env = u < 0.10 ? (u/0.10) : (1 - (u-0.10)/0.90);   /* quick appear, long fade */
+    /* startle: fast burst that eases as they settle into a glide (drag) */
+    var drag = Math.exp(-t*0.9);
+    /* veer: heading wanders a little so paths aren't straight */
+    var veer = Math.sin(t*fl.veerf + fl.flapp)*fl.veer;
+    var vx = fl.vx*drag, vy = fl.vy*drag - 10*t;      /* slight lift as they rise */
+    /* integrate position (approx) */
+    var dispX = fl.vx*(1-drag)/0.9 + veer*8;
+    var dispY = (fl.vy*(1-drag)/0.9) - 5*t*t*10 - 6*t; /* rise + gentle climb */
     var base = map.project([fl.lng, fl.lat]);
-    var px = base.x + fl.vx*t + Math.sin(t*fl.swf + fl.swp)*fl.sway*6;
-    var py = base.y + fl.vy*t + 6*t*t;
-    var col = fl.hue===0 ? 'rgba(255,120,150,'+(0.9*env).toFixed(3)+')'
-                         : 'rgba(120,175,255,'+(0.9*env).toFixed(3)+')';
-    if(FLURRY_SHAPE==='bird') drawBird(x, px, py, fl.sz, fl.rot + Math.sin(t*fl.swf)*0.25, col);
-    else drawHeart(x, px, py, fl.sz*(0.7+0.3*env), fl.rot + Math.sin(t*fl.swf)*0.2, col);
+    var px = base.x + dispX, py = base.y + dispY;
+    var heading = Math.atan2(vy, vx) + veer*0.15;      /* bank toward travel direction */
+    var flap = t*fl.flapf + fl.flapp;                  /* wingbeat */
+    var col = 'rgba('+fl.col+','+(0.92*env).toFixed(3)+')';
+    drawBird(x, px, py, fl.sz, heading, flap, col);
     keep.push(fl);
   }
   flurries = keep;
