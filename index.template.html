@@ -2395,7 +2395,7 @@ function spawnFlurry(lng, lat){
     var ang = flockAng + (r()-0.5)*1.5;              /* each bird's own heading */
     var spd = 38 + r()*49;                            /* ~30% less distance from the pin (Laurie, 2026-09-15) */
     flurries.push({lng:lng, lat:lat, born:performance.now(),
-      life: 1360 + r()*1120,                          /* ~20% shorter — animation ends sooner (Laurie, 2026-09-15) */
+      life: 680 + r()*560,                            /* twice as fast — ends sooner (Laurie, 2026-09-15) */
       vx: Math.cos(ang)*spd, vy: Math.sin(ang)*spd,
       veer: (r()-0.5)*2.2, veerf: 0.6 + r()*1.1,      /* gentle course changes mid-flight */
       flapf: 9 + r()*6, flapp: r()*6.283,             /* wingbeat speed + phase */
