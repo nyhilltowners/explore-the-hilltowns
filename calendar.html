@@ -252,6 +252,27 @@ h1{font-family:'Montserrat',sans-serif; font-weight:800; text-transform:uppercas
 .skyline .sky-strat{display:none;}
 .skyline.has-strat .sky-strat{display:flex;}
 .skyline #stratArrow{transition:transform .6s ease; transform-origin:50% 50%;}
+/* 13" laptop band (2026-09-17, Laurie): keep every header group on one row down to ~1240px.
+   Nothing hides here — spacing tightens, the wind arrow loses its long tail, the degrees
+   drop, and the nav refuses to wrap. Below 1180 the moon and wind hide as before. */
+.sitenav .hright, .sitenav .links{flex-wrap:nowrap; white-space:nowrap;}
+.skyline #stratArrow{width:15px; height:15px;}
+@media (max-width:1480px){
+  .sitenav{padding-left:14px; padding-right:14px;}
+  .skyline{margin:0 8px; gap:12px;}
+  .skyline .sky-g + .sky-g{padding-left:12px;}
+  .skyline .sky-g{gap:5px;}
+  .sitenav .links a{padding:8px 9px; letter-spacing:.06em;}
+  .sitenav .links a.ig{padding:8px 6px;}
+  .skyline .sky-strat .sky-val .deg{display:none;}
+}
+@media (max-width:1320px){
+  .skyline{gap:9px; margin:0 6px;}
+  .skyline .sky-g + .sky-g{padding-left:9px;}
+  .skyline .sky-eyebrow{letter-spacing:.12em;}
+  .sitenav .links a{padding:8px 7px; font-size:12px;}
+  .sitenav .brand .stack .l1, .sitenav .brand .stack .l2{font-size:15px;}
+}
 @media (max-width:1180px){ .skyline .sky-strat{display:none !important;} }
 @media (max-width:1180px){ .skyline .sky-moon{display:none;} }
 @media (max-width:960px){ .skyline{display:none;} }

@@ -100,7 +100,7 @@ function renderStrat(h){
   var box = document.getElementById('skyline'), el = document.getElementById('stratVal'), sub = document.getElementById('stratSub'), arrow = document.getElementById('stratArrow');
   if(!box || !el) return;
   if(!h){ box.classList.remove('has-strat'); return; }
-  el.innerHTML = Math.round(h.kt)+' kt<span class="c">from '+compass(h.dir)+' \u00b7 '+Math.round(h.dir)+'&deg;</span>';
+  el.innerHTML = Math.round(h.kt)+' kt<span class="c">from '+compass(h.dir)+'<span class="deg"> \u00b7 '+Math.round(h.dir)+'&deg;</span></span>';
   var km = (typeof h.gph === 'number') ? (h.gph/1000).toFixed(1)+' km up' : '';
   if(sub) sub.textContent = '';   /* 2026-09-16 (Laurie): no sub-line; height + model live in the tooltip */
   if(arrow) arrow.style.transform = 'rotate('+(((h.dir+180)%360))+'deg)';
