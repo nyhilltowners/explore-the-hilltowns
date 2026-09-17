@@ -1,0 +1,133 @@
+{
+  "site_title": "Explore These Hills — Catskill & Beyond",
+  "categories": [
+    {
+      "key": "events",
+      "label": "Events",
+      "schema": "events",
+      "workbook": "data/events.xlsx",
+      "color": "#ff6f5e",
+      "default_on": true,
+      "glyph": "📅",
+      "sheet": "Events"
+    },
+    {
+      "key": "adventures",
+      "label": "Adventures",
+      "schema": "poi",
+      "workbook": "data/points_of_interest.xlsx",
+      "sheet": "Adventures",
+      "color": "#00a896",
+      "default_on": true,
+      "glyph": "≋"
+    },
+    {
+      "key": "restaurants",
+      "label": "Restaurants",
+      "schema": "poi",
+      "workbook": "data/points_of_interest.xlsx",
+      "sheet": "Restaurants",
+      "color": "#e05252",
+      "default_on": true,
+      "glyph": "🍴"
+    },
+    {
+      "key": "farmstands",
+      "label": "Farm Stands",
+      "schema": "poi",
+      "workbook": "data/points_of_interest.xlsx",
+      "sheet": "Farm Stands",
+      "color": "#4caf50",
+      "default_on": true,
+      "glyph": "𐚱"
+    },
+    {
+      "key": "antiques",
+      "label": "Antiques & Vintage",
+      "schema": "poi",
+      "workbook": "data/points_of_interest.xlsx",
+      "sheet": "Antiques & Vintage",
+      "color": "#b08968",
+      "default_on": true,
+      "glyph": "☞"
+    },
+    {
+      "key": "artsent",
+      "label": "Arts & Entertainment",
+      "schema": "poi",
+      "workbook": "data/points_of_interest.xlsx",
+      "sheet": "Arts & Entertainment",
+      "color": "#a2c523",
+      "default_on": true,
+      "glyph": "▣"
+    },
+    {
+      "key": "lodging",
+      "label": "Lodging",
+      "schema": "poi",
+      "workbook": "data/points_of_interest.xlsx",
+      "sheet": "Lodging",
+      "color": "#8e6cf0",
+      "default_on": true,
+      "glyph": "☾"
+    },
+    {
+      "key": "flowersgifts",
+      "label": "Flowers & Garden",
+      "schema": "poi",
+      "workbook": "data/points_of_interest.xlsx",
+      "sheet": "Flowers & Garden",
+      "color": "#c2185b",
+      "default_on": true,
+      "glyph": "𐫱"
+    },
+    {
+      "key": "wellness",
+      "label": "Wellness",
+      "schema": "poi",
+      "workbook": "data/points_of_interest.xlsx",
+      "sheet": "Wellness",
+      "color": "#e6b422",
+      "default_on": true,
+      "glyph": "𐘿"
+    },
+    {
+      "key": "mutualaid",
+      "label": "Mutual Aid",
+      "schema": "poi",
+      "workbook": "data/points_of_interest.xlsx",
+      "sheet": "Mutual Aid",
+      "color": "#d4519f",
+      "default_on": true,
+      "glyph": "✚"
+    },
+    {
+      "key": "othernecessities",
+      "label": "Other Necessities",
+      "schema": "poi",
+      "workbook": "data/points_of_interest.xlsx",
+      "sheet": "Other Necessities",
+      "color": "#7a8ba6",
+      "default_on": true,
+      "glyph": "⚙"
+    },
+    {
+      "key": "transportation",
+      "label": "Transportation",
+      "schema": "poi",
+      "workbook": "data/points_of_interest.xlsx",
+      "sheet": "Transportation",
+      "color": "#5b7a99",
+      "default_on": false,
+      "glyph": "🚌"
+    },
+    {
+      "key": "folklore",
+      "label": "Folklore",
+      "schema": "folklore",
+      "workbook": "data/folklore_legends.xlsx",
+      "color": "#000080",
+      "default_on": false
+    }
+  ]
+}
