@@ -1,0 +1,35 @@
+<!-- Shared site header. Edit partials/header.html, never the copy inside a page.
+     build.py stamps it into every page at the @@header marker and flags the current
+     page's nav link active. Page-specific buttons (search, night toggle) stay in each
+     page right after the marker; the page closes .hright and the nav itself. -->
+<nav class="sitenav">
+  <a class="brand" href="index.html">
+    <img src="images/raccoon-mark.svg" alt="">
+    <span class="stack"><span class="l1">Hilltowns</span><span class="l2">Folk Atlas</span></span>
+  </a>
+  <div class="skyline" id="skyline">
+    <div class="sky-g sky-wx" id="skyWx">
+      <svg id="skyIco" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"></svg>
+      <div class="sky-stack"><span class="sky-eyebrow" id="skyCond"></span><span class="sky-val" id="skyTemp"></span></div>
+    </div>
+    <div class="sky-g sky-sun" title="Today's sunrise and sunset, Berne time">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 16a8 8 0 0 1 16 0"/><line x1="2" y1="19.5" x2="22" y2="19.5"/><line x1="12" y1="3" x2="12" y2="5.5"/><line x1="5" y1="6.5" x2="6.6" y2="8.1"/><line x1="19" y1="6.5" x2="17.4" y2="8.1"/></svg>
+      <div class="sky-stack"><span class="sky-eyebrow">Sunrise &middot; Sunset</span><span class="sky-val" id="skySun"></span></div>
+    </div>
+    <div class="sky-g sky-moon" id="skyMoon">
+      <svg id="moonIco" viewBox="0 0 24 24" aria-hidden="true"></svg>
+      <div class="sky-stack"><span class="sky-eyebrow" id="moonPhase"></span><span class="sky-val" id="moonName"></span><span class="sky-sub" id="moonEng"></span></div>
+    </div>
+    <div class="sky-g sky-strat" id="skyStrat">
+      <svg id="stratArrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="12" y1="21" x2="12" y2="4"/><polyline points="6.5,9.5 12,4 17.5,9.5"/></svg>
+      <div class="sky-stack"><span class="sky-eyebrow">Stratospheric wind</span><span class="sky-val" id="stratVal"></span></div>
+    </div>
+  </div>
+  <div class="hright">
+    <div class="links" id="hnav">
+    <a href="index.html">Atlas</a>
+    <a href="calendar.html">Calendar</a>
+    <a href="directory.html">Directory</a>
+    <a href="instagram.html" class="ig" title="Instagram" aria-label="Instagram"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.3" cy="6.7" r="1" fill="currentColor" stroke="none"/></svg></a>
+    <a href="about.html" class="mob-only">About</a>
+  </div>

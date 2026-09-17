@@ -1142,6 +1142,54 @@ def refresh_hearts(all_records):
                                                 ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
 
 
+# ---------------------------------------------------------------------------
+# Shared header / footer partials. A page marks where they go with
+#   <!-- @@header -->   and   <!-- @@footer -->
+# and build.py splices partials/header.html / partials/footer.html in, adding
+# class="active" to the nav link whose href is this page. Missing marker = page
+# is emitted as-is; missing partial = the marker is left in place and a WARNING
+# is logged, never a broken page.
+# ---------------------------------------------------------------------------
+PARTIALS = ROOT / "partials"
+
+
+def _partial(name: str) -> str:
+    p = PARTIALS / name
+    if not p.exists():
+        WARNS.append(f"partials/{name} missing — marker left in page")
+        return ""
+    return p.read_text(encoding="utf-8")
+
+
+def _mark_active(header: str, page: str) -> str:
+    """Add class="active" to the nav link pointing at `page` (keeps any existing class)."""
+    def repl(m):
+        attrs = m.group(1)
+        if 'class="' in attrs:
+            attrs = attrs.replace('class="', 'class="active ', 1)
+        else:
+            attrs = attrs + ' class="active"'
+        return f'<a href="{page}"{attrs}>'
+    return re.sub(r'<a href="' + re.escape(page) + r'"([^>]*)>', repl, header, count=1)
+
+
+def apply_partials(html: str, page: str) -> str:
+    if "<!-- @@header -->" in html:
+        h = _partial("header.html")
+        if h:
+            html = html.replace("<!-- @@header -->", _mark_active(h, page).rstrip("\n"), 1)
+    if "<!-- @@footer -->" in html:
+        f = _partial("footer.html")
+        if f:
+            html = html.replace("<!-- @@footer -->", f.rstrip("\n"), 1)
+    return html
+
+
+def emit_page(src, out_name: str) -> None:
+    html = Path(src).read_text(encoding="utf-8")
+    (SITE / out_name).write_text(apply_partials(html, out_name), encoding="utf-8")
+
+
 def main() -> int:
     manifest = json.loads((ROOT / "manifest.json").read_text(encoding="utf-8"))
     load_preview_cache()
@@ -1205,21 +1253,13 @@ def main() -> int:
     if not template.exists():
         print("ERROR: no index.template.html (or index.html) found at repo root")
         return 1
-    shutil.copyfile(template, SITE / "index.html")
-    # Standalone About page (hand-authored, not templated).
-    if (ROOT / "about.html").exists():
-        shutil.copyfile(ROOT / "about.html", SITE / "about.html")
-    # Standalone Event Calendar page (reads site/data.js at runtime).
-    if (ROOT / "calendar.html").exists():
-        shutil.copyfile(ROOT / "calendar.html", SITE / "calendar.html")
-    # Standalone Directory page (reads site/data.js at runtime).
-    if (ROOT / "directory.html").exists():
-        shutil.copyfile(ROOT / "directory.html", SITE / "directory.html")
-    # Standalone Instagram feed page (static; embed widget added separately).
-    if (ROOT / "instagram.html").exists():
-        shutil.copyfile(ROOT / "instagram.html", SITE / "instagram.html")
-    if (ROOT / "bulletin.html").exists():
-        shutil.copyfile(ROOT / "bulletin.html", SITE / "bulletin.html")
+    emit_page(template, "index.html")
+    # Standalone pages (hand-authored). Each carries <!-- @@header --> / <!-- @@footer -->
+    # markers that emit_page() fills from partials/, so the nav + skyline + footer are
+    # written once and stamped everywhere (2026-09-16, per Laurie).
+    for name in ("about.html", "calendar.html", "directory.html", "instagram.html", "bulletin.html"):
+        if (ROOT / name).exists():
+            emit_page(ROOT / name, name)
     if (ROOT / "skyline.js").exists():
         shutil.copyfile(ROOT / "skyline.js", SITE / "skyline.js")
     if (ROOT / "images").exists():

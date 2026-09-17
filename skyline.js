@@ -102,9 +102,9 @@ function renderStrat(h){
   if(!h){ box.classList.remove('has-strat'); return; }
   el.innerHTML = Math.round(h.kt)+' kt<span class="c">from '+compass(h.dir)+' \u00b7 '+Math.round(h.dir)+'&deg;</span>';
   var km = (typeof h.gph === 'number') ? (h.gph/1000).toFixed(1)+' km up' : '';
-  sub.textContent = [km, h.model].filter(Boolean).join(' \u00b7 ');
+  if(sub) sub.textContent = '';   /* 2026-09-16 (Laurie): no sub-line; height + model live in the tooltip */
   if(arrow) arrow.style.transform = 'rotate('+(((h.dir+180)%360))+'deg)';
-  document.getElementById('skyStrat').title = 'Wind at the 10 hPa pressure level over Berne, NY \u2014 the stratosphere, roughly 26\u201331 km up. '+Math.round(h.kt)+' knots blowing from the '+compass(h.dir)+' ('+Math.round(h.dir)+'\u00b0); the arrow points downwind. Model: '+h.model+' via Open-Meteo.com, valid '+h.when+' (nearest model hour). Refreshes with the surface weather.';
+  document.getElementById('skyStrat').title = 'Wind at the 10 hPa pressure level over Berne, NY \u2014 the stratosphere, '+(km||'roughly 26\u201331 km up')+'. '+Math.round(h.kt)+' knots blowing from the '+compass(h.dir)+' ('+Math.round(h.dir)+'\u00b0); the arrow points downwind. Model: '+h.model+' via Open-Meteo.com, valid '+h.when+' (nearest model hour). Refreshes with the surface weather.';
   box.classList.add('has-strat');
 }
 function nearestHour(j, key, dirKey, gphKey){

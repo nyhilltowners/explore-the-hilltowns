@@ -97,6 +97,10 @@ body{
 .sitenav .brand .stack .l2{font-size:16px; display:block; transform:scaleX(0.979); transform-origin:left center;}
 .sitenav .hright{display:flex; align-items:center; gap:2px;}
 .sitenav .links{display:flex; align-items:center; gap:4px;}
+.sitenav .links a.ig{padding:8px 10px; display:inline-flex; align-items:center;}
+.sitenav .links a.ig svg{width:18px; height:18px;}
+.sitenav .links a.mob-only{display:none;}
+@media (max-width:760px){ .sitenav .links a.mob-only{display:block;} }
 .sitenav .links a{
   font-family:'Montserrat',sans-serif; font-weight:600; font-size:12.5px;
   letter-spacing:.08em; text-transform:uppercase; text-decoration:none;
@@ -136,7 +140,7 @@ body{
 .skyline .sky-strat{display:none;}
 .skyline.has-strat .sky-strat{display:flex;}
 .skyline #stratArrow{transition:transform .6s ease; transform-origin:50% 50%;}
-@media (max-width:1320px){ .skyline .sky-strat{display:none !important;} }
+@media (max-width:1180px){ .skyline .sky-strat{display:none !important;} }
 @media (max-width:1180px){ .skyline .sky-moon{display:none;} }
 @media (max-width:960px){ .skyline{display:none;} }
 /* Search overlay: drops from the header, anchored to it, over the map. */
@@ -196,7 +200,10 @@ body{
 .epigraph{font-size:12px; font-style:italic; color:#6b6552; line-height:1.5; margin:11px 1px 3px;}
 .controls .epigraph{color:#4a4f7a;}
 .controls #filtersToggle{background:#eef0fb; border-color:#c9cdec; color:#2b2f57;}
-.controls.fcollapsed .cats, .controls.fcollapsed .epigraph, .controls.fcollapsed .planrow{display:none;}
+.controls.fcollapsed .cats, .controls.fcollapsed .epigraph, .controls.fcollapsed .planrow, .controls.fcollapsed .sidefoot{display:none;}
+.sidefoot{font-size:11px; letter-spacing:.04em; color:#6b6552; margin:14px 1px 6px;}
+.sidefoot a{color:inherit; text-decoration:none; border-bottom:1px solid var(--gold);}
+html[data-theme="night"] .sidefoot{color:var(--birch);}
 .controls #filtersToggle:hover{border-color:var(--gold);}
 .cats{display:flex; flex-direction:column; gap:0; margin-top:6px;}
 .catbox{display:flex; align-items:center; gap:10px; cursor:pointer; user-select:none;
@@ -536,37 +543,7 @@ html[data-theme="night"] #modeToggle{color:#fca315;}
     <div class="sm-msg" id="sm-msg"></div>
   </div>
 </div>
-<nav class="sitenav">
-  <a class="brand" href="index.html">
-    <img src="images/raccoon-mark.svg" alt="">
-    <span class="stack"><span class="l1">Hilltowns</span><span class="l2">Folk Atlas</span></span>
-  </a>
-  <div class="skyline" id="skyline">
-    <div class="sky-g sky-wx" id="skyWx">
-      <svg id="skyIco" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"></svg>
-      <div class="sky-stack"><span class="sky-eyebrow" id="skyCond"></span><span class="sky-val" id="skyTemp"></span></div>
-    </div>
-    <div class="sky-g sky-strat" id="skyStrat">
-      <svg id="stratArrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="12" y1="21" x2="12" y2="4"/><polyline points="6.5,9.5 12,4 17.5,9.5"/></svg>
-      <div class="sky-stack"><span class="sky-eyebrow">10 hPa wind &middot; Berne</span><span class="sky-val" id="stratVal"></span><span class="sky-sub" id="stratSub"></span></div>
-    </div>
-    <div class="sky-g sky-sun" title="Today's sunrise and sunset, Berne time">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 16a8 8 0 0 1 16 0"/><line x1="2" y1="19.5" x2="22" y2="19.5"/><line x1="12" y1="3" x2="12" y2="5.5"/><line x1="5" y1="6.5" x2="6.6" y2="8.1"/><line x1="19" y1="6.5" x2="17.4" y2="8.1"/></svg>
-      <div class="sky-stack"><span class="sky-eyebrow">Sunrise &middot; Sunset</span><span class="sky-val" id="skySun"></span></div>
-    </div>
-    <div class="sky-g sky-moon" id="skyMoon">
-      <svg id="moonIco" viewBox="0 0 24 24" aria-hidden="true"></svg>
-      <div class="sky-stack"><span class="sky-eyebrow" id="moonPhase"></span><span class="sky-val" id="moonName"></span><span class="sky-sub" id="moonEng"></span></div>
-    </div>
-  </div>
-  <div class="hright">
-    <div class="links" id="hnav">
-      <a href="index.html" class="active">Atlas</a>
-      <a href="calendar.html">Calendar</a>
-      <a href="directory.html">Directory</a>
-      <a href="instagram.html">Instagram</a>
-      <a href="about.html">About</a>
-    </div>
+<!-- @@header -->
     <button class="iconbtn" id="modeToggle" title="Night mode follows sunset and sunrise in Berne, NY. Tap to switch until the next one." aria-label="Toggle night mode" aria-pressed="false">
       <svg class="moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 14.5A8.5 8.5 0 0 1 9.5 4a8.5 8.5 0 1 0 10.5 10.5z"></path></svg>
       <svg class="sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="12" cy="12" r="4.2"></circle><line x1="12" y1="2.5" x2="12" y2="5"></line><line x1="12" y1="19" x2="12" y2="21.5"></line><line x1="2.5" y1="12" x2="5" y2="12"></line><line x1="19" y1="12" x2="21.5" y2="12"></line><line x1="5.3" y1="5.3" x2="7" y2="7"></line><line x1="17" y1="17" x2="18.7" y2="18.7"></line><line x1="5.3" y1="18.7" x2="7" y2="17"></line><line x1="17" y1="7" x2="18.7" y2="5.3"></line></svg>
@@ -597,6 +574,7 @@ html[data-theme="night"] #modeToggle{color:#fca315;}
       <div class="cats" id="catsMain"></div>
       <div class="epigraph">People have been sharing stories in these hills since long before you were here, and will be long after you&#8217;re gone&#8230;</div>
       <div class="cats" id="catsStory"></div>
+      <div class="sidefoot"><a href="about.html">About this atlas</a> &middot; <a href="https://instagram.com/NYHilltowners" target="_blank" rel="noopener">@NYHilltowners</a></div>
     </div>
 
     <button class="btn" id="listToggle" title="Browse everything on the map as a list, nearest first">List View &#9662;</button>

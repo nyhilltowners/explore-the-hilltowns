@@ -1,4 +1,4 @@
-# NY Hilltowners Folk Atlas — Session Handoff (2026-09-16, v666)
+# NY Hilltowners Folk Atlas — Session Handoff (2026-09-17, v670)
 
 This ZIP is a **complete, self-contained source tree**. A new chat can unzip it,
 run the build, and continue exactly where this session left off. Everything here
@@ -30,6 +30,7 @@ node -e 'let fs=require("fs");let s=fs.readFileSync("site/data.js","utf8").repla
 
 | Path | Role |
 |---|---|
+| `partials/header.html`, `partials/footer.html` | **The global header (brand + skyline widget + nav) and footer.** Edit these, never a page's copy. Each page carries `<!-- @@header -->` / `<!-- @@footer -->` markers; `build.py` stamps the partials in and marks the current page's nav link active. Page-specific buttons (search, night toggle) live in each page right after the header marker. (v669) |
 | `index.template.html` | **The map app** — all pin logic, glow/dim, canvas effects (birds), List View. This is the master; `site/index.html` is generated from it. |
 | `calendar.html` | Calendar + agenda + Explore-nearby module. Source root (never edit `site/calendar.html`). |
 | `directory.html` | A–Z directory page. |
@@ -193,7 +194,7 @@ Big ongoing effort to tame tag sprawl. Started at 2,332 unique tags; now ~2,178.
 7. Clean-room verify: unzip the package fresh, rebuild, confirm BUILD OK.
 8. `present_files` the zip + both xlsx.
 
-Version at handoff: **v666**. Next chat continues from v667.
+Version at handoff: **v670**. Next chat continues from v671.
 
 ---
 
