@@ -1415,6 +1415,14 @@ if(IN_SANDBOX && map && !noticeShown){
 /* ============ GEOJSON BUILD ============ */
 var DOW_KEYS=['sun','mon','tue','wed','thu','fri','sat'];
 function _parseTimes(str){
+  /* 2026-09-16 (Laurie): tolerate a bare start hour ("12-4pm", "9-5pm", "7-11pm") by
+     inferring its am/pm from the end: 12 takes the end's meridiem (12-4pm = noon);
+     a start at or below the end hour shares it (7-11pm); above it flips (9-5pm = 9am). */
+  str = String(str||'').replace(/(^|[^\d:])(\d{1,2})(?::(\d{2}))?\s*-\s*(?=(\d{1,2})(?::\d{2})?\s*([AaPp])\.?\s*[Mm])/g, function(_, pre, h, mm, eh, ep){
+    var hs=parseInt(h,10), he=parseInt(eh,10)%12, e=ep.toLowerCase();
+    var mer = (hs===12) ? e : ((hs%12) <= he ? e : (e==='p'?'a':'p'));
+    return pre + h + (mm?':'+mm:'') + mer + 'm-';
+  });
   var out=[], rx=/(\d{1,2})(?::(\d{2}))?\s*([AP])\.?\s*M/gi, m;
   while((m=rx.exec(str))){
     var h=parseInt(m[1],10)%12; if(m[3].toUpperCase()==='P') h+=12;
@@ -1444,7 +1452,7 @@ function isClosedNow(r){
   if(/dawn|dusk|daylight|sunrise|sunset/i.test(cell)) return isNight();  /* dawn-dusk: lit by day, dimmed after dark (Laurie, 2026-09-15) */
   if(/24\s*hours|open\s*24|always\s*open/i.test(cell)) return false;
   var ts=_parseTimes(cell);
-  if(ts.length<2) return isTruck;               /* unparseable: trucks dim, others don't */
+  if(ts.length<2) return true;                  /* unparseable: can't confirm open → no glow (brightness is isDimmed's call). Was: non-trucks glowed all day. (Laurie, 2026-09-16) */
   var nm=nyMinutesNow();                          /* NY wall-clock, not the browser's timezone (Laurie, 2026-09-15) */
   for(var i=0;i+1<ts.length;i+=2){
     var s=ts[i], e=ts[i+1];
@@ -2128,6 +2136,8 @@ function _listSet(collapsed){
   }
 }
 document.body.classList.add('list-collapsed');   /* collapsed by default */
+/* …except at night: the folklore is the point of night view, so open the list. (Laurie, 2026-09-16) */
+if(isNight()) _listSet(false);
 if(_lt){
   _lt.style.touchAction='manipulation';
   var _ltLast=0;
@@ -2670,6 +2680,7 @@ function applyMode(mode, auto){
   var tb = document.getElementById('modeToggle');
   if(tb) tb.setAttribute('aria-pressed', isNight() ? 'true' : 'false');
   if(changed && !(auto && catsTouched)) resetCatsToDefaults();
+  if(changed && typeof _listSet === 'function') _listSet(!isNight());   /* night → list open (folklore); day → list collapsed (Laurie, 2026-09-16) */
   applyMapMode();
 }
 document.getElementById('modeToggle').addEventListener('click', function(){
@@ -2883,7 +2894,8 @@ if(!map) applyHash();
   window.__sheetCollapse = function(){ STOPS[0] = peekFrac(); apply(STOPS[0]); };
   // Called when filters or List View expand: a peeked sheet would show nothing, so lift it to mid.
   window.__sheetExpand = function(){ if(current <= STOPS[0] + 0.02) apply(STOPS[1]); };
-  STOPS[0] = peekFrac(); apply(STOPS[0]);
+  STOPS[0] = peekFrac();
+  apply(document.body.classList.contains('list-collapsed') ? STOPS[0] : STOPS[1]);   /* list already open (night) → start at mid, not peek */
   window.__sheetIsActive = function(){ return getComputedStyle(handle).display !== 'none'; };
   function nearestStop(frac){
     var best = STOPS[0], d = Math.abs(frac-STOPS[0]);
