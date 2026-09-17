@@ -1590,32 +1590,53 @@ function toFC(list){
   LAST_FC = {type:'FeatureCollection', features:feats};
   return LAST_FC;
 }
-/* When several pins share (almost) the same coordinate they stack and only the
-   top one is clickable — a "crash". We fan co-located pins out around their shared
-   point in a small ring so each is reachable. The offset is deterministic (keyed by
-   the stable feature id) so a given event always lands in the same spot, and tiny
-   (a few meters) so the cluster still reads as one place. */
+/* When several pins share (almost) the same coordinate they stack and only the top
+   one is clickable — a "crash". We fan co-located pins out around their shared point
+   so each is reachable. (Rewritten 2026-09-17, per Laurie.)
+   - RANK-ORDERED: the pin that wins the z-order / click ranking (open event > open >
+     neutral > faded > transit — the same ladder as symbol-sort-key and pinRank) stays
+     on the TRUE point; lower ranks fan outward. Ties break on the stable id, so a
+     given pin always lands in the same slot. Draw order itself is untouched — faded
+     pins still render underneath when rings overlap at regional zoom.
+   - ZOOM-AWARE: ring radius is ~22 screen px at the current zoom, capped at 140 m on
+     the ground, so pins separate as you zoom in without ever being flung far from
+     the place they belong to. Re-spread runs on zoomend (see below). Groups are keyed
+     on a grid the size of that radius, so "nearly" co-located pins fan out too. */
+var SPREAD_PX = 22, SPREAD_CAP_M = 140, SPREAD_MIN_M = 12;
+function spreadRank(p){
+  if(TRANSIT_GLYPHS[p.g]) return 1;
+  if(p.dim == 1 && p.ty !== 'events') return 2;
+  if(p.open == 1 && p.ty === 'events') return 7;
+  if(p.open == 1) return 6;
+  return 4;
+}
 function spreadCollisions(feats){
+  var z = (map && map.getZoom) ? map.getZoom() : 12;
+  var lat0 = (map && map.getCenter) ? map.getCenter().lat : 42.6;
+  var mPerPx = 156543.03 * Math.cos(lat0*Math.PI/180) / Math.pow(2, z);
+  var radM = Math.max(SPREAD_MIN_M, Math.min(SPREAD_CAP_M, SPREAD_PX * mPerPx));
+  var dLat = radM / 111320;                              /* degrees of latitude per ring */
   var groups = {};
   feats.forEach(function(f){
-    // key by ~11m grid so near-identical points (e.g. two library events) group together
-    var key = f.geometry.coordinates[1].toFixed(4)+','+f.geometry.coordinates[0].toFixed(4);
+    var la = f.geometry.coordinates[1], lo = f.geometry.coordinates[0];
+    var cos = Math.cos(la*Math.PI/180) || 1;
+    var key = Math.round(la/dLat) + ',' + Math.round(lo/(dLat/cos));
     (groups[key] || (groups[key] = [])).push(f);
   });
   Object.keys(groups).forEach(function(key){
     var g = groups[key];
     if(g.length < 2) return;
-    // sort by id for stable ordering, then fan out on a ring
-    g.sort(function(a,b){ return a.properties.k < b.properties.k ? -1 : 1; });
-    var lat = g[0].geometry.coordinates[1];
-    // ~0.00016 deg latitude ≈ 18m; scale longitude by cos(lat) so the ring stays round
-    var R = 0.00016, cos = Math.cos(lat*Math.PI/180) || 1;
-    // rings of up to 8; grow radius for larger stacks so they don't overlap
+    g.sort(function(a,b){
+      var ra = spreadRank(a.properties), rb = spreadRank(b.properties);
+      if(ra !== rb) return rb - ra;                       /* highest rank first → true point */
+      return a.properties.k < b.properties.k ? -1 : 1;
+    });
+    var lat = g[0].geometry.coordinates[1], cos = Math.cos(lat*Math.PI/180) || 1;
     g.forEach(function(f, i){
-      if(i === 0) return;            // leave the first pin on the true point
+      if(i === 0) return;                                 /* top-ranked pin keeps the true point */
       var ring = Math.ceil(i/8), idx = (i-1) % 8;
-      var ang = (idx/8) * 2*Math.PI + ring*0.4;   // offset each ring's phase
-      var rad = R * ring;
+      var ang = (idx/8) * 2*Math.PI + ring*0.4;
+      var rad = dLat * ring;
       f.geometry.coordinates = [
         f.geometry.coordinates[0] + (rad*Math.cos(ang))/cos,
         f.geometry.coordinates[1] +  rad*Math.sin(ang)
@@ -2846,6 +2867,8 @@ buildCats();
 if(map) map.on('load', function(){ applyMapMode(); renderList(); applyHash(); });
 /* Keep List View sorted by proximity to the live map centre as you pan/zoom. */
 if(map) map.on('moveend', resortByCenter);
+/* re-fan co-located pins for the new scale (spread radius is zoom-aware) */
+if(map){ var _spreadZ = null; map.on('zoomend', function(){ var z = Math.round(map.getZoom()*2)/2; if(z !== _spreadZ){ _spreadZ = z; refreshMapData(); } }); }
 setInterval(function(){
   if(map && map.getSource && map.getSource('folk')){
     map.getSource('folk').setData(toFC(currentFilter(true)));
