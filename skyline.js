@@ -89,6 +89,56 @@ function renderSkyWx(cur){
   document.getElementById('skyWx').title = kind[1]+asOf+' \u2014 modeled current conditions for the Hilltowns (data: Open-Meteo.com). Fetched '+fetchedAt+'; refreshes every 15 min and whenever this tab comes back into focus.';
   box.classList.add('has-wx');
 }
+/* ---- Stratospheric wind at 10 hPa over Berne (Laurie, 2026-09-16). ~26-31 km up, the
+   level people watch for the polar vortex. Open-Meteo serves it from the Canadian GEM
+   Global model (3-hourly, interpolated); GFS is the fallback. Shown only when a value
+   arrives; the arrow points where the wind is blowing TO (Windy convention), the text
+   says where it blows FROM (meteorological convention). ---- */
+var COMPASS16 = ['N','NNE','NE','ENE','E','ESE','SE','SSE','S','SSW','SW','WSW','W','WNW','NW','NNW'];
+function compass(deg){ return COMPASS16[Math.round((((deg%360)+360)%360)/22.5)%16]; }
+function renderStrat(h){
+  var box = document.getElementById('skyline'), el = document.getElementById('stratVal'), sub = document.getElementById('stratSub'), arrow = document.getElementById('stratArrow');
+  if(!box || !el) return;
+  if(!h){ box.classList.remove('has-strat'); return; }
+  el.innerHTML = Math.round(h.kt)+' kt<span class="c">from '+compass(h.dir)+' \u00b7 '+Math.round(h.dir)+'&deg;</span>';
+  var km = (typeof h.gph === 'number') ? (h.gph/1000).toFixed(1)+' km up' : '';
+  sub.textContent = [km, h.model].filter(Boolean).join(' \u00b7 ');
+  if(arrow) arrow.style.transform = 'rotate('+(((h.dir+180)%360))+'deg)';
+  document.getElementById('skyStrat').title = 'Wind at the 10 hPa pressure level over Berne, NY \u2014 the stratosphere, roughly 26\u201331 km up. '+Math.round(h.kt)+' knots blowing from the '+compass(h.dir)+' ('+Math.round(h.dir)+'\u00b0); the arrow points downwind. Model: '+h.model+' via Open-Meteo.com, valid '+h.when+' (nearest model hour). Refreshes with the surface weather.';
+  box.classList.add('has-strat');
+}
+function nearestHour(j, key, dirKey, gphKey){
+  if(!j || !j.hourly || !j.hourly.time) return null;
+  var t = j.hourly.time, sp = j.hourly[key] || [], dr = j.hourly[dirKey] || [], gp = j.hourly[gphKey] || [];
+  var now = Date.now(), best = -1, bd = 1e18;
+  for(var i=0;i<t.length;i++){
+    if(typeof sp[i] !== 'number' || typeof dr[i] !== 'number') continue;
+    var ms = new Date(t[i]+(j.utc_offset_seconds ? '' : 'Z')).getTime() - (j.utc_offset_seconds||0)*1000;
+    var d = Math.abs(ms - now); if(d < bd){ bd = d; best = i; }
+  }
+  if(best < 0 || bd > 4*3600*1000) return null;   /* nothing within 4 h of now → don't fake it */
+  var mt = /T(\d{2}):(\d{2})/.exec(t[best]) || []; var hh = +mt[1];
+  return {kt:sp[best], dir:dr[best], gph:gp[best], when: mt.length ? (((hh%12)||12)+':'+mt[2]+(hh<12?' am':' pm')) : t[best]};
+}
+function fetchStrat(){
+  if(!window.fetch || !document.getElementById('skyStrat')) return;
+  var q = 'latitude='+BERNE.lat.toFixed(4)+'&longitude='+BERNE.lng.toFixed(4)
+        + '&hourly=wind_speed_10hPa,wind_direction_10hPa,geopotential_height_10hPa&wind_speed_unit=kn'
+        + '&past_hours=3&forecast_hours=6&timezone=America%2FNew_York';
+  var tries = [
+    ['https://api.open-meteo.com/v1/gem?'+q+'&models=cmc_gem_global', 'GEM Global'],
+    ['https://api.open-meteo.com/v1/gfs?'+q+'&models=gfs_global',      'GFS']
+  ];
+  (function attempt(i){
+    if(i >= tries.length){ renderStrat(null); return; }
+    fetch(tries[i][0], {cache:'no-store'}).then(function(r){ return r.ok ? r.json() : null; })
+      .then(function(j){
+        var h = nearestHour(j, 'wind_speed_10hPa', 'wind_direction_10hPa', 'geopotential_height_10hPa');
+        if(h){ h.model = tries[i][1]; renderStrat(h); } else attempt(i+1);
+      })
+      .catch(function(){ attempt(i+1); });
+  })(0);
+}
 var skyLastFetch = 0;
 function fetchSkyWx(){
   if(!window.fetch || !document.getElementById('skyline')) return;
@@ -180,9 +230,11 @@ renderMoon();
 setInterval(renderMoon, 30*60*1000);
 renderSkySun();
 fetchSkyWx();
+fetchStrat();
 setInterval(fetchSkyWx, 15*60*1000);
+setInterval(fetchStrat, 30*60*1000);
 /* a laptop that slept through the timer, or a tab left in the background, refetches on return */
-document.addEventListener('visibilitychange', function(){ if(!document.hidden && Date.now()-skyLastFetch > 60*1000){ skyLastFetch = Date.now(); fetchSkyWx(); renderSkySun(); renderMoon(); } });
+document.addEventListener('visibilitychange', function(){ if(!document.hidden && Date.now()-skyLastFetch > 60*1000){ skyLastFetch = Date.now(); fetchSkyWx(); fetchStrat(); renderSkySun(); renderMoon(); } });
 setInterval(renderSkySun, 60*1000);
 
 })();

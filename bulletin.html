@@ -247,6 +247,10 @@ dialog.pinform::backdrop{ background:rgba(30,15,0,.6); backdrop-filter:blur(2px)
 .skyline.has-wx .sky-wx + .sky-g{padding-left:18px; border-left:1px solid var(--parchment-line);}
 .skyline .sky-wx + .sky-g{padding-left:0; border-left:none;}
 #modeToggle{margin-left:4px;}
+.skyline .sky-strat{display:none;}
+.skyline.has-strat .sky-strat{display:flex;}
+.skyline #stratArrow{transition:transform .6s ease; transform-origin:50% 50%;}
+@media (max-width:1320px){ .skyline .sky-strat{display:none !important;} }
 @media (max-width:1180px){ .skyline .sky-moon{display:none;} }
 @media (max-width:960px){ .skyline{display:none;} }
 
@@ -284,6 +288,10 @@ dialog.pinform::backdrop{ background:rgba(30,15,0,.6); backdrop-filter:blur(2px)
     <div class="sky-g sky-wx" id="skyWx">
       <svg id="skyIco" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"></svg>
       <div class="sky-stack"><span class="sky-eyebrow" id="skyCond"></span><span class="sky-val" id="skyTemp"></span></div>
+    </div>
+    <div class="sky-g sky-strat" id="skyStrat">
+      <svg id="stratArrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="12" y1="21" x2="12" y2="4"/><polyline points="6.5,9.5 12,4 17.5,9.5"/></svg>
+      <div class="sky-stack"><span class="sky-eyebrow">10 hPa wind &middot; Berne</span><span class="sky-val" id="stratVal"></span><span class="sky-sub" id="stratSub"></span></div>
     </div>
     <div class="sky-g sky-sun" title="Today's sunrise and sunset, Berne time">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 16a8 8 0 0 1 16 0"/><line x1="2" y1="19.5" x2="22" y2="19.5"/><line x1="12" y1="3" x2="12" y2="5.5"/><line x1="5" y1="6.5" x2="6.6" y2="8.1"/><line x1="19" y1="6.5" x2="17.4" y2="8.1"/></svg>
