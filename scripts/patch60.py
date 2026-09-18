@@ -21,6 +21,7 @@ COORDS={
  'troy atrium':(42.7318827,-73.6898645,'Frear Bldg / Troy Atrium, Places-verified'),
  'super-stories':(42.3955207,-73.6976052,'Super-Stories Kinderhook, POI master (feed had wrong Catskill coord)'),
  'super stories':(42.3955207,-73.6976052,'Super-Stories Kinderhook, POI master (feed had wrong Catskill coord)'),
+ 'return brewing':(42.2480372,-73.7815525,'Return Brewing Hudson, POI master (feed geocodes 725 State St to Manhattan)'),   # 2026-09-17 Laurie
 }
 # NOT patched (no reliable coord): Mid-Hudson Astronomical Association, Hunter Stone Carving Seminar
 
@@ -40,9 +41,13 @@ for r in range(2, ws.max_row+1):
     la=ws.cell(row=r,column=H['Latitude']).value; lo=ws.cell(row=r,column=H['Longitude']).value
     ven=ws.cell(row=r,column=H['Venue']).value or ''
     is_super = 'super-stories' in str(ven).lower() or 'super stories' in str(ven).lower()
+    is_return = 'return brewing' in str(ven).lower() and ('725 state' in str(ws.cell(row=r,column=H['Address']).value or '').lower())
     if isnum(la) and isnum(lo):  # normally only patch EMPTY rows
         # EXCEPTION: Super-Stories comes through with a wrong Catskill coord — override it
         if is_super and abs(float(la)-42.221514)<0.01 and abs(float(lo)+73.866586)<0.01:
+            pass  # fall through to patch
+        # EXCEPTION (2026-09-17): Return Brewing's 725 State St geocodes to State St, Manhattan (40.72, -74.00)
+        elif is_return and float(la) < 41.5:
             pass  # fall through to patch
         else:
             continue

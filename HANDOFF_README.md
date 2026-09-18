@@ -1,4 +1,4 @@
-# NY Hilltowners Folk Atlas — Session Handoff (2026-09-17, v694)
+# NY Hilltowners Folk Atlas — Session Handoff (2026-09-17, v702)
 
 This ZIP is a **complete, self-contained source tree**. A new chat can unzip it,
 run the build, and continue exactly where this session left off. Everything here
@@ -120,6 +120,9 @@ Fixed-hinge wingbeat, 4 white wing-spots. Day-only, reduced-motion safe. The
 
 ## UX state (recent)
 
+- **Radio tuner (v698):** fixed bottom-left tuner on every page, injected by `skyline.js` (no markup). Presets live in the `STATIONS` array at the bottom of `skyline.js`; each `url` must be a direct HTTPS audio stream. All five shipped presets are `verified:false` best-guess endpoints — Laurie to test in a browser and fix/delete; a failed stream shows 'Stream unavailable' rather than breaking. Remembers station + play state in localStorage; browsers block autoplay until first click.
+- **Atina Foods (v698):** pin + 13 stockist rows (some far out of region by design) + 3 online/distribution rows (no pin), all tagged `Atina Foods`; four pre-existing rows (Toko, Story Farms, Olana, Montgomery Place) tagged. Stockist websites were inferred from names and are flagged UNVERIFIED in Notes.
+
 - **`Staffed 24h` tag (v683):** a POI whose day cells read `Open 24 hours` is lit but never glows (rule of 2026-09-15 for fridges/trailheads). Adding the tag `Staffed 24h` opts a genuinely staffed round-the-clock place (24-hour Stewart's) into the glow. Never fake it with a 1-minute closure.
 
 - **Mobile bottom sheet opens COLLAPSED (peek) by default** (v658, per Laurie): peek height is
@@ -196,7 +199,7 @@ Big ongoing effort to tame tag sprawl. Started at 2,332 unique tags; now ~2,178.
 7. Clean-room verify: unzip the package fresh, rebuild, confirm BUILD OK.
 8. `present_files` the zip + both xlsx.
 
-Version at handoff: **v694**. Next chat continues from v695.
+Version at handoff: **v702**. Next chat continues from v703.
 
 ---
 

@@ -238,3 +238,58 @@ document.addEventListener('visibilitychange', function(){ if(!document.hidden &&
 setInterval(renderSkySun, 60*1000);
 
 })();
+
+/* ============ RADIO TUNER (2026-09-17, per Laurie) ============
+   A small fixed tuner, bottom-left on every page, that streams public/community
+   radio in-page through a plain <audio> element. Presets are edited in STATIONS
+   below; each `url` must be a direct HTTPS audio stream (MP3/AAC), not a web
+   player page. `verified:false` presets are best-guess endpoints — test them,
+   fix or delete. Remembers the last station and whether it was playing
+   (localStorage); browsers block autoplay until the visitor has clicked once. */
+(function(){
+  var STATIONS = [
+    {id:'wamc', name:'WAMC', sub:'Northeast Public Radio · Albany', url:'https://wamc.streamguys1.com/wamc', verified:false},
+    {id:'wgxc', name:'WGXC 90.7', sub:'Wave Farm · Acra / Hudson Valley', url:'https://audio.wavefarm.org/wgxc.mp3', verified:false},
+    {id:'wiox', name:'WIOX 91.3', sub:'Roxbury · Catskills community radio', url:'https://wioxradio.streamguys1.com/wiox', verified:false},
+    {id:'wmht', name:'WMHT 89.1', sub:'Classical · Schenectady', url:'https://wmht.streamguys1.com/wmht', verified:false},
+    {id:'wvkr', name:'WVKR 91.3', sub:'Vassar · Poughkeepsie', url:'https://wvkr.streamguys1.com/wvkr', verified:false}
+  ];
+  var css = '#hfaRadio{position:fixed;left:14px;bottom:14px;z-index:5000;font-family:Montserrat,sans-serif;font-size:11px;letter-spacing:.04em;color:var(--ink-blue,#1a1f5e);background:var(--paper,#f4ecd8);border:1px solid var(--ink-blue,#1a1f5e);border-radius:10px;box-shadow:0 4px 14px rgba(0,0,0,.18);padding:8px 10px;display:flex;align-items:center;gap:8px;max-width:calc(100vw - 28px)}'
+    + '#hfaRadio button{font:inherit;cursor:pointer;border:1px solid var(--ink-blue,#1a1f5e);background:transparent;color:inherit;border-radius:6px;padding:4px 7px;line-height:1}'
+    + '#hfaRadio .pl{width:30px;height:30px;border-radius:50%;font-size:13px;display:inline-flex;align-items:center;justify-content:center}'
+    + '#hfaRadio .st{display:flex;flex-direction:column;min-width:0}#hfaRadio .nm{font-weight:700;font-size:12px;white-space:nowrap}#hfaRadio .sb{opacity:.75;font-size:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:170px}'
+    + '#hfaRadio .pre{display:flex;gap:4px;flex-wrap:wrap}#hfaRadio .pre button{padding:3px 6px;font-size:10px}#hfaRadio .pre button.on{background:var(--ink-blue,#1a1f5e);color:var(--paper,#f4ecd8)}'
+    + '#hfaRadio.err .sb{color:#b3261e}#hfaRadio .x{border:none;opacity:.6;padding:2px 4px}'
+    + 'html[data-theme="night"] #hfaRadio{background:var(--ink2,#141a3a);color:var(--birch,#e9e2cf);border-color:var(--birch,#e9e2cf)}html[data-theme="night"] #hfaRadio button{border-color:var(--birch,#e9e2cf)}html[data-theme="night"] #hfaRadio .pre button.on{background:var(--birch,#e9e2cf);color:var(--ink2,#141a3a)}'
+    + '@media (max-width:760px){#hfaRadio{left:8px;bottom:8px;padding:6px 8px}#hfaRadio .pre{display:none}#hfaRadio.open .pre{display:flex}}'
+    + '#hfaRadio.min .st,#hfaRadio.min .pre{display:none}';
+  function ls(k,v){ try{ if(v===undefined) return localStorage.getItem(k); localStorage.setItem(k,v); }catch(e){} }
+  function build(){
+    if(document.getElementById('hfaRadio')) return;
+    var st=document.createElement('style'); st.textContent=css; document.head.appendChild(st);
+    var box=document.createElement('div'); box.id='hfaRadio'; box.setAttribute('role','region'); box.setAttribute('aria-label','Radio tuner');
+    box.innerHTML='<button class="pl" id="hfaPlay" title="Play / stop" aria-label="Play or stop">&#9654;</button>'
+      +'<div class="st"><span class="nm" id="hfaName"></span><span class="sb" id="hfaSub"></span></div>'
+      +'<div class="pre" id="hfaPre"></div><button class="x" id="hfaMin" title="Minimize">&#8211;</button>';
+    document.body.appendChild(box);
+    var audio=new Audio(); audio.preload='none'; audio.crossOrigin='anonymous';
+    var cur=null, playing=false;
+    var pre=document.getElementById('hfaPre');
+    STATIONS.forEach(function(s){ var b=document.createElement('button'); b.textContent=s.name; b.dataset.id=s.id; b.onclick=function(){ tune(s, true); }; pre.appendChild(b); });
+    function show(s){ document.getElementById('hfaName').textContent=s.name; document.getElementById('hfaSub').textContent=s.sub; Array.prototype.forEach.call(pre.children,function(b){ b.classList.toggle('on', b.dataset.id===s.id); }); box.classList.remove('err'); }
+    function tune(s, go){ cur=s; show(s); ls('hfaRadio.station', s.id); if(go || playing){ start(); } }
+    function start(){ if(!cur) return; audio.src=cur.url; document.getElementById('hfaSub').textContent='Tuning…';
+      audio.play().then(function(){ playing=true; ls('hfaRadio.playing','1'); document.getElementById('hfaPlay').innerHTML='&#9632;'; document.getElementById('hfaSub').textContent=cur.sub; })
+      .catch(function(){ playing=false; box.classList.add('err'); document.getElementById('hfaSub').textContent='Stream unavailable — try another station'; document.getElementById('hfaPlay').innerHTML='&#9654;'; }); }
+    function stop(){ audio.pause(); audio.removeAttribute('src'); audio.load(); playing=false; ls('hfaRadio.playing','0'); document.getElementById('hfaPlay').innerHTML='&#9654;'; if(cur) document.getElementById('hfaSub').textContent=cur.sub; }
+    audio.addEventListener('error', function(){ if(playing){ box.classList.add('err'); document.getElementById('hfaSub').textContent='Stream dropped — press play to retry'; playing=false; document.getElementById('hfaPlay').innerHTML='&#9654;'; } });
+    document.getElementById('hfaPlay').onclick=function(){ playing ? stop() : start(); };
+    document.getElementById('hfaMin').onclick=function(){ box.classList.toggle('min'); ls('hfaRadio.min', box.classList.contains('min')?'1':'0'); };
+    box.addEventListener('click', function(e){ if(window.matchMedia('(max-width:760px)').matches && e.target.closest('.st')) box.classList.toggle('open'); });
+    if(ls('hfaRadio.min')==='1') box.classList.add('min');
+    var saved=STATIONS.filter(function(s){ return s.id===ls('hfaRadio.station'); })[0] || STATIONS[0];
+    tune(saved, false);
+    if(ls('hfaRadio.playing')==='1'){ start(); }   /* resumes after navigation when the browser allows autoplay */
+  }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', build); else build();
+})();

@@ -258,17 +258,19 @@ h1{font-family:'Montserrat',sans-serif; font-weight:800; text-transform:uppercas
 .sitenav .hright, .sitenav .links{flex-wrap:nowrap; white-space:nowrap;}
 .skyline #stratArrow{width:15px; height:15px;}
 @media (max-width:1480px){
-  .sitenav{padding-left:14px; padding-right:14px;}
-  .skyline{margin:0 8px; gap:12px;}
-  .skyline .sky-g + .sky-g{padding-left:12px;}
-  .skyline .sky-g{gap:5px;}
+  .sitenav{padding-left:12px; padding-right:12px;}
+  .skyline{margin:0 2px; gap:8px;}
+  .skyline .sky-g + .sky-g{padding-left:8px;}
+  .skyline .sky-g{gap:4px;}
+  .sitenav .brand{margin-right:0;}
   .sitenav .links a{padding:8px 9px; letter-spacing:.06em;}
   .sitenav .links a.ig{padding:8px 6px;}
   .skyline .sky-strat .sky-val .deg{display:none;}
 }
 @media (max-width:1320px){
-  .skyline{gap:9px; margin:0 6px;}
-  .skyline .sky-g + .sky-g{padding-left:9px;}
+  .skyline{gap:6px; margin:0;}
+  .skyline .sky-g + .sky-g{padding-left:6px;}
+  .sitenav .links{gap:0;}
   .skyline .sky-eyebrow{letter-spacing:.12em;}
   .sitenav .links a{padding:8px 7px; font-size:12px;}
   .sitenav .brand .stack .l1, .sitenav .brand .stack .l2{font-size:15px;}
@@ -749,7 +751,9 @@ h1{font-family:'Montserrat',sans-serif; font-weight:800; text-transform:uppercas
     "winter clove inn","mine kill state park pool","deer mountain inn","hotel mountain brook","the shell inn",
     "the tasting lab","seec","penny lane ices","vosburgh swamp","unbridled sanctuary","variety video",
     "westerlo library","medusa branch library","greenville public library","corner gateway printing",
-    "windham mountain club","windham mountain outfitters","restaurant matilda","wild hudson valley","2 twisted ladies"
+    "windham mountain club","windham mountain outfitters","restaurant matilda","wild hudson valley","2 twisted ladies",
+    /* 2026-09-17 (Laurie): niche resources / weaker stock — fine to list, not a "draw" */
+    "veterans miracle center","black horse farms","schoharie county department of social services"
   ];
   var NEARBY_DEMOTE_LAST = ["maple on the lake"];
   /* 2026-09-12 (Laurie): priority places get picked into the panel BEFORE everyone
@@ -762,7 +766,8 @@ h1{font-family:'Montserrat',sans-serif; font-weight:800; text-transform:uppercas
     "the pub at hilltown commons","the g spot","six hands farm store","the greenville arms",
     "life by chocolate","the graham & co","gracie's luncheonette","the marketplace east durham",
     "enoki","the circus family",
-    "hamlet ny"   /* 2026-09-16 (Laurie) — Hamlet NY, Rensselaerville */
+    "hamlet ny",   /* 2026-09-16 (Laurie) — Hamlet NY, Rensselaerville */
+    "nocturne bakehouse","the sweet spot"   /* 2026-09-17 (Laurie) — both Greenville */
   ].map(function(x){ return x.replace(/\u2019/g,"'"); });
   /* 2026-09-13 (Laurie): down-weight American Legion posts and post offices /
      mailing / business centers in Explore-nearby — matched by kind (glyph/name/tags)
@@ -778,6 +783,8 @@ h1{font-family:'Montserrat',sans-serif; font-weight:800; text-transform:uppercas
     if(/\b(post office|usps|mailing center|business center|pack (and|&) ship|postnet)\b/.test(n + " " + tg)) return true;
     if(p.cat === "Lodging" && /\b(camping|glamping|campsite|campground|tent)\b/.test(tg)) return true;  // 2026-09-15 (Laurie): deprioritize outdoor camping/glamping stays — too cold now
     if(/\bwolberg\b|\bagway rentals\b/.test(n)) return true;   // 2026-09-16 (Laurie): electrical-supply / equipment-rental — fine as a last resort, not a "draw"
+    if(g === "\uD83D\uDE97" && /\bdmv\b/.test(n + " " + tg)) return true;
+    if(g === "\u26FD") return true;                                                   // 2026-09-17 (Laurie): ⛽ gas stations — a necessity, not a destination   // 2026-09-17 (Laurie): DMVs (🚗 + "DMV") — nobody explores nearby for one
     return false;
   }
   function demoteTier(p){
