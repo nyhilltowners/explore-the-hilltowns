@@ -112,6 +112,16 @@
       "glyph": "⚙"
     },
     {
+      "key": "independent_media",
+      "label": "Independent Media",
+      "sheet": "Independent Media",
+      "workbook": "data/points_of_interest.xlsx",
+      "schema": "poi",
+      "glyph": "📻",
+      "color": "#8a4b2f",
+      "default_on": true
+    },
+    {
       "key": "transportation",
       "label": "Transportation",
       "schema": "poi",
