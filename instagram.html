@@ -145,7 +145,8 @@ a.link:hover{background:rgba(252,163,21,.14);}
 /* 13" laptop band (2026-09-17, Laurie): keep every header group on one row down to ~1240px.
    Nothing hides here — spacing tightens, the wind arrow loses its long tail, the degrees
    drop, and the nav refuses to wrap. Below 1180 the moon and wind hide as before. */
-.sitenav .hright, .sitenav .links{flex-wrap:nowrap; white-space:nowrap;}
+.sitenav .hright{display:flex !important; flex-direction:row !important; align-items:center; gap:6px; margin-left:auto; position:relative; flex-wrap:nowrap; white-space:nowrap;}   /* 2026-09-18: keeps search + ≡ side by side (they were stacking) */
+.sitenav .links{flex-wrap:nowrap; white-space:nowrap;}
 .skyline #stratArrow{width:15px; height:15px;}
 @media (max-width:1480px){
   .sitenav{padding-left:12px; padding-right:12px;}

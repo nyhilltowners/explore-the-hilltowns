@@ -190,7 +190,8 @@ h1{font-family:'Montserrat',sans-serif; font-weight:800; text-transform:uppercas
 
 .nearby .nb-none{color:var(--faint); font-style:italic; padding:2px 0 4px;}
 @media (max-width:640px){ .nearby{margin-left:16px;} .arow.core + .nearby{margin-left:12px;} .nearby .nb-cat{display:none;} }
-.arow .aglyph{flex:none; font-size:16px;}
+.arow .aglyph{flex:none; font-size:16px; order:-1; margin-right:12px; width:72px; text-align:center;}   /* 2026-09-18 (Laurie): image/emoji on the LEFT */
+@media (max-width:760px){ .arow .aglyph{width:52px; margin-right:8px;} }
 
 .empty{text-align:center; color:var(--faint); padding:48px 20px; font-size:15px;}
 
@@ -260,7 +261,8 @@ h1{font-family:'Montserrat',sans-serif; font-weight:800; text-transform:uppercas
 /* 13" laptop band (2026-09-17, Laurie): keep every header group on one row down to ~1240px.
    Nothing hides here — spacing tightens, the wind arrow loses its long tail, the degrees
    drop, and the nav refuses to wrap. Below 1180 the moon and wind hide as before. */
-.sitenav .hright, .sitenav .links{flex-wrap:nowrap; white-space:nowrap;}
+.sitenav .hright{display:flex !important; flex-direction:row !important; align-items:center; gap:6px; margin-left:auto; position:relative; flex-wrap:nowrap; white-space:nowrap;}   /* 2026-09-18: keeps search + ≡ side by side (they were stacking) */
+.sitenav .links{flex-wrap:nowrap; white-space:nowrap;}
 .skyline #stratArrow{width:15px; height:15px;}
 @media (max-width:1480px){
   .sitenav{padding-left:12px; padding-right:12px;}

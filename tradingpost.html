@@ -141,7 +141,8 @@ a.link:hover{background:rgba(252,163,21,.14);}
 /* 13" laptop band (2026-09-17, Laurie): keep every header group on one row down to ~1240px.
    Nothing hides here — spacing tightens, the wind arrow loses its long tail, the degrees
    drop, and the nav refuses to wrap. Below 1180 the moon and wind hide as before. */
-.sitenav .hright, .sitenav .links{flex-wrap:nowrap; white-space:nowrap;}
+.sitenav .hright{display:flex !important; flex-direction:row !important; align-items:center; gap:6px; margin-left:auto; position:relative; flex-wrap:nowrap; white-space:nowrap;}   /* 2026-09-18: keeps search + ≡ side by side (they were stacking) */
+.sitenav .links{flex-wrap:nowrap; white-space:nowrap;}
 .skyline #stratArrow{width:15px; height:15px;}
 @media (max-width:1480px){
   .sitenav{padding-left:12px; padding-right:12px;}
@@ -170,10 +171,10 @@ a.link:hover{background:rgba(252,163,21,.14);}
 <style>
 /* ---- Trading Post (2026-09-18, Laurie) ---- */
 .tp-wrap{max-width:1180px; margin:0 auto; padding:28px 18px 60px;}
-.tp-head{margin:0 0 6px; font-family:'Montserrat',sans-serif; font-weight:800; letter-spacing:.02em; color:var(--ink-blue); font-size:clamp(26px,4vw,40px);}
-.tp-sub{margin:0 0 30px; font-size:17px; color:var(--ink-blue); opacity:.8; font-style:italic;}
-.tp-cat{margin:26px 0 10px; font-family:'Montserrat',sans-serif; font-weight:700; text-transform:uppercase; letter-spacing:.14em; font-size:13px; color:var(--ink-blue); display:flex; align-items:center; gap:10px;}
-.tp-cat:after{content:""; flex:1; height:1px; background:var(--ink-blue); opacity:.25;}
+.tp-head{margin:0 0 6px; font-family:'Montserrat',sans-serif; font-weight:800; letter-spacing:.02em; color:var(--gold,#c9a227); font-size:clamp(26px,4vw,40px);}
+.tp-sub{margin:0 0 30px; font-size:17px; color:var(--parchment,#f4ecd8); opacity:.9; font-style:italic;}
+.tp-cat{margin:26px 0 10px; font-family:'Montserrat',sans-serif; font-weight:700; text-transform:uppercase; letter-spacing:.14em; font-size:13px; color:var(--parchment,#f4ecd8); display:flex; align-items:center; gap:10px;}
+.tp-cat:after{content:""; flex:1; height:1px; background:var(--parchment,#f4ecd8); opacity:.35;}
 .tp-row{display:flex; gap:16px; overflow-x:auto; scroll-snap-type:x mandatory; padding:4px 2px 14px; -webkit-overflow-scrolling:touch; scrollbar-width:thin;}
 .tp-card{flex:0 0 260px; scroll-snap-align:start; background:var(--parchment,#f4ecd8); border:1px solid var(--ink-blue); border-radius:14px; overflow:hidden; display:flex; flex-direction:column; box-shadow:0 3px 10px rgba(0,0,60,.10);}
 .tp-img{aspect-ratio:1/1; width:100%; background:#e9e2cf; display:block; object-fit:cover;}
@@ -224,7 +225,7 @@ html[data-theme="night"] .tp-head, html[data-theme="night"] .tp-sub, html[data-t
 
 <main class="tp-wrap">
   <h1 class="tp-head">Hilltowns Trading Post</h1>
-  <p class="tp-sub">Shop locally, without leaving your seat.</p>
+  <p class="tp-sub">Shop locally, without leaving your nook.</p>
   <div id="tp"></div>
 </main>
 

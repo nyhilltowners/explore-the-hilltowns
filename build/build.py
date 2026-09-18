@@ -1196,6 +1196,21 @@ def emit_page(src, out_name: str) -> None:
 # Image blank → the product page's Open Graph image is fetched via the same
 # preview machinery as events/POI (cached in site/preview-cache.json).
 # ---------------------------------------------------------------------------
+def _og_price(url):
+    """Best-effort price from the product page's og:price:amount / product:price:amount meta
+    (Shopify, WooCommerce). Blank if the page can't be fetched or has no price tag."""
+    try:
+        req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0 (HilltownsAtlas preview)"})
+        html_ = urllib.request.urlopen(req, timeout=PREVIEW_TIMEOUT).read(300000).decode("utf-8", "ignore")
+        m = re.search(r'property=["\'](?:og|product):price:amount["\'][^>]*content=["\']([\d.,]+)', html_, re.I) \
+            or re.search(r'content=["\']([\d.,]+)["\'][^>]*property=["\'](?:og|product):price:amount', html_, re.I)
+        if not m:
+            return ""
+        v = float(m.group(1).replace(",", ""))
+        return f"${v:,.0f}" if v == int(v) else f"${v:,.2f}"
+    except Exception:
+        return ""
+
 def load_trading_post():
     path = ROOT / "data" / "trading_post.xlsx"
     if not path.exists():
@@ -1216,8 +1231,9 @@ def load_trading_post():
         if not url:
             WARNS.append(f"trading_post.xlsx row {n}: {g(r,'product')} has no URL — skipped"); continue
         img = g(r, "image") or fetch_site_image(url, f"trading_post.xlsx row {n}")
+        price = g(r, "price") or _og_price(url)
         out.append({"cat": g(r, "category") or "Other", "biz": g(r, "business"), "town": g(r, "town"),
-                    "name": g(r, "product"), "price": g(r, "price"), "url": url, "img": img})
+                    "name": g(r, "product"), "price": price, "url": url, "img": img})
     return out
 
 
