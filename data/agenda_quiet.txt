@@ -1,0 +1,15 @@
+# Agenda-quiet list — one pattern per line (see build.py). Matching events stay on the
+# map and in search but are hidden from the calendar list/month views. Case-insensitive
+# substring against "title venue"; prefix a line with re: for a regex.
+#
+# 2026-09-18 (Laurie) — dense series / far venues that were cluttering the list:
+adirondack folk school
+conversational spanish
+think & sip
+think and sip
+bearsville theater
+thrall public library
+re:story hour.*phoenicia library|phoenicia library.*story hour
+re:the campus\b.*open hours|open hours.*the campus
+hudson valley irish festival
+new skete

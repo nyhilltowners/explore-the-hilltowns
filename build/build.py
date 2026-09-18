@@ -873,6 +873,42 @@ def auto_glyph(title, venue, cell_glyph, is_online=False):
             return gg
     return "💻" if is_online else ""
 
+# ---------------------------------------------------------------------------
+# Agenda-quiet list (2026-09-18, Laurie). events.xlsx is replaced wholesale by each
+# ingestor drop-in, so an Agenda=No cell edited by hand is lost next time. This file
+# is the durable version: one pattern per line (case-insensitive substring, or a
+# regex if the line starts with "re:"), matched against the event title AND venue.
+# Matching events keep their map pin and stay searchable but are hidden from the
+# calendar list/month views — exactly what Agenda=No does. Lines starting with # are
+# comments.
+# ---------------------------------------------------------------------------
+_AGENDA_QUIET = None
+def _load_agenda_quiet():
+    global _AGENDA_QUIET
+    if _AGENDA_QUIET is not None:
+        return _AGENDA_QUIET
+    rules = []
+    f = ROOT / "data" / "agenda_quiet.txt"
+    if f.exists():
+        for line in f.read_text(encoding="utf-8").splitlines():
+            line = line.strip()
+            if not line or line.startswith("#"):
+                continue
+            if line.lower().startswith("re:"):
+                try: rules.append(re.compile(line[3:].strip(), re.I))
+                except re.error as e: WARNS.append(f"agenda_quiet.txt: bad regex {line!r}: {e}")
+            else:
+                rules.append(line.lower())
+    _AGENDA_QUIET = rules
+    return rules
+
+def agenda_quiet_match(title, venue):
+    hay = f"{title} {venue}".lower()
+    for r in _load_agenda_quiet():
+        if (r.search(hay) if hasattr(r, "search") else r in hay):
+            return True
+    return False
+
 def parse_events(path: Path, label: str, sheet=None):
     where = path.name + (f" [{sheet}]" if sheet else "")
     hdr, rows = read_rows(path, where, sheet)
@@ -947,6 +983,8 @@ def parse_events(path: Path, label: str, sheet=None):
             out.pop(); continue
         if s(cell(row, idx, "ag")).lower() in ("no", "n", "false", "0", "hide", "hidden"):
             out[-1]["ag"] = 0        # only emitted when hidden; absent means "show on agenda"
+        elif agenda_quiet_match(out[-1]["t"], out[-1].get("ven") or ""):
+            out[-1]["ag"] = 0        # atlas-side rule (data/agenda_quiet.txt) — survives ingestor drop-ins
         ev_web = s(cell(row, idx, "web"))
         if not out[-1]["img"] and ev_web:
             out[-1]["img"] = fetch_site_image(ev_web, rw)
