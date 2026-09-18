@@ -1526,7 +1526,11 @@ function openNow(r){
      So neither pattern glows. Dawn-Dusk additionally dims after dark (handled in
      isDimmed); 24-hour stays lit around the clock. */
   if(/dawn|dusk|daylight|sunrise|sunset/i.test(todayCell)) return false;
-  if(/24\s*h|open\s*24|always\s*open/i.test(todayCell)) return false;
+  /* EXCEPTION (Laurie, 2026-09-17): a round-the-clock place that is actually STAFFED
+     — a 24-hour gas station, a manned taxi line — earns the glow. Opt in with the tag
+     "Staffed 24h"; fridges, trailheads and unstaffed spots stay lit-not-glowing. */
+  var staffed24 = (r.tags||[]).some(function(t){ return /^staffed\s*24\s*h/i.test(t.trim()); });
+  if(/24\s*h|open\s*24|always\s*open/i.test(todayCell)) return staffed24;
   if(r.cat === 'Lodging') return false;              /* a bed for the night ≠ a staffed welcome now */
   return !isClosedNow(r);                            /* real posted hours → glow only while within them */
 }

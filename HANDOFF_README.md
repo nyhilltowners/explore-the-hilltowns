@@ -1,4 +1,4 @@
-# NY Hilltowners Folk Atlas — Session Handoff (2026-09-17, v681)
+# NY Hilltowners Folk Atlas — Session Handoff (2026-09-17, v694)
 
 This ZIP is a **complete, self-contained source tree**. A new chat can unzip it,
 run the build, and continue exactly where this session left off. Everything here
@@ -120,6 +120,8 @@ Fixed-hinge wingbeat, 4 white wing-spots. Day-only, reduced-motion safe. The
 
 ## UX state (recent)
 
+- **`Staffed 24h` tag (v683):** a POI whose day cells read `Open 24 hours` is lit but never glows (rule of 2026-09-15 for fridges/trailheads). Adding the tag `Staffed 24h` opts a genuinely staffed round-the-clock place (24-hour Stewart's) into the glow. Never fake it with a 1-minute closure.
+
 - **Mobile bottom sheet opens COLLAPSED (peek) by default** (v658, per Laurie): peek height is
   measured from content (handle + Show filters + List View), not a fixed vh. Expanding filters or
   List View auto-lifts the sheet to mid (`window.__sheetExpand`). Tap on the handle: peek→mid→tall→mid.
@@ -141,7 +143,7 @@ Fixed-hinge wingbeat, 4 white wing-spots. Day-only, reduced-motion safe. The
 
 ## Events pipeline / recurrence schema
 
-Latest drop-in: **events_67**. Schema carries 4 recurrence columns after `Agenda`:
+Latest drop-in: **events_68**. Schema carries 4 recurrence columns after `Agenda`:
 `Recur Weeks` / `Recur Days` / `Recur Except` / `Recur Time`.
 
 **Model A contract:** the ingestor emits ONE fully-dated row per occurrence and
@@ -194,7 +196,7 @@ Big ongoing effort to tame tag sprawl. Started at 2,332 unique tags; now ~2,178.
 7. Clean-room verify: unzip the package fresh, rebuild, confirm BUILD OK.
 8. `present_files` the zip + both xlsx.
 
-Version at handoff: **v681**. Next chat continues from v682.
+Version at handoff: **v694**. Next chat continues from v695.
 
 ---
 
