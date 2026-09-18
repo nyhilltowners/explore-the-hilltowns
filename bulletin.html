@@ -55,7 +55,19 @@ body{
 .sitenav .links a.ig{padding:8px 10px; display:inline-flex; align-items:center;}
 .sitenav .links a.ig svg{width:18px; height:18px;}
 .sitenav .links a.mob-only{display:none;}
-@media (max-width:760px){ .sitenav .links a.mob-only{display:block;} }
+/* Hamburger nav at ALL widths (Laurie, 2026-09-18) */
+.menubtn, #menuToggle{display:flex;}
+.sitenav .links{
+  display:none; position:absolute; top:100%; right:0; left:auto; min-width:220px;
+  flex-direction:column; align-items:stretch; gap:0;
+  background:var(--parchment); border:1px solid var(--ink-blue); border-top:none; border-bottom:3px solid var(--ink-blue);
+  box-shadow:0 12px 26px rgba(0,0,60,.18); padding:6px 10px 12px; z-index:101; border-radius:0 0 10px 10px;
+}
+.sitenav .links.open{display:flex;}
+.sitenav .links a{padding:12px 14px; font-size:14px; letter-spacing:.08em;}
+.sitenav .links a.ig{align-self:flex-start;}
+.sitenav .links a.mob-only{display:block;}
+@media (max-width:760px){ .sitenav .links{left:0; right:0; min-width:0; border-radius:0; border-left:none; border-right:none;} }
 .sitenav .links a{font-family:'Montserrat',sans-serif; font-weight:600; font-size:12.5px; letter-spacing:.08em;
   text-transform:uppercase; text-decoration:none; color:var(--ink-blue); padding:8px 14px; border-radius:6px; transition:.15s;}
 .sitenav .links a:hover{background:rgba(26,29,92,.07);}

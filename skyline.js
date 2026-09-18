@@ -248,26 +248,18 @@ setInterval(renderSkySun, 60*1000);
    (localStorage); browsers block autoplay until the visitor has clicked once. */
 (function(){
   var STATIONS = [
-    {id:'wamc', name:'WAMC', sub:'Northeast Public Radio · Albany', url:'https://playerservices.streamtheworld.com/api/livestream-redirect/WAMCFM.mp3', verified:true},   /* 2026-09-18 per Laurie (WAMC's published source link; https form — the site is https, so http:// streams are blocked as mixed content) */
-    {id:'wamchd2', name:'WAMC HD2', sub:'WAMC HD2 · Albany', url:'https://playerservices.streamtheworld.com/api/livestream-redirect/WAMCHD2.mp3', verified:true},
-    /* Wave Farm streams — all from wavefarm.org/listen (2026-09-18, Laurie) */
-    {id:'wgxc', name:'WGXC 90.7', sub:'Wave Farm · Radio for Open Ears · Acra', url:'https://audio.wavefarm.org/wgxc.mp3', verified:true},
-    {id:'swr', name:'Standing Wave', sub:'Wave Farm · transmission art / experimental sound', url:'https://audio.wavefarm.org/transmissionarts.mp3', verified:true},
-    {id:'apiary', name:'Apiary', sub:'The Listening Apiary · inside a honeybee hive at Wave Farm', url:'https://audio.wavefarm.org/listening-apiary.mp3', verified:true},
-    {id:'pond', name:'Pond', sub:'Pond Station · inside a Wave Farm pond, dawn to sundown', url:'https://audio.wavefarm.org/pondstation.mp3', verified:true},
-    {id:'solar', name:'Solar', sub:'Solar Radio · a small AI sings while the sun shines in Acra', url:'https://audio.wavefarm.org/solarradio.mp3', verified:true},
-    {id:'warlock', name:'Weather Warlock', sub:'Quintron · analog synth played by the weather', url:'https://audio.wavefarm.org/weatherwarlock.mp3', verified:true},
-    {id:'saxx', name:'Traffic Saxx', sub:'Quintron · tire noise on NY 23, transformed', url:'https://audio.wavefarm.org/trafficsaxx.mp3', verified:true},
-    {id:'goes', name:'Here GOES', sub:'Neilson & Dove · space weather from satellite GOES-19', url:'https://audio.wavefarm.org/heregoes.mp3', verified:true},
-    {id:'wjff', name:'Radio Catskill', sub:'WJFF 90.5 · Jeffersonville / Sullivan County', url:'https://stream1.rcast.net/69645', verified:true},   /* radiocatskill.org/radio-player (2026-09-18 Laurie) */
-    /* WEXT (wextradio.org, WMHT's AAA station) plays through the same NPR Cadence widget as WMHT — no raw stream URL on the page. Link off for now. */
-    /* National / global news & independent radio (2026-09-18 Laurie). URLs marked verified:false
-       are the endpoints these broadcasters have published for third-party players; test each. */
-    {id:'npr', name:'NPR', sub:'NPR News / Talk · national live stream', url:'https://npr-ice.streamguys1.com/live.mp3', verified:false},
+    /* Order per Laurie, 2026-09-18. Dropped from the tuner (still reachable elsewhere): WAMC HD2,
+       WGXC 90.7 (Wave Farm's terrestrial station), Solar Radio, Weather Warlock, Traffic Saxx, Here GOES. */
+    {id:'wjff', name:'Radio Catskill', sub:'WJFF 90.5 · Jeffersonville / Sullivan County', url:'https://stream1.rcast.net/69645', verified:true},,
+    {id:'wamc', name:'WAMC', sub:'Northeast Public Radio · Albany', url:'https://playerservices.streamtheworld.com/api/livestream-redirect/WAMCFM.mp3', verified:true},,
+    {id:'wfmu', name:'WFMU', sub:'WFMU 91.1 Jersey City · freeform, listener-supported, independent', url:'https://stream0.wfmu.org/freeform-128k', verified:false},,
     {id:'wnyc', name:'WNYC', sub:'WNYC 93.9 FM · New York public radio', url:'https://fm939.wnyc.org/wnycfm', verified:false},
+    {id:'npr', name:'NPR', sub:'NPR News / Talk · national live stream', url:'https://npr-ice.streamguys1.com/live.mp3', verified:false},
     {id:'bbcws', name:'BBC World Service', sub:'BBC World Service · English · global news', url:'https://stream.live.vc.bbcmedia.co.uk/bbc_world_service', verified:false},
     {id:'kexp', name:'KEXP', sub:'KEXP 90.3 Seattle · independent music radio', url:'https://kexp-mp3-128.streamguys1.com/kexp128.mp3', verified:false},
-    {id:'wfmu', name:'WFMU', sub:'WFMU 91.1 Jersey City · freeform, listener-supported, independent', url:'https://stream0.wfmu.org/freeform-128k', verified:false},   /* 2026-09-18 Laurie */
+    {id:'swr', name:'Standing Wave', sub:'Wave Farm · transmission art / experimental sound', url:'https://audio.wavefarm.org/transmissionarts.mp3', verified:true},
+    {id:'pond', name:'Pond', sub:'Pond Station · inside a Wave Farm pond, dawn to sundown', url:'https://audio.wavefarm.org/pondstation.mp3', verified:true},
+    {id:'apiary', name:'Apiary', sub:'The Listening Apiary · inside a honeybee hive at Wave Farm', url:'https://audio.wavefarm.org/listening-apiary.mp3', verified:true}
   ];
   var css = '#hfaRadio{position:fixed;left:14px;bottom:14px;z-index:5000;font-family:Montserrat,sans-serif;font-size:11px;letter-spacing:.04em;color:var(--ink-blue,#1a1f5e);background:var(--paper,#f4ecd8);border:1px solid var(--ink-blue,#1a1f5e);border-radius:10px;box-shadow:0 4px 14px rgba(0,0,0,.18);padding:8px 10px;display:flex;align-items:center;gap:8px;max-width:calc(100vw - 28px)}'
     + '#hfaRadio button{font:inherit;cursor:pointer;border:1px solid var(--ink-blue,#1a1f5e);background:transparent;color:inherit;border-radius:6px;padding:4px 7px;line-height:1}'

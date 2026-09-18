@@ -57,7 +57,19 @@ body{
 .sitenav .links a.ig{padding:8px 10px; display:inline-flex; align-items:center;}
 .sitenav .links a.ig svg{width:18px; height:18px;}
 .sitenav .links a.mob-only{display:none;}
-@media (max-width:760px){ .sitenav .links a.mob-only{display:block;} }
+/* Hamburger nav at ALL widths (Laurie, 2026-09-18) */
+.menubtn, #menuToggle{display:flex;}
+.sitenav .links{
+  display:none; position:absolute; top:100%; right:0; left:auto; min-width:220px;
+  flex-direction:column; align-items:stretch; gap:0;
+  background:var(--parchment); border:1px solid var(--ink-blue); border-top:none; border-bottom:3px solid var(--ink-blue);
+  box-shadow:0 12px 26px rgba(0,0,60,.18); padding:6px 10px 12px; z-index:101; border-radius:0 0 10px 10px;
+}
+.sitenav .links.open{display:flex;}
+.sitenav .links a{padding:12px 14px; font-size:14px; letter-spacing:.08em;}
+.sitenav .links a.ig{align-self:flex-start;}
+.sitenav .links a.mob-only{display:block;}
+@media (max-width:760px){ .sitenav .links{left:0; right:0; min-width:0; border-radius:0; border-left:none; border-right:none;} }
 .sitenav .links a{
   font-family:'Montserrat',sans-serif; font-weight:600; font-size:12.5px;
   text-transform:uppercase; letter-spacing:.04em; text-decoration:none;
@@ -67,21 +79,14 @@ body{
 .sitenav .links a.ig{display:flex; align-items:center; justify-content:center; padding:7px; margin-left:2px; color:var(--ink-blue);}
 .sitenav .links a.ig:hover{background:rgba(26,29,92,.07); color:var(--gold);}
 .sitenav .links a.ig svg{width:22px; height:22px; display:block;}
+.aglyph.aimg{padding:0; overflow:hidden; border-radius:10px;}
+.aglyph.aimg img{width:72px; height:72px; object-fit:cover; display:block;}
+@media (max-width:760px){ .aglyph.aimg img{width:52px; height:52px;} }
 .menubtn{display:none; align-items:center; justify-content:center; background:none; border:none;
   cursor:pointer; padding:8px; border-radius:6px; color:var(--ink-blue); transition:.15s; touch-action:manipulation;}
 .menubtn:hover{background:rgba(26,29,92,.07); color:var(--gold);}
 .menubtn svg{width:24px; height:24px; display:block;}
 @media (max-width:760px){
-  .menubtn{display:flex;}
-  .sitenav .links{
-    display:none; position:absolute; top:100%; left:0; right:0;
-    flex-direction:column; align-items:stretch; gap:0;
-    background:var(--parchment); border-bottom:3px solid var(--ink-blue);
-    box-shadow:0 12px 26px rgba(0,0,60,.18); padding:6px 10px 12px; z-index:101;
-  }
-  .sitenav .links.open{display:flex;}
-  .sitenav .links a{padding:13px 14px; font-size:14px;}
-  .sitenav .links a.ig{align-self:flex-start;}
 }
 
 .wrap{max-width:920px; margin:0 auto; padding:40px 24px 72px; background:var(--parchment); border-radius:10px; box-shadow:0 8px 30px rgba(0,0,40,.28);}
@@ -348,7 +353,7 @@ h1{font-family:'Montserrat',sans-serif; font-weight:800; text-transform:uppercas
 
   <div class="agenda" id="agenda"></div>
 
-  <a class="backmap" href="index.html">Explore the Atlas &rarr;</a>
+  <a class="backmap" href="atlas.html">Explore the Atlas &rarr;</a>
 </main>
 
 <div class="modal" id="modal">
@@ -694,7 +699,8 @@ h1{font-family:'Montserrat',sans-serif; font-weight:800; text-transform:uppercas
           '<div class="ameta">'+esc([ev.ven, townOf(ev.addr)].filter(Boolean).join(" · "))+'</div>'+
           (hasPin ? '<button class="nearbybtn" type="button" title="Places open nearby during this event">Explore nearby <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg></button>' : '')+
           '</div>'+
-          (ev.g ? '<div class="aglyph">'+esc(ev.g)+'</div>' : '');
+          (ev.img ? '<div class="aglyph aimg"><img src="'+esc(ev.img)+'" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.className=\'aglyph\';this.parentNode.textContent=\''+esc(ev.g||'')+'\'"></div>' :
+           ev.g ? '<div class="aglyph">'+esc(ev.g)+'</div>' : '');   /* 2026-09-18 (Laurie): OG image when the ingestor found one, emoji otherwise */
         row.onclick = (function(e){ return function(){ openModal(e); }; })(ev);
         group.appendChild(row);
         if(hasPin){
@@ -962,7 +968,7 @@ h1{font-family:'Montserrat',sans-serif; font-weight:800; text-transform:uppercas
     items.forEach(function(it){
       var p = it.p, mi = (it.km*0.621371).toFixed(1);
       if(it.far && it === farItems[0]) h += '<div class="nb-head nb-far">Farther afield</div>';
-      h += '<a class="nb-row'+(it.far?' nb-farrow':'')+'" href="index.html#'+encodeURIComponent(p.sl||"")+'" title="Open on the map">'
+      h += '<a class="nb-row'+(it.far?' nb-farrow':'')+'" href="atlas.html#'+encodeURIComponent(p.sl||"")+'" title="Open on the map">'
         + '<span class="nb-g">'+esc(p.g||"")+'</span>'
         + '<span class="nb-name">'+esc((it.transit && p.g === "\uD83D\uDE8F" ? "Bus Stop: " : "") + p.t)+'</span>'
         + '<span class="nb-cat">'+esc((it.cats||[p.cat]).join(" · "))+'</span>'

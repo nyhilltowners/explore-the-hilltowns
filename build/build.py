@@ -1190,6 +1190,45 @@ def emit_page(src, out_name: str) -> None:
     (SITE / out_name).write_text(apply_partials(html, out_name), encoding="utf-8")
 
 
+# ---------------------------------------------------------------------------
+# Trading Post (2026-09-18, Laurie): data/trading_post.xlsx → site/trading_post.js
+# Columns: Category, Business, Town, Product, Price, URL, Image, Notes, Display.
+# Image blank → the product page's Open Graph image is fetched via the same
+# preview machinery as events/POI (cached in site/preview-cache.json).
+# ---------------------------------------------------------------------------
+def load_trading_post():
+    path = ROOT / "data" / "trading_post.xlsx"
+    if not path.exists():
+        return []
+    ws = load_workbook(path, read_only=True, data_only=True).active
+    rows = list(ws.iter_rows(values_only=True))
+    if not rows:
+        return []
+    ix = {str(h).strip().lower(): i for i, h in enumerate(rows[0]) if h}
+    def g(r, k):
+        i = ix.get(k); v = r[i] if i is not None and i < len(r) else None
+        return str(v).strip() if v is not None else ""
+    out = []
+    for n, r in enumerate(rows[1:], start=2):
+        if not g(r, "product") or g(r, "display").lower() == "no":
+            continue
+        url = g(r, "url")
+        if not url:
+            WARNS.append(f"trading_post.xlsx row {n}: {g(r,'product')} has no URL — skipped"); continue
+        img = g(r, "image") or fetch_site_image(url, f"trading_post.xlsx row {n}")
+        out.append({"cat": g(r, "category") or "Other", "biz": g(r, "business"), "town": g(r, "town"),
+                    "name": g(r, "product"), "price": g(r, "price"), "url": url, "img": img})
+    return out
+
+
+def emit_trading_post(items):
+    for it in items:
+        if isinstance(it.get("img"), str) and it["img"].startswith(_PENDING):
+            it["img"] = _preview_cache.get(it["img"][len(_PENDING):], {}).get("img", "")
+    (SITE / "trading_post.js").write_text("window.TRADING_POST = " + json.dumps(items, ensure_ascii=False) + ";\n", encoding="utf-8")
+    print(f"  Trading Post: {len(items)} items")
+
+
 def main() -> int:
     manifest = json.loads((ROOT / "manifest.json").read_text(encoding="utf-8"))
     load_preview_cache()
@@ -1218,7 +1257,9 @@ def main() -> int:
         print(f"  {label}: {len(recs)} records")
 
     backfill_event_coords_from_poi(all_records)
+    tp_items = load_trading_post()          # registers its preview fetches before resolve
     resolve_previews(all_records)
+    emit_trading_post(tp_items)
     assign_slugs(all_records)
     refresh_hearts(all_records)
 
@@ -1253,13 +1294,16 @@ def main() -> int:
     if not template.exists():
         print("ERROR: no index.template.html (or index.html) found at repo root")
         return 1
-    emit_page(template, "index.html")
+    emit_page(template, "atlas.html")      # 2026-09-18 (Laurie): the map now lives at atlas.html
     # Standalone pages (hand-authored). Each carries <!-- @@header --> / <!-- @@footer -->
     # markers that emit_page() fills from partials/, so the nav + skyline + footer are
     # written once and stamped everywhere (2026-09-16, per Laurie).
-    for name in ("about.html", "calendar.html", "directory.html", "instagram.html", "bulletin.html"):
+    for name in ("about.html", "calendar.html", "directory.html", "instagram.html", "bulletin.html", "tradingpost.html"):
         if (ROOT / name).exists():
-            emit_page(ROOT / name, name)
+            emit_page(ROOT / name, "index.html" if name == "calendar.html" else name)   # calendar (list view) is the landing page
+    # keep calendar.html answering too, for old links
+    if (ROOT / "calendar.html").exists():
+        emit_page(ROOT / "calendar.html", "calendar.html")
     if (ROOT / "skyline.js").exists():
         shutil.copyfile(ROOT / "skyline.js", SITE / "skyline.js")
     if (ROOT / "images").exists():

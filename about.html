@@ -58,7 +58,19 @@ body{
 .sitenav .links a.ig{padding:8px 10px; display:inline-flex; align-items:center;}
 .sitenav .links a.ig svg{width:18px; height:18px;}
 .sitenav .links a.mob-only{display:none;}
-@media (max-width:760px){ .sitenav .links a.mob-only{display:block;} }
+/* Hamburger nav at ALL widths (Laurie, 2026-09-18) */
+.menubtn, #menuToggle{display:flex;}
+.sitenav .links{
+  display:none; position:absolute; top:100%; right:0; left:auto; min-width:220px;
+  flex-direction:column; align-items:stretch; gap:0;
+  background:var(--parchment); border:1px solid var(--ink-blue); border-top:none; border-bottom:3px solid var(--ink-blue);
+  box-shadow:0 12px 26px rgba(0,0,60,.18); padding:6px 10px 12px; z-index:101; border-radius:0 0 10px 10px;
+}
+.sitenav .links.open{display:flex;}
+.sitenav .links a{padding:12px 14px; font-size:14px; letter-spacing:.08em;}
+.sitenav .links a.ig{align-self:flex-start;}
+.sitenav .links a.mob-only{display:block;}
+@media (max-width:760px){ .sitenav .links{left:0; right:0; min-width:0; border-radius:0; border-left:none; border-right:none;} }
 .sitenav .links a{
   font-family:'Montserrat',sans-serif; font-weight:600; font-size:12.5px;
   letter-spacing:.08em; text-transform:uppercase; text-decoration:none;
@@ -74,16 +86,6 @@ body{
 .menubtn:hover{background:rgba(26,29,92,.07); color:var(--gold);}
 .menubtn svg{width:24px; height:24px; display:block;}
 @media (max-width:760px){
-  .menubtn{display:flex;}
-  .sitenav .links{
-    display:none; position:absolute; top:100%; left:0; right:0;
-    flex-direction:column; align-items:stretch; gap:0;
-    background:var(--parchment); border-bottom:3px solid var(--ink-blue);
-    box-shadow:0 12px 26px rgba(0,0,60,.18); padding:6px 10px 12px; z-index:101;
-  }
-  .sitenav .links.open{display:flex;}
-  .sitenav .links a{padding:13px 14px; font-size:14px;}
-  .sitenav .links a.ig{align-self:flex-start;}
 }
 
 .wrap{max-width:720px; margin:0 auto; padding:56px 24px 72px; background:var(--parchment); border-radius:10px; box-shadow:0 8px 30px rgba(0,0,40,.28);}
@@ -230,7 +232,7 @@ a.link:hover{background:rgba(252,163,21,.14);}
     <p>We always welcome new perspectives and civil discourse. Please DM us on Instagram at <a href="https://instagram.com/NYHilltowners" target="_blank" rel="noopener">@NYHilltowners</a> or email us at <a href="mailto:nyhilltowners@gmail.com">nyhilltowners@gmail.com</a>.</p>
   </section>
 
-  <a class="backmap" href="index.html">Explore the Atlas &rarr;</a>
+  <a class="backmap" href="atlas.html">Explore the Atlas &rarr;</a>
 </main>
 
 <!-- @@footer -->

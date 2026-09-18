@@ -1,4 +1,4 @@
-# NY Hilltowners Folk Atlas — Session Handoff (2026-09-18, v716)
+# NY Hilltowners Folk Atlas — Session Handoff (2026-09-18, v720)
 
 This ZIP is a **complete, self-contained source tree**. A new chat can unzip it,
 run the build, and continue exactly where this session left off. Everything here
@@ -120,6 +120,12 @@ Fixed-hinge wingbeat, 4 white wing-spots. Day-only, reduced-motion safe. The
 
 ## UX state (recent)
 
+- **Trading Post page (v720, Laurie):** `tradingpost.html` + nav item. Data lives in `data/trading_post.xlsx` (Category, Business, Town, Product, Price, URL, Image, Notes, Display); `build.py` emits `site/trading_post.js`. Blank Image → the product page's Open Graph image is fetched at build time (needs network — the GitHub runner has it; a sandbox build shows a placeholder 🛍️). Categories become horizontal scroll-snap carousels in workbook order. Adding a product = one row + push.
+
+- **Landing page is the Calendar (v719, Laurie):** `build.py` emits `calendar.html` → `site/index.html` (list view is its default) and the map template → `site/atlas.html` (`site/calendar.html` is also emitted for old links). Nav order: Calendar, Atlas, Directory, IG. Pin deep-links are `atlas.html#<slug>`.
+- **Hamburger nav at all widths (v719):** the link row is always behind the ≡ button (dropdown panel, right-aligned on desktop, full-width on phones).
+- **Calendar list view shows the event's Open Graph image** (`img` from the ingestor's preview fetch) in place of the emoji when one exists; falls back to the emoji on load error.
+
 - **Radio tuner (v698):** fixed bottom-left tuner on every page, injected by `skyline.js` (no markup). Presets live in the `STATIONS` array at the bottom of `skyline.js`; each `url` must be a direct HTTPS audio stream. All five shipped presets are `verified:false` best-guess endpoints — Laurie to test in a browser and fix/delete; a failed stream shows 'Stream unavailable' rather than breaking. Remembers station + play state in localStorage; browsers block autoplay until first click.
 - **Atina Foods (v698):** pin + 13 stockist rows (some far out of region by design) + 3 online/distribution rows (no pin), all tagged `Atina Foods`; four pre-existing rows (Toko, Story Farms, Olana, Montgomery Place) tagged. Stockist websites were inferred from names and are flagged UNVERIFIED in Notes.
 
@@ -199,7 +205,7 @@ Big ongoing effort to tame tag sprawl. Started at 2,332 unique tags; now ~2,178.
 7. Clean-room verify: unzip the package fresh, rebuild, confirm BUILD OK.
 8. `present_files` the zip + both xlsx.
 
-Version at handoff: **v716**. Next chat continues from v717.
+Version at handoff: **v720**. Next chat continues from v721.
 
 ---
 
