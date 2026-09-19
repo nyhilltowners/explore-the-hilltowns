@@ -909,6 +909,30 @@ def agenda_quiet_match(title, venue):
             return True
     return False
 
+def strip_redundant_recurrence(rows):
+    """Model A drop-ins emit one DATED row per occurrence but still carry the recurrence
+    rule (Recur Weeks/Days) on every instance. The calendar rolls any recurring row whose
+    date has passed forward to its next occurrence — which lands on top of the explicit
+    row for that date, so every weekly series showed twice (2026-09-18, Laurie). Rule:
+    when two or more rows share a title AND a recurrence rule, the dated rows are the
+    truth and the rule is dropped from all of them. A lone recurring row (legacy
+    "meets 2nd Tuesday" entries with no dated siblings) keeps its rule."""
+    groups = {}
+    for r in rows:
+        if r.get("rw"):
+            key = (re.sub(r"\s+", " ", str(r.get("t") or "")).strip().lower(), str(r.get("rw")), str(r.get("rd") or ""))
+            groups.setdefault(key, []).append(r)
+    n = 0
+    for g in groups.values():
+        if len(g) < 2:
+            continue
+        for r in g:
+            for k in ("rw", "rd", "rx", "rt"):
+                r.pop(k, None)
+            n += 1
+    if n:
+        print(f"    (recurrence rule dropped from {n} dated series rows — dated instances are authoritative)")
+
 def parse_events(path: Path, label: str, sheet=None):
     where = path.name + (f" [{sheet}]" if sheet else "")
     hdr, rows = read_rows(path, where, sheet)
@@ -988,6 +1012,7 @@ def parse_events(path: Path, label: str, sheet=None):
         ev_web = s(cell(row, idx, "web"))
         if not out[-1]["img"] and ev_web:
             out[-1]["img"] = fetch_site_image(ev_web, rw)
+    strip_redundant_recurrence(out)
     check_dupe_ids(out, where)
     if skipped_past[0]:
         print(f"    ({skipped_past[0]} past events skipped)")
