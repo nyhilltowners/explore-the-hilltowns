@@ -1363,8 +1363,7 @@ def _station_years(path):
             s_, cum = 0.0, []
             for i in range(1, 367):
                 s_ += Y[k][i]; cum.append(round(s_, dp) if dp else round(s_))
-            if y >= 1991:               # daily cumulative only where the page needs day-of-year lookups
-                rec[k] = cum            # (normals window + current year); older years keep totals only
+            rec[k] = cum                # daily cumulative for every year — the record-wide average needs day-of-year lookups
             rec["t" + k] = cum[-1]      # full-year total, every year — keeps the file at ~1/3 the size
         out[y] = rec
     return out

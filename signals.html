@@ -198,7 +198,10 @@ a.link:hover{background:rgba(252,163,21,.14);}
 .ddtab thead th{color:var(--gold,#c9a227); font-size:11px; letter-spacing:.1em; text-transform:uppercase;}
 .ddtab tr.cur td{font-weight:800;}
 .obs{opacity:1;}
-.sg-chart{background:rgba(0,0,0,.18); border:1px solid rgba(255,255,255,.18); border-radius:12px; padding:6px;}
+.sg-h3{margin:18px 0 4px; font-size:13px; letter-spacing:.1em; text-transform:uppercase; color:var(--gold,#c9a227);}
+.sg-chart{background:rgba(0,0,0,.18); border:1px solid rgba(255,255,255,.18); border-radius:12px; padding:6px; position:relative;}
+.sg-tip{position:absolute; top:10px; right:14px; font:700 13px "Montserrat",sans-serif; color:#fff; background:rgba(0,0,0,.55); padding:4px 8px; border-radius:6px; pointer-events:none; display:none;}
+.sg-chart polyline.hl{stroke:#ffd166 !important; stroke-opacity:1 !important; stroke-width:2.6 !important;}
 .sg-chart svg{width:100%; height:auto; display:block;}
 .sg-chart .ax{stroke:rgba(255,255,255,.28); stroke-width:1;}
 .sg-chart .lbl{font:600 11px "Montserrat",sans-serif; fill:#fff; opacity:.85;}
@@ -266,8 +269,25 @@ a.link:hover{background:rgba(252,163,21,.14);}
   <p class="sg-note">Arrows point <em>downwind</em>; the text says where the wind blows <em>from</em>. 850 hPa steers valley weather; 500 hPa carries the troughs and ridges; 100 hPa is the tropopause, where jets live; 10 hPa is the polar vortex's winter home.</p>
 
   <h2 class="sg-sec">The year, drawn</h2>
-  <p class="sg-det" style="margin:0 0 8px">Daily mean temperature at Berne, January to December, every year since 1940. This year is white; each earlier year a shade closer to the night sky. Lines are 7-day running means so the shape reads through the noise.</p>
-  <div class="sg-chart"><svg id="yr-chart" viewBox="0 0 1000 420" preserveAspectRatio="none" role="img" aria-label="Daily mean temperature by year"></svg></div>
+  <p class="sg-det" style="margin:0 0 14px">Every year since 1940 at Berne, January to December. This year is white; each earlier year a shade closer to the night sky, oldest darkest. Temperature lines are 7-day running means. Hover to name a year.</p>
+  <h3 class="sg-h3">Daily mean temperature</h3>
+  <p class="sg-det" style="margin:0 0 8px"></p>
+  <div class="sg-chart"><svg id="ch-mean" viewBox="0 0 1000 420" preserveAspectRatio="none" role="img" aria-label="Daily mean temperature"></svg><div class="sg-tip" id="ch-mean-tip"></div></div>
+  <h3 class="sg-h3">Daily high</h3>
+  <p class="sg-det" style="margin:0 0 8px"></p>
+  <div class="sg-chart"><svg id="ch-hi" viewBox="0 0 1000 420" preserveAspectRatio="none" role="img" aria-label="Daily high"></svg><div class="sg-tip" id="ch-hi-tip"></div></div>
+  <h3 class="sg-h3">Daily low</h3>
+  <p class="sg-det" style="margin:0 0 8px"></p>
+  <div class="sg-chart"><svg id="ch-lo" viewBox="0 0 1000 420" preserveAspectRatio="none" role="img" aria-label="Daily low"></svg><div class="sg-tip" id="ch-lo-tip"></div></div>
+  <h3 class="sg-h3">Heating degree days, accumulating</h3>
+  <p class="sg-det" style="margin:0 0 8px">Base 65°F. Each line climbs through the cold months and flattens in summer; a higher line is a colder year.</p>
+  <div class="sg-chart"><svg id="ch-hdd" viewBox="0 0 1000 420" preserveAspectRatio="none" role="img" aria-label="Heating degree days, accumulating"></svg><div class="sg-tip" id="ch-hdd-tip"></div></div>
+  <h3 class="sg-h3">Cooling degree days, accumulating</h3>
+  <p class="sg-det" style="margin:0 0 8px">Base 65°F. Flat until late spring, then climbs; a higher line is a hotter summer.</p>
+  <div class="sg-chart"><svg id="ch-cdd" viewBox="0 0 1000 420" preserveAspectRatio="none" role="img" aria-label="Cooling degree days, accumulating"></svg><div class="sg-tip" id="ch-cdd-tip"></div></div>
+  <h3 class="sg-h3">Growing degree days, accumulating</h3>
+  <p class="sg-det" style="margin:0 0 8px">Base 50°F, capped at 86°F. The season's heat budget for everything that grows; a steeper spring means an earlier bloom.</p>
+  <div class="sg-chart"><svg id="ch-gdd" viewBox="0 0 1000 420" preserveAspectRatio="none" role="img" aria-label="Growing degree days, accumulating"></svg><div class="sg-tip" id="ch-gdd-tip"></div></div>
   <p class="sg-note" id="yr-note"></p>
 
   <h2 class="sg-sec">Water · year to date</h2>
