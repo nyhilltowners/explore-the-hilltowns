@@ -1451,34 +1451,42 @@ def emit_phenology_history():
 # own marker. Inline markdown (*em*, **strong**) becomes <em>/<b>; everything else is escaped.
 # ---------------------------------------------------------------------------
 def emit_phenology_expected():
-    p = ROOT / "data" / "microseasons.md"
+    """data/microseasons.xlsx (Entries (Long Form): Season #, Microseason, Date Range, Season, Category,
+    Entry) → site/phenology_expected.js. One record per microseason with its entries grouped by
+    category, in the workbook's category order. Falls back to the older data/microseasons.md if
+    the workbook is absent. (2026-09-20, Laurie: the calendar is now sectioned.)"""
+    p = ROOT / "data" / "microseasons.xlsx"
     if not p.exists():
         return
-    def inline(t):
-        t = html_mod.escape(t)
-        t = re.sub(r"\*\*(.+?)\*\*", r"<b>\1</b>", t)
-        t = re.sub(r"(?<!\*)\*(?!\*)(.+?)(?<!\*)\*(?!\*)", r"<em>\1</em>", t)
-        return t
-    out, cur, season = [], None, ""
-    for line in p.read_text(encoding="utf-8").splitlines():
-        s = line.strip()
-        m = re.match(r"^## (WINTER|SPRING|SUMMER|FALL)", s)
-        if m:
-            season = m.group(1).title(); continue
-        m = re.match(r"^### (\d+)\.\s*(.+?)\s+—\s+([A-Z][a-z]+)\s+(\d+)[–-](\d+)\s*$", s)
-        if m:
-            cur = {"n": int(m.group(1)), "name": m.group(2).strip(), "mon": m.group(3), "lo": int(m.group(4)), "hi": int(m.group(5)), "season": season, "items": []}
-            out.append(cur); continue
-        if cur is not None and s.startswith("- "):
-            body = s[2:].strip(); kind = "plain"
-            for tag, k in (("*Ghost:*", "ghost"), ("*Health watch:*", "health"), ("**Garden:**", "garden"), ("**Foodways", "foodways")):
-                if body.startswith(tag):
-                    kind = k
-                    if k in ("ghost", "health"): body = body[len(tag):].strip()
-                    break
-            cur["items"].append({"k": kind, "h": inline(body)})
+    wb = load_workbook(p, read_only=True, data_only=True)
+    if "Entries (Long Form)" not in wb.sheetnames:
+        WARNS.append("microseasons.xlsx: no 'Entries (Long Form)' sheet"); return
+    rows = list(wb["Entries (Long Form)"].iter_rows(values_only=True))
+    ix = {str(h).strip().lower(): i for i, h in enumerate(rows[0]) if h}
+    CATS = ["Sky & Light", "Weather & Ground", "Flora & Phenology", "Birds", "Animals", "Insects & Fungi", "Garden", "Foodways", "Ghost", "Health Watch"]
+    out, byn = [], {}
+    for r in rows[1:]:
+        g = lambda k: (str(r[ix[k]]).strip() if ix.get(k) is not None and r[ix[k]] is not None else "")
+        try: n = int(float(g("season #")))
+        except ValueError: continue
+        entry = g("entry")
+        if not entry: continue
+        rec = byn.get(n)
+        if not rec:
+            dr = g("date range"); m = re.match(r"([A-Za-z]+)\s+(\d+)[–-](\d+)", dr)
+            rec = byn[n] = {"n": n, "name": g("microseason"), "range": dr, "mon": m.group(1) if m else "", "lo": int(m.group(2)) if m else 0, "hi": int(m.group(3)) if m else 0,
+                            "season": g("season"), "sections": []}
+            out.append(rec)
+        cat = g("category") or "Notes"
+        sec = next((s for s in rec["sections"] if s["cat"] == cat), None)
+        if not sec:
+            sec = {"cat": cat, "items": []}; rec["sections"].append(sec)
+        sec["items"].append(html_mod.escape(entry))
+    for rec in out:
+        rec["sections"].sort(key=lambda s: CATS.index(s["cat"]) if s["cat"] in CATS else 99)
+    out.sort(key=lambda r: r["n"])
     (SITE / "phenology_expected.js").write_text("window.PHENOLOGY_EXPECTED = " + json.dumps(out, ensure_ascii=False) + ";\n", encoding="utf-8")
-    print(f"  Expected phenology: {len(out)} microseasons, {sum(len(w['items']) for w in out)} bullets → phenology_expected.js")
+    print(f"  Expected phenology: {len(out)} microseasons, {sum(len(s['items']) for r in out for s in r['sections'])} entries in sections → phenology_expected.js")
 
 def main() -> int:
     manifest = json.loads((ROOT / "manifest.json").read_text(encoding="utf-8"))

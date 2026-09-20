@@ -170,7 +170,7 @@
   }
   function drawAll(){
     var sel=$('ch-src'), ALL=window.STATION_DD, src=sel?sel.value:'berne', years, note='';
-    if(src==='berne'||!ALL||!ALL.stations[src]){ years=_yearsBerne; note='Reanalysis for a ~30 km grid cell: a smoothed countryside, a few degrees short of a ridge thermometer on the hottest and coldest days. Pick an observed station for the real extremes.'; }
+    if(src==='berne'||!ALL||!ALL.stations[src]){ years=_yearsBerne; note=''; }
     else { var S=ALL.stations[src]; years=stationSeries(S); note='Observed at '+S.name+', ~'+S.elev.toLocaleString()+' ft — NOAA thermometer readings, gaps where the observer missed a day.'; }
     var n=$('ch-src-note'); if(n) n.textContent=note;
     if(!years) return;
@@ -247,8 +247,8 @@
     row.innerHTML = wins.map(function(w,idx){
       var label = MON[w.m-1]+' '+w.lo+'–'+(w.hi===15?15:dim(w.m));
       var ex = EX[idx];
-      var exCard = '<article class="ph-card'+(idx===curIdx?' cur':'')+'"><div class="ph-head"><div><p class="ph-sub">Expected · '+(ex?esc(ex.season):'')+'</p><div class="ph-win">'+(ex?esc(ex.name):label)+'</div></div><div class="ph-count">'+label+'</div></div>'
-        + (ex ? '<ol class="ph-list">'+ex.items.map(function(it){ return '<li><div class="ph-kind '+it.k+'">'+(TAG[it.k]?'<span class="ph-tag">'+TAG[it.k]+'</span>':'')+it.h+'</div></li>'; }).join('')+'</ol>' : '<p class="ph-empty">No microseason text for this window.</p>')+'</article>';
+      var exCard = '<article class="ph-card'+(idx===curIdx?' cur':'')+'"><div class="ph-head"><div><p class="ph-sub">Expected</p><div class="ph-win">'+(ex?esc(ex.name):label)+'</div></div><div class="ph-count">'+label+'</div></div>'
+        + (ex ? ex.sections.map(function(sec){ var k=({'Ghost':'ghost','Health Watch':'health','Garden':'garden','Foodways':'foodways'})[sec.cat]||'plain'; return '<div class="ph-sec"><div class="ph-sech">'+esc(sec.cat)+'</div><ul class="ph-list">'+sec.items.map(function(h){ return '<li><div class="ph-kind '+k+'">'+h+'</div></li>'; }).join('')+'</ul></div>'; }).join('') : '<p class="ph-empty">No microseason text for this window.</p>')+'</article>';
       var items = EV.filter(function(e){ return e.m===w.m && e.d>=w.lo && e.d<=w.hi; }).sort(function(a,b){ return (a.y-b.y)||(a.d-b.d); });
       var hist = '<article class="ph-card'+(idx===curIdx?' cur':'')+'"><div class="ph-head"><div><p class="ph-sub">On record</p><div class="ph-win">'+label+'</div></div><div class="ph-count">'+items.length+' event'+(items.length===1?'':'s')+'</div></div>'
         + (items.length ? '<ol class="ph-list">'+items.map(function(e){
@@ -258,10 +258,10 @@
               + (e.impact?'<div class="ph-meta">'+esc(e.impact.length>200?e.impact.slice(0,197)+'…':e.impact)+'</div>':'')
               + '<div class="ph-src">'+(e.url?'<a href="'+esc(e.url)+'" target="_blank" rel="noopener">'+esc(e.source||'source')+'</a>':esc(e.source))+(e.conf?' · confidence '+esc(e.conf):'')+'</div></div></li>';
           }).join('')+'</ol>' : '<p class="ph-empty">Nothing on record for this fortnight yet.</p>')+'</article>';
-      return '<div class="ph-pair" id="ph-win-'+idx+'">'+exCard+hist+'</div>';
+      return '<div class="ph-pair" id="ph-win-'+idx+'">'+hist+exCard+'</div>';
     }).join('');
     var ys=EV.map(function(e){ return e.y; });
-    $('ph-note').textContent = EX.length+' microseasons · '+EV.length+' events on the register, '+Math.min.apply(null,ys)+'–'+Math.max.apply(null,ys)+' · multi-day and seasonal events sit at their anchor date · hill dates, not valley dates.';
+    $('ph-note').textContent = EX.length+' microseasons in '+(EX.length?EX.reduce(function(n,x){ return n+x.sections.reduce(function(m,s){ return m+s.items.length; },0); },0):0)+' entries · '+EV.length+' events on the register, '+Math.min.apply(null,ys)+'–'+Math.max.apply(null,ys)+' · multi-day and seasonal events sit at their anchor date · hill dates, not valley dates.';
     function setTitle(idx){ var w=wins[idx], ex=EX[idx]; $('ph-title').textContent=(idx===curIdx?'Now: ':'')+MON[w.m-1]+' '+w.lo+'–'+(w.hi===15?15:dim(w.m))+(ex?' · '+ex.name:''); }
     function go(idx){ var el=$('ph-win-'+idx); if(el) row.scrollTo({left: el.offsetLeft - row.offsetLeft, behavior:'smooth'}); setTitle(idx); }
     var cur=curIdx; setTitle(cur);
@@ -280,14 +280,18 @@
       var esc=function(v){ return String(v||'').replace(/[&<>"]/g,function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); };
       var res=(j.results||[]);
       if(!res.length){ grid.innerHTML='<p class="ph-empty">No research-grade observations came back.</p>'; return; }
-      grid.innerHTML=res.map(function(o){
-        var t=o.taxon||{}, name=t.preferred_common_name||t.name||'Unidentified', sci=t.preferred_common_name?t.name:'';
-        var ph=(o.photos&&o.photos[0])||null, lic=ph&&ph.license_code, img=ph&&lic?ph.url.replace('square','medium'):null;   /* only openly licensed photos are shown */
-        var when=o.observed_on_string||o.observed_on||'', who=o.user&&(o.user.name||o.user.login)||'', where=o.place_guess||'';
-        return '<a class="inat" href="https://www.inaturalist.org/observations/'+o.id+'" target="_blank" rel="noopener">'
-          +(img?'<img src="'+esc(img)+'" alt="'+esc(name)+'" loading="lazy">':'<div class="ph">'+({Aves:'🐦',Insecta:'🦋',Plantae:'🌿',Fungi:'🍄',Mammalia:'🦌',Amphibia:'🐸',Reptilia:'🐢',Arachnida:'🕷️'}[t.iconic_taxon_name]||'🔍')+'</div>')
-          +'<div class="b"><div class="n">'+esc(name)+'</div>'+(sci?'<div class="sci">'+esc(sci)+'</div>':'')+'<div class="m">'+esc(when)+(where?' · '+esc(where):'')+(who?'<br>by '+esc(who):'')+(img?'<br><span style="opacity:.7">photo '+esc(lic.toUpperCase())+'</span>':'<br><span style="opacity:.7">photo not openly licensed — see iNaturalist</span>')+'</div></div></a>';
-      }).join('');
+      var ICON={Aves:'🐦',Insecta:'🦋',Plantae:'🌿',Fungi:'🍄',Mammalia:'🦌',Amphibia:'🐸',Reptilia:'🐢',Arachnida:'🕷️'};
+      var info=function(o){ var t=o.taxon||{}, ph=(o.photos&&o.photos[0])||null, lic=ph&&ph.license_code;
+        return {t:t, name:t.preferred_common_name||t.name||'Unidentified', sci:t.preferred_common_name?t.name:'', img:(ph&&lic)?ph.url.replace('square','medium'):null, lic:lic,
+                when:o.observed_on_string||o.observed_on||'', who:o.user&&(o.user.name||o.user.login)||'', where:o.place_guess||'', url:'https://www.inaturalist.org/observations/'+o.id}; };
+      var withPic=res.filter(function(o){ return info(o).img; }), noPic=res.filter(function(o){ return !info(o).img; });
+      grid.innerHTML = withPic.length ? withPic.map(function(o){ var d=info(o);
+        return '<a class="inat" href="'+d.url+'" target="_blank" rel="noopener"><img src="'+esc(d.img)+'" alt="'+esc(d.name)+'" loading="lazy">'
+          +'<div class="b"><div class="n">'+esc(d.name)+'</div>'+(d.sci?'<div class="sci">'+esc(d.sci)+'</div>':'')+'<div class="m">'+esc(d.when)+(d.where?' · '+esc(d.where):'')+(d.who?'<br>by '+esc(d.who):'')+'<br><span style="opacity:.7">photo '+esc(d.lic.toUpperCase())+'</span></div></div></a>';
+      }).join('') : '<p class="ph-empty">No openly licensed photos in the latest batch.</p>';
+      $('inat-list').innerHTML = noPic.length ? '<div class="inat-list">'+noPic.map(function(o){ var d=info(o);
+        return '<div class="eb"><div class="img ph">'+(ICON[d.t.iconic_taxon_name]||'🔍')+'</div><div><div class="n"><a href="'+d.url+'" target="_blank" rel="noopener">'+esc(d.name)+'</a>'+(d.sci?' <span class="sci" style="font-weight:400;font-style:italic;opacity:.85">'+esc(d.sci)+'</span>':'')+'</div><div class="m">'+esc(d.when)+(d.where?' · '+esc(d.where):'')+(d.who?' · '+esc(d.who):'')+'</div></div></div>';
+      }).join('')+'</div>' : '';
       $('inat-note').textContent='Showing '+res.length+' of '+(j.total_results||res.length).toLocaleString()+' research-grade observations in the box · data © iNaturalist contributors; only Creative Commons photos are displayed here, others link through.';
     }).catch(function(e){ grid.innerHTML='<p class="ph-empty">iNaturalist is unreachable right now.</p>'; status('iNaturalist: '+(e && e.message || 'fetch failed')); });
   }
@@ -299,7 +303,7 @@
     var base='https://api.ebird.org/v2/data/obs/geo/recent', q='?lat='+LAT.toFixed(4)+'&lng='+LNG.toFixed(4)+'&dist='+EBIRD_DIST+'&back='+EBIRD_BACK+'&maxResults=60';
     var opt={headers:{'X-eBirdApiToken':EBIRD_KEY}};
     var esc=function(v){ return String(v||'').replace(/[&<>"]/g,function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); };
-    var row=function(o,rare){ return '<div class="eb'+(rare?' rare':'')+'"><div class="c">'+(o.howMany!=null?o.howMany:'')+'</div><div><div class="n">'+esc(o.comName)+' <span class="sci" style="font-weight:400;font-style:italic;opacity:.85">'+esc(o.sciName)+'</span>'+(rare?' · <span class="ph-tag">notable</span>':'')+'</div><div class="m">'+esc((o.obsDt||'').slice(0,16))+' · '+esc(o.locName)+(o.subId?' · <a href="https://ebird.org/checklist/'+esc(o.subId)+'" target="_blank" rel="noopener">checklist</a>':'')+'</div></div></div>'; };
+    var row=function(o,rare){ return '<div class="eb'+(rare?' rare':'')+'" data-sci="'+esc(o.sciName)+'"><div class="img ph">🐦</div><div class="c">'+(o.howMany!=null?o.howMany:'')+'</div><div><div class="n">'+esc(o.comName)+' <span class="sci" style="font-weight:400;font-style:italic;opacity:.85">'+esc(o.sciName)+'</span>'+(rare?' · <span class="ph-tag">notable</span>':'')+'</div><div class="m">'+esc((o.obsDt||'').slice(0,16))+' · '+esc(o.locName)+(o.subId?' · <a href="https://ebird.org/checklist/'+esc(o.subId)+'" target="_blank" rel="noopener">checklist</a>':'')+'</div></div></div>'; };
     Promise.all([fetch(base+'/notable'+q,opt).then(function(r){ return r.ok?r.json():[]; }).catch(function(){ return []; }),
                  fetch(base+q,opt).then(function(r){ if(!r.ok) throw new Error('eBird HTTP '+r.status); return r.json(); })])
     .then(function(res){ var notable=res[0]||[], recent=res[1]||[];
@@ -307,8 +311,24 @@
       band.innerHTML = notable.length ? '<div class="eb-band"><div class="t">Notable · '+notable.length+'</div>'+notable.slice(0,12).map(function(o){ return row(o,true); }).join('')+'</div>' : '';
       var seen={}; recent=recent.filter(function(o){ var k=o.speciesCode; if(seen[k]) return false; seen[k]=1; return true; });   /* one line per species, most recent report */
       grid.innerHTML = recent.length ? '<div style="grid-column:1/-1">'+recent.map(function(o){ return row(o,false); }).join('')+'</div>' : '<p class="ph-empty">No reports in the window.</p>';
+      wikiPics(); 
       $('ebird-note').textContent = recent.length+' species reported in the last '+EBIRD_BACK+' days within '+EBIRD_DIST+' km of Berne · one line per species, most recent report · data © eBird / Cornell Lab of Ornithology.';
     }).catch(function(e){ grid.innerHTML='<p class="ph-empty">eBird is unreachable right now.</p>'; status('eBird: '+(e && e.message || 'fetch failed')+' (if this says HTTP 403 the key is wrong; if it says "Failed to fetch" eBird refused the cross-site request and the feed must move to build time)'); });
+  }
+
+  function wikiPics(){
+    var els=document.querySelectorAll('.eb[data-sci]'), cache={}; try{ cache=JSON.parse(sessionStorage.getItem('hfa.wiki')||'{}'); }catch(e){}
+    var pending={};
+    Array.prototype.forEach.call(els,function(el){ var sci=el.getAttribute('data-sci'); if(!sci) return;
+      var put=function(u){ if(!u) return; var im=document.createElement('img'); im.className='img'; im.alt=''; im.loading='lazy'; im.src=u; var ph=el.querySelector('.img.ph'); if(ph) el.replaceChild(im,ph); };
+      if(cache[sci]){ put(cache[sci]); return; }
+      if(pending[sci]){ pending[sci].push(put); return; }
+      pending[sci]=[put];
+      fetch('https://en.wikipedia.org/api/rest_v1/page/summary/'+encodeURIComponent(sci.replace(/ /g,'_'))).then(function(r){ return r.ok?r.json():null; }).then(function(p){
+        var u=p&&p.thumbnail&&p.thumbnail.source||''; cache[sci]=u; try{ sessionStorage.setItem('hfa.wiki',JSON.stringify(cache)); }catch(e){}
+        pending[sci].forEach(function(f){ f(u); });
+      }).catch(function(){});
+    });
   }
 
   function init(){ fetchINat(); fetchEBird(); renderPhenology(); renderSunMoon(); fetchWx(); fetchDD(); setInterval(renderSunMoon, 60000); setInterval(fetchWx, 15*60000); }

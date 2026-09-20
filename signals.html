@@ -200,7 +200,10 @@ a.link:hover{background:rgba(252,163,21,.14);}
 .inat .sci{font-style:italic; opacity:.85;}
 .inat .m{font-size:12px; opacity:.9; margin-top:4px;}
 .inat a{color:var(--gold,#c9a227) !important; text-decoration:none;}
-.eb{display:flex; gap:10px; align-items:flex-start; padding:8px 4px; border-bottom:1px solid rgba(255,255,255,.14);}
+.eb{display:flex; gap:10px; align-items:center; padding:8px 4px; border-bottom:1px solid rgba(255,255,255,.14);}
+.eb .img{flex:none; width:56px; height:56px; border-radius:8px; object-fit:cover; background:rgba(255,255,255,.08);}
+.eb .img.ph{display:flex; align-items:center; justify-content:center; font-size:22px;}
+.inat-list .eb .img{width:44px; height:44px;}
 .eb .c{flex:none; min-width:34px; font-weight:800; text-align:right; color:var(--gold,#c9a227) !important;}
 .eb .n{font-weight:700;}
 .eb .m{font-size:12px; opacity:.9;}
@@ -247,6 +250,9 @@ a.link:hover{background:rgba(252,163,21,.14);}
 .ph-list{list-style:none; margin:0; padding:0;}
 .ph-list li{display:flex; gap:12px; padding:9px 0; border-top:1px solid rgba(255,255,255,.14);}
 .ph-kind{font-size:13px; line-height:1.45;}
+.ph-sec{margin:10px 0 2px;}
+.ph-sech{font-size:10px; letter-spacing:.16em; text-transform:uppercase; color:var(--gold,#c9a227) !important; margin:0 0 2px; padding-bottom:2px; border-bottom:1px solid rgba(201,162,39,.35);}
+.ph-sec .ph-list li{padding:6px 0; border-top:none;}
 .ph-kind.ghost{border-left:3px solid rgba(255,255,255,.35); padding-left:10px; font-style:italic;}
 .ph-kind.health{border-left:3px solid #f0b67f; padding-left:10px;}
 .ph-kind.garden,.ph-kind.foodways{border-left:3px solid var(--gold,#c9a227); padding-left:10px;}
@@ -303,8 +309,7 @@ a.link:hover{background:rgba(252,163,21,.14);}
   <p class="sg-sub">Sky, wind, and the slow arithmetic of the seasons, read from Berne, NY.</p>
   <p id="sg-status"></p>
 
-  <h2 class="sg-sec">Phenology · this fortnight</h2>
-  <p class="sg-det" style="margin:0 0 10px">Two cards per fortnight: what the hill is <b>expected</b> to do (from <em>The Twenty-Four Microseasons of Albany Hill</em>) and what it has done <b>on record</b> (from the Regional Climate &amp; Weather Event Register). Step forward or back a fortnight at a time.</p>
+  <h2 class="sg-sec">Phenology</h2>
   <div class="ph-nav"><button type="button" class="sg-btn" id="ph-prev">&larr; earlier</button><div class="ph-title" id="ph-title"></div><button type="button" class="sg-btn" id="ph-next">later &rarr;</button></div>
   <div class="ph-row" id="ph-row"></div>
   <p class="sg-note" id="ph-note"></p>
@@ -331,7 +336,6 @@ a.link:hover{background:rgba(252,163,21,.14);}
     <div class="sg-row wind"><div class="sg-ico" id="w10hpa-ico"><svg viewBox="0 0 24 24"><g class="arrow"><line x1="12" y1="18" x2="12" y2="5"/><polyline points="7,10 12,5 17,10"/></g></svg></div><div><p class="sg-eye">10 hPa · ~30 km</p><p class="sg-val" id="w10hpa-val">—</p><p class="sg-det" id="w10hpa-sub"></p><p class="sg-alt">polar vortex level</p></div></div>
     <div class="sg-cap"><svg viewBox="0 0 24 24"><path d="M12 2l1.8 5.6H20l-4.7 3.4 1.8 5.6L12 13.2 6.9 16.6l1.8-5.6L4 7.6h6.2z"/></svg></div>
   </div>
-  <p class="sg-note">Left to right, ground to sky: the tree is the hill, the star is the stratosphere. Arrows point <em>downwind</em>, like a weather vane's tail; the text says where the wind blows <em>from</em>.</p>
 
   <h2 class="sg-sec">The year, drawn</h2>
   <p class="sg-det" style="margin:0 0 10px">Every year on record, January to December, raw daily values — no smoothing. This year is white; each earlier year a shade closer to the night sky, oldest darkest. Hover to name a year.</p>
@@ -374,16 +378,18 @@ a.link:hover{background:rgba(252,163,21,.14);}
   <div id="dd-hist" style="display:none"></div>
   <p class="sg-note">Weather, winds and history by <a href="https://open-meteo.com/" target="_blank" rel="noopener">Open-Meteo</a> (CC BY 4.0); winds aloft from the Canadian GEM Global model with GFS as fallback; sun and moon computed locally. Refreshes every 15 minutes.</p>
 
+  <h2 class="sg-sec">Seen lately · iNaturalist</h2>
+  <p class="sg-det" style="margin:0 0 10px">Research-grade observations from the Hilltowns box (Helderbergs to the northern Catskills, Schoharie to the Hudson), newest first. What people are actually finding out there this week.</p>
+  <div class="sg-grid" id="inat-grid"><p class="ph-empty">Loading observations…</p></div>
+  <div id="inat-list"></div>
+  <p class="sg-note" id="inat-note"></p>
+  <a class="sg-btn" id="inat-more" href="https://www.inaturalist.org/observations?quality_grade=research&subview=map&nelat=42.72799866533435&nelng=-73.7475942353335&swlat=42.23036745843211&swlng=-74.39711226427585" target="_blank" rel="noopener" style="display:inline-block; text-decoration:none">Explore more on iNaturalist &rarr;</a>
   <h2 class="sg-sec">Birds lately · eBird</h2>
   <p class="sg-det" style="margin:0 0 10px">Reported within 25 km of Berne in the last 14 days, newest first. Rarities and out-of-season birds are flagged. The <a href="https://dashboard.birdcast.info/region/US-NY-001" target="_blank" rel="noopener" style="color:var(--gold,#c9a227)">BirdCast migration dashboard for Albany County</a> has tonight's radar forecast.</p>
   <div id="ebird-notable"></div>
   <div class="sg-grid" id="ebird-grid"><p class="ph-empty">Loading sightings…</p></div>
   <p class="sg-note" id="ebird-note"></p>
 
-  <h2 class="sg-sec">Seen lately · iNaturalist</h2>
-  <p class="sg-det" style="margin:0 0 10px">Research-grade observations from the Hilltowns box (Helderbergs to the northern Catskills, Schoharie to the Hudson), newest first. What people are actually finding out there this week.</p>
-  <div class="sg-grid" id="inat-grid"><p class="ph-empty">Loading observations…</p></div>
-  <p class="sg-note" id="inat-note"></p>
 </main>
 
 <script src="skyline.js"></script>

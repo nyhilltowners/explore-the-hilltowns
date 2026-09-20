@@ -1,4 +1,4 @@
-# NY Hilltowners Folk Atlas — Session Handoff (2026-09-20, v771)
+# NY Hilltowners Folk Atlas — Session Handoff (2026-09-20, v773)
 
 This ZIP is a **complete, self-contained source tree**. A new chat can unzip it,
 run the build, and continue exactly where this session left off. Everything here
@@ -161,7 +161,7 @@ Fixed-hinge wingbeat, 4 white wing-spots. Day-only, reduced-motion safe. The
 
 ## Events pipeline / recurrence schema
 
-Latest drop-in: **events_69**. Schema carries 4 recurrence columns after `Agenda`:
+Latest drop-in: **events_71**. Schema carries 4 recurrence columns after `Agenda`:
 `Recur Weeks` / `Recur Days` / `Recur Except` / `Recur Time`.
 
 **Model A contract:** the ingestor emits ONE fully-dated row per occurrence and
@@ -214,7 +214,7 @@ Big ongoing effort to tame tag sprawl. Started at 2,332 unique tags; now ~2,178.
 7. Clean-room verify: unzip the package fresh, rebuild, confirm BUILD OK.
 8. `present_files` the zip + both xlsx.
 
-Version at handoff: **v771**. Next chat continues from v772.
+Version at handoff: **v773**. Next chat continues from v774.
 
 ---
 
