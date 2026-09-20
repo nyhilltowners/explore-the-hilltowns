@@ -235,33 +235,39 @@
     })();
   }
 
-  /* ---------- Historical Phenology: one card per two-week window, events listed chronologically ---------- */
+  /* ---------- Phenology: one PAIR per fortnight — expected (microseasons) beside on-record (register) ---------- */
   function renderPhenology(){
-    var EV = window.PHENOLOGY_HISTORY || [], row=$('ph-row'); if(!row) return;
+    var EV = window.PHENOLOGY_HISTORY || [], EX = window.PHENOLOGY_EXPECTED || [], row=$('ph-row'); if(!row) return;
     var MON=['January','February','March','April','May','June','July','August','September','October','November','December'];
     function dim(m){ return new Date(2001, m, 0).getDate(); }
     var esc=function(v){ return String(v||'').replace(/[&<>"]/g,function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); };
     var wins=[]; for(var m=1;m<=12;m++){ wins.push({m:m,lo:1,hi:15}); wins.push({m:m,lo:16,hi:31}); }
     var now=new Date(), curIdx=(now.getMonth())*2+(now.getDate()<=15?0:1);
+    var TAG={ghost:'Ghost',health:'Health watch',garden:'Garden',foodways:'Foodways'};
     row.innerHTML = wins.map(function(w,idx){
+      var label = MON[w.m-1]+' '+w.lo+'–'+(w.hi===15?15:dim(w.m));
+      var ex = EX[idx];
+      var exCard = '<article class="ph-card'+(idx===curIdx?' cur':'')+'"><div class="ph-head"><div><p class="ph-sub">Expected · '+(ex?esc(ex.season):'')+'</p><div class="ph-win">'+(ex?esc(ex.name):label)+'</div></div><div class="ph-count">'+label+'</div></div>'
+        + (ex ? '<ol class="ph-list">'+ex.items.map(function(it){ return '<li><div class="ph-kind '+it.k+'">'+(TAG[it.k]?'<span class="ph-tag">'+TAG[it.k]+'</span>':'')+it.h+'</div></li>'; }).join('')+'</ol>' : '<p class="ph-empty">No microseason text for this window.</p>')+'</article>';
       var items = EV.filter(function(e){ return e.m===w.m && e.d>=w.lo && e.d<=w.hi; }).sort(function(a,b){ return (a.y-b.y)||(a.d-b.d); });
-      var head='<div class="ph-head"><div class="ph-win">'+MON[w.m-1]+' '+w.lo+'–'+(w.hi===15?15:dim(w.m))+'</div><div class="ph-count">'+items.length+' on record</div></div>';
-      var list = items.length ? '<ol class="ph-list">'+items.map(function(e){
-        var when = e.prec==='day' ? MON[e.m-1].slice(0,3)+' '+e.d : (e.prec==='days' ? MON[e.m-1].slice(0,3)+' '+e.d+' onset' : (e.prec||'')); 
-        return '<li><span class="ph-y">'+e.y+'</span><div><div class="ph-name">'+esc(e.t)+'</div><div class="ph-meta">'+esc(e.cat)+(when?' · '+esc(when):'')+(e.area?' · '+esc(e.area):'')+'</div>'
-          + (e.meas?'<div class="ph-meta"><b>Measured:</b> '+esc(e.meas)+(e.station?' — '+esc(e.station):'')+'</div>':'')
-          + (e.impact?'<div class="ph-meta">'+esc(e.impact.length>200?e.impact.slice(0,197)+'…':e.impact)+'</div>':'')
-          + '<div class="ph-src">'+(e.url?'<a href="'+esc(e.url)+'" target="_blank" rel="noopener">'+esc(e.source||'source')+'</a>':esc(e.source))+(e.conf?' · confidence '+esc(e.conf):'')+'</div></div></li>';
-      }).join('')+'</ol>' : '<p class="ph-empty">Nothing on record for this fortnight yet.</p>';
-      return '<article class="ph-card'+(idx===curIdx?' cur':'')+'" id="ph-win-'+idx+'">'+head+list+'</article>';
+      var hist = '<article class="ph-card'+(idx===curIdx?' cur':'')+'"><div class="ph-head"><div><p class="ph-sub">On record</p><div class="ph-win">'+label+'</div></div><div class="ph-count">'+items.length+' event'+(items.length===1?'':'s')+'</div></div>'
+        + (items.length ? '<ol class="ph-list">'+items.map(function(e){
+            var when = e.prec==='day' ? MON[e.m-1].slice(0,3)+' '+e.d : (e.prec==='days' ? MON[e.m-1].slice(0,3)+' '+e.d+' onset' : (e.prec||''));
+            return '<li><span class="ph-y">'+e.y+'</span><div><div class="ph-name">'+esc(e.t)+'</div><div class="ph-meta">'+esc(e.cat)+(when?' · '+esc(when):'')+(e.area?' · '+esc(e.area):'')+'</div>'
+              + (e.meas?'<div class="ph-meta"><b>Measured:</b> '+esc(e.meas)+(e.station?' — '+esc(e.station):'')+'</div>':'')
+              + (e.impact?'<div class="ph-meta">'+esc(e.impact.length>200?e.impact.slice(0,197)+'…':e.impact)+'</div>':'')
+              + '<div class="ph-src">'+(e.url?'<a href="'+esc(e.url)+'" target="_blank" rel="noopener">'+esc(e.source||'source')+'</a>':esc(e.source))+(e.conf?' · confidence '+esc(e.conf):'')+'</div></div></li>';
+          }).join('')+'</ol>' : '<p class="ph-empty">Nothing on record for this fortnight yet.</p>')+'</article>';
+      return '<div class="ph-pair" id="ph-win-'+idx+'">'+exCard+hist+'</div>';
     }).join('');
     var ys=EV.map(function(e){ return e.y; });
-    $('ph-note').textContent = EV.length+' events on the register, '+Math.min.apply(null,ys)+'–'+Math.max.apply(null,ys)+' · one card per fortnight, events oldest to newest · multi-day and seasonal events sit at their anchor date.';
-    function go(idx){ var el=$('ph-win-'+idx); if(el) row.scrollTo({left: el.offsetLeft - row.offsetLeft - 2, behavior:'smooth'}); }
-    var cur=curIdx; $('ph-title').textContent='Now: '+MON[wins[curIdx].m-1]+' '+wins[curIdx].lo+'–'+(wins[curIdx].hi===15?15:dim(wins[curIdx].m));
+    $('ph-note').textContent = EX.length+' microseasons · '+EV.length+' events on the register, '+Math.min.apply(null,ys)+'–'+Math.max.apply(null,ys)+' · multi-day and seasonal events sit at their anchor date · hill dates, not valley dates.';
+    function setTitle(idx){ var w=wins[idx], ex=EX[idx]; $('ph-title').textContent=(idx===curIdx?'Now: ':'')+MON[w.m-1]+' '+w.lo+'–'+(w.hi===15?15:dim(w.m))+(ex?' · '+ex.name:''); }
+    function go(idx){ var el=$('ph-win-'+idx); if(el) row.scrollTo({left: el.offsetLeft - row.offsetLeft, behavior:'smooth'}); setTitle(idx); }
+    var cur=curIdx; setTitle(cur);
     $('ph-prev').onclick=function(){ cur=(cur+23)%24; go(cur); };
     $('ph-next').onclick=function(){ cur=(cur+1)%24; go(cur); };
-    setTimeout(function(){ var el=$('ph-win-'+curIdx); if(el) row.scrollLeft = el.offsetLeft - row.offsetLeft - 2; }, 0);
+    setTimeout(function(){ var el=$('ph-win-'+curIdx); if(el) row.scrollLeft = el.offsetLeft - row.offsetLeft; }, 0);
   }
 
   function init(){ renderPhenology(); renderSunMoon(); fetchWx(); fetchDD(); setInterval(renderSunMoon, 60000); setInterval(fetchWx, 15*60000); }

@@ -1444,6 +1444,42 @@ def emit_phenology_history():
     (SITE / "phenology_history.js").write_text("window.PHENOLOGY_HISTORY = " + json.dumps(out, ensure_ascii=False) + ";\n", encoding="utf-8")
     print(f"  Historical Phenology: {len(out)} events → phenology_history.js")
 
+# ---------------------------------------------------------------------------
+# Expected phenology (2026-09-20, Laurie): data/microseasons.md ("The Twenty-Four Microseasons
+# of Albany Hill") → site/phenology_expected.js. One record per "### N. Name — Mon D–D" heading
+# with its bullets, each tagged plain / ghost / health / garden / foodways from the bullet's
+# own marker. Inline markdown (*em*, **strong**) becomes <em>/<b>; everything else is escaped.
+# ---------------------------------------------------------------------------
+def emit_phenology_expected():
+    p = ROOT / "data" / "microseasons.md"
+    if not p.exists():
+        return
+    def inline(t):
+        t = html_mod.escape(t)
+        t = re.sub(r"\*\*(.+?)\*\*", r"<b>\1</b>", t)
+        t = re.sub(r"(?<!\*)\*(?!\*)(.+?)(?<!\*)\*(?!\*)", r"<em>\1</em>", t)
+        return t
+    out, cur, season = [], None, ""
+    for line in p.read_text(encoding="utf-8").splitlines():
+        s = line.strip()
+        m = re.match(r"^## (WINTER|SPRING|SUMMER|FALL)", s)
+        if m:
+            season = m.group(1).title(); continue
+        m = re.match(r"^### (\d+)\.\s*(.+?)\s+—\s+([A-Z][a-z]+)\s+(\d+)[–-](\d+)\s*$", s)
+        if m:
+            cur = {"n": int(m.group(1)), "name": m.group(2).strip(), "mon": m.group(3), "lo": int(m.group(4)), "hi": int(m.group(5)), "season": season, "items": []}
+            out.append(cur); continue
+        if cur is not None and s.startswith("- "):
+            body = s[2:].strip(); kind = "plain"
+            for tag, k in (("*Ghost:*", "ghost"), ("*Health watch:*", "health"), ("**Garden:**", "garden"), ("**Foodways", "foodways")):
+                if body.startswith(tag):
+                    kind = k
+                    if k in ("ghost", "health"): body = body[len(tag):].strip()
+                    break
+            cur["items"].append({"k": kind, "h": inline(body)})
+    (SITE / "phenology_expected.js").write_text("window.PHENOLOGY_EXPECTED = " + json.dumps(out, ensure_ascii=False) + ";\n", encoding="utf-8")
+    print(f"  Expected phenology: {len(out)} microseasons, {sum(len(w['items']) for w in out)} bullets → phenology_expected.js")
+
 def main() -> int:
     manifest = json.loads((ROOT / "manifest.json").read_text(encoding="utf-8"))
     load_preview_cache()
@@ -1525,6 +1561,7 @@ def main() -> int:
         shutil.copyfile(ROOT / "signals.js", SITE / "signals.js")
     emit_station_dd()
     emit_phenology_history()
+    emit_phenology_expected()
     if (ROOT / "images").exists():
         shutil.copytree(ROOT / "images", SITE / "images", dirs_exist_ok=True)
     if (ROOT / "fonts").exists():
