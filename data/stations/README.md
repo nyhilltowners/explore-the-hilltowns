@@ -9,6 +9,7 @@ STATIONS in build.py with its display name and rough elevation.
 
 | slug | station | record | notes |
 |---|---|---|---|
+| slide_mountain | Slide Mountain (co-op) | 1948-05 → 2017-04; temperatures 1961–2012 | ~2,650 ft, highest station in the region; the cold bracket for the Hilltowns; closed |
 | albany_ap | Albany International Airport (ALB) | 1938-06 → present | first-order station, 285 ft; the long, continuous record |
 | alcove_dam | Alcove Dam (co-op) | 1942-05 → present | Alcove Reservoir, Coeymans — the closest active station to Westerlo, ~590 ft |
 | cairo_3nw | Cairo 3 NW (co-op) | 1978-07 → 2012-08 | closed |

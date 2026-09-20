@@ -1315,9 +1315,10 @@ def emit_trading_post(items):
 # observed Tmax/Tmin — same formulas the Signals page applies to the reanalysis, so the two
 # are comparable. Missing days (M) are skipped, not zeroed.
 # ---------------------------------------------------------------------------
-DAILY_STATIONS = {"alcove_dam", "albany_ap"}   # continuous records: raw daily highs/lows shipped for the year charts
+DAILY_STATIONS = {"alcove_dam", "albany_ap", "slide_mountain", "cobleskill_2ese"}   # continuous records: raw daily highs/lows shipped for the year charts
 STATIONS = [   # (slug, display name, elevation ft, active?)  — see data/stations/README.md
     ("alcove_dam",      "Alcove Dam (co-op) · Coeymans",        590,  True),
+    ("slide_mountain",  "Slide Mountain (co-op) · Ulster Co.",  2650,  False),
     ("albany_ap",       "Albany Intl Airport (ALB)",            285,  True),
     ("phoenicia",       "Phoenicia 2SW (co-op) · Ulster Co.",   820,  False),
     ("prattsville",     "Prattsville (co-op) · Greene Co.",    1150,  False),

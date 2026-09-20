@@ -1,4 +1,4 @@
-# NY Hilltowners Folk Atlas — Session Handoff (2026-09-20, v763)
+# NY Hilltowners Folk Atlas — Session Handoff (2026-09-20, v766)
 
 This ZIP is a **complete, self-contained source tree**. A new chat can unzip it,
 run the build, and continue exactly where this session left off. Everything here
@@ -213,7 +213,7 @@ Big ongoing effort to tame tag sprawl. Started at 2,332 unique tags; now ~2,178.
 7. Clean-room verify: unzip the package fresh, rebuild, confirm BUILD OK.
 8. `present_files` the zip + both xlsx.
 
-Version at handoff: **v763**. Next chat continues from v764.
+Version at handoff: **v766**. Next chat continues from v767.
 
 ---
 
