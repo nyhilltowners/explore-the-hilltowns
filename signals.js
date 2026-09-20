@@ -117,6 +117,14 @@
       Y.hdd[doy]=Y._h; Y.cdd[doy]=Y._c; Y.gdd[doy]=Y._g; }
     return out;
   }
+  function stationSeries(S){
+    var out={}; Object.keys(S.years).forEach(function(y){ var Y=S.years[y]; if(!Y.dhi) return;
+      var o={hi:new Array(366),lo:new Array(366),mean:new Array(366),hdd:new Array(366),cdd:new Array(366),gdd:new Array(366)}, h=0,c=0,g=0;
+      for(var d=0;d<366;d++){ var mx=Y.dhi[d], mn=Y.dlo[d]; if(typeof mx!=='number'||typeof mn!=='number') continue;
+        var mean=(mx+mn)/2; o.hi[d]=mx; o.lo[d]=mn; o.mean[d]=mean; h+=Math.max(0,65-mean); c+=Math.max(0,mean-65); g+=Math.max(0,(Math.min(86,mx)+Math.max(50,mn))/2-50); o.hdd[d]=h; o.cdd[d]=c; o.gdd[d]=g; }
+      out[y]=o; });
+    return out;
+  }
   function drawChart(id, years, key, tMin, tMax, smooth, unit){
     var svg=$(id), tip=$(id+'-tip'); if(!svg) return;
     var ys=Object.keys(years).map(Number).sort(function(a,b){ return a-b; }), y0=ys[0], yN=ys[ys.length-1];
@@ -152,67 +160,28 @@
     };
     svg.onmouseleave=function(){ if(lastHl) lastHl.classList.remove('hl'); tip.style.display='none'; };
   }
+  var _yearsBerne=null;
   function renderYearChart(j){
     if(!j||!j.daily) return;
-    var years=yearSeries(j), ys=Object.keys(years).map(Number);
-    drawChart('ch-mean', years, 'mean', -10, 90, true, '°');
-    drawChart('ch-hi',   years, 'hi',   -5, 100, true, '°');
-    drawChart('ch-lo',   years, 'lo',  -25,  80, true, '°');
-    drawChart('ch-hdd',  years, 'hdd',   0, 8000, false, 'HDD');
-    drawChart('ch-cdd',  years, 'cdd',   0, 1200, false, 'CDD');
-    drawChart('ch-gdd',  years, 'gdd',   0, 3600, false, 'GDD');
-    var n=$('yr-note'); if(n) n.textContent = ys.length+' years ('+Math.min.apply(null,ys)+'–'+Math.max.apply(null,ys)+') · ERA5 reanalysis for Berne via Open-Meteo.';
+    _yearsBerne=yearSeries(j);
+    var sel=$('ch-src'), ALL=window.STATION_DD;
+    if(sel && ALL && sel.options.length<2){ Object.keys(ALL.stations).forEach(function(k){ var S=ALL.stations[k]; if(!S.daily) return; var o=document.createElement('option'); o.value=k; o.textContent=S.name+' observed ('+S.first+'–'+S.last+')'; sel.appendChild(o); }); sel.onchange=drawAll; }
+    drawAll();
   }
-
-  function renderDD(j){
-    renderYearChart(j);
-    var t = new Date(Date.now()-86400000), end = t.getFullYear()+'-'+String(t.getMonth()+1).padStart(2,'0')+'-'+String(t.getDate()).padStart(2,'0');
-    var thisYear = t.getFullYear(), mmdd = end.slice(5);
-    (function(){
-      var T=j.daily.time, mx=j.daily.temperature_2m_max, mn=j.daily.temperature_2m_min, years={};
-      for(var i=0;i<T.length;i++){ var y=+T[i].slice(0,4), d=ddOf(mx[i],mn[i]); if(!d) continue;
-        var Y=years[y]||(years[y]={td:{h:0,c:0,g:0},full:{h:0,c:0,g:0},days:0});
-        if(T[i].slice(5)<=mmdd){ Y.td.h+=d.h; Y.td.c+=d.c; Y.td.g+=d.g; } Y.full.h+=d.h; Y.full.c+=d.c; Y.full.g+=d.g; Y.days++; }
-      var cur=years[thisYear]; if(!cur){ status('Degree days: no data for '+thisYear); return; }
-      var norm={h:0,c:0,g:0}, n=0, nyrs=Object.keys(years).map(Number).filter(function(y){ return y<thisYear && years[y].days>=360; });
-      nyrs.forEach(function(y){ norm.h+=years[y].td.h; norm.c+=years[y].td.c; norm.g+=years[y].td.g; n++; });
-      norm.h/=n; norm.c/=n; norm.g/=n; var normLbl='vs. '+Math.min.apply(null,nyrs)+'–'+Math.max.apply(null,nyrs)+' average';
-      var fmt=function(v){ return Math.round(v).toLocaleString(); }, dev=function(v,nv){ var d=v-nv, p=nv?Math.round(d/nv*100):0; return (d>=0?'+':'−')+fmt(Math.abs(d))+' ('+(p>=0?'+':'')+p+'%) '+normLbl+' '+fmt(nv); };
-      $('dd-h').textContent=fmt(cur.td.h); $('dd-c').textContent=fmt(cur.td.c); $('dd-g').textContent=fmt(cur.td.g);
-      /* Albany observed (station_dd.js), same date, same formulas */
-      /* Observed station (picker; station_dd.js carries several) */
-      var ALL = window.STATION_DD, doy = Math.round((Date.UTC(t.getFullYear(),t.getMonth(),t.getDate())-Date.UTC(t.getFullYear(),0,1))/86400000)+1;
-      var sel = $('st-pick'), key = (sel && sel.value) || (ALL && Object.keys(ALL.stations)[0]);
-      var SD = ALL && ALL.stations[key], sy = SD && SD.years[thisYear], sn = null;
-      if(SD){ var acc={h:0,c:0,g:0}, k=0, y1=null, y2=null; Object.keys(SD.years).forEach(function(yy){ yy=+yy; var Y=SD.years[yy]; if(yy<thisYear && Y && Y.n>=360 && Y.h){ acc.h+=Y.h[doy-1]; acc.c+=Y.c[doy-1]; acc.g+=Y.g[doy-1]; k++; y1=y1==null?yy:Math.min(y1,yy); y2=y2==null?yy:Math.max(y2,yy); } }); if(k>=5){ sn={h:acc.h/k,c:acc.c/k,g:acc.g/k,n:k,y1:y1,y2:y2}; } }
-      /* water + extremes for the chosen station */
-      (function(){ var P=$('w-p'); if(!P) return; if(!SD){ P.textContent='—'; return; }
-        var pn=null, snw=null, k2=0; Object.keys(SD.years).forEach(function(yy){ yy=+yy; var Y=SD.years[yy]; if(yy<thisYear && Y && Y.np>=360 && Y.p){ pn=(pn||0)+Y.p[doy-1]; snw=(snw||0)+Y.s[doy-1]; k2++; } });
-        if(k2>=5){ pn/=k2; snw/=k2; } else { pn=snw=null; }
-        var lbl=SD.name.split(' ·')[0];
-        if(sy && sy.np){ var pv=sy.p[doy-1], sv=sy.s[doy-1];
-          $('w-p').textContent=pv.toFixed(2)+' in'; $('w-p-d').textContent=lbl+' · '+sy.wet+' wet days'+(pn!=null?' · record average '+pn.toFixed(2)+' in ('+(pv-pn>=0?'+':'−')+Math.abs(pv-pn).toFixed(2)+', '+k2+' yrs)':' · too few complete years for an average');
-          $('w-s').textContent=sv.toFixed(1)+' in'; $('w-s-d').textContent=lbl+' · deepest snowpack '+sy.depth+' in'+(snw!=null?' · record average to date '+snw.toFixed(1)+' in':'');
-          $('w-x').innerHTML=(sy.hi!=null?'↑ '+Math.round(sy.hi)+'°<span class="c">↓ '+Math.round(sy.lo)+'°</span>':'—');
-          $('w-x-d').textContent=lbl+' · '+sy.d90+' days at or above 90°F · '+sy.d0+' nights at or below 0°F';
-        } else { ['w-p','w-s','w-x'].forEach(function(id){ $(id).textContent='—'; }); $('w-p-d').textContent=lbl+': no '+thisYear+' observations'+(SD.active?'':' (closed '+SD.last+')'); $('w-s-d').textContent=''; $('w-x-d').textContent=''; }
-      })();
-      var obs=function(kk){ if(!SD) return ''; if(!sy) return '<br><span class="obs">'+SD.name+': no '+thisYear+' observations'+(SD.active?'':' (station closed '+SD.last+')')+'</span>';
-        var v=sy[kk][doy-1]; return '<br><span class="obs">'+SD.name+' observed: <b>'+fmt(v)+'</b>'+(sn?' · '+sn.y1+'–'+sn.y2+' average '+fmt(sn[kk])+' ('+(v-sn[kk]>=0?'+':'−')+fmt(Math.abs(v-sn[kk]))+', '+sn.n+' complete years)':' · fewer than 5 complete years — no average')+'</span>'; };
-      $('dd-h-d').innerHTML='<b>'+dev(cur.td.h,norm.h)+'</b>'+obs('h')+'<br>Base 65°F: each degree the daily mean falls below 65 is one heating degree day.';
-      $('dd-c-d').innerHTML='<b>'+dev(cur.td.c,norm.c)+'</b>'+obs('c')+'<br>Base 65°F, the other direction: heat the season has thrown at us.';
-      $('dd-g-d').innerHTML='<b>'+dev(cur.td.g,norm.g)+'</b>'+obs('g')+'<br>Base 50°F, capped at 86°F (the corn scale). Insects, weeds and crops keep their calendars in these units.';
-      $('dd-note').textContent='Jan 1 – '+end+' · Berne, NY at ~1,700 ft: ERA5 reanalysis via Open-Meteo. Observed: '+(SD?SD.name+', ~'+SD.elev.toLocaleString()+' ft, record '+SD.first+'–'+SD.last+(SD.active?' (active)':' (closed)')+', '+ALL.source:'no station loaded')+'. Averages are the full period of record through this same date (complete years only, current year excluded), same formulas for both.';
-      /* year-by-year table (collapsed) */
-      var ys=Object.keys(years).map(Number).sort(function(a,b){ return b-a; });
-      var h='<table class="ddtab"><thead><tr><th>Year</th><th colspan="3">Berne · through '+mmdd.replace('-','/')+'</th><th colspan="3">Berne · full year</th>'+(SD?'<th colspan="3">'+SD.name.split(' ·')[0]+' observed · through '+mmdd.replace('-','/')+'</th><th colspan="6">'+SD.name.split(' ·')[0]+' · full year</th>':'')+'</tr><tr><th></th><th>Heat</th><th>Cool</th><th>Grow</th><th>Heat</th><th>Cool</th><th>Grow</th>'+(SD?'<th>Heat</th><th>Cool</th><th>Grow</th><th>Precip</th><th>Snow</th><th>Hi</th><th>Lo</th><th>≥90°</th><th>≤0°</th><th>Depth</th>':'')+'</tr></thead><tbody>';
-      if(SD){ Object.keys(SD.years).forEach(function(y){ y=+y; if(!years[y]) years[y]={td:{h:0,c:0,g:0},full:{h:0,c:0,g:0},days:0,noBerne:true}; }); }
-      var ys=Object.keys(years).map(Number).sort(function(a,b){ return b-a; });
-      ys.forEach(function(y){ var Y=years[y], nb=Y.noBerne, S=SD&&SD.years[y]; h+='<tr'+(y===thisYear?' class="cur"':'')+'><td>'+y+'</td><td>'+(nb?'—':fmt(Y.td.h))+'</td><td>'+(nb?'—':fmt(Y.td.c))+'</td><td>'+(nb?'—':fmt(Y.td.g))+'</td><td>'+(nb||y===thisYear?'—':fmt(Y.full.h))+'</td><td>'+(nb||y===thisYear?'—':fmt(Y.full.c))+'</td><td>'+(nb||y===thisYear?'—':fmt(Y.full.g))+'</td>'+(SD?'<td>'+(S&&S.n&&S.h?fmt(S.h[doy-1]):'—')+'</td><td>'+(S&&S.n&&S.c?fmt(S.c[doy-1]):'—')+'</td><td>'+(S&&S.n&&S.g?fmt(S.g[doy-1]):'—')+'</td><td>'+(S&&S.np?S.tp.toFixed(2):'—')+'</td><td>'+(S&&S.np?S.ts.toFixed(1):'—')+'</td><td>'+(S&&S.hi!=null?Math.round(S.hi)+'°':'—')+'</td><td>'+(S&&S.lo!=null?Math.round(S.lo)+'°':'—')+'</td><td>'+(S&&S.n?S.d90:'—')+'</td><td>'+(S&&S.n?S.d0:'—')+'</td><td>'+(S?S.depth:'—')+'</td>':'')+'</tr>'; });
-      h+='</tbody></table>';
-      $('dd-hist').innerHTML=h;
-      $('dd-toggle').style.display='inline-block';
-    })();
+  function drawAll(){
+    var sel=$('ch-src'), ALL=window.STATION_DD, src=sel?sel.value:'berne', years, note='';
+    if(src==='berne'||!ALL||!ALL.stations[src]){ years=_yearsBerne; note='Reanalysis for a ~30 km grid cell: a smoothed countryside, a few degrees short of a ridge thermometer on the hottest and coldest days. Pick an observed station for the real extremes.'; }
+    else { var S=ALL.stations[src]; years=stationSeries(S); note='Observed at '+S.name+', ~'+S.elev.toLocaleString()+' ft — NOAA thermometer readings, gaps where the observer missed a day.'; }
+    var n=$('ch-src-note'); if(n) n.textContent=note;
+    if(!years) return;
+    var ys=Object.keys(years).map(Number);
+    drawChart('ch-mean', years, 'mean', -20, 95, false, '°');
+    drawChart('ch-hi',   years, 'hi',  -10, 105, false, '°');
+    drawChart('ch-lo',   years, 'lo',  -35,  80, false, '°');
+    drawChart('ch-hdd',  years, 'hdd',   0, 8500, false, 'HDD');
+    drawChart('ch-cdd',  years, 'cdd',   0, 1400, false, 'CDD');
+    drawChart('ch-gdd',  years, 'gdd',   0, 4000, false, 'GDD');
+    var nn=$('yr-note'); if(nn) nn.textContent = ys.length+' years ('+Math.min.apply(null,ys)+'–'+Math.max.apply(null,ys)+') · '+(src==='berne'?'ERA5 reanalysis for Berne via Open-Meteo':'NOAA GHCN-Daily via xmACIS2')+' · raw daily values.';
   }
 
   /* ---------- Historical Phenology: one card per two-week window, events listed chronologically ---------- */

@@ -1315,6 +1315,7 @@ def emit_trading_post(items):
 # observed Tmax/Tmin — same formulas the Signals page applies to the reanalysis, so the two
 # are comparable. Missing days (M) are skipped, not zeroed.
 # ---------------------------------------------------------------------------
+DAILY_STATIONS = {"alcove_dam", "albany_ap"}   # continuous records: raw daily highs/lows shipped for the year charts
 STATIONS = [   # (slug, display name, elevation ft, active?)  — see data/stations/README.md
     ("alcove_dam",      "Alcove Dam (co-op) · Coeymans",        590,  True),
     ("albany_ap",       "Albany Intl Airport (ALB)",            285,  True),
@@ -1326,7 +1327,7 @@ STATIONS = [   # (slug, display name, elevation ft, active?)  — see data/stati
     ("conklingville_dam","Conklingville Dam (co-op) · Sacandaga", 780,  True),
 ]
 
-def _station_years(path):
+def _station_years(path, keep_daily=False):
     """Per year: cumulative HDD/CDD/GDD, precipitation and snowfall by day-of-year (rounded),
     plus annual extremes. T = trace counts as 0.0. Missing days are skipped, not zeroed."""
     import csv as _csv
@@ -1346,6 +1347,7 @@ def _station_years(path):
                                           "n":0,"np":0,"hi":None,"lo":None,"d90":0,"d0":0,"depth":0.0,"wet":0})
             mx, mn = num(row.get("MaxT")), num(row.get("MinT"))
             if mx is not None and mn is not None:
+                Y.setdefault("dhi", [None]*367)[doy] = mx; Y.setdefault("dlo", [None]*367)[doy] = mn
                 mean = (mx + mn) / 2
                 Y["h"][doy] += max(0.0, 65 - mean); Y["c"][doy] += max(0.0, mean - 65)
                 gm = (min(86.0, mx) + max(50.0, mn)) / 2; Y["g"][doy] += max(0.0, gm - 50); Y["n"] += 1
@@ -1359,6 +1361,8 @@ def _station_years(path):
     out = {}
     for y, Y in years.items():
         rec = {"n": Y["n"], "np": Y["np"], "hi": Y["hi"], "lo": Y["lo"], "d90": Y["d90"], "d0": Y["d0"], "depth": Y["depth"], "wet": Y["wet"]}
+        if keep_daily and "dhi" in Y:
+            rec["dhi"] = Y["dhi"][1:]; rec["dlo"] = Y["dlo"][1:]   # raw daily highs/lows, index = day-of-year - 1
         for k, dp in (("h",0),("c",0),("g",0),("p",2),("s",1)):
             s_, cum = 0.0, []
             for i in range(1, 367):
@@ -1379,9 +1383,9 @@ def emit_station_dd():
         p = ROOT / "data" / "stations" / f"{slug}.csv"
         if not p.exists():
             WARNS.append(f"stations/{slug}.csv missing — skipped"); continue
-        yrs = _station_years(p)
+        yrs = _station_years(p, keep_daily=(slug in DAILY_STATIONS))
         ys = sorted(yrs)
-        out[slug] = {"name": name, "elev": elev, "active": active, "first": ys[0], "last": ys[-1], "years": yrs}
+        out[slug] = {"name": name, "elev": elev, "active": active, "first": ys[0], "last": ys[-1], "daily": slug in DAILY_STATIONS, "years": yrs}
     if out:
         (SITE / "station_dd.js").write_text("window.STATION_DD = " + json.dumps({"source": "NOAA GHCN-Daily via xmACIS2 (NRCC)", "stations": out}) + ";\n", encoding="utf-8")
         print(f"  Station degree days: {len(out)} stations → station_dd.js")
