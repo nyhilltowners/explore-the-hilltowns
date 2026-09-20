@@ -1377,7 +1377,7 @@ def main() -> int:
     # Standalone pages (hand-authored). Each carries <!-- @@header --> / <!-- @@footer -->
     # markers that emit_page() fills from partials/, so the nav + skyline + footer are
     # written once and stamped everywhere (2026-09-16, per Laurie).
-    for name in ("about.html", "calendar.html", "directory.html", "instagram.html", "bulletin.html", "tradingpost.html"):
+    for name in ("about.html", "calendar.html", "directory.html", "instagram.html", "bulletin.html", "tradingpost.html", "signals.html"):
         if (ROOT / name).exists():
             emit_page(ROOT / name, "index.html" if name == "calendar.html" else name)   # calendar (list view) is the landing page
     # keep calendar.html answering too, for old links
@@ -1385,6 +1385,8 @@ def main() -> int:
         emit_page(ROOT / "calendar.html", "calendar.html")
     if (ROOT / "skyline.js").exists():
         shutil.copyfile(ROOT / "skyline.js", SITE / "skyline.js")
+    if (ROOT / "signals.js").exists():
+        shutil.copyfile(ROOT / "signals.js", SITE / "signals.js")
     if (ROOT / "images").exists():
         shutil.copytree(ROOT / "images", SITE / "images", dirs_exist_ok=True)
     if (ROOT / "fonts").exists():

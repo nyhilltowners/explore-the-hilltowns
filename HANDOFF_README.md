@@ -1,4 +1,4 @@
-# NY Hilltowners Folk Atlas — Session Handoff (2026-09-19, v746)
+# NY Hilltowners Folk Atlas — Session Handoff (2026-09-19, v747)
 
 This ZIP is a **complete, self-contained source tree**. A new chat can unzip it,
 run the build, and continue exactly where this session left off. Everything here
@@ -120,6 +120,8 @@ Fixed-hinge wingbeat, 4 white wing-spots. Day-only, reduced-motion safe. The
 
 ## UX state (recent)
 
+- **Signs + Signals page (v747, Laurie):** `signals.html` + `signals.js`, an old-instrument-panel dashboard for Berne: sun arc (rise/set, daylight, delta vs tomorrow), moon (phase, %, Onondaga lunation name), today's hi/lo/precip, temperature/humidity/barometer/cloud gauges, five wind compasses (surface, 850, 500, 100, 10 hPa), and year-to-date heating/cooling (base 65°F) and growing (base 50/86°F) degree days from the Open-Meteo archive API. Nav link is commented out in both partials until Laurie approves; page builds at signals.html.
+
 - **Renamed (v737, Laurie): the site lockup, page titles and OG tags now read "Hilltowns Field Guide"** (was "Hilltowns Folk Atlas"). The repo, build, and this README still say "atlas" internally; the About page's body copy still uses the word atlas descriptively — Laurie to rewrite when she wants.
 
 - **Agenda-quiet (v733):** events already honor an `Agenda` column (No → map + search only, off the calendar), but drop-ins overwrite hand edits. `data/agenda_quiet.txt` is the durable atlas-side list: one substring (or `re:` regex) per line, matched against title + venue at build → `ag:0`. Ask the ingestor to emit Agenda=No upstream for series that are permanently list-noise.
@@ -209,7 +211,7 @@ Big ongoing effort to tame tag sprawl. Started at 2,332 unique tags; now ~2,178.
 7. Clean-room verify: unzip the package fresh, rebuild, confirm BUILD OK.
 8. `present_files` the zip + both xlsx.
 
-Version at handoff: **v746**. Next chat continues from v747.
+Version at handoff: **v747**. Next chat continues from v748.
 
 ---
 

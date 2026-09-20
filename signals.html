@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Signs + Signals — Hilltowns Field Guide</title>
+<meta name="description" content="Sun, moon, weather, winds aloft and degree days for the Hilltowns — the natural cycles, on one dashboard.">
+<meta property="og:title" content="Signs + Signals — Hilltowns Field Guide">
+<meta property="og:type" content="website">
+<meta property="og:image" content="images/share-card.png">
+<link rel="icon" href="images/favicon.svg">
+<link rel="apple-touch-icon" href="images/apple-touch-icon.png">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lato:ital,wght@0,400;0,700;1,400&family=Montserrat:ital,wght@0,400;0,600;0,700;0,800;1,600&display=swap">
+<style>
+:root{
+  --ink:#00004d; --paper:#feffff; --parchment:#f4efe1; --parchment-line:#e3dcc8;
+  --ink-blue:#1a1d5c; --lichen:#dde0f2; --birch:#a9b0dd; --faint:#7b82b8;
+  --wampum:#39b7ff; --wampum-deep:#000080; --gold:#fca315; --gold-ink:#2b2410;
+}
+*{box-sizing:border-box; margin:0; padding:0;}
+body{
+  font-family:'Lato',ui-sans-serif,system-ui,sans-serif;
+  color:var(--ink-blue);
+  background:var(--ink);
+  -webkit-font-smoothing:antialiased; line-height:1.6;
+}
+.betabar{background:var(--gold); color:var(--gold-ink);
+  font-family:'Montserrat',sans-serif; font-weight:700; font-size:11px;
+  letter-spacing:.08em; text-transform:uppercase; line-height:1.4;
+  overflow:hidden; white-space:nowrap; position:relative;}
+.betabar .ticker-track{display:inline-block; white-space:nowrap; animation:betabar-scroll 44s linear infinite;}
+.betabar:hover .ticker-track, .betabar:focus-within .ticker-track{animation-play-state:paused;}
+.betabar .ticker-set{display:inline-block;}
+.betabar a{color:inherit; text-decoration:underline; text-underline-offset:2px;}
+.betabar .ticker-track span span{padding:5px 14px; display:inline-block;}
+.betabar .tg{font-size:1.75em; font-weight:900; vertical-align:-4px; display:inline-block; margin-right:1px;}
+@keyframes betabar-scroll{ from{transform:translateX(0);} to{transform:translateX(-50%);} }
+@media (prefers-reduced-motion: reduce){
+  .betabar{overflow-x:auto;}
+  .betabar .ticker-track{animation:none;}
+}
+.sitenav{
+  position:sticky; top:0; z-index:100;
+  display:flex; align-items:center; justify-content:space-between;
+  padding:8px 20px; background:var(--parchment);
+  border-bottom:3px solid var(--ink-blue); box-shadow:0 2px 8px rgba(0,0,60,.05);
+}
+.sitenav .brand{
+  display:flex; align-items:center; gap:8px; text-decoration:none;
+  font-family:'Montserrat',sans-serif; font-weight:800; text-transform:uppercase;
+  letter-spacing:.05em; color:var(--ink-blue);
+}
+.sitenav .brand img{height:42px; width:auto; flex:none; display:block;}
+.sitenav .brand .stack{display:flex; flex-direction:column; line-height:1.03; margin-left:2px;}
+.sitenav .brand .stack .l1{font-size:16px; display:block;}
+.sitenav .brand .stack .l2{font-size:16px; display:block; transform:scaleX(0.979); transform-origin:left center;}
+.sitenav .links{display:flex; align-items:center; gap:4px;}
+.sitenav .links a.ig{padding:8px 10px; display:inline-flex; align-items:center;}
+.sitenav .links a.ig svg{width:18px; height:18px;}
+.sitenav .links a.mob-only{display:none;}
+/* Hamburger nav at ALL widths (Laurie, 2026-09-18) */
+.menubtn, #menuToggle{display:flex;}
+.sitenav .links{
+  display:none; position:absolute; top:100%; right:0; left:auto; min-width:220px;
+  flex-direction:column; align-items:stretch; gap:0;
+  background:var(--parchment); border:1px solid var(--ink-blue); border-top:none; border-bottom:3px solid var(--ink-blue);
+  box-shadow:0 12px 26px rgba(0,0,60,.18); padding:6px 10px 12px; z-index:101; border-radius:0 0 10px 10px;
+}
+.sitenav .links.open{display:flex;}
+.sitenav .hright > a.hd-ig{display:inline-flex; align-items:center; padding:7px; color:var(--ink-blue); border-radius:8px;}
+.sitenav .hright > a.hd-ig svg{width:22px; height:22px;}
+.sitenav .hright > a.hd-ig:hover{background:rgba(0,0,60,.06);}
+.sitenav .links a{padding:12px 14px; font-size:14px; letter-spacing:.08em;}
+.sitenav .links a.ig{align-self:flex-start;}
+.sitenav .links a.mob-only{display:block;}
+@media (max-width:760px){ .sitenav .links{left:0; right:0; min-width:0; border-radius:0; border-left:none; border-right:none;} }
+.sitenav .links a{
+  font-family:'Montserrat',sans-serif; font-weight:600; font-size:12.5px;
+  letter-spacing:.08em; text-transform:uppercase; text-decoration:none;
+  color:var(--ink-blue); padding:8px 14px; border-radius:6px; transition:.15s;
+}
+.sitenav .links a:hover{background:rgba(26,29,92,.07);}
+.sitenav .links a.active{color:var(--gold);}
+.sitenav .links a.ig{display:flex; align-items:center; justify-content:center; padding:7px; margin-left:2px; color:var(--ink-blue);}
+.sitenav .links a.ig:hover{background:rgba(26,29,92,.07); color:var(--gold);}
+.sitenav .links a.ig svg{width:22px; height:22px; display:block;}
+.menubtn{display:none; align-items:center; justify-content:center; background:none; border:none;
+  cursor:pointer; padding:8px; border-radius:6px; color:var(--ink-blue); transition:.15s; touch-action:manipulation;}
+.menubtn:hover{background:rgba(26,29,92,.07); color:var(--gold);}
+.menubtn svg{width:24px; height:24px; display:block;}
+@media (max-width:760px){
+}
+
+.wrap{max-width:720px; margin:0 auto; padding:56px 24px 72px; background:var(--parchment); border-radius:10px; box-shadow:0 8px 30px rgba(0,0,40,.28);}
+.eyebrow{font-family:'Montserrat',sans-serif; font-weight:700; font-size:12px; letter-spacing:.18em;
+  text-transform:uppercase; color:var(--gold); margin-bottom:12px;}
+h1{font-family:'Montserrat',sans-serif; font-weight:800; text-transform:uppercase; letter-spacing:.03em;
+  font-size:clamp(26px,5vw,38px); color:var(--ink-blue); line-height:1.08; margin-bottom:26px;}
+p{font-size:17px; color:#3a3f6b; margin-bottom:18px;}
+a.link{color:var(--wampum-deep); font-weight:700; text-decoration:none; border-bottom:2px solid var(--gold);}
+a.link:hover{background:rgba(252,163,21,.14);}
+.backmap{display:inline-block; margin-top:26px; font-family:'Montserrat',sans-serif; font-weight:700;
+  font-size:14px; letter-spacing:.05em; text-transform:uppercase; text-decoration:none;
+  background:var(--ink-blue); color:var(--paper); padding:13px 26px; border-radius:8px;}
+.backmap:hover{background:#24287a;}
+.faq{margin-top:44px; padding-top:8px; border-top:1px solid var(--parchment-line);}
+.faq .eyebrow{margin-top:32px;}
+.faq h2{font-family:'Montserrat',sans-serif; font-weight:800; text-transform:uppercase; letter-spacing:.02em;
+  font-size:clamp(20px,3.6vw,26px); color:var(--ink-blue); line-height:1.1; margin:0 0 22px;}
+.faq h3{font-family:'Montserrat',sans-serif; font-weight:700; font-size:18px; letter-spacing:.01em;
+  color:var(--ink-blue); margin:28px 0 10px;}
+.foot{background:var(--ink-blue); color:var(--birch); text-align:center; padding:32px 24px; font-size:13px; border-top:3px solid var(--gold);}
+.foot a{color:var(--gold); text-decoration:none; letter-spacing:.06em; font-family:'Montserrat',sans-serif; font-weight:600; font-size:12px;}
+.foot .row{margin-top:10px; display:flex; gap:18px; justify-content:center; flex-wrap:wrap;}
+@media (max-width:560px){
+  .sitenav{padding:6px 14px;}
+  .sitenav .brand img{height:36px;}
+  .sitenav .brand .stack .l1, .sitenav .brand .stack .l2{font-size:14px;}
+}
+
+/* Shared skyline widget */
+.skyline{
+  display:flex; align-items:center; gap:18px; margin:0 14px; flex:none;
+  font-family:'Montserrat',sans-serif; font-size:11px; letter-spacing:.04em; color:var(--ink-blue); line-height:1.2;
+}
+.skyline .sky-g{display:flex; align-items:center; gap:7px;}
+.skyline .sky-g + .sky-g{padding-left:18px; border-left:1px solid var(--parchment-line);}
+.skyline svg{width:26px; height:26px; flex:none; color:var(--ink-blue);}
+.skyline .sky-stack{display:flex; flex-direction:column; gap:2px; white-space:nowrap;}
+.skyline .sky-eyebrow{font-size:9px; letter-spacing:.16em; text-transform:uppercase; color:var(--faint);}
+.skyline .sky-val{font-weight:700; font-size:12.5px; letter-spacing:.02em;}
+.skyline .sky-val .c{font-weight:400; color:var(--faint); margin-left:5px;}
+.skyline .sky-val .sep{margin:0 5px; color:var(--birch); font-weight:400;}
+.skyline .sky-sub{font-size:10px; font-style:italic; letter-spacing:.02em; color:#4a4f7a;}
+.skyline .sky-stack{gap:1px;}
+.skyline .sky-wx{display:none;}
+.skyline.has-wx .sky-wx{display:flex;}
+.skyline.has-wx .sky-wx + .sky-g{padding-left:18px; border-left:1px solid var(--parchment-line);}
+.skyline .sky-wx + .sky-g{padding-left:0; border-left:none;}
+#modeToggle{margin-left:4px;}
+.skyline .sky-strat{display:none;}
+.skyline.has-strat .sky-strat{display:flex;}
+.skyline #stratArrow{transition:transform .6s ease; transform-origin:50% 50%;}
+/* 13" laptop band (2026-09-17, Laurie): keep every header group on one row down to ~1240px.
+   Nothing hides here — spacing tightens, the wind arrow loses its long tail, the degrees
+   drop, and the nav refuses to wrap. Below 1180 the moon and wind hide as before. */
+.sitenav .hright{display:flex !important; flex-direction:row !important; align-items:center; gap:6px; margin-left:auto; position:relative; flex-wrap:nowrap; white-space:nowrap;}   /* 2026-09-18: keeps search + ≡ side by side (they were stacking) */
+.sitenav .links{flex-wrap:nowrap; white-space:nowrap;}
+.skyline #stratArrow{width:15px; height:15px;}
+@media (max-width:1480px){
+  .sitenav{padding-left:12px; padding-right:12px;}
+  .skyline{margin:0 2px; gap:8px;}
+  .skyline .sky-g + .sky-g{padding-left:8px;}
+  .skyline .sky-g{gap:4px;}
+  .sitenav .brand{margin-right:0;}
+  .sitenav .links a{padding:8px 9px; letter-spacing:.06em;}
+  .sitenav .links a.ig{padding:8px 6px;}
+  .skyline .sky-strat .sky-val .deg{display:none;}
+}
+@media (max-width:1320px){
+  .skyline{gap:6px; margin:0;}
+  .skyline .sky-g + .sky-g{padding-left:6px;}
+  .sitenav .links{gap:0;}
+  .skyline .sky-eyebrow{letter-spacing:.12em;}
+  .sitenav .links a{padding:8px 7px; font-size:12px;}
+  .sitenav .brand .stack .l1, .sitenav .brand .stack .l2{font-size:15px;}
+}
+@media (max-width:1180px){ .skyline .sky-strat{display:none !important;} }
+@media (max-width:1180px){ .skyline .sky-moon{display:none;} }
+@media (max-width:960px){ .skyline{display:none;} }
+
+</style>
+
+
+<style>
+/* ---- Signs + Signals (2026-09-19, Laurie): an old instrument panel ---- */
+:root{--brass:#b8925a; --brass2:#e2c58b; --cream:#f1e7cf; --ink:#1a1f5e; --panel:#2a2417; --panel2:#3b3323;}
+.sg-wrap{max-width:1180px; margin:0 auto; padding:26px 18px 60px; color:var(--cream);}
+.sg-head{margin:0; font-family:'Montserrat',sans-serif; font-weight:800; letter-spacing:.04em; font-size:clamp(26px,4vw,40px); color:var(--brass2);}
+.sg-sub{margin:4px 0 24px; font-style:italic; opacity:.85;}
+.sg-sec{margin:26px 0 10px; font-family:'Montserrat',sans-serif; font-weight:700; text-transform:uppercase; letter-spacing:.16em; font-size:12px; color:var(--brass2); display:flex; align-items:center; gap:10px;}
+.sg-sec:after{content:""; flex:1; height:1px; background:var(--brass); opacity:.5;}
+.sg-grid{display:grid; grid-template-columns:repeat(auto-fill, minmax(230px,1fr)); gap:16px;}
+.dial{background:linear-gradient(160deg,var(--panel2),var(--panel)); border:2px solid var(--brass); border-radius:18px; padding:14px 14px 12px; box-shadow:inset 0 2px 8px rgba(0,0,0,.5), 0 6px 18px rgba(0,0,0,.35); position:relative;}
+.dial:before{content:""; position:absolute; inset:6px; border:1px solid rgba(226,197,139,.25); border-radius:13px; pointer-events:none;}
+.dial h3{margin:0 0 6px; font-family:'Montserrat',sans-serif; font-size:11px; letter-spacing:.14em; text-transform:uppercase; color:var(--brass2); font-weight:700;}
+.dial svg{width:100%; height:auto; display:block;}
+.dial .face{fill:#efe4c6; stroke:var(--brass); stroke-width:3;}
+.dial .tick{stroke:#5a4a2a; stroke-width:1.5;}
+.dial .needle{fill:#8b1e1e; stroke:#3a0d0d; stroke-width:.8;}
+.dial .hub{fill:var(--brass); stroke:#5a4a2a;}
+.dial .lbl{font:600 9px 'Montserrat',sans-serif; fill:#5a4a2a; letter-spacing:.08em;}
+.dial .val{margin:8px 0 0; font-family:'Montserrat',sans-serif; font-weight:800; font-size:22px; color:var(--cream); text-align:center; line-height:1.1;}
+.dial .sub{margin:2px 0 0; font-size:12px; text-align:center; opacity:.8; min-height:1.4em;}
+.dial.wide{grid-column:span 2;}
+.dd{display:grid; grid-template-columns:repeat(3,1fr); gap:14px;}
+.odo{background:#111; border:2px solid var(--brass); border-radius:12px; padding:14px 10px; text-align:center; box-shadow:inset 0 0 12px rgba(0,0,0,.8);}
+.odo .n{font-family:'Montserrat',sans-serif; font-weight:800; font-size:clamp(26px,4vw,40px); letter-spacing:.08em; color:#f5f0dc; text-shadow:0 0 8px rgba(226,197,139,.4);}
+.odo .l{font-size:11px; letter-spacing:.14em; text-transform:uppercase; color:var(--brass2); margin-top:4px;}
+.odo .d{font-size:11px; opacity:.7; margin-top:6px; line-height:1.35;}
+.sg-note{font-size:12px; opacity:.7; margin-top:10px; line-height:1.5;}
+.sg-note a{color:var(--brass2);}
+@media (max-width:760px){ .dial.wide{grid-column:span 1;} .dd{grid-template-columns:1fr;} }
+</style>
+</head>
+<body>
+<div class="betabar" role="region" aria-label="Site announcements">
+  <div class="ticker-track"><span class="ticker-set">
+    <span><span class="tg">𓅓</span> Beta version: please double check all info before hitting the trail</span>
+    <span><span class="tg">𓅓</span> Suggestions? Hit us up NYHilltowners@Gmail.com</span>
+    <span><span class="tg">𓅓</span> Not another dime for corrupt corporations; shop and spend your time and money locally!</span>
+    <span><span class="tg">𓅓</span> Apes together strong.</span>
+    <span><span class="tg">𓅓</span> Do not obey in advance.</span>
+    <span><span class="tg">𓅓</span> Hiring? News to share? Poetry into the void? Email us and we'll share it here (free! not everything needs to be monetized)</span>
+    <span><span class="tg">𓅓</span> Register to vote before October 23: <a href="https://voterlookup.elections.ny.gov/" target="_blank" rel="noopener">voterlookup.elections.ny.gov</a></span>
+    <span><span class="tg">𓅓</span> Do you know who&#8217;s paying your politicians? <a href="https://www.opensecrets.org/" target="_blank" rel="noopener">OpenSecrets.org</a></span>
+  </span><span class="ticker-set" aria-hidden="true">
+    <span><span class="tg">𓅓</span> Beta version: please double check all info before hitting the trail</span>
+    <span><span class="tg">𓅓</span> Suggestions? Hit us up NYHilltowners@Gmail.com</span>
+    <span><span class="tg">𓅓</span> Not another dime for corrupt corporations; shop and spend your time and money locally!</span>
+    <span><span class="tg">𓅓</span> Apes together strong.</span>
+    <span><span class="tg">𓅓</span> Do not obey in advance.</span>
+    <span><span class="tg">𓅓</span> Hiring? News to share? Poetry into the void? Email us and we'll share it here (free! not everything needs to be monetized)</span>
+    <span><span class="tg">𓅓</span> Register to vote before October 23: <a href="https://voterlookup.elections.ny.gov/" target="_blank" rel="noopener">voterlookup.elections.ny.gov</a></span>
+    <span><span class="tg">𓅓</span> Do you know who&#8217;s paying your politicians? <a href="https://www.opensecrets.org/" target="_blank" rel="noopener">OpenSecrets.org</a></span>
+  </span></div>
+</div>
+
+<!-- @@header -->
+
+
+  <button class="menubtn" id="menuToggle" title="Menu" aria-label="Menu" aria-expanded="false">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="4" y1="7" x2="20" y2="7"></line><line x1="4" y1="12" x2="20" y2="12"></line><line x1="4" y1="17" x2="20" y2="17"></line></svg>
+  </button>
+  </div>
+</nav>
+
+<main class="sg-wrap">
+  <h1 class="sg-head">Signs + Signals</h1>
+  <p class="sg-sub">The instrument panel for the Hilltowns: sky, wind, and the slow arithmetic of the seasons. Read from Berne, NY.</p>
+
+  <h2 class="sg-sec">Sky</h2>
+  <div class="sg-grid">
+    <div class="dial wide"><h3>Sun</h3>
+      <svg viewBox="0 0 200 120"><path d="M20 110 A80 80 0 0 1 180 110" fill="none" stroke="#5a4a2a" stroke-width="2" stroke-dasharray="3 4"/><line x1="12" y1="110" x2="188" y2="110" stroke="#5a4a2a" stroke-width="2"/><circle id="sun-dot" cx="20" cy="110" r="8" fill="#e2b33c" stroke="#8a6a1a" stroke-width="2"/><text x="20" y="118" class="lbl" text-anchor="middle" style="fill:#e2c58b">rise</text><text x="180" y="118" class="lbl" text-anchor="middle" style="fill:#e2c58b">set</text></svg>
+      <p class="val"><span id="sun-rise">—</span> · <span id="sun-set">—</span></p>
+      <p class="sub"><span id="sun-len"></span> · <span id="sun-delta"></span></p></div>
+    <div class="dial wide"><h3>Moon</h3>
+      <svg id="moon-svg" viewBox="0 0 40 40" style="max-width:150px; margin:0 auto"></svg>
+      <p class="val" id="moon-phase">—</p>
+      <p class="sub"><b id="moon-name"></b> <span id="moon-mean"></span></p>
+      <p class="sub" id="moon-age"></p></div>
+    <div class="dial"><h3>Today</h3><p class="val" style="margin-top:28px">↑ <span id="day-hi">—</span> &nbsp; ↓ <span id="day-lo">—</span></p><p class="sub">forecast high / low</p><p class="val" style="font-size:18px"><span id="day-pcp">—</span></p><p class="sub">precipitation expected</p></div>
+  </div>
+
+  <h2 class="sg-sec">Air</h2>
+  <div class="sg-grid"><div class="dial"><h3>Temperature</h3><svg viewBox="0 0 200 200"><path d="M30 148 A86 86 0 1 1 170 148" fill="none" stroke="#5a4a2a" stroke-width="2"/><circle cx="100" cy="100" r="86" class="face"/><line x1="100" y1="16" x2="100" y2="26" class="tick" transform="rotate(-120 100 100)"/><line x1="100" y1="16" x2="100" y2="21" class="tick" transform="rotate(-110 100 100)"/><line x1="100" y1="16" x2="100" y2="21" class="tick" transform="rotate(-100 100 100)"/><line x1="100" y1="16" x2="100" y2="26" class="tick" transform="rotate(-90 100 100)"/><line x1="100" y1="16" x2="100" y2="21" class="tick" transform="rotate(-80 100 100)"/><line x1="100" y1="16" x2="100" y2="21" class="tick" transform="rotate(-70 100 100)"/><line x1="100" y1="16" x2="100" y2="26" class="tick" transform="rotate(-60 100 100)"/><line x1="100" y1="16" x2="100" y2="21" class="tick" transform="rotate(-50 100 100)"/><line x1="100" y1="16" x2="100" y2="21" class="tick" transform="rotate(-40 100 100)"/><line x1="100" y1="16" x2="100" y2="26" class="tick" transform="rotate(-30 100 100)"/><line x1="100" y1="16" x2="100" y2="21" class="tick" transform="rotate(-20 100 100)"/><line x1="100" y1="16" x2="100" y2="21" class="tick" transform="rotate(-10 100 100)"/><line x1="100" y1="16" x2="100" y2="26" class="tick" transform="rotate(0 100 100)"/><line x1="100" y1="16" x2="100" y2="21" class="tick" transform="rotate(10 100 100)"/><line x1="100" y1="16" x2="100" y2="21" class="tick" transform="rotate(20 100 100)"/><line x1="100" y1="16" x2="100" y2="26" class="tick" transform="rotate(30 100 100)"/><line x1="100" y1="16" x2="100" y2="21" class="tick" transform="rotate(40 100 100)"/><line x1="100" y1="16" x2="100" y2="21" class="tick" transform="rotate(50 100 100)"/><line x1="100" y1="16" x2="100" y2="26" class="tick" transform="rotate(60 100 100)"/><line x1="100" y1="16" x2="100" y2="21" class="tick" transform="rotate(70 100 100)"/><line x1="100" y1="16" x2="100" y2="21" class="tick" transform="rotate(80 100 100)"/><line x1="100" y1="16" x2="100" y2="26" class="tick" transform="rotate(90 100 100)"/><line x1="100" y1="16" x2="100" y2="21" class="tick" transform="rotate(100 100 100)"/><line x1="100" y1="16" x2="100" y2="21" class="tick" transform="rotate(110 100 100)"/><line x1="100" y1="16" x2="100" y2="26" class="tick" transform="rotate(120 100 100)"/><polygon id="temp-needle" points="100,26 95,100 100,106 105,100" class="needle" transform="rotate(-120 100 100)"/><circle cx="100" cy="100" r="6" class="hub"/></svg><p class="val" id="temp-val">—</p><p class="sub" id="temp-sub"></p></div><div class="dial"><h3>Humidity</h3><svg viewBox="0 0 200 200"><path d="M30 148 A86 86 0 1 1 170 148" fill="none" stroke="#5a4a2a" stroke-width="2"/><circle cx="100" cy="100" r="86" class="face"/><line x1="100" y1="16" x2="100" y2="26" class="tick" transform="rotate(-120 100 100)"/><line x1="100" y1="16" x2="100" y2="21" class="tick" transform="rotate(-110 100 100)"/><line x1="100" y1="16" x2="100" y2="21" class="tick" transform="rotate(-100 100 100)"/><line x1="100" y1="16" x2="100" y2="26" class="tick" transform="rotate(-90 100 100)"/><line x1="100" y1="16" x2="100" y2="21" class="tick" transform="rotate(-80 100 100)"/><line x1="100" y1="16" x2="100" y2="21" class="tick" transform="rotate(-70 100 100)"/><line x1="100" y1="16" x2="100" y2="26" class="tick" transform="rotate(-60 100 100)"/><line x1="100" y1="16" x2="100" y2="21" class="tick" transform="rotate(-50 100 100)"/><line x1="100" y1="16" x2="100" y2="21" class="tick" transform="rotate(-40 100 100)"/><line x1="100" y1="16" x2="100" y2="26" class="tick" transform="rotate(-30 100 100)"/><line x1="100" y1="16" x2="100" y2="21" class="tick" transform="rotate(-20 100 100)"/><line x1="100" y1="16" x2="100" y2="21" class="tick" transform="rotate(-10 100 100)"/><line x1="100" y1="16" x2="100" y2="26" class="tick" transform="rotate(0 100 100)"/><line x1="100" y1="16" x2="100" y2="21" class="tick" transform="rotate(10 100 100)"/><line x1="100" y1="16" x2="100" y2="21" class="tick" transform="rotate(20 100 100)"/><line x1="100" y1="16" x2="100" y2="26" class="tick" transform="rotate(30 100 100)"/><line x1="100" y1="16" x2="100" y2="21" class="tick" transform="rotate(40 100 100)"/><line x1="100" y1="16" x2="100" y2="21" class="tick" transform="rotate(50 100 100)"/><line x1="100" y1="16" x2="100" y2="26" class="tick" transform="rotate(60 100 100)"/><line x1="100" y1="16" x2="100" y2="21" class="tick" transform="rotate(70 100 100)"/><line x1="100" y1="16" x2="100" y2="21" class="tick" transform="rotate(80 100 100)"/><line x1="100" y1="16" x2="100" y2="26" class="tick" transform="rotate(90 100 100)"/><line x1="100" y1="16" x2="100" y2="21" class="tick" transform="rotate(100 100 100)"/><line x1="100" y1="16" x2="100" y2="21" class="tick" transform="rotate(110 100 100)"/><line x1="100" y1="16" x2="100" y2="26" class="tick" transform="rotate(120 100 100)"/><polygon id="hum-needle" points="100,26 95,100 100,106 105,100" class="needle" transform="rotate(-120 100 100)"/><circle cx="100" cy="100" r="6" class="hub"/></svg><p class="val" id="hum-val">—</p><p class="sub" id="hum-sub"></p></div><div class="dial"><h3>Barometer</h3><svg viewBox="0 0 200 200"><path d="M30 148 A86 86 0 1 1 170 148" fill="none" stroke="#5a4a2a" stroke-width="2"/><circle cx="100" cy="100" r="86" class="face"/><line x1="100" y1="16" x2="100" y2="26" class="tick" transform="rotate(-120 100 100)"/><line x1="100" y1="16" x2="100" y2="21" class="tick" transform="rotate(-110 100 100)"/><line x1="100" y1="16" x2="100" y2="21" class="tick" transform="rotate(-100 100 100)"/><line x1="100" y1="16" x2="100" y2="26" class="tick" transform="rotate(-90 100 100)"/><line x1="100" y1="16" x2="100" y2="21" class="tick" transform="rotate(-80 100 100)"/><line x1="100" y1="16" x2="100" y2="21" class="tick" transform="rotate(-70 100 100)"/><line x1="100" y1="16" x2="100" y2="26" class="tick" transform="rotate(-60 100 100)"/><line x1="100" y1="16" x2="100" y2="21" class="tick" transform="rotate(-50 100 100)"/><line x1="100" y1="16" x2="100" y2="21" class="tick" transform="rotate(-40 100 100)"/><line x1="100" y1="16" x2="100" y2="26" class="tick" transform="rotate(-30 100 100)"/><line x1="100" y1="16" x2="100" y2="21" class="tick" transform="rotate(-20 100 100)"/><line x1="100" y1="16" x2="100" y2="21" class="tick" transform="rotate(-10 100 100)"/><line x1="100" y1="16" x2="100" y2="26" class="tick" transform="rotate(0 100 100)"/><line x1="100" y1="16" x2="100" y2="21" class="tick" transform="rotate(10 100 100)"/><line x1="100" y1="16" x2="100" y2="21" class="tick" transform="rotate(20 100 100)"/><line x1="100" y1="16" x2="100" y2="26" class="tick" transform="rotate(30 100 100)"/><line x1="100" y1="16" x2="100" y2="21" class="tick" transform="rotate(40 100 100)"/><line x1="100" y1="16" x2="100" y2="21" class="tick" transform="rotate(50 100 100)"/><line x1="100" y1="16" x2="100" y2="26" class="tick" transform="rotate(60 100 100)"/><line x1="100" y1="16" x2="100" y2="21" class="tick" transform="rotate(70 100 100)"/><line x1="100" y1="16" x2="100" y2="21" class="tick" transform="rotate(80 100 100)"/><line x1="100" y1="16" x2="100" y2="26" class="tick" transform="rotate(90 100 100)"/><line x1="100" y1="16" x2="100" y2="21" class="tick" transform="rotate(100 100 100)"/><line x1="100" y1="16" x2="100" y2="21" class="tick" transform="rotate(110 100 100)"/><line x1="100" y1="16" x2="100" y2="26" class="tick" transform="rotate(120 100 100)"/><polygon id="pres-needle" points="100,26 95,100 100,106 105,100" class="needle" transform="rotate(-120 100 100)"/><circle cx="100" cy="100" r="6" class="hub"/></svg><p class="val" id="pres-val">—</p><p class="sub" id="pres-sub"></p></div><div class="dial"><h3>Cloud cover</h3><svg viewBox="0 0 200 200"><path d="M30 148 A86 86 0 1 1 170 148" fill="none" stroke="#5a4a2a" stroke-width="2"/><circle cx="100" cy="100" r="86" class="face"/><line x1="100" y1="16" x2="100" y2="26" class="tick" transform="rotate(-120 100 100)"/><line x1="100" y1="16" x2="100" y2="21" class="tick" transform="rotate(-110 100 100)"/><line x1="100" y1="16" x2="100" y2="21" class="tick" transform="rotate(-100 100 100)"/><line x1="100" y1="16" x2="100" y2="26" class="tick" transform="rotate(-90 100 100)"/><line x1="100" y1="16" x2="100" y2="21" class="tick" transform="rotate(-80 100 100)"/><line x1="100" y1="16" x2="100" y2="21" class="tick" transform="rotate(-70 100 100)"/><line x1="100" y1="16" x2="100" y2="26" class="tick" transform="rotate(-60 100 100)"/><line x1="100" y1="16" x2="100" y2="21" class="tick" transform="rotate(-50 100 100)"/><line x1="100" y1="16" x2="100" y2="21" class="tick" transform="rotate(-40 100 100)"/><line x1="100" y1="16" x2="100" y2="26" class="tick" transform="rotate(-30 100 100)"/><line x1="100" y1="16" x2="100" y2="21" class="tick" transform="rotate(-20 100 100)"/><line x1="100" y1="16" x2="100" y2="21" class="tick" transform="rotate(-10 100 100)"/><line x1="100" y1="16" x2="100" y2="26" class="tick" transform="rotate(0 100 100)"/><line x1="100" y1="16" x2="100" y2="21" class="tick" transform="rotate(10 100 100)"/><line x1="100" y1="16" x2="100" y2="21" class="tick" transform="rotate(20 100 100)"/><line x1="100" y1="16" x2="100" y2="26" class="tick" transform="rotate(30 100 100)"/><line x1="100" y1="16" x2="100" y2="21" class="tick" transform="rotate(40 100 100)"/><line x1="100" y1="16" x2="100" y2="21" class="tick" transform="rotate(50 100 100)"/><line x1="100" y1="16" x2="100" y2="26" class="tick" transform="rotate(60 100 100)"/><line x1="100" y1="16" x2="100" y2="21" class="tick" transform="rotate(70 100 100)"/><line x1="100" y1="16" x2="100" y2="21" class="tick" transform="rotate(80 100 100)"/><line x1="100" y1="16" x2="100" y2="26" class="tick" transform="rotate(90 100 100)"/><line x1="100" y1="16" x2="100" y2="21" class="tick" transform="rotate(100 100 100)"/><line x1="100" y1="16" x2="100" y2="21" class="tick" transform="rotate(110 100 100)"/><line x1="100" y1="16" x2="100" y2="26" class="tick" transform="rotate(120 100 100)"/><polygon id="cloud-needle" points="100,26 95,100 100,106 105,100" class="needle" transform="rotate(-120 100 100)"/><circle cx="100" cy="100" r="6" class="hub"/></svg><p class="val" id="cloud-val">—</p><p class="sub" id="cloud-sub"></p></div></div>
+
+  <h2 class="sg-sec">Winds, ground to stratosphere</h2>
+  <div class="sg-grid"><div class="dial"><h3>Surface · 10 m</h3><svg viewBox="0 0 200 200"><circle cx="100" cy="100" r="86" class="face"/><line x1="100" y1="16" x2="100" y2="26" class="tick" transform="rotate(0 100 100)"/><line x1="100" y1="16" x2="100" y2="21" class="tick" transform="rotate(10 100 100)"/><line x1="100" y1="16" x2="100" y2="21" class="tick" transform="rotate(20 100 100)"/><line x1="100" y1="16" x2="100" y2="21" class="tick" transform="rotate(30 100 100)"/><line x1="100" y1="16" x2="100" y2="21" class="tick" transform="rotate(40 100 100)"/><line x1="100" y1="16" x2="100" y2="21" class="tick" transform="rotate(50 100 100)"/><line x1="100" y1="16" x2="100" y2="21" class="tick" transform="rotate(60 100 100)"/><line x1="100" y1="16" x2="100" y2="21" class="tick" transform="rotate(70 100 100)"/><line x1="100" y1="16" x2="100" y2="21" class="tick" transform="rotate(80 100 100)"/><line x1="100" y1="16" x2="100" y2="26" class="tick" transform="rotate(90 100 100)"/><line x1="100" y1="16" x2="100" y2="21" class="tick" transform="rotate(100 100 100)"/><line x1="100" y1="16" x2="100" y2="21" class="tick" transform="rotate(110 100 100)"/><line x1="100" y1="16" x2="100" y2="21" class="tick" transform="rotate(120 100 100)"/><line x1="100" y1="16" x2="100" y2="21" class="tick" transform="rotate(130 100 100)"/><line x1="100" y1="16" x2="100" y2="21" class="tick" transform="rotate(140 100 100)"/><line x1="100" y1="16" x2="100" y2="21" class="tick" transform="rotate(150 100 100)"/><line x1="100" y1="16" x2="100" y2="21" class="tick" transform="rotate(160 100 100)"/><line x1="100" y1="16" x2="100" y2="21" class="tick" transform="rotate(170 100 100)"/><line x1="100" y1="16" x2="100" y2="26" class="tick" transform="rotate(180 100 100)"/><line x1="100" y1="16" x2="100" y2="21" class="tick" transform="rotate(190 100 100)"/><line x1="100" y1="16" x2="100" y2="21" class="tick" transform="rotate(200 100 100)"/><line x1="100" y1="16" x2="100" y2="21" class="tick" transform="rotate(210 100 100)"/><line x1="100" y1="16" x2="100" y2="21" class="tick" transform="rotate(220 100 100)"/><line x1="100" y1="16" x2="100" y2="21" class="tick" transform="rotate(230 100 100)"/><line x1="100" y1="16" x2="100" y2="21" class="tick" transform="rotate(240 100 100)"/><line x1="100" y1="16" x2="100" y2="21" class="tick" transform="rotate(250 100 100)"/><line x1="100" y1="16" x2="100" y2="21" class="tick" transform="rotate(260 100 100)"/><line x1="100" y1="16" x2="100" y2="26" class="tick" transform="rotate(270 100 100)"/><line x1="100" y1="16" x2="100" y2="21" class="tick" transform="rotate(280 100 100)"/><line x1="100" y1="16" x2="100" y2="21" class="tick" transform="rotate(290 100 100)"/><line x1="100" y1="16" x2="100" y2="21" class="tick" transform="rotate(300 100 100)"/><line x1="100" y1="16" x2="100" y2="21" class="tick" transform="rotate(310 100 100)"/><line x1="100" y1="16" x2="100" y2="21" class="tick" transform="rotate(320 100 100)"/><line x1="100" y1="16" x2="100" y2="21" class="tick" transform="rotate(330 100 100)"/><line x1="100" y1="16" x2="100" y2="21" class="tick" transform="rotate(340 100 100)"/><line x1="100" y1="16" x2="100" y2="21" class="tick" transform="rotate(350 100 100)"/><text x="100" y="40" text-anchor="middle" class="lbl">N</text><text x="164" y="104" text-anchor="middle" class="lbl">E</text><text x="100" y="170" text-anchor="middle" class="lbl">S</text><text x="36" y="104" text-anchor="middle" class="lbl">W</text><polygon id="w10-needle" points="100,28 92,100 100,94 108,100" class="needle" transform="rotate(0 100 100)"/><circle cx="100" cy="100" r="6" class="hub"/></svg><p class="val" id="w10-val">—</p><p class="sub" id="w10-sub"></p></div><div class="dial"><h3>850 hPa · ~1.5 km</h3><svg viewBox="0 0 200 200"><circle cx="100" cy="100" r="86" class="face"/><line x1="100" y1="16" x2="100" y2="26" class="tick" transform="rotate(0 100 100)"/><line x1="100" y1="16" x2="100" y2="21" class="tick" transform="rotate(10 100 100)"/><line x1="100" y1="16" x2="100" y2="21" class="tick" transform="rotate(20 100 100)"/><line x1="100" y1="16" x2="100" y2="21" class="tick" transform="rotate(30 100 100)"/><line x1="100" y1="16" x2="100" y2="21" class="tick" transform="rotate(40 100 100)"/><line x1="100" y1="16" x2="100" y2="21" class="tick" transform="rotate(50 100 100)"/><line x1="100" y1="16" x2="100" y2="21" class="tick" transform="rotate(60 100 100)"/><line x1="100" y1="16" x2="100" y2="21" class="tick" transform="rotate(70 100 100)"/><line x1="100" y1="16" x2="100" y2="21" class="tick" transform="rotate(80 100 100)"/><line x1="100" y1="16" x2="100" y2="26" class="tick" transform="rotate(90 100 100)"/><line x1="100" y1="16" x2="100" y2="21" class="tick" transform="rotate(100 100 100)"/><line x1="100" y1="16" x2="100" y2="21" class="tick" transform="rotate(110 100 100)"/><line x1="100" y1="16" x2="100" y2="21" class="tick" transform="rotate(120 100 100)"/><line x1="100" y1="16" x2="100" y2="21" class="tick" transform="rotate(130 100 100)"/><line x1="100" y1="16" x2="100" y2="21" class="tick" transform="rotate(140 100 100)"/><line x1="100" y1="16" x2="100" y2="21" class="tick" transform="rotate(150 100 100)"/><line x1="100" y1="16" x2="100" y2="21" class="tick" transform="rotate(160 100 100)"/><line x1="100" y1="16" x2="100" y2="21" class="tick" transform="rotate(170 100 100)"/><line x1="100" y1="16" x2="100" y2="26" class="tick" transform="rotate(180 100 100)"/><line x1="100" y1="16" x2="100" y2="21" class="tick" transform="rotate(190 100 100)"/><line x1="100" y1="16" x2="100" y2="21" class="tick" transform="rotate(200 100 100)"/><line x1="100" y1="16" x2="100" y2="21" class="tick" transform="rotate(210 100 100)"/><line x1="100" y1="16" x2="100" y2="21" class="tick" transform="rotate(220 100 100)"/><line x1="100" y1="16" x2="100" y2="21" class="tick" transform="rotate(230 100 100)"/><line x1="100" y1="16" x2="100" y2="21" class="tick" transform="rotate(240 100 100)"/><line x1="100" y1="16" x2="100" y2="21" class="tick" transform="rotate(250 100 100)"/><line x1="100" y1="16" x2="100" y2="21" class="tick" transform="rotate(260 100 100)"/><line x1="100" y1="16" x2="100" y2="26" class="tick" transform="rotate(270 100 100)"/><line x1="100" y1="16" x2="100" y2="21" class="tick" transform="rotate(280 100 100)"/><line x1="100" y1="16" x2="100" y2="21" class="tick" transform="rotate(290 100 100)"/><line x1="100" y1="16" x2="100" y2="21" class="tick" transform="rotate(300 100 100)"/><line x1="100" y1="16" x2="100" y2="21" class="tick" transform="rotate(310 100 100)"/><line x1="100" y1="16" x2="100" y2="21" class="tick" transform="rotate(320 100 100)"/><line x1="100" y1="16" x2="100" y2="21" class="tick" transform="rotate(330 100 100)"/><line x1="100" y1="16" x2="100" y2="21" class="tick" transform="rotate(340 100 100)"/><line x1="100" y1="16" x2="100" y2="21" class="tick" transform="rotate(350 100 100)"/><text x="100" y="40" text-anchor="middle" class="lbl">N</text><text x="164" y="104" text-anchor="middle" class="lbl">E</text><text x="100" y="170" text-anchor="middle" class="lbl">S</text><text x="36" y="104" text-anchor="middle" class="lbl">W</text><polygon id="w850-needle" points="100,28 92,100 100,94 108,100" class="needle" transform="rotate(0 100 100)"/><circle cx="100" cy="100" r="6" class="hub"/></svg><p class="val" id="w850-val">—</p><p class="sub" id="w850-sub"></p></div><div class="dial"><h3>500 hPa · ~5.5 km</h3><svg viewBox="0 0 200 200"><circle cx="100" cy="100" r="86" class="face"/><line x1="100" y1="16" x2="100" y2="26" class="tick" transform="rotate(0 100 100)"/><line x1="100" y1="16" x2="100" y2="21" class="tick" transform="rotate(10 100 100)"/><line x1="100" y1="16" x2="100" y2="21" class="tick" transform="rotate(20 100 100)"/><line x1="100" y1="16" x2="100" y2="21" class="tick" transform="rotate(30 100 100)"/><line x1="100" y1="16" x2="100" y2="21" class="tick" transform="rotate(40 100 100)"/><line x1="100" y1="16" x2="100" y2="21" class="tick" transform="rotate(50 100 100)"/><line x1="100" y1="16" x2="100" y2="21" class="tick" transform="rotate(60 100 100)"/><line x1="100" y1="16" x2="100" y2="21" class="tick" transform="rotate(70 100 100)"/><line x1="100" y1="16" x2="100" y2="21" class="tick" transform="rotate(80 100 100)"/><line x1="100" y1="16" x2="100" y2="26" class="tick" transform="rotate(90 100 100)"/><line x1="100" y1="16" x2="100" y2="21" class="tick" transform="rotate(100 100 100)"/><line x1="100" y1="16" x2="100" y2="21" class="tick" transform="rotate(110 100 100)"/><line x1="100" y1="16" x2="100" y2="21" class="tick" transform="rotate(120 100 100)"/><line x1="100" y1="16" x2="100" y2="21" class="tick" transform="rotate(130 100 100)"/><line x1="100" y1="16" x2="100" y2="21" class="tick" transform="rotate(140 100 100)"/><line x1="100" y1="16" x2="100" y2="21" class="tick" transform="rotate(150 100 100)"/><line x1="100" y1="16" x2="100" y2="21" class="tick" transform="rotate(160 100 100)"/><line x1="100" y1="16" x2="100" y2="21" class="tick" transform="rotate(170 100 100)"/><line x1="100" y1="16" x2="100" y2="26" class="tick" transform="rotate(180 100 100)"/><line x1="100" y1="16" x2="100" y2="21" class="tick" transform="rotate(190 100 100)"/><line x1="100" y1="16" x2="100" y2="21" class="tick" transform="rotate(200 100 100)"/><line x1="100" y1="16" x2="100" y2="21" class="tick" transform="rotate(210 100 100)"/><line x1="100" y1="16" x2="100" y2="21" class="tick" transform="rotate(220 100 100)"/><line x1="100" y1="16" x2="100" y2="21" class="tick" transform="rotate(230 100 100)"/><line x1="100" y1="16" x2="100" y2="21" class="tick" transform="rotate(240 100 100)"/><line x1="100" y1="16" x2="100" y2="21" class="tick" transform="rotate(250 100 100)"/><line x1="100" y1="16" x2="100" y2="21" class="tick" transform="rotate(260 100 100)"/><line x1="100" y1="16" x2="100" y2="26" class="tick" transform="rotate(270 100 100)"/><line x1="100" y1="16" x2="100" y2="21" class="tick" transform="rotate(280 100 100)"/><line x1="100" y1="16" x2="100" y2="21" class="tick" transform="rotate(290 100 100)"/><line x1="100" y1="16" x2="100" y2="21" class="tick" transform="rotate(300 100 100)"/><line x1="100" y1="16" x2="100" y2="21" class="tick" transform="rotate(310 100 100)"/><line x1="100" y1="16" x2="100" y2="21" class="tick" transform="rotate(320 100 100)"/><line x1="100" y1="16" x2="100" y2="21" class="tick" transform="rotate(330 100 100)"/><line x1="100" y1="16" x2="100" y2="21" class="tick" transform="rotate(340 100 100)"/><line x1="100" y1="16" x2="100" y2="21" class="tick" transform="rotate(350 100 100)"/><text x="100" y="40" text-anchor="middle" class="lbl">N</text><text x="164" y="104" text-anchor="middle" class="lbl">E</text><text x="100" y="170" text-anchor="middle" class="lbl">S</text><text x="36" y="104" text-anchor="middle" class="lbl">W</text><polygon id="w500-needle" points="100,28 92,100 100,94 108,100" class="needle" transform="rotate(0 100 100)"/><circle cx="100" cy="100" r="6" class="hub"/></svg><p class="val" id="w500-val">—</p><p class="sub" id="w500-sub"></p></div><div class="dial"><h3>100 hPa · ~16 km</h3><svg viewBox="0 0 200 200"><circle cx="100" cy="100" r="86" class="face"/><line x1="100" y1="16" x2="100" y2="26" class="tick" transform="rotate(0 100 100)"/><line x1="100" y1="16" x2="100" y2="21" class="tick" transform="rotate(10 100 100)"/><line x1="100" y1="16" x2="100" y2="21" class="tick" transform="rotate(20 100 100)"/><line x1="100" y1="16" x2="100" y2="21" class="tick" transform="rotate(30 100 100)"/><line x1="100" y1="16" x2="100" y2="21" class="tick" transform="rotate(40 100 100)"/><line x1="100" y1="16" x2="100" y2="21" class="tick" transform="rotate(50 100 100)"/><line x1="100" y1="16" x2="100" y2="21" class="tick" transform="rotate(60 100 100)"/><line x1="100" y1="16" x2="100" y2="21" class="tick" transform="rotate(70 100 100)"/><line x1="100" y1="16" x2="100" y2="21" class="tick" transform="rotate(80 100 100)"/><line x1="100" y1="16" x2="100" y2="26" class="tick" transform="rotate(90 100 100)"/><line x1="100" y1="16" x2="100" y2="21" class="tick" transform="rotate(100 100 100)"/><line x1="100" y1="16" x2="100" y2="21" class="tick" transform="rotate(110 100 100)"/><line x1="100" y1="16" x2="100" y2="21" class="tick" transform="rotate(120 100 100)"/><line x1="100" y1="16" x2="100" y2="21" class="tick" transform="rotate(130 100 100)"/><line x1="100" y1="16" x2="100" y2="21" class="tick" transform="rotate(140 100 100)"/><line x1="100" y1="16" x2="100" y2="21" class="tick" transform="rotate(150 100 100)"/><line x1="100" y1="16" x2="100" y2="21" class="tick" transform="rotate(160 100 100)"/><line x1="100" y1="16" x2="100" y2="21" class="tick" transform="rotate(170 100 100)"/><line x1="100" y1="16" x2="100" y2="26" class="tick" transform="rotate(180 100 100)"/><line x1="100" y1="16" x2="100" y2="21" class="tick" transform="rotate(190 100 100)"/><line x1="100" y1="16" x2="100" y2="21" class="tick" transform="rotate(200 100 100)"/><line x1="100" y1="16" x2="100" y2="21" class="tick" transform="rotate(210 100 100)"/><line x1="100" y1="16" x2="100" y2="21" class="tick" transform="rotate(220 100 100)"/><line x1="100" y1="16" x2="100" y2="21" class="tick" transform="rotate(230 100 100)"/><line x1="100" y1="16" x2="100" y2="21" class="tick" transform="rotate(240 100 100)"/><line x1="100" y1="16" x2="100" y2="21" class="tick" transform="rotate(250 100 100)"/><line x1="100" y1="16" x2="100" y2="21" class="tick" transform="rotate(260 100 100)"/><line x1="100" y1="16" x2="100" y2="26" class="tick" transform="rotate(270 100 100)"/><line x1="100" y1="16" x2="100" y2="21" class="tick" transform="rotate(280 100 100)"/><line x1="100" y1="16" x2="100" y2="21" class="tick" transform="rotate(290 100 100)"/><line x1="100" y1="16" x2="100" y2="21" class="tick" transform="rotate(300 100 100)"/><line x1="100" y1="16" x2="100" y2="21" class="tick" transform="rotate(310 100 100)"/><line x1="100" y1="16" x2="100" y2="21" class="tick" transform="rotate(320 100 100)"/><line x1="100" y1="16" x2="100" y2="21" class="tick" transform="rotate(330 100 100)"/><line x1="100" y1="16" x2="100" y2="21" class="tick" transform="rotate(340 100 100)"/><line x1="100" y1="16" x2="100" y2="21" class="tick" transform="rotate(350 100 100)"/><text x="100" y="40" text-anchor="middle" class="lbl">N</text><text x="164" y="104" text-anchor="middle" class="lbl">E</text><text x="100" y="170" text-anchor="middle" class="lbl">S</text><text x="36" y="104" text-anchor="middle" class="lbl">W</text><polygon id="w100-needle" points="100,28 92,100 100,94 108,100" class="needle" transform="rotate(0 100 100)"/><circle cx="100" cy="100" r="6" class="hub"/></svg><p class="val" id="w100-val">—</p><p class="sub" id="w100-sub"></p></div><div class="dial"><h3>10 hPa · ~30 km</h3><svg viewBox="0 0 200 200"><circle cx="100" cy="100" r="86" class="face"/><line x1="100" y1="16" x2="100" y2="26" class="tick" transform="rotate(0 100 100)"/><line x1="100" y1="16" x2="100" y2="21" class="tick" transform="rotate(10 100 100)"/><line x1="100" y1="16" x2="100" y2="21" class="tick" transform="rotate(20 100 100)"/><line x1="100" y1="16" x2="100" y2="21" class="tick" transform="rotate(30 100 100)"/><line x1="100" y1="16" x2="100" y2="21" class="tick" transform="rotate(40 100 100)"/><line x1="100" y1="16" x2="100" y2="21" class="tick" transform="rotate(50 100 100)"/><line x1="100" y1="16" x2="100" y2="21" class="tick" transform="rotate(60 100 100)"/><line x1="100" y1="16" x2="100" y2="21" class="tick" transform="rotate(70 100 100)"/><line x1="100" y1="16" x2="100" y2="21" class="tick" transform="rotate(80 100 100)"/><line x1="100" y1="16" x2="100" y2="26" class="tick" transform="rotate(90 100 100)"/><line x1="100" y1="16" x2="100" y2="21" class="tick" transform="rotate(100 100 100)"/><line x1="100" y1="16" x2="100" y2="21" class="tick" transform="rotate(110 100 100)"/><line x1="100" y1="16" x2="100" y2="21" class="tick" transform="rotate(120 100 100)"/><line x1="100" y1="16" x2="100" y2="21" class="tick" transform="rotate(130 100 100)"/><line x1="100" y1="16" x2="100" y2="21" class="tick" transform="rotate(140 100 100)"/><line x1="100" y1="16" x2="100" y2="21" class="tick" transform="rotate(150 100 100)"/><line x1="100" y1="16" x2="100" y2="21" class="tick" transform="rotate(160 100 100)"/><line x1="100" y1="16" x2="100" y2="21" class="tick" transform="rotate(170 100 100)"/><line x1="100" y1="16" x2="100" y2="26" class="tick" transform="rotate(180 100 100)"/><line x1="100" y1="16" x2="100" y2="21" class="tick" transform="rotate(190 100 100)"/><line x1="100" y1="16" x2="100" y2="21" class="tick" transform="rotate(200 100 100)"/><line x1="100" y1="16" x2="100" y2="21" class="tick" transform="rotate(210 100 100)"/><line x1="100" y1="16" x2="100" y2="21" class="tick" transform="rotate(220 100 100)"/><line x1="100" y1="16" x2="100" y2="21" class="tick" transform="rotate(230 100 100)"/><line x1="100" y1="16" x2="100" y2="21" class="tick" transform="rotate(240 100 100)"/><line x1="100" y1="16" x2="100" y2="21" class="tick" transform="rotate(250 100 100)"/><line x1="100" y1="16" x2="100" y2="21" class="tick" transform="rotate(260 100 100)"/><line x1="100" y1="16" x2="100" y2="26" class="tick" transform="rotate(270 100 100)"/><line x1="100" y1="16" x2="100" y2="21" class="tick" transform="rotate(280 100 100)"/><line x1="100" y1="16" x2="100" y2="21" class="tick" transform="rotate(290 100 100)"/><line x1="100" y1="16" x2="100" y2="21" class="tick" transform="rotate(300 100 100)"/><line x1="100" y1="16" x2="100" y2="21" class="tick" transform="rotate(310 100 100)"/><line x1="100" y1="16" x2="100" y2="21" class="tick" transform="rotate(320 100 100)"/><line x1="100" y1="16" x2="100" y2="21" class="tick" transform="rotate(330 100 100)"/><line x1="100" y1="16" x2="100" y2="21" class="tick" transform="rotate(340 100 100)"/><line x1="100" y1="16" x2="100" y2="21" class="tick" transform="rotate(350 100 100)"/><text x="100" y="40" text-anchor="middle" class="lbl">N</text><text x="164" y="104" text-anchor="middle" class="lbl">E</text><text x="100" y="170" text-anchor="middle" class="lbl">S</text><text x="36" y="104" text-anchor="middle" class="lbl">W</text><polygon id="w10hpa-needle" points="100,28 92,100 100,94 108,100" class="needle" transform="rotate(0 100 100)"/><circle cx="100" cy="100" r="6" class="hub"/></svg><p class="val" id="w10hpa-val">—</p><p class="sub" id="w10hpa-sub"></p></div></div>
+  <p class="sg-note">Arrows point <em>downwind</em>; the text says where the wind blows <em>from</em>. 850 hPa is the layer that steers valley weather; 500 hPa carries the troughs and ridges on the evening news; 100 hPa is the tropopause, where jets live; 10 hPa is the polar vortex's home in winter.</p>
+
+  <h2 class="sg-sec">Degree days · year to date</h2>
+  <div class="dd">
+    <div class="odo"><div class="n" id="dd-h">—</div><div class="l">Heating</div><div class="d">Base 65°F. Every degree the daily mean falls below 65 is one heating degree day: how much cold the house has had to fight.</div></div>
+    <div class="odo"><div class="n" id="dd-c">—</div><div class="l">Cooling</div><div class="d">Base 65°F, the other direction: heat the season has thrown at us.</div></div>
+    <div class="odo"><div class="n" id="dd-g">—</div><div class="l">Growing</div><div class="d">Base 50°F, capped at 86°F, the standard corn scale. Insects, weeds and crops keep their calendars in these units, not in dates.</div></div>
+  </div>
+  <p class="sg-note" id="dd-note">Loading…</p>
+  <p class="sg-note">Weather, winds and history by <a href="https://open-meteo.com/" target="_blank" rel="noopener">Open-Meteo</a> (CC BY 4.0); winds aloft from the Canadian GEM Global model with GFS as fallback; sun and moon computed locally. Refreshes every 15 minutes.</p>
+</main>
+
+<script src="skyline.js"></script>
+<script src="signals.js"></script>
+<!-- @@footer -->
+
+<script>
+(function(){
+  var nav = document.getElementById("hnav"), btn = document.getElementById("menuToggle");
+  btn.addEventListener("click", function(e){
+    e.stopPropagation();
+    var open = nav.classList.toggle("open");
+    btn.setAttribute("aria-expanded", open ? "true" : "false");
+  });
+  nav.addEventListener("click", function(){ nav.classList.remove("open"); btn.setAttribute("aria-expanded","false"); });
+  document.addEventListener("click", function(e){
+    if(nav.classList.contains("open") && !nav.contains(e.target) && !btn.contains(e.target)){
+      nav.classList.remove("open"); btn.setAttribute("aria-expanded","false");
+    }
+  });
+})();
+</script>
+<!-- GoatCounter: privacy-friendly analytics, no cookies, no personal data -->
+<script data-goatcounter="https://nyhilltowners.goatcounter.com/count"
+        async src="//gc.zgo.at/count.js"></script>
+
+</body>
+</html>
