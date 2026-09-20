@@ -1308,6 +1308,43 @@ def emit_trading_post(items):
     print(f"  Trading Post: {len(items)} items")
 
 
+# ---------------------------------------------------------------------------
+# Station degree days (2026-09-19, Laurie): data/station_albany_daily.csv (xmACIS listing,
+# Albany Intl AP, 1938→) → site/station_dd.js. Per year, cumulative HDD/CDD (base 65 on the
+# daily mean) and GDD (base 50, Tmax capped 86, Tmin floored 50) by day-of-year, from the
+# observed Tmax/Tmin — same formulas the Signals page applies to the reanalysis, so the two
+# are comparable. Missing days (M) are skipped, not zeroed.
+# ---------------------------------------------------------------------------
+def emit_station_dd():
+    p = ROOT / "data" / "station_albany_daily.csv"
+    if not p.exists():
+        return
+    import csv as _csv
+    years = {}
+    with p.open(encoding="utf-8") as f:
+        for row in _csv.DictReader(f):
+            try:
+                mx, mn = float(row["MaxT"]), float(row["MinT"])
+            except (ValueError, KeyError):
+                continue
+            y, m, d = row["Date"].split("-")
+            doy = datetime.date(int(y), int(m), int(d)).timetuple().tm_yday
+            Y = years.setdefault(int(y), [[0.0]*367, [0.0]*367, [0.0]*367, 0])
+            mean = (mx + mn) / 2
+            Y[0][doy] += max(0.0, 65 - mean); Y[1][doy] += max(0.0, mean - 65)
+            gm = (min(86.0, mx) + max(50.0, mn)) / 2; Y[2][doy] += max(0.0, gm - 50); Y[3] += 1
+    out = {}
+    for y, (h, c, g, n) in years.items():
+        acc = []
+        for arr in (h, c, g):
+            s, cum = 0.0, []
+            for i in range(1, 367):
+                s += arr[i]; cum.append(round(s))
+            acc.append(cum)
+        out[y] = {"h": acc[0], "c": acc[1], "g": acc[2], "n": n}
+    (SITE / "station_dd.js").write_text("window.STATION_DD = " + json.dumps({"station": "Albany International Airport (ALB), 285 ft", "source": "NOAA GHCN-Daily via xmACIS2 (NRCC)", "years": out}) + ";\n", encoding="utf-8")
+    print(f"  Station degree days: {len(out)} years → station_dd.js")
+
 def main() -> int:
     manifest = json.loads((ROOT / "manifest.json").read_text(encoding="utf-8"))
     load_preview_cache()
@@ -1387,6 +1424,7 @@ def main() -> int:
         shutil.copyfile(ROOT / "skyline.js", SITE / "skyline.js")
     if (ROOT / "signals.js").exists():
         shutil.copyfile(ROOT / "signals.js", SITE / "signals.js")
+    emit_station_dd()
     if (ROOT / "images").exists():
         shutil.copytree(ROOT / "images", SITE / "images", dirs_exist_ok=True)
     if (ROOT / "fonts").exists():

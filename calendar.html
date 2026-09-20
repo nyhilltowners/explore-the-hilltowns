@@ -193,6 +193,8 @@ h1{font-family:'Montserrat',sans-serif; font-weight:800; text-transform:uppercas
 
 .nearby .nb-none{color:var(--faint); font-style:italic; padding:2px 0 4px;}
 @media (max-width:640px){ .nearby{margin-left:16px;} .arow.core + .nearby{margin-left:12px;} .nearby .nb-cat{display:none;} }
+.pastbtn{display:block; margin:6px auto 4px; background:none; border:1px dashed var(--ink-blue); color:var(--ink-blue); border-radius:8px; padding:6px 12px; font:600 12px "Montserrat",sans-serif; letter-spacing:.06em; cursor:pointer; opacity:.7;}
+.pastbtn:hover{opacity:1;}
 .arow .aglyph{flex:none; font-size:16px; order:-1; margin-right:12px; width:72px; text-align:center;}   /* 2026-09-18 (Laurie): image/emoji on the LEFT */
 @media (max-width:760px){ .arow .aglyph{width:52px; margin-right:8px;} }
 
@@ -619,6 +621,15 @@ h1{font-family:'Montserrat',sans-serif; font-weight:800; text-transform:uppercas
     return minToLabel(r.start);
   }
   // full range for agenda/modal ("10am\u20136pm")
+  /* minutes-since-midnight for an event's time string ("6:30pm–10pm", "7pm", "10am-12pm") */
+  function agendaMinutes(tm){
+    if(!tm) return null;
+    var out=[], rx=/(\d{1,2})(?::(\d{2}))?\s*([ap])\.?m/gi, m;
+    while((m=rx.exec(tm))){ var h=parseInt(m[1],10)%12; if(m[3].toLowerCase()==='p') h+=12; out.push(h*60+(m[2]?parseInt(m[2],10):0)); }
+    if(!out.length) return null;
+    var end = out.length>1 ? out[1] : null; if(end != null && end < out[0]) end += 24*60;   /* past midnight */
+    return {start:out[0], end:end};
+  }
   function shortRange(tm){
     var r = parseRange(tm);
     if(r.empty) return "All day";
@@ -695,7 +706,15 @@ h1{font-family:'Montserrat',sans-serif; font-weight:800; text-transform:uppercas
       var head = document.createElement("div"); head.className="dayhead"+(dstr===ymd(TODAY)?" istoday":"");
       head.innerHTML = '<span class="dd">'+MONTHS[d.getMonth()].slice(0,3)+' '+d.getDate()+'</span><span class="dw">'+DOWLONG[d.getDay()]+'</span>';
       group.appendChild(head);
+      /* 2026-09-19 (Laurie): on TODAY, events that have already ended fold away so the evening
+         is visible without scrolling. "Ended" = end time + 30 min grace, or, with no end time,
+         start + 2 h. All-day / untimed rows stay. A one-line toggle brings them back. */
+      var isToday = (dstr === ymd(TODAY)), nowMin = TODAY.getHours()*60 + TODAY.getMinutes(), hidden = 0, showPast = group.dataset.showPast === "1";
       byDay[dstr].forEach(function(ev){
+        if(isToday && !window.__showPastToday){
+          var ts = agendaMinutes(ev.tm);
+          if(ts && ((ts.end != null && nowMin > ts.end + 30) || (ts.end == null && nowMin > ts.start + 120))){ hidden++; return; }
+        }
         var row = document.createElement("div"); row.className="arow"+(isCoreTown(ev)?" core":"");
         var hasPin = typeof ev.lat === "number" && typeof ev.lng === "number";
         row.innerHTML =
@@ -720,6 +739,12 @@ h1{font-family:'Montserrat',sans-serif; font-weight:800; text-transform:uppercas
           }; })(ev, row, btn, dstr);
         }
       });
+      if(hidden){
+        var t = document.createElement("button"); t.type="button"; t.className="pastbtn";
+        t.textContent = hidden+" earlier today \u2014 show";
+        t.onclick = function(){ window.__showPastToday = true; renderAgenda(); };
+        group.appendChild(t);
+      }
       agenda.appendChild(group);
     });
   }
