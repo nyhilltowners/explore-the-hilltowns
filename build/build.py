@@ -1315,35 +1315,77 @@ def emit_trading_post(items):
 # observed Tmax/Tmin — same formulas the Signals page applies to the reanalysis, so the two
 # are comparable. Missing days (M) are skipped, not zeroed.
 # ---------------------------------------------------------------------------
-def emit_station_dd():
-    p = ROOT / "data" / "station_albany_daily.csv"
-    if not p.exists():
-        return
+STATIONS = [   # (slug, display name, elevation ft, active?)  — see data/stations/README.md
+    ("alcove_dam",      "Alcove Dam (co-op) · Coeymans",        590,  True),
+    ("albany_ap",       "Albany Intl Airport (ALB)",            285,  True),
+    ("phoenicia",       "Phoenicia 2SW (co-op) · Ulster Co.",   820,  False),
+    ("prattsville",     "Prattsville (co-op) · Greene Co.",    1150,  False),
+    ("cobleskill_2ese", "Cobleskill 2 ESE (co-op)",            1200,  False),
+    ("cairo_3nw",       "Cairo 3 NW (co-op)",                   600,  False),
+    ("windham_3e",      "Windham 3 E (co-op) · Greene Co.",    1600,  False),
+    ("conklingville_dam","Conklingville Dam (co-op) · Sacandaga", 780,  True),
+]
+
+def _station_years(path):
+    """Per year: cumulative HDD/CDD/GDD, precipitation and snowfall by day-of-year (rounded),
+    plus annual extremes. T = trace counts as 0.0. Missing days are skipped, not zeroed."""
     import csv as _csv
+    def num(v):
+        if v is None: return None
+        v = v.strip()
+        if v in ("", "M"): return None
+        if v == "T": return 0.0
+        try: return float(v)
+        except ValueError: return None
     years = {}
-    with p.open(encoding="utf-8") as f:
+    with path.open(encoding="utf-8") as f:
         for row in _csv.DictReader(f):
-            try:
-                mx, mn = float(row["MaxT"]), float(row["MinT"])
-            except (ValueError, KeyError):
-                continue
             y, m, d = row["Date"].split("-")
             doy = datetime.date(int(y), int(m), int(d)).timetuple().tm_yday
-            Y = years.setdefault(int(y), [[0.0]*367, [0.0]*367, [0.0]*367, 0])
-            mean = (mx + mn) / 2
-            Y[0][doy] += max(0.0, 65 - mean); Y[1][doy] += max(0.0, mean - 65)
-            gm = (min(86.0, mx) + max(50.0, mn)) / 2; Y[2][doy] += max(0.0, gm - 50); Y[3] += 1
+            Y = years.setdefault(int(y), {"h":[0.0]*367,"c":[0.0]*367,"g":[0.0]*367,"p":[0.0]*367,"s":[0.0]*367,
+                                          "n":0,"np":0,"hi":None,"lo":None,"d90":0,"d0":0,"depth":0.0,"wet":0})
+            mx, mn = num(row.get("MaxT")), num(row.get("MinT"))
+            if mx is not None and mn is not None:
+                mean = (mx + mn) / 2
+                Y["h"][doy] += max(0.0, 65 - mean); Y["c"][doy] += max(0.0, mean - 65)
+                gm = (min(86.0, mx) + max(50.0, mn)) / 2; Y["g"][doy] += max(0.0, gm - 50); Y["n"] += 1
+                Y["hi"] = mx if Y["hi"] is None else max(Y["hi"], mx); Y["lo"] = mn if Y["lo"] is None else min(Y["lo"], mn)
+                if mx >= 90: Y["d90"] += 1
+                if mn <= 0: Y["d0"] += 1
+            p, s, dep = num(row.get("Precip")), num(row.get("Snow")), num(row.get("SnowDepth"))
+            if p is not None: Y["p"][doy] += p; Y["np"] += 1; Y["wet"] += (1 if p >= 0.01 else 0)
+            if s is not None: Y["s"][doy] += s
+            if dep is not None: Y["depth"] = max(Y["depth"], dep)
     out = {}
-    for y, (h, c, g, n) in years.items():
-        acc = []
-        for arr in (h, c, g):
-            s, cum = 0.0, []
+    for y, Y in years.items():
+        rec = {"n": Y["n"], "np": Y["np"], "hi": Y["hi"], "lo": Y["lo"], "d90": Y["d90"], "d0": Y["d0"], "depth": Y["depth"], "wet": Y["wet"]}
+        for k, dp in (("h",0),("c",0),("g",0),("p",2),("s",1)):
+            s_, cum = 0.0, []
             for i in range(1, 367):
-                s += arr[i]; cum.append(round(s))
-            acc.append(cum)
-        out[y] = {"h": acc[0], "c": acc[1], "g": acc[2], "n": n}
-    (SITE / "station_dd.js").write_text("window.STATION_DD = " + json.dumps({"station": "Albany International Airport (ALB), 285 ft", "source": "NOAA GHCN-Daily via xmACIS2 (NRCC)", "years": out}) + ";\n", encoding="utf-8")
-    print(f"  Station degree days: {len(out)} years → station_dd.js")
+                s_ += Y[k][i]; cum.append(round(s_, dp) if dp else round(s_))
+            if y >= 1991:               # daily cumulative only where the page needs day-of-year lookups
+                rec[k] = cum            # (normals window + current year); older years keep totals only
+            rec["t" + k] = cum[-1]      # full-year total, every year — keeps the file at ~1/3 the size
+        out[y] = rec
+    return out
+
+
+def emit_station_dd():
+    """data/stations/*.csv → site/station_dd.js: per station, per year, cumulative HDD/CDD (base 65)
+    and GDD (base 50, 86 cap), precipitation and snowfall by day-of-year, plus annual extremes —
+    everything the xmACIS listings carry that the Signals page can show. The raw CSVs stay in
+    data/stations/ untouched as the archive of record."""
+    out = {}
+    for slug, name, elev, active in STATIONS:
+        p = ROOT / "data" / "stations" / f"{slug}.csv"
+        if not p.exists():
+            WARNS.append(f"stations/{slug}.csv missing — skipped"); continue
+        yrs = _station_years(p)
+        ys = sorted(yrs)
+        out[slug] = {"name": name, "elev": elev, "active": active, "first": ys[0], "last": ys[-1], "years": yrs}
+    if out:
+        (SITE / "station_dd.js").write_text("window.STATION_DD = " + json.dumps({"source": "NOAA GHCN-Daily via xmACIS2 (NRCC)", "stations": out}) + ";\n", encoding="utf-8")
+        print(f"  Station degree days: {len(out)} stations → station_dd.js")
 
 def main() -> int:
     manifest = json.loads((ROOT / "manifest.json").read_text(encoding="utf-8"))

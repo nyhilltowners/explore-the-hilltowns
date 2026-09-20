@@ -175,29 +175,35 @@ a.link:hover{background:rgba(252,163,21,.14);}
 
 <style>
 /* ---- Signs + Signals (v749): the header's own vocabulary, laid out with room to read ---- */
-.sg-wrap{max-width:1080px; margin:0 auto; padding:26px 18px 60px; color:var(--parchment,#f4ecd8); font-family:'Montserrat',sans-serif;}
+.sg-wrap{max-width:1080px; margin:0 auto; padding:26px 18px 60px; color:#ffffff; font-family:'Montserrat',sans-serif;}
 .sg-head{margin:0; font-weight:800; letter-spacing:.04em; font-size:clamp(26px,4vw,40px); color:var(--gold,#c9a227);}
-.sg-sub{margin:4px 0 22px; font-style:italic; opacity:.85; font-family:inherit;}
+.sg-sub{margin:4px 0 22px; font-style:italic; opacity:1; font-family:inherit;}
 .sg-sec{margin:28px 0 8px; font-weight:700; text-transform:uppercase; letter-spacing:.16em; font-size:12px; color:var(--gold,#c9a227); display:flex; align-items:center; gap:10px;}
 .sg-sec:after{content:""; flex:1; height:1px; background:currentColor; opacity:.35;}
 .sg-grid{display:grid; grid-template-columns:repeat(auto-fill, minmax(250px,1fr)); gap:12px 24px;}
-.sg-row{display:flex; align-items:flex-start; gap:14px; padding:12px 4px; border-bottom:1px solid rgba(244,236,216,.15);}
+.sg-row{display:flex; align-items:flex-start; gap:14px; padding:12px 4px; border-bottom:1px solid rgba(255,255,255,.2);}
 .sg-ico{flex:none; width:34px; height:34px; color:var(--gold,#c9a227);}
 .sg-ico svg{width:34px; height:34px; display:block; stroke:currentColor; fill:none; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round;}
 .sg-ico .arrow{transition:transform .6s ease; transform-origin:50% 50%;}
-.sg-eye{font-size:10px; letter-spacing:.16em; text-transform:uppercase; opacity:.75; margin:0 0 2px;}
+.sg-eye{font-size:10px; letter-spacing:.16em; text-transform:uppercase; opacity:.95; margin:0 0 2px;}
 .sg-val{font-size:22px; font-weight:800; margin:0; line-height:1.15;}
-.sg-val .c{font-weight:400; opacity:.75; font-size:16px; margin-left:6px;}
-.sg-det{font-size:13px; margin:3px 0 0; opacity:.85; line-height:1.4; font-family:inherit;}
-.sg-note{font-size:12px; opacity:.65; margin-top:12px; line-height:1.5;}
+.sg-val .c{font-weight:400; opacity:.95; font-size:16px; margin-left:6px;}
+.sg-det{font-size:13px; margin:3px 0 0; opacity:1; line-height:1.4; font-family:inherit; color:#fff;}
+.sg-note{font-size:12px; opacity:.9; margin-top:12px; line-height:1.5; color:#fff;}
 .sg-note a{color:var(--gold,#c9a227);}
 .sg-btn{margin:10px 0 0; background:none; border:1px dashed var(--gold,#c9a227); color:var(--gold,#c9a227); border-radius:8px; padding:7px 12px; font:600 12px "Montserrat",sans-serif; letter-spacing:.06em; cursor:pointer;}
 .ddtab{width:100%; border-collapse:collapse; margin-top:12px; font-size:13px; font-variant-numeric:tabular-nums;}
-.ddtab th,.ddtab td{padding:5px 8px; text-align:right; border-bottom:1px solid rgba(244,236,216,.12);}
+.ddtab th,.ddtab td{padding:5px 8px; text-align:right; border-bottom:1px solid rgba(255,255,255,.18); color:#fff;}
 .ddtab th:first-child,.ddtab td:first-child{text-align:left;}
 .ddtab thead th{color:var(--gold,#c9a227); font-size:11px; letter-spacing:.1em; text-transform:uppercase;}
 .ddtab tr.cur td{font-weight:800;}
-.obs{opacity:.85;}
+.obs{opacity:1;}
+.sg-chart{background:rgba(0,0,0,.18); border:1px solid rgba(255,255,255,.18); border-radius:12px; padding:6px;}
+.sg-chart svg{width:100%; height:auto; display:block;}
+.sg-chart .ax{stroke:rgba(255,255,255,.28); stroke-width:1;}
+.sg-chart .lbl{font:600 11px "Montserrat",sans-serif; fill:#fff; opacity:.85;}
+.sg-sel{font:600 12px "Montserrat",sans-serif; background:transparent; color:var(--gold,#c9a227); border:1px solid var(--gold,#c9a227); border-radius:6px; padding:4px 8px; max-width:100%;}
+.sg-sel option{color:#1a1f5e;}
 #sg-status{font-size:12px; color:#f0b67f; margin:8px 0 0; min-height:1.2em;}
 .dd{display:grid; grid-template-columns:repeat(3,1fr); gap:12px 24px;}
 @media (max-width:760px){ .dd{grid-template-columns:1fr;} }
@@ -259,7 +265,21 @@ a.link:hover{background:rgba(252,163,21,.14);}
   </div>
   <p class="sg-note">Arrows point <em>downwind</em>; the text says where the wind blows <em>from</em>. 850 hPa steers valley weather; 500 hPa carries the troughs and ridges; 100 hPa is the tropopause, where jets live; 10 hPa is the polar vortex's winter home.</p>
 
+  <h2 class="sg-sec">The year, drawn</h2>
+  <p class="sg-det" style="margin:0 0 8px">Daily mean temperature at Berne, January to December, every year since 1940. This year is white; each earlier year a shade closer to the night sky. Lines are 7-day running means so the shape reads through the noise.</p>
+  <div class="sg-chart"><svg id="yr-chart" viewBox="0 0 1000 420" preserveAspectRatio="none" role="img" aria-label="Daily mean temperature by year"></svg></div>
+  <p class="sg-note" id="yr-note"></p>
+
+  <h2 class="sg-sec">Water · year to date</h2>
+  <p class="sg-det" style="margin:0 0 10px">Observed at the station chosen below.</p>
+  <div class="sg-grid" id="water-grid">
+    <div class="sg-row"><div class="sg-ico"><svg viewBox="0 0 24 24"><path d="M12 3s6 6.5 6 11a6 6 0 0 1-12 0c0-4.5 6-11 6-11z"/></svg></div><div><p class="sg-eye">Precipitation</p><p class="sg-val" id="w-p">—</p><p class="sg-det" id="w-p-d"></p></div></div>
+    <div class="sg-row"><div class="sg-ico"><svg viewBox="0 0 24 24"><path d="M12 2v20M2 12h20M5 5l14 14M19 5L5 19"/></svg></div><div><p class="sg-eye">Snowfall</p><p class="sg-val" id="w-s">—</p><p class="sg-det" id="w-s-d"></p></div></div>
+    <div class="sg-row"><div class="sg-ico"><svg viewBox="0 0 24 24"><path d="M14 14.8V5a2 2 0 0 0-4 0v9.8a4 4 0 1 0 4 0z"/></svg></div><div><p class="sg-eye">Extremes this year</p><p class="sg-val" id="w-x">—</p><p class="sg-det" id="w-x-d"></p></div></div>
+  </div>
+
   <h2 class="sg-sec">Degree days · year to date</h2>
+  <p class="sg-det" style="margin:0 0 10px">Compare against an observed station: <select id="st-pick" class="sg-sel"></select></p>
   <div class="dd">
     <div class="sg-row"><div class="sg-ico" ><svg viewBox="0 0 24 24"><path d="M12 3c1 4 5 5 5 10a5 5 0 0 1-10 0c0-2 1-3 2-4 0 2 1 3 2 3 0-4-1-6 1-9z"/></svg></div><div><p class="sg-eye">Heating</p><p class="sg-val" id="dd-h">—</p><p class="sg-det" id="dd-h-d"></p></div></div><div class="sg-row"><div class="sg-ico" ><svg viewBox="0 0 24 24"><path d="M12 2v20M2 12h20M5 5l14 14M19 5L5 19"/></svg></div><div><p class="sg-eye">Cooling</p><p class="sg-val" id="dd-c">—</p><p class="sg-det" id="dd-c-d"></p></div></div><div class="sg-row"><div class="sg-ico" ><svg viewBox="0 0 24 24"><path d="M12 22V10M12 10c0-4 3-6 7-6 0 4-3 6-7 6zM12 14c0-3-2.5-5-6-5 0 3 2.5 5 6 5z"/></svg></div><div><p class="sg-eye">Growing</p><p class="sg-val" id="dd-g">—</p><p class="sg-det" id="dd-g-d"></p></div></div>
   </div>
