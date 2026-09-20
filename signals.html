@@ -207,6 +207,23 @@ a.link:hover{background:rgba(252,163,21,.14);}
 .sg-chart .lbl{font:600 11px "Montserrat",sans-serif; fill:#fff; opacity:.85;}
 .sg-sel{font:600 12px "Montserrat",sans-serif; background:transparent; color:var(--gold,#c9a227); border:1px solid var(--gold,#c9a227); border-radius:6px; padding:4px 8px; max-width:100%;}
 .sg-sel option{color:#1a1f5e;}
+/* v758 (Laurie): nothing on this page inherits the site's ink-blue text — everything is white or gold */
+.sg-wrap, .sg-wrap p, .sg-wrap span, .sg-wrap b, .sg-wrap td, .sg-wrap li, .sg-wrap div, .sg-eye, .sg-val, .sg-val .c, .sg-sub, .sg-det, .sg-note, .obs, .ddtab td{color:#ffffff !important; opacity:1;}
+.sg-wrap h1, .sg-wrap h2, .sg-wrap h3, .sg-head, .sg-sec, .sg-h3, .ddtab thead th, .sg-note a, .sg-btn, .sg-sel{color:var(--gold,#c9a227) !important;}
+.sg-eye{opacity:.92;} .sg-val .c{opacity:.92;} .sg-note{opacity:.92;}
+.ph-nav{display:flex; align-items:center; justify-content:space-between; gap:12px; margin:0 0 10px;}
+.ph-title{font-weight:800; font-size:18px; letter-spacing:.04em; text-align:center; flex:1;}
+.ph-row{display:flex; gap:14px; overflow-x:auto; scroll-snap-type:x mandatory; padding:4px 2px 14px; -webkit-overflow-scrolling:touch; scrollbar-width:thin;}
+.ph-card{flex:0 0 300px; scroll-snap-align:start; background:rgba(0,0,0,.22); border:1px solid rgba(255,255,255,.22); border-radius:14px; padding:14px 16px; display:flex; flex-direction:column; gap:6px;}
+.ph-year{font-size:26px; font-weight:800; line-height:1; color:var(--gold,#c9a227) !important;}
+.ph-cat{font-size:10px; letter-spacing:.14em; text-transform:uppercase; opacity:.85;}
+.ph-name{font-size:15px; font-weight:700; line-height:1.3;}
+.ph-meta{font-size:12px; line-height:1.45;}
+.ph-meta b{font-weight:700;}
+.ph-src{font-size:11px; margin-top:auto; padding-top:6px; opacity:.85;}
+.ph-src a{color:var(--gold,#c9a227) !important;}
+.ph-empty{opacity:.8; font-style:italic; padding:20px 4px;}
+@media (max-width:760px){ .ph-card{flex-basis:82vw;} .ph-title{font-size:15px;} }
 #sg-status{font-size:12px; color:#f0b67f; margin:8px 0 0; min-height:1.2em;}
 .dd{display:grid; grid-template-columns:repeat(3,1fr); gap:12px 24px;}
 @media (max-width:760px){ .dd{grid-template-columns:1fr;} }
@@ -249,6 +266,12 @@ a.link:hover{background:rgba(252,163,21,.14);}
   <h1 class="sg-head">Signs + Signals</h1>
   <p class="sg-sub">Sky, wind, and the slow arithmetic of the seasons, read from Berne, NY.</p>
   <p id="sg-status"></p>
+
+  <h2 class="sg-sec">Historical Phenology</h2>
+  <p class="sg-det" style="margin:0 0 10px">What this fortnight has brought to these hills before — the historical record only, from the Regional Climate &amp; Weather Event Register. (Current and expected phenology will live in a separate section.)</p>
+  <div class="ph-nav"><button type="button" class="sg-btn" id="ph-prev">&larr; earlier</button><div class="ph-title" id="ph-title"></div><button type="button" class="sg-btn" id="ph-next">later &rarr;</button></div>
+  <div class="ph-row" id="ph-row"></div>
+  <p class="sg-note" id="ph-note"></p>
 
   <h2 class="sg-sec">Sky</h2>
   <div class="sg-grid">
@@ -311,6 +334,7 @@ a.link:hover{background:rgba(252,163,21,.14);}
 
 <script src="skyline.js"></script>
 <script src="station_dd.js"></script>
+<script src="phenology_history.js"></script>
 <script src="signals.js"></script>
 <!-- @@footer -->
 

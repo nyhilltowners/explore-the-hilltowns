@@ -1386,6 +1386,59 @@ def emit_station_dd():
         (SITE / "station_dd.js").write_text("window.STATION_DD = " + json.dumps({"source": "NOAA GHCN-Daily via xmACIS2 (NRCC)", "stations": out}) + ";\n", encoding="utf-8")
         print(f"  Station degree days: {len(out)} stations → station_dd.js")
 
+# ---------------------------------------------------------------------------
+# Historical Phenology (2026-09-20, Laurie): data/climate_events.xlsx (the Regional Climate &
+# Weather Event Register) → site/phenology_history.js. Sheets "Events" (anchored by the
+# "Timeline anchor (ISO)" column) and "Wind & Tornadoes" (by Date). Each record carries a
+# month-day so the page can slot it into a two-week window regardless of year. Formula cells
+# are not evaluated (openpyxl reads the formula text), so only literal columns are used.
+# ---------------------------------------------------------------------------
+def emit_phenology_history():
+    p = ROOT / "data" / "climate_events.xlsx"
+    if not p.exists():
+        return
+    wb = load_workbook(p, read_only=True, data_only=True)
+    def sheet_rows(name):
+        if name not in wb.sheetnames:
+            return [], {}
+        ws = wb[name]; rows = list(ws.iter_rows(values_only=True))
+        if not rows:
+            return [], {}
+        ix = {str(h).strip().lower(): i for i, h in enumerate(rows[0]) if h}
+        return rows[1:], ix
+    def g(r, ix, k):
+        i = ix.get(k); v = r[i] if i is not None and i < len(r) else None
+        if v is None: return ""
+        if hasattr(v, "isoformat"): return v.isoformat()[:10]
+        return str(v).strip()
+    out = []
+    rows, ix = sheet_rows("Events")
+    for r in rows:
+        iso = g(r, ix, "timeline anchor (iso)") or g(r, ix, "start date")
+        if not re.match(r"^-?\d{3,4}-\d{2}-\d{2}", iso):
+            continue
+        y, m, d = iso.split("-")[:3]
+        out.append({"src": "events", "id": g(r, ix, "id"), "y": int(y), "m": int(m), "d": int(d),
+                    "start": g(r, ix, "start date"), "end": g(r, ix, "end date"), "prec": g(r, ix, "date precision"),
+                    "cat": g(r, ix, "category"), "t": g(r, ix, "event name"), "area": g(r, ix, "area affected"),
+                    "meas": g(r, ix, "key measurement"), "station": g(r, ix, "station / gauge"), "impact": g(r, ix, "impact summary"),
+                    "source": g(r, ix, "primary source"), "url": g(r, ix, "source url"), "conf": g(r, ix, "confidence"), "basis": g(r, ix, "anchor basis")})
+    rows, ix = sheet_rows("Wind & Tornadoes")
+    for r in rows:
+        iso = g(r, ix, "date")
+        if not re.match(r"^\d{4}-\d{2}-\d{2}", iso):
+            continue
+        y, m, d = iso.split("-")[:3]
+        deaths, inj = g(r, ix, "deaths"), g(r, ix, "injuries")
+        meas = " · ".join(x for x in [g(r, ix, "rating / peak wind"), (g(r, ix, "path length (mi)") + " mi path") if g(r, ix, "path length (mi)") else "", (deaths + " deaths") if deaths not in ("", "0") else "", (inj + " injured") if inj not in ("", "0") else ""] if x)
+        out.append({"src": "wind", "id": "W-" + iso, "y": int(y), "m": int(m), "d": int(d), "start": iso, "end": iso, "prec": "day",
+                    "cat": g(r, ix, "type") or "Wind", "t": (g(r, ix, "type") or "Wind event") + " — " + (g(r, ix, "place / path") or g(r, ix, "county") + " Co."),
+                    "area": (g(r, ix, "county") + " County") if g(r, ix, "county") else "", "meas": meas, "station": "", "impact": g(r, ix, "notes"),
+                    "source": g(r, ix, "source"), "url": "", "conf": g(r, ix, "confidence"), "basis": g(r, ix, "time (local)")})
+    out.sort(key=lambda e: (e["m"], e["d"], e["y"]))
+    (SITE / "phenology_history.js").write_text("window.PHENOLOGY_HISTORY = " + json.dumps(out, ensure_ascii=False) + ";\n", encoding="utf-8")
+    print(f"  Historical Phenology: {len(out)} events → phenology_history.js")
+
 def main() -> int:
     manifest = json.loads((ROOT / "manifest.json").read_text(encoding="utf-8"))
     load_preview_cache()
@@ -1466,6 +1519,7 @@ def main() -> int:
     if (ROOT / "signals.js").exists():
         shutil.copyfile(ROOT / "signals.js", SITE / "signals.js")
     emit_station_dd()
+    emit_phenology_history()
     if (ROOT / "images").exists():
         shutil.copytree(ROOT / "images", SITE / "images", dirs_exist_ok=True)
     if (ROOT / "fonts").exists():

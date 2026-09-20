@@ -1,4 +1,4 @@
-# NY Hilltowners Folk Atlas — Session Handoff (2026-09-20, v757)
+# NY Hilltowners Folk Atlas — Session Handoff (2026-09-20, v760)
 
 This ZIP is a **complete, self-contained source tree**. A new chat can unzip it,
 run the build, and continue exactly where this session left off. Everything here
@@ -120,6 +120,8 @@ Fixed-hinge wingbeat, 4 white wing-spots. Day-only, reduced-motion safe. The
 
 ## UX state (recent)
 
+- **Historical Phenology (v760, Laurie):** top of the Signals page. `data/climate_events.xlsx` (the Regional Climate & Weather Event Register: Events + Wind & Tornadoes sheets) → `build.py` → `site/phenology_history.js`; the page shows the current two-week window (1st–15th / 16th–end) as a card carousel with ← → to step through windows. Historical record ONLY — Laurie will add a separate current/expected phenology layer later. Update the register by replacing the xlsx and pushing.
+
 - **Signs + Signals page (v747, Laurie):** `signals.html` + `signals.js`, an old-instrument-panel dashboard for Berne: sun arc (rise/set, daylight, delta vs tomorrow), moon (phase, %, Onondaga lunation name), today's hi/lo/precip, temperature/humidity/barometer/cloud gauges, five wind compasses (surface, 850, 500, 100, 10 hPa), and year-to-date heating/cooling (base 65°F) and growing (base 50/86°F) degree days from the Open-Meteo archive API. Nav link is commented out in both partials until Laurie approves; page builds at signals.html.
 
 - **Renamed (v737, Laurie): the site lockup, page titles and OG tags now read "Hilltowns Field Guide"** (was "Hilltowns Folk Atlas"). The repo, build, and this README still say "atlas" internally; the About page's body copy still uses the word atlas descriptively — Laurie to rewrite when she wants.
@@ -211,7 +213,7 @@ Big ongoing effort to tame tag sprawl. Started at 2,332 unique tags; now ~2,178.
 7. Clean-room verify: unzip the package fresh, rebuild, confirm BUILD OK.
 8. `present_files` the zip + both xlsx.
 
-Version at handoff: **v757**. Next chat continues from v758.
+Version at handoff: **v760**. Next chat continues from v761.
 
 ---
 

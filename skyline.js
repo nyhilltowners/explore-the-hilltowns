@@ -237,6 +237,8 @@ setInterval(fetchStrat, 30*60*1000);
 document.addEventListener('visibilitychange', function(){ if(!document.hidden && Date.now()-skyLastFetch > 60*1000){ skyLastFetch = Date.now(); fetchSkyWx(); fetchStrat(); renderSkySun(); renderMoon(); } });
 setInterval(renderSkySun, 60*1000);
 
+/* exported for signals.js (2026-09-20): everything above lives inside this closure */
+window.hfa = { skyKind: skyKind, compass: compass, nearestHour: nearestHour, moonAge: moonAge, drawMoon: drawMoon, phaseLabel: phaseLabel, lunationInfo: lunationInfo, SYNODIC: SYNODIC };
 })();
 
 /* ============ RADIO TUNER (2026-09-17, per Laurie) ============

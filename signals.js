@@ -6,6 +6,9 @@
      heating/cooling and base 50°F for growing (corn/standard), capped at 86°F. */
 (function(){
   var $ = function(id){ return document.getElementById(id); };
+  var H = window.hfa || {};   /* skyline.js helpers (its code is a closure; it exports these) */
+  var compass = H.compass || function(d){ return Math.round(d)+'°'; }, nearestHour = H.nearestHour, skyKind = H.skyKind, SYNODIC = H.SYNODIC || 29.530588853;
+  function safe(fn){ try{ fn(); }catch(e){ status(e && e.message || String(e)); } }
   var LAT = (window.BERNE||{}).lat || 42.6248, LNG = (window.BERNE||{}).lng || -74.1350;
   var Q = 'latitude='+LAT.toFixed(4)+'&longitude='+LNG.toFixed(4)+'&timezone=America%2FNew_York';
   var f2c = function(f){ return (f-32)*5/9; }, c2f = function(c){ return c*9/5+32; };
@@ -42,11 +45,11 @@
       var st2 = sunTimes(iso, LAT, LNG), d = st2 ? ((st2.set-st2.rise)-(set-rise))/60000 : 0;
       $('sun-det').textContent = lenTxt+' · tomorrow '+(d>=0?'+':'')+d.toFixed(1)+' min'+(now<rise?' · before sunrise':(now>set?' · after sunset':''));
     }
-    if(window.moonAge){
-      var age = moonAge(now), ill = (1-Math.cos(age/SYNODIC*2*Math.PI))/2;
-      var mi = $('moon-ico'); if(mi && window.drawMoon) mi.innerHTML = '<svg viewBox="0 0 40 40" style="fill:none">'+drawMoon(age)+'</svg>';
-      $('moon-phase').textContent = phaseLabel(age)+' · '+Math.round(ill*100)+'% lit';
-      var li = window.lunationInfo ? lunationInfo(now) : null;
+    if(H.moonAge){
+      var age = H.moonAge(now), ill = (1-Math.cos(age/SYNODIC*2*Math.PI))/2;
+      var mi = $('moon-ico'); if(mi && H.drawMoon) mi.innerHTML = '<svg viewBox="0 0 40 40" style="fill:none">'+H.drawMoon(age)+'</svg>';
+      $('moon-phase').textContent = (H.phaseLabel?H.phaseLabel(age):'')+' · '+Math.round(ill*100)+'% lit';
+      var li = H.lunationInfo ? H.lunationInfo(now) : null;
       $('moon-det').innerHTML = (li ? '<b>'+li.word+'</b> — '+(li.english||'')+'<br>' : '')+age.toFixed(1)+' days into the lunation · next new moon in '+(SYNODIC-age).toFixed(1)+' days';
     }
   }
@@ -59,15 +62,18 @@
       + '&temperature_unit=fahrenheit&wind_speed_unit=kn&precipitation_unit=inch';
     fetch(url).then(function(r){ return r.json(); }).then(function(j){
       var c = j.current; if(!c){ status('Surface weather: '+(j.reason||'no data')); return; }
-      gauge('temp', c.temperature_2m, -20, 110, Math.round(c.temperature_2m)+'°F', 'feels like '+Math.round(c.apparent_temperature)+'° · '+Math.round(f2c(c.temperature_2m))+'°C');
-      gauge('hum', c.relative_humidity_2m, 0, 100, c.relative_humidity_2m+'%', 'relative humidity');
-      var inHg = c.surface_pressure*0.02953;
+      safe(function(){ gauge('temp', c.temperature_2m, -20, 110, Math.round(c.temperature_2m)+'°F', 'feels like '+Math.round(c.apparent_temperature)+'° · '+Math.round(f2c(c.temperature_2m))+'°C');
+      });
+      safe(function(){ gauge('hum', c.relative_humidity_2m, 0, 100, c.relative_humidity_2m+'%', 'relative humidity'); });
+      safe(function(){ var inHg = c.surface_pressure*0.02953;
       gauge('pres', inHg, 28.5, 31, inHg.toFixed(2)+' inHg', Math.round(c.surface_pressure)+' hPa at the surface');
-      gauge('cloud', c.cloud_cover, 0, 100, c.cloud_cover+'%', 'cloud cover · '+(window.skyKind ? skyKind(c.weather_code, c.is_day)[1] : ''));
-      windDial('w10', c.wind_speed_10m, c.wind_direction_10m, 'gusts '+Math.round(c.wind_gusts_10m)+' kt');
-      var d = j.daily||{};
+      });
+      safe(function(){ gauge('cloud', c.cloud_cover, 0, 100, c.cloud_cover+'%', 'cloud cover · '+(skyKind ? skyKind(c.weather_code, c.is_day)[1] : ''));
+      });
+      safe(function(){ windDial('w10', c.wind_speed_10m, c.wind_direction_10m, 'gusts '+Math.round(c.wind_gusts_10m)+' kt'); });
+      safe(function(){ var d = j.daily||{};
       $('day-val').innerHTML = '↑ '+Math.round(d.temperature_2m_max[0])+'°<span class="c">↓ '+Math.round(d.temperature_2m_min[0])+'°</span>';
-      $('day-det').textContent = 'forecast high / low · '+(d.precipitation_sum[0]||0).toFixed(2)+' in precipitation expected';
+      $('day-det').textContent = 'forecast high / low · '+(d.precipitation_sum[0]||0).toFixed(2)+' in precipitation expected'; });
     }).catch(function(e){ status('Surface weather: '+(e && e.message || 'fetch failed')); });
     var lv = ['850','500','100','10'];
     var q2 = Q+'&hourly='+lv.map(function(l){ return 'wind_speed_'+l+'hPa,wind_direction_'+l+'hPa,geopotential_height_'+l+'hPa'; }).join(',')+'&wind_speed_unit=kn&past_hours=3&forecast_hours=6';
@@ -76,7 +82,7 @@
       if(i>=tries.length){ lv.forEach(function(l){ windDial(l==='10'?'w10hpa':'w'+l, null); }); return; }
       fetch(tries[i]).then(function(r){ return r.ok ? r.json() : null; }).then(function(j){
         var ok = false;
-        lv.forEach(function(l){ var h = window.nearestHour ? nearestHour(j,'wind_speed_'+l+'hPa','wind_direction_'+l+'hPa','geopotential_height_'+l+'hPa') : null;
+        lv.forEach(function(l){ var h = nearestHour ? nearestHour(j,'wind_speed_'+l+'hPa','wind_direction_'+l+'hPa','geopotential_height_'+l+'hPa') : null;
           var pid = (l==='10') ? 'w10hpa' : 'w'+l; if(h){ ok = true; windDial(pid, h.kt, h.dir, (h.gph/1000).toFixed(1)+' km up'); } else windDial(pid, null); });
         if(!ok) attempt(i+1);
       }).catch(function(e){ if(i===tries.length-1) status('Winds aloft: '+(e && e.message || 'fetch failed')); attempt(i+1); });
@@ -209,6 +215,34 @@
     })();
   }
 
-  function init(){ renderSunMoon(); fetchWx(); fetchDD(); setInterval(renderSunMoon, 60000); setInterval(fetchWx, 15*60000); }
+  /* ---------- Historical Phenology: two-week windows (1st–15th, 16th–end), carousel ---------- */
+  function renderPhenology(){
+    var EV = window.PHENOLOGY_HISTORY || [], row=$('ph-row'), title=$('ph-title'); if(!row) return;
+    var now=new Date(), win={m: now.getMonth()+1, h: now.getDate()<=15 ? 1 : 2};   /* h: half of month */
+    var MON=['January','February','March','April','May','June','July','August','September','October','November','December'];
+    function dim(m){ return new Date(2001, m, 0).getDate(); }   /* days in month (non-leap; Feb 29 folds into 16–end) */
+    function draw(){
+      var lo = win.h===1 ? 1 : 16, hi = win.h===1 ? 15 : 31;
+      title.textContent = MON[win.m-1]+' '+lo+'–'+(win.h===1?15:dim(win.m));
+      var items = EV.filter(function(e){ return e.m===win.m && e.d>=lo && e.d<=hi; }).sort(function(a,b){ return (a.d-b.d)||(a.y-b.y); });
+      if(!items.length){ row.innerHTML='<p class="ph-empty">Nothing on record for this fortnight yet.</p>'; }
+      else row.innerHTML = items.map(function(e){
+        var when = e.prec==='day' ? (MON[e.m-1].slice(0,3)+' '+e.d) : (e.prec==='days' ? (MON[e.m-1].slice(0,3)+' '+e.d+' (onset)') : (e.prec||'') );
+        var esc=function(v){ return String(v||'').replace(/[&<>"]/g,function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); };
+        return '<article class="ph-card"><div class="ph-year">'+e.y+'</div><div class="ph-cat">'+esc(e.cat)+(when?' · '+esc(when):'')+'</div><div class="ph-name">'+esc(e.t)+'</div>'
+          + (e.area?'<div class="ph-meta"><b>Where:</b> '+esc(e.area)+'</div>':'')
+          + (e.meas?'<div class="ph-meta"><b>Measured:</b> '+esc(e.meas)+(e.station?' — '+esc(e.station):'')+'</div>':'')
+          + (e.impact?'<div class="ph-meta">'+esc(e.impact.length>220?e.impact.slice(0,217)+'…':e.impact)+'</div>':'')
+          + '<div class="ph-src">'+(e.url?'<a href="'+esc(e.url)+'" target="_blank" rel="noopener">'+esc(e.source||'source')+'</a>':esc(e.source))+(e.conf?' · confidence '+esc(e.conf):'')+'</div></article>';
+      }).join('');
+      $('ph-note').textContent = items.length+' event'+(items.length===1?'':'s')+' in this window · '+EV.length+' on the register, '+Math.min.apply(null,EV.map(function(e){ return e.y; }))+'–'+Math.max.apply(null,EV.map(function(e){ return e.y; }))+'. Multi-day and seasonal events are placed at their anchor date.';
+      row.scrollLeft=0;
+    }
+    $('ph-prev').onclick=function(){ if(win.h===2) win.h=1; else { win.h=2; win.m=win.m===1?12:win.m-1; } draw(); };
+    $('ph-next').onclick=function(){ if(win.h===1) win.h=2; else { win.h=1; win.m=win.m===12?1:win.m+1; } draw(); };
+    draw();
+  }
+
+  function init(){ renderPhenology(); renderSunMoon(); fetchWx(); fetchDD(); setInterval(renderSunMoon, 60000); setInterval(fetchWx, 15*60000); }
   if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', init); else init();
 })();
