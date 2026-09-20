@@ -215,32 +215,33 @@
     })();
   }
 
-  /* ---------- Historical Phenology: two-week windows (1st–15th, 16th–end), carousel ---------- */
+  /* ---------- Historical Phenology: one card per two-week window, events listed chronologically ---------- */
   function renderPhenology(){
-    var EV = window.PHENOLOGY_HISTORY || [], row=$('ph-row'), title=$('ph-title'); if(!row) return;
-    var now=new Date(), win={m: now.getMonth()+1, h: now.getDate()<=15 ? 1 : 2};   /* h: half of month */
+    var EV = window.PHENOLOGY_HISTORY || [], row=$('ph-row'); if(!row) return;
     var MON=['January','February','March','April','May','June','July','August','September','October','November','December'];
-    function dim(m){ return new Date(2001, m, 0).getDate(); }   /* days in month (non-leap; Feb 29 folds into 16–end) */
-    function draw(){
-      var lo = win.h===1 ? 1 : 16, hi = win.h===1 ? 15 : 31;
-      title.textContent = MON[win.m-1]+' '+lo+'–'+(win.h===1?15:dim(win.m));
-      var items = EV.filter(function(e){ return e.m===win.m && e.d>=lo && e.d<=hi; }).sort(function(a,b){ return (a.d-b.d)||(a.y-b.y); });
-      if(!items.length){ row.innerHTML='<p class="ph-empty">Nothing on record for this fortnight yet.</p>'; }
-      else row.innerHTML = items.map(function(e){
-        var when = e.prec==='day' ? (MON[e.m-1].slice(0,3)+' '+e.d) : (e.prec==='days' ? (MON[e.m-1].slice(0,3)+' '+e.d+' (onset)') : (e.prec||'') );
-        var esc=function(v){ return String(v||'').replace(/[&<>"]/g,function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); };
-        return '<article class="ph-card"><div class="ph-year">'+e.y+'</div><div class="ph-cat">'+esc(e.cat)+(when?' · '+esc(when):'')+'</div><div class="ph-name">'+esc(e.t)+'</div>'
-          + (e.area?'<div class="ph-meta"><b>Where:</b> '+esc(e.area)+'</div>':'')
+    function dim(m){ return new Date(2001, m, 0).getDate(); }
+    var esc=function(v){ return String(v||'').replace(/[&<>"]/g,function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); };
+    var wins=[]; for(var m=1;m<=12;m++){ wins.push({m:m,lo:1,hi:15}); wins.push({m:m,lo:16,hi:31}); }
+    var now=new Date(), curIdx=(now.getMonth())*2+(now.getDate()<=15?0:1);
+    row.innerHTML = wins.map(function(w,idx){
+      var items = EV.filter(function(e){ return e.m===w.m && e.d>=w.lo && e.d<=w.hi; }).sort(function(a,b){ return (a.y-b.y)||(a.d-b.d); });
+      var head='<div class="ph-head"><div class="ph-win">'+MON[w.m-1]+' '+w.lo+'–'+(w.hi===15?15:dim(w.m))+'</div><div class="ph-count">'+items.length+' on record</div></div>';
+      var list = items.length ? '<ol class="ph-list">'+items.map(function(e){
+        var when = e.prec==='day' ? MON[e.m-1].slice(0,3)+' '+e.d : (e.prec==='days' ? MON[e.m-1].slice(0,3)+' '+e.d+' onset' : (e.prec||'')); 
+        return '<li><span class="ph-y">'+e.y+'</span><div><div class="ph-name">'+esc(e.t)+'</div><div class="ph-meta">'+esc(e.cat)+(when?' · '+esc(when):'')+(e.area?' · '+esc(e.area):'')+'</div>'
           + (e.meas?'<div class="ph-meta"><b>Measured:</b> '+esc(e.meas)+(e.station?' — '+esc(e.station):'')+'</div>':'')
-          + (e.impact?'<div class="ph-meta">'+esc(e.impact.length>220?e.impact.slice(0,217)+'…':e.impact)+'</div>':'')
-          + '<div class="ph-src">'+(e.url?'<a href="'+esc(e.url)+'" target="_blank" rel="noopener">'+esc(e.source||'source')+'</a>':esc(e.source))+(e.conf?' · confidence '+esc(e.conf):'')+'</div></article>';
-      }).join('');
-      $('ph-note').textContent = items.length+' event'+(items.length===1?'':'s')+' in this window · '+EV.length+' on the register, '+Math.min.apply(null,EV.map(function(e){ return e.y; }))+'–'+Math.max.apply(null,EV.map(function(e){ return e.y; }))+'. Multi-day and seasonal events are placed at their anchor date.';
-      row.scrollLeft=0;
-    }
-    $('ph-prev').onclick=function(){ if(win.h===2) win.h=1; else { win.h=2; win.m=win.m===1?12:win.m-1; } draw(); };
-    $('ph-next').onclick=function(){ if(win.h===1) win.h=2; else { win.h=1; win.m=win.m===12?1:win.m+1; } draw(); };
-    draw();
+          + (e.impact?'<div class="ph-meta">'+esc(e.impact.length>200?e.impact.slice(0,197)+'…':e.impact)+'</div>':'')
+          + '<div class="ph-src">'+(e.url?'<a href="'+esc(e.url)+'" target="_blank" rel="noopener">'+esc(e.source||'source')+'</a>':esc(e.source))+(e.conf?' · confidence '+esc(e.conf):'')+'</div></div></li>';
+      }).join('')+'</ol>' : '<p class="ph-empty">Nothing on record for this fortnight yet.</p>';
+      return '<article class="ph-card'+(idx===curIdx?' cur':'')+'" id="ph-win-'+idx+'">'+head+list+'</article>';
+    }).join('');
+    var ys=EV.map(function(e){ return e.y; });
+    $('ph-note').textContent = EV.length+' events on the register, '+Math.min.apply(null,ys)+'–'+Math.max.apply(null,ys)+' · one card per fortnight, events oldest to newest · multi-day and seasonal events sit at their anchor date.';
+    function go(idx){ var el=$('ph-win-'+idx); if(el) row.scrollTo({left: el.offsetLeft - row.offsetLeft - 2, behavior:'smooth'}); }
+    var cur=curIdx; $('ph-title').textContent='Now: '+MON[wins[curIdx].m-1]+' '+wins[curIdx].lo+'–'+(wins[curIdx].hi===15?15:dim(wins[curIdx].m));
+    $('ph-prev').onclick=function(){ cur=(cur+23)%24; go(cur); };
+    $('ph-next').onclick=function(){ cur=(cur+1)%24; go(cur); };
+    setTimeout(function(){ var el=$('ph-win-'+curIdx); if(el) row.scrollLeft = el.offsetLeft - row.offsetLeft - 2; }, 0);
   }
 
   function init(){ renderPhenology(); renderSunMoon(); fetchWx(); fetchDD(); setInterval(renderSunMoon, 60000); setInterval(fetchWx, 15*60000); }
