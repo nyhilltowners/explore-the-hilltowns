@@ -185,6 +185,14 @@ a.link:hover{background:rgba(252,163,21,.14);}
 .sg-ico{flex:none; width:34px; height:34px; color:var(--gold,#c9a227);}
 .sg-ico svg{width:34px; height:34px; display:block; stroke:currentColor; fill:none; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round;}
 .sg-ico .arrow{transition:transform .6s ease; transform-origin:50% 50%;}
+.sg-column{max-width:620px; border-left:2px dashed rgba(255,255,255,.28); margin:0 0 0 22px; padding:4px 0 4px 18px; position:relative;}
+.sg-column .sg-row{border-bottom:none; padding:10px 4px;}
+.sg-column .sg-row.wind{position:relative;}
+.sg-column .sg-row.wind:before{content:""; position:absolute; left:-24px; top:22px; width:10px; height:2px; background:rgba(255,255,255,.35);}
+.sg-alt{flex:none; width:58px; font-size:11px; letter-spacing:.06em; opacity:.85; padding-top:2px;}
+.sg-cap{display:flex; align-items:center; gap:8px; font-size:11px; letter-spacing:.14em; text-transform:uppercase; color:var(--gold,#c9a227) !important; padding:2px 0 6px;}
+.sg-cap.bottom{padding:8px 0 2px; border-top:2px solid rgba(255,255,255,.35); margin-top:4px;}
+.sg-cap svg{width:22px; height:22px; fill:var(--gold,#c9a227); stroke:var(--gold,#c9a227); stroke-width:1.2;}
 .sg-eye{font-size:10px; letter-spacing:.16em; text-transform:uppercase; opacity:.95; margin:0 0 2px;}
 .sg-val{font-size:22px; font-weight:800; margin:0; line-height:1.15;}
 .sg-val .c{font-weight:400; opacity:.95; font-size:16px; margin-left:6px;}
@@ -298,11 +306,17 @@ a.link:hover{background:rgba(252,163,21,.14);}
     <div class="sg-row"><div class="sg-ico" ><svg viewBox="0 0 24 24"><path d="M14 14.8V5a2 2 0 0 0-4 0v9.8a4 4 0 1 0 4 0z"/></svg></div><div><p class="sg-eye">Temperature</p><p class="sg-val" id="temp-val">—</p><p class="sg-det" id="temp-sub"></p></div></div><div class="sg-row"><div class="sg-ico" ><svg viewBox="0 0 24 24"><path d="M12 3s6 6.5 6 11a6 6 0 0 1-12 0c0-4.5 6-11 6-11z"/></svg></div><div><p class="sg-eye">Humidity</p><p class="sg-val" id="hum-val">—</p><p class="sg-det" id="hum-sub"></p></div></div><div class="sg-row"><div class="sg-ico" ><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 12l4-4M12 7v1M17 12h-1M12 17v-1M7 12h1"/></svg></div><div><p class="sg-eye">Barometer</p><p class="sg-val" id="pres-val">—</p><p class="sg-det" id="pres-sub"></p></div></div><div class="sg-row"><div class="sg-ico" ><svg viewBox="0 0 24 24"><path d="M7 18a4 4 0 0 1-.5-8A6 6 0 0 1 18 9a4 4 0 0 1 0 9H7z"/></svg></div><div><p class="sg-eye">Sky</p><p class="sg-val" id="cloud-val">—</p><p class="sg-det" id="cloud-sub"></p></div></div>
   </div>
 
-  <h2 class="sg-sec">Winds, ground to stratosphere</h2>
-  <div class="sg-grid">
-    <div class="sg-row"><div class="sg-ico" id="w10-ico"><svg viewBox="0 0 24 24"><g class="arrow"><line x1="12" y1="18" x2="12" y2="5"/><polyline points="7,10 12,5 17,10"/></g></svg></div><div><p class="sg-eye">Surface · 10 m</p><p class="sg-val" id="w10-val">—</p><p class="sg-det" id="w10-sub"></p></div></div><div class="sg-row"><div class="sg-ico" id="w850-ico"><svg viewBox="0 0 24 24"><g class="arrow"><line x1="12" y1="18" x2="12" y2="5"/><polyline points="7,10 12,5 17,10"/></g></svg></div><div><p class="sg-eye">850 hPa · ~1.5 km</p><p class="sg-val" id="w850-val">—</p><p class="sg-det" id="w850-sub"></p></div></div><div class="sg-row"><div class="sg-ico" id="w500-ico"><svg viewBox="0 0 24 24"><g class="arrow"><line x1="12" y1="18" x2="12" y2="5"/><polyline points="7,10 12,5 17,10"/></g></svg></div><div><p class="sg-eye">500 hPa · ~5.5 km</p><p class="sg-val" id="w500-val">—</p><p class="sg-det" id="w500-sub"></p></div></div><div class="sg-row"><div class="sg-ico" id="w100-ico"><svg viewBox="0 0 24 24"><g class="arrow"><line x1="12" y1="18" x2="12" y2="5"/><polyline points="7,10 12,5 17,10"/></g></svg></div><div><p class="sg-eye">100 hPa · ~16 km</p><p class="sg-val" id="w100-val">—</p><p class="sg-det" id="w100-sub"></p></div></div><div class="sg-row"><div class="sg-ico" id="w10hpa-ico"><svg viewBox="0 0 24 24"><g class="arrow"><line x1="12" y1="18" x2="12" y2="5"/><polyline points="7,10 12,5 17,10"/></g></svg></div><div><p class="sg-eye">10 hPa · ~30 km</p><p class="sg-val" id="w10hpa-val">—</p><p class="sg-det" id="w10hpa-sub"></p></div></div>
+  <h2 class="sg-sec">Winds, stratosphere to ground</h2>
+  <div class="sg-column">
+    <div class="sg-cap top"><svg viewBox="0 0 24 24"><path d="M12 2l1.8 5.6H20l-4.7 3.4 1.8 5.6L12 13.2 6.9 16.6l1.8-5.6L4 7.6h6.2z"/></svg><span>above the weather</span></div>
+    <div class="sg-row wind"><div class="sg-alt">~30 km</div><div class="sg-ico" id="w10hpa-ico"><svg viewBox="0 0 24 24"><g class="arrow"><line x1="12" y1="18" x2="12" y2="5"/><polyline points="7,10 12,5 17,10"/></g></svg></div><div><p class="sg-eye">10 hPa · polar vortex level</p><p class="sg-val" id="w10hpa-val">—</p><p class="sg-det" id="w10hpa-sub"></p></div></div>
+    <div class="sg-row wind"><div class="sg-alt">~16 km</div><div class="sg-ico" id="w100-ico"><svg viewBox="0 0 24 24"><g class="arrow"><line x1="12" y1="18" x2="12" y2="5"/><polyline points="7,10 12,5 17,10"/></g></svg></div><div><p class="sg-eye">100 hPa · tropopause, where jets fly</p><p class="sg-val" id="w100-val">—</p><p class="sg-det" id="w100-sub"></p></div></div>
+    <div class="sg-row wind"><div class="sg-alt">~5.5 km</div><div class="sg-ico" id="w500-ico"><svg viewBox="0 0 24 24"><g class="arrow"><line x1="12" y1="18" x2="12" y2="5"/><polyline points="7,10 12,5 17,10"/></g></svg></div><div><p class="sg-eye">500 hPa · troughs and ridges</p><p class="sg-val" id="w500-val">—</p><p class="sg-det" id="w500-sub"></p></div></div>
+    <div class="sg-row wind"><div class="sg-alt">~1.5 km</div><div class="sg-ico" id="w850-ico"><svg viewBox="0 0 24 24"><g class="arrow"><line x1="12" y1="18" x2="12" y2="5"/><polyline points="7,10 12,5 17,10"/></g></svg></div><div><p class="sg-eye">850 hPa · steers the valley weather</p><p class="sg-val" id="w850-val">—</p><p class="sg-det" id="w850-sub"></p></div></div>
+    <div class="sg-row wind"><div class="sg-alt">10 m</div><div class="sg-ico" id="w10-ico"><svg viewBox="0 0 24 24"><g class="arrow"><line x1="12" y1="18" x2="12" y2="5"/><polyline points="7,10 12,5 17,10"/></g></svg></div><div><p class="sg-eye">Surface · the wind on the hill</p><p class="sg-val" id="w10-val">—</p><p class="sg-det" id="w10-sub"></p></div></div>
+    <div class="sg-cap bottom"><svg viewBox="0 0 24 24"><path d="M12 2L7 9h3l-4 6h4l-4 6h12l-4-6h4l-4-6h3z"/><line x1="12" y1="21" x2="12" y2="23"/></svg><span>Albany Hill · ~1,700 ft</span></div>
   </div>
-  <p class="sg-note">Arrows point <em>downwind</em>; the text says where the wind blows <em>from</em>. 850 hPa steers valley weather; 500 hPa carries the troughs and ridges; 100 hPa is the tropopause, where jets live; 10 hPa is the polar vortex's winter home.</p>
+  <p class="sg-note">Read it top to bottom as a column of air over the hill. Arrows point <em>downwind</em>; the text says where the wind blows <em>from</em>. The star is the stratosphere, above the weather; the tree is you.</p>
 
   <h2 class="sg-sec">The year, drawn</h2>
   <p class="sg-det" style="margin:0 0 10px">Every year on record, January to December, raw daily values — no smoothing. This year is white; each earlier year a shade closer to the night sky, oldest darkest. Hover to name a year.</p>
