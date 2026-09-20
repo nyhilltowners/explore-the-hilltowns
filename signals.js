@@ -270,6 +270,47 @@
     setTimeout(function(){ var el=$('ph-win-'+curIdx); if(el) row.scrollLeft = el.offsetLeft - row.offsetLeft; }, 0);
   }
 
-  function init(){ renderPhenology(); renderSunMoon(); fetchWx(); fetchDD(); setInterval(renderSunMoon, 60000); setInterval(fetchWx, 15*60000); }
+  /* ---------- iNaturalist: research-grade observations in the Hilltowns box, newest observed first ---------- */
+  var INAT_BOX = {nelat:42.72799866533435, nelng:-73.7475942353335, swlat:42.23036745843211, swlng:-74.39711226427585};   /* per Laurie, 2026-09-20 */
+  function fetchINat(){
+    var grid=$('inat-grid'); if(!grid) return;
+    var url='https://api.inaturalist.org/v1/observations?quality_grade=research&photos=true&order_by=observed_on&order=desc&per_page=24'
+      +'&nelat='+INAT_BOX.nelat+'&nelng='+INAT_BOX.nelng+'&swlat='+INAT_BOX.swlat+'&swlng='+INAT_BOX.swlng;
+    fetch(url).then(function(r){ return r.json(); }).then(function(j){
+      var esc=function(v){ return String(v||'').replace(/[&<>"]/g,function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); };
+      var res=(j.results||[]);
+      if(!res.length){ grid.innerHTML='<p class="ph-empty">No research-grade observations came back.</p>'; return; }
+      grid.innerHTML=res.map(function(o){
+        var t=o.taxon||{}, name=t.preferred_common_name||t.name||'Unidentified', sci=t.preferred_common_name?t.name:'';
+        var ph=(o.photos&&o.photos[0])||null, lic=ph&&ph.license_code, img=ph&&lic?ph.url.replace('square','medium'):null;   /* only openly licensed photos are shown */
+        var when=o.observed_on_string||o.observed_on||'', who=o.user&&(o.user.name||o.user.login)||'', where=o.place_guess||'';
+        return '<a class="inat" href="https://www.inaturalist.org/observations/'+o.id+'" target="_blank" rel="noopener">'
+          +(img?'<img src="'+esc(img)+'" alt="'+esc(name)+'" loading="lazy">':'<div class="ph">'+({Aves:'🐦',Insecta:'🦋',Plantae:'🌿',Fungi:'🍄',Mammalia:'🦌',Amphibia:'🐸',Reptilia:'🐢',Arachnida:'🕷️'}[t.iconic_taxon_name]||'🔍')+'</div>')
+          +'<div class="b"><div class="n">'+esc(name)+'</div>'+(sci?'<div class="sci">'+esc(sci)+'</div>':'')+'<div class="m">'+esc(when)+(where?' · '+esc(where):'')+(who?'<br>by '+esc(who):'')+(img?'<br><span style="opacity:.7">photo '+esc(lic.toUpperCase())+'</span>':'<br><span style="opacity:.7">photo not openly licensed — see iNaturalist</span>')+'</div></div></a>';
+      }).join('');
+      $('inat-note').textContent='Showing '+res.length+' of '+(j.total_results||res.length).toLocaleString()+' research-grade observations in the box · data © iNaturalist contributors; only Creative Commons photos are displayed here, others link through.';
+    }).catch(function(e){ grid.innerHTML='<p class="ph-empty">iNaturalist is unreachable right now.</p>'; status('iNaturalist: '+(e && e.message || 'fetch failed')); });
+  }
+
+  /* ---------- eBird: recent + notable sightings near Berne (key per Laurie, 2026-09-20) ---------- */
+  var EBIRD_KEY='dce779eb-603d-4505-9113-a04103e6d8d5', EBIRD_DIST=25, EBIRD_BACK=14;
+  function fetchEBird(){
+    var grid=$('ebird-grid'), band=$('ebird-notable'); if(!grid) return;
+    var base='https://api.ebird.org/v2/data/obs/geo/recent', q='?lat='+LAT.toFixed(4)+'&lng='+LNG.toFixed(4)+'&dist='+EBIRD_DIST+'&back='+EBIRD_BACK+'&maxResults=60';
+    var opt={headers:{'X-eBirdApiToken':EBIRD_KEY}};
+    var esc=function(v){ return String(v||'').replace(/[&<>"]/g,function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); };
+    var row=function(o,rare){ return '<div class="eb'+(rare?' rare':'')+'"><div class="c">'+(o.howMany!=null?o.howMany:'')+'</div><div><div class="n">'+esc(o.comName)+' <span class="sci" style="font-weight:400;font-style:italic;opacity:.85">'+esc(o.sciName)+'</span>'+(rare?' · <span class="ph-tag">notable</span>':'')+'</div><div class="m">'+esc((o.obsDt||'').slice(0,16))+' · '+esc(o.locName)+(o.subId?' · <a href="https://ebird.org/checklist/'+esc(o.subId)+'" target="_blank" rel="noopener">checklist</a>':'')+'</div></div></div>'; };
+    Promise.all([fetch(base+'/notable'+q,opt).then(function(r){ return r.ok?r.json():[]; }).catch(function(){ return []; }),
+                 fetch(base+q,opt).then(function(r){ if(!r.ok) throw new Error('eBird HTTP '+r.status); return r.json(); })])
+    .then(function(res){ var notable=res[0]||[], recent=res[1]||[];
+      var srt=function(a,b){ return (b.obsDt||'').localeCompare(a.obsDt||''); }; notable.sort(srt); recent.sort(srt);
+      band.innerHTML = notable.length ? '<div class="eb-band"><div class="t">Notable · '+notable.length+'</div>'+notable.slice(0,12).map(function(o){ return row(o,true); }).join('')+'</div>' : '';
+      var seen={}; recent=recent.filter(function(o){ var k=o.speciesCode; if(seen[k]) return false; seen[k]=1; return true; });   /* one line per species, most recent report */
+      grid.innerHTML = recent.length ? '<div style="grid-column:1/-1">'+recent.map(function(o){ return row(o,false); }).join('')+'</div>' : '<p class="ph-empty">No reports in the window.</p>';
+      $('ebird-note').textContent = recent.length+' species reported in the last '+EBIRD_BACK+' days within '+EBIRD_DIST+' km of Berne · one line per species, most recent report · data © eBird / Cornell Lab of Ornithology.';
+    }).catch(function(e){ grid.innerHTML='<p class="ph-empty">eBird is unreachable right now.</p>'; status('eBird: '+(e && e.message || 'fetch failed')+' (if this says HTTP 403 the key is wrong; if it says "Failed to fetch" eBird refused the cross-site request and the feed must move to build time)'); });
+  }
+
+  function init(){ fetchINat(); fetchEBird(); renderPhenology(); renderSunMoon(); fetchWx(); fetchDD(); setInterval(renderSunMoon, 60000); setInterval(fetchWx, 15*60000); }
   if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', init); else init();
 })();
