@@ -832,7 +832,12 @@ h1{font-family:'Montserrat',sans-serif; font-weight:800; text-transform:uppercas
     if(isDownweightKind(p)) return 1;
     return 0;
   }
+  /* 2026-09-21 (Laurie): whole categories excluded from Explore-nearby, not just
+     names — Geology (caves/karst/deep-time sites) for now; add more keys here
+     if other layers need the same treatment. */
+  var NEARBY_EXCLUDE_CATS = ["Geology"];
   function nearbyExcluded(p){
+    if(NEARBY_EXCLUDE_CATS.indexOf(p.cat) >= 0) return true;
     var n = String(p.t||"").toLowerCase().replace(/\u2019/g,"'").trim();
     if(NEARBY_EXCLUDE_EXACT.indexOf(n) >= 0) return true;
     return NEARBY_EXCLUDE.some(function(x){ return n.indexOf(x) >= 0; });

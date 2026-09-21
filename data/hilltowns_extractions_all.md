@@ -505,3 +505,22 @@ Checked against Albany's own record and excluded from the regional register (or 
 - **Columbia Republican (Hudson), 11 Nov 1897** — no distinct register event; only a passing note of fall-1897 dryness (low wells, "much-needed rain").
 
 *New newspaper sources used (via NYS Historic Newspapers / archive): The Argus (Albany), Columbia Republican (Hudson), (Endicott) Daily Bulletin. NCEI gives when/what; the Enterprise/Argus/Republican fix the where and the local losses.*
+
+---
+
+## SESSION ADDENDUM — Karst coordinates + Schoharie/Helderberg expansion
+
+**Karst sheet: build-script sync + coordinate schema.**
+- Synced the 3 marble features (Natural Stone Bridge, Bartholomew's Cobble/Eldon's Cave, Rosendale/Widow Jane) + 3 scope-notes from the xlsx INTO `register_build.py` — the "karst sheet ahead of the .py" debt is PAID. .py and xlsx Karst sheets now identical (verified cell-by-cell).
+- Added coordinate columns to every karst feature: **Lat, Lon, Coord precision, Coord source/note** (in both files, via a `KARST_COORDS` dict in the .py). Honest precision tiers — never invent false precision; NSS/NCC don't publish wild-cave entrances, so those get flagged loci.
+- Re-anchored the Barton Hill cluster on the USGS NWIS gage "Schoharie Cavern at Shutter Corners" (42.67869, -74.24263). Matched TV Tower Cave to LiDAR depression LiDAR-36-001-16 (probable, flagged).
+- Set up the regional carbonate belt as a **polygon FILL layer** (placeholder envelope + USGS Kappel 2020 SIR 2020-5030 source), documented in the Karst-sheet notes.
+
+**Added (in footprint), coordinate-first:**
+- **Tory Cave** (Voorheesville / Thacher Park, Albany Co.) — Coeymans/Manlius Ls escarpment cave by the Indian Ladder Trail; Jacob Salsbury Loyalist-spy lore (1777); ice stalagmites via a natural chimney. Marker locus 42.65547, -74.01687 (cave ~0.3 mi off).
+- **Wolf Hollow (Hoffmans Fault gorge)** (Glenville, Schenectady Co.) — added FLAGGED **NOT karst**: a fault-line gorge (Hoffmans normal fault; Schenectady Fm shale vs Beekmantown dolostone), differential erosion, not dissolution. Contrast entry so it isn't mis-filed as a cave. Gorge-midpoint locus 42.910, -74.072.
+
+**Excluded (dedup) — recorded so it isn't re-added:**
+- **"Gebhard's Cave"** — NOT a distinct cave. John Gebhard was the 1831 *explorer* of **Ball's Cave** (mapped as "Gages Cave" in 1842), already on the sheet as **Balls Cave** (James Gage Karst Preserve). The name is Ball's Cave's history, not a separate feature. The genuine distinct Central-Bridge-area system is **Barrack Zourie Cave** (still to add).
+
+*Karst sheet grew 25 → 27 features (1 now flagged non-karst). All changes patched in parallel (.py + xlsx), parity verified, recalc 0 errors.*
