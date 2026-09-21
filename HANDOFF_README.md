@@ -1,4 +1,4 @@
-# NY Hilltowners Folk Atlas — Session Handoff (2026-09-21, v776)
+# NY Hilltowners Folk Atlas — Session Handoff (2026-09-21, v777)
 
 This ZIP is a **complete, self-contained source tree**. A new chat can unzip it,
 run the build, and continue exactly where this session left off. Everything here
@@ -136,7 +136,7 @@ Fixed-hinge wingbeat, 4 white wing-spots. Day-only, reduced-motion safe. The
 
 - **Landing page is the Calendar (v719, Laurie):** `build.py` emits `calendar.html` → `site/index.html` (list view is its default) and the map template → `site/atlas.html` (`site/calendar.html` is also emitted for old links). Nav order: Calendar, Atlas, Directory, IG. Pin deep-links are `atlas.html#<slug>`.
 - **Hamburger nav at all widths (v719):** the link row is always behind the ≡ button (dropdown panel, right-aligned on desktop, full-width on phones).
-- **Calendar list view shows the event's Open Graph image** (`img` from the ingestor's preview fetch) in place of the emoji when one exists; falls back to the emoji on load error.
+- **Calendar list view is emoji-only again (v777, Laurie):** the OG-image treatment from v719 was tried and reverted — too visually heavy in the list. Left glyph column stays for layout; `img` is still fetched into `data.js` for other uses (the events preview cache), just not shown here.
 
 - **Radio tuner (v698):** fixed bottom-left tuner on every page, injected by `skyline.js` (no markup). Presets live in the `STATIONS` array at the bottom of `skyline.js`; each `url` must be a direct HTTPS audio stream. All five shipped presets are `verified:false` best-guess endpoints — Laurie to test in a browser and fix/delete; a failed stream shows 'Stream unavailable' rather than breaking. Remembers station + play state in localStorage; browsers block autoplay until first click.
 - **Atina Foods (v698):** pin + 13 stockist rows (some far out of region by design) + 3 online/distribution rows (no pin), all tagged `Atina Foods`; four pre-existing rows (Toko, Story Farms, Olana, Montgomery Place) tagged. Stockist websites were inferred from names and are flagged UNVERIFIED in Notes.
@@ -217,7 +217,7 @@ Big ongoing effort to tame tag sprawl. Started at 2,332 unique tags; now ~2,178.
 7. Clean-room verify: unzip the package fresh, rebuild, confirm BUILD OK.
 8. `present_files` the zip + both xlsx.
 
-Version at handoff: **v776**. Next chat continues from v777.
+Version at handoff: **v777**. Next chat continues from v778.
 
 ---
 
