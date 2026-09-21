@@ -1,4 +1,4 @@
-# NY Hilltowners Folk Atlas — Session Handoff (2026-09-20, v775)
+# NY Hilltowners Folk Atlas — Session Handoff (2026-09-21, v776)
 
 This ZIP is a **complete, self-contained source tree**. A new chat can unzip it,
 run the build, and continue exactly where this session left off. Everything here
@@ -120,6 +120,9 @@ Fixed-hinge wingbeat, 4 white wing-spots. Day-only, reduced-motion safe. The
 
 ## UX state (recent)
 
+- **Karst & Caves layer (v776, Laurie):** new sheet in `points_of_interest.xlsx` + manifest category (key `karst_caves`, 🕳️, off by default). 23 features from the Regional Climate & Weather Event Register's Subsidence & Karst sheet — active caves, filled/erased sinks, and standing-hazard context rows. Coordinates are Places-confirmed where a preserve/park matched, hamlet-centroid `approximate` where only a general area is documented, and `none` (no pin, directory-only) for the three Barton Hill features (Caboose, Single X, Joober Hole) and the Joralemon/regional context rows still waiting on Mylroie 1977 for exact coordinates.
+- **Lore / lost-places POIs (v776):** four rows added to Points of Interest — the Coonley house (Altamont), White Sulphur Springs (Berne), vanished Knox landmarks (Si Stevens' store, the old post office), and the Joralemon Park rock shelter. From `Hilltowns_extractions_ALL.md` (Altamont Enterprise archive, staged via the climate register). All `approximate` anchors pending exact sites.
+
 - **Phenology pairs (v767, Laurie):** the Signals carousel now shows one PAIR per fortnight — Expected (from `data/microseasons.md`, *The Twenty-Four Microseasons of Albany Hill*, parsed by `build.py` → `site/phenology_expected.js`; bullets tagged ghost/health/garden/foodways) beside On record (the register). ← → step a fortnight at a time. Update either source by replacing the file and pushing.
 - **Historical Phenology (v760, Laurie):** top of the Signals page. `data/climate_events.xlsx` (the Regional Climate & Weather Event Register: Events + Wind & Tornadoes sheets) → `build.py` → `site/phenology_history.js`; the page shows the current two-week window (1st–15th / 16th–end) as a card carousel with ← → to step through windows. Historical record ONLY — Laurie will add a separate current/expected phenology layer later. Update the register by replacing the xlsx and pushing.
 
@@ -214,7 +217,7 @@ Big ongoing effort to tame tag sprawl. Started at 2,332 unique tags; now ~2,178.
 7. Clean-room verify: unzip the package fresh, rebuild, confirm BUILD OK.
 8. `present_files` the zip + both xlsx.
 
-Version at handoff: **v775**. Next chat continues from v776.
+Version at handoff: **v776**. Next chat continues from v777.
 
 ---
 

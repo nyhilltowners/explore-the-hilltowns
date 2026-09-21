@@ -112,6 +112,16 @@
       "glyph": "⚙"
     },
     {
+      "key": "karst_caves",
+      "label": "Karst & Caves",
+      "sheet": "Karst & Caves",
+      "workbook": "data/points_of_interest.xlsx",
+      "schema": "poi",
+      "glyph": "🕳️",
+      "color": "#5b4636",
+      "default_on": false
+    },
+    {
       "key": "independent_media",
       "label": "Independent Media",
       "sheet": "Independent Media",
