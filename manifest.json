@@ -112,9 +112,9 @@
       "glyph": "⚙"
     },
     {
-      "key": "karst_caves",
-      "label": "Karst & Caves",
-      "sheet": "Karst & Caves",
+      "key": "geology",
+      "label": "Geology",
+      "sheet": "Geology",
       "workbook": "data/points_of_interest.xlsx",
       "schema": "poi",
       "glyph": "🕳️",

@@ -120,6 +120,18 @@ Fixed-hinge wingbeat, 4 white wing-spots. Day-only, reduced-motion safe. The
 
 ## UX state (recent)
 
+- **v779 (2026-09-21), Laurie:** 10 deep-time geology / folklore POIs added to the Geology layer, from `data/hilltowns_poi_lore_notes.md` (The Catskill Geologist, Robert & Johanna Titus) — the alluvial fan on Rte 67 Freehold, Austin Glen turbidites (New Baltimore Conservancy), Cohoes Falls, the Twin Bridges Normanskill outcrop, the Rte 23 Catskill Front overlook, Gilboa Fossil Forest, Murderer's Creek (Athens, 1813), and the three Glacial-Lake-Albany-delta landmarks (Springwood/FDR, Vanderbilt Mansion, Mount Ida/Poestenkill Gorge). Landslide field-ID methods (leaning trees, headwall scarps) and the Route 102/Joralemon rock-shelter item are documentation, not new pins — the latter was already added as a lore POI. `hilltowns_poi_lore_notes.md` still has thinner leads (Altamont naming/Lucy Cassidy, undated) held back for lack of a confirmed location.
+
+- **v776-v778 (2026-09-21), Laurie:**
+  - Karst & Caves layer renamed to **Geology** (manifest key `geology`, same sheet/data).
+  - **Locust Grove** (Oak Hill events venue) hours cleared — events-only, never glows.
+  - **Six Hands Farm Store**: an exact-duplicate row consolidated into one.
+  - **Gem Mercantile**: Display=No.
+  - 5 directory adds: Art Murphy (fossils/geology, no pin), Catskills Visitor Center / Catskill Center (Mt Tremper), Meadowdale Winery (Voorheesville), Kaatsbaan Cultural Park (Tivoli), Herb Society of America NY (no pin).
+  - **33 orchards/PYO farms** added to Farm Stands (🍎, tags `Apples; Pick Your Own`), 2 already present (Boehm Farm, Saunderskill Farms) skipped, 3 unverified (Apple Hill Farm, Meadowbrook Apples, Wilkens Fruit & Fir Farm) filed directory-only pending Laurie confirming location.
+  - Dropped 3 weak weather stations from `STATIONS` in `build.py` (conklingville_dam, phoenicia, saratoga_springs_4sw) — thin/low-elevation, were bloating `station_dd.js`. CSVs left in `data/stations/`, harmless.
+  - Updated `data/climate_events.xlsx` (register); added `data/hilltowns_poi_lore_notes.md` and `data/hilltowns_extractions_all.md` as reference material (Titus deep-time geology, folklore leads, Ways Atlas cross-links) — not yet built into map layers; flag for a future pass.
+
 - **Karst & Caves layer (v776, Laurie):** new sheet in `points_of_interest.xlsx` + manifest category (key `karst_caves`, 🕳️, off by default). 23 features from the Regional Climate & Weather Event Register's Subsidence & Karst sheet — active caves, filled/erased sinks, and standing-hazard context rows. Coordinates are Places-confirmed where a preserve/park matched, hamlet-centroid `approximate` where only a general area is documented, and `none` (no pin, directory-only) for the three Barton Hill features (Caboose, Single X, Joober Hole) and the Joralemon/regional context rows still waiting on Mylroie 1977 for exact coordinates.
 - **Lore / lost-places POIs (v776):** four rows added to Points of Interest — the Coonley house (Altamont), White Sulphur Springs (Berne), vanished Knox landmarks (Si Stevens' store, the old post office), and the Joralemon Park rock shelter. From `Hilltowns_extractions_ALL.md` (Altamont Enterprise archive, staged via the climate register). All `approximate` anchors pending exact sites.
 
@@ -164,7 +176,7 @@ Fixed-hinge wingbeat, 4 white wing-spots. Day-only, reduced-motion safe. The
 
 ## Events pipeline / recurrence schema
 
-Latest drop-in: **events_71**. Schema carries 4 recurrence columns after `Agenda`:
+Latest drop-in: **events_72**. Schema carries 4 recurrence columns after `Agenda`:
 `Recur Weeks` / `Recur Days` / `Recur Except` / `Recur Time`.
 
 **Model A contract:** the ingestor emits ONE fully-dated row per occurrence and

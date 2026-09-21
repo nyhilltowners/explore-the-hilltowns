@@ -1317,20 +1317,19 @@ def emit_trading_post(items):
 # ---------------------------------------------------------------------------
 DAILY_STATIONS = {"alcove_dam", "albany_ap", "slide_mountain", "cobleskill_2ese", "indian_lake_2sw", "old_forge", "mohonk_lake"}   # continuous records: raw daily highs/lows shipped for the year charts
 STATIONS = [   # (slug, display name, elevation ft, active?)  — see data/stations/README.md
+    # 2026-09-21 (Laurie): dropped conklingville_dam, phoenicia, saratoga_springs_4sw — thin/low-value,
+    # were bloating station_dd.js for little comparative payoff. CSVs stay in data/stations/ (harmless,
+    # just unread); re-add here if wanted later.
     ("indian_lake_2sw", "Indian Lake 2 SW (co-op) · Hamilton Co.", 1660, True),
     ("old_forge",       "Old Forge (co-op) · Herkimer Co.",     1720,  False),
     ("mohonk_lake",     "Mohonk Lake (co-op) · Ulster Co.",     1245,  True),
     ("alcove_dam",      "Alcove Dam (co-op) · Coeymans",        590,  True),
     ("slide_mountain",  "Slide Mountain (co-op) · Ulster Co.",  2650,  False),
     ("albany_ap",       "Albany Intl Airport (ALB)",            285,  True),
-    ("saratoga_springs_4sw", "Saratoga Springs 4 SW (co-op)",   305,  True),
-    ("phoenicia",       "Phoenicia 2SW (co-op) · Ulster Co.",   820,  False),
     ("prattsville",     "Prattsville (co-op) · Greene Co.",    1150,  False),
     ("cobleskill_2ese", "Cobleskill 2 ESE (co-op)",            1200,  False),
     ("cairo_3nw",       "Cairo 3 NW (co-op)",                   600,  False),
     ("windham_3e",      "Windham 3 E (co-op) · Greene Co.",    1600,  False),
-    ("conklingville_dam","Conklingville Dam (co-op) · Sacandaga", 780,  True),
-    ("lake_luzerne",    "Lake Luzerne (co-op) · Warren Co. — precip only", 700, True),
 ]
 
 def _station_years(path, keep_daily=False):
