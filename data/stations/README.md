@@ -9,6 +9,11 @@ STATIONS in build.py with its display name and rough elevation.
 
 | slug | station | record | notes |
 |---|---|---|---|
+| indian_lake_2sw | Indian Lake 2 SW (co-op) | 1899-09 → present | ~1,660 ft, Adirondacks; active, near Westerlo's elevation |
+| old_forge | Old Forge (co-op) | 1907-12 → 2021; temps through 2021 | ~1,720 ft, Adirondacks; closed, close to Westerlo's elevation |
+| mohonk_lake | Mohonk Lake (co-op) | 1896-01 → present | ~1,245 ft, Shawangunks; the best-kept station in NY, active |
+| saratoga_springs_4sw | Saratoga Springs 4 SW (co-op) | 1955-08 → present | ~305 ft; low elevation, included for regional context |
+| lake_luzerne | Lake Luzerne (co-op) | 2009-03 → present | ~700 ft; precipitation/snow only, no temperature record |
 | slide_mountain | Slide Mountain (co-op) | 1948-05 → 2017-04; temperatures 1961–2012 | ~2,650 ft, highest station in the region; the cold bracket for the Hilltowns; closed |
 | albany_ap | Albany International Airport (ALB) | 1938-06 → present | first-order station, 285 ft; the long, continuous record |
 | alcove_dam | Alcove Dam (co-op) | 1942-05 → present | Alcove Reservoir, Coeymans — the closest active station to Westerlo, ~590 ft |
