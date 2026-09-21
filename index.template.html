@@ -1476,7 +1476,16 @@ function isClosedNow(r){
   }
   return true;
 }
+/* 2026-09-21 (Laurie): gas stations (⛽) read as a plain, neutral pin from
+   10am-6pm ET regardless of actual open/closed hours — no glow, no fade.
+   Outside that window the normal hours-based rules apply. */
+function isGasQuietHours(r){
+  if(r.g !== '\u26FD') return false;
+  var m = nyMinutesNow();
+  return m >= 600 && m < 1080;   /* 10:00am–6:00pm ET */
+}
 function isDimmed(r){
+  if(isGasQuietHours(r)) return false;
   if(r.ty==='events'){
     var ref = planDate || TODAY_E;
     return r.d1 > ref;         /* announced but not yet begun: gray */
@@ -1500,6 +1509,7 @@ function isDimmed(r){
    POI in its meeting window. (Laurie, 2026-09-14) */
 function isLodgingRec(r){ return r.cat === 'Lodging'; }
 function openNow(r){
+  if(isGasQuietHours(r)) return false;
   if(r.ty==='events'){
     if(planDate) return false;                     /* planning a future day: full-color, no "live now" glow */
     /* Glow only from 1 HOUR before start until the event ends (ET, to the
