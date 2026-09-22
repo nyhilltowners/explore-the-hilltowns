@@ -1483,6 +1483,24 @@ function isGasQuietHours(r){
   var m = nyMinutesNow();
   return m >= 600 && m < 1080;   /* 10:00am–6:00pm ET */
 }
+/* 2026-09-21 (Laurie): two tag-driven exceptions to the ordinary hours logic —
+   never applied unless the record carries the matching tag, so nothing else changes.
+   "Event Venue": a place with no standing hours that exists to host events (a rented
+   hall, a resort's event lawn) — it fades like closed whenever nothing is booked there
+   right now, and glows only while a matching event's own window is live. Matched to the
+   venue by near-exact coordinates (events at a hand-set VENUE_COORDS pin share the same
+   lat/lng down to the source data). "Fade When Closed": a place with real but narrow
+   posted hours (post offices) that should read as closed outside that window, not just
+   when the whole day is blank/Closed. */
+function isEventVenue(r){ return (r.tags||[]).some(function(t){ return /^event\s*venue$/i.test(t.trim()); }); }
+function isFadeWhenClosed(r){ return (r.tags||[]).some(function(t){ return /^fade\s*when\s*closed$/i.test(t.trim()); }); }
+function eventsAtVenue(r){
+  if(r.lat==null || r.lng==null || !ATLAS.records) return [];
+  return ATLAS.records.filter(function(e){
+    return e.ty==='events' && e.lat!=null && e.lng!=null &&
+      Math.abs(e.lat-r.lat)<0.0006 && Math.abs(e.lng-r.lng)<0.0006 && !isExpired(e);
+  });
+}
 function isDimmed(r){
   if(isGasQuietHours(r)) return false;
   if(r.ty==='events'){
@@ -1494,6 +1512,12 @@ function isDimmed(r){
      right now." It's dimmed only when today has NO real open hours: today's cell
      is Closed / blank / by-appointment, or it has no hours at all. (Laurie 2026-09-16) */
   var hasAnyHours = r.hrs && ['mon','tue','wed','thu','fri','sat','sun'].some(function(d){ return r.hrs[d] && r.hrs[d].trim(); });
+  if(isEventVenue(r)){
+    var ref0=planDate||TODAY_E;
+    var hasToday=eventsAtVenue(r).some(function(e){ var start=e.nextOcc||e.d1, end=crossesMidnight(e)?e.d1:(e.d2||e.d1); return start<=ref0 && ref0<=end; });
+    return !hasToday;                                   /* faded unless something's actually booked here today */
+  }
+  if(isFadeWhenClosed(r)) return isClosedNow(r);         /* real hours, but faded the moment they close, not just for a blank day */
   if(!hasAnyHours) return false;                       /* no hours anywhere → neutral, not dimmed */
   var cell = (r.hrs[nyDowKey()]||'').trim();
   if(!cell) return true;                               /* has hours other days but not today → dim */
@@ -1528,6 +1552,7 @@ function openNow(r){
     if(/\bp\.?\s*o\.?\s*box\b|post office box/.test(addrLow) || /approximate/.test(tagLow)) return false;
     return recurActiveNow(r);
   }
+  if(isEventVenue(r)) return eventsAtVenue(r).some(function(e){ return openNow(e); });
   var hasHours = r.hrs && ['mon','tue','wed','thu','fri','sat','sun'].some(function(d){ return r.hrs[d] && r.hrs[d].trim(); });
   if(!hasHours) return false;                        /* NO hours → neither dimmed nor glowing */
   /* Unstaffed, always-open outdoor spots (trailheads, preserves, falls, access

@@ -120,6 +120,10 @@ Fixed-hinge wingbeat, 4 white wing-spots. Day-only, reduced-motion safe. The
 
 ## UX state (recent)
 
+- **v795 (2026-09-21), two new tag-driven glow/fade rules on the atlas map, per Laurie:**
+  - **"Event Venue" tag** — a place with no standing hours that exists to host events (Locust Grove, Blackthorne Resort). Now fades like closed whenever nothing is actually booked there today, and glows only while a matching event's own window is live. Matched to its events by near-exact shared coordinates.
+  - **"Fade When Closed" tag** — applied to all 12 Post Office rows. A place with real but narrow hours (e.g. 9am-12:30pm; 2pm-4:30pm) now fades the instant it's outside that window, instead of staying lit all day just because today isn't marked fully Closed. Extend to other narrow-hours businesses by adding the same tag.
+
 - **v793-794 (2026-09-21): first "far-flung" pins, per Laurie** — places outside the Hilltowns region she plans to add occasionally for fun, no special tagging (Laurie declined the "Easter Egg" tag in v794 — plain regional tags only, same as everywhere else). This round: Veselka + Ippudo NY (East Village, NYC), Zelda's Original Gourmet Pizza (Sacramento), London Bridge Pub (Monterey), Trish's Mini Donuts (Pier 39, SF).
 
 - **v791 (2026-09-21), Laurie: no victim names on the site.** Anonymized the three Irene fatality rows in `data/climate_events.xlsx` (Events 265-267) — kept as hazard records (age, mechanism, location, date) with names stripped from the title and key-measurement fields; also stripped a name that had leaked into the Onesquethaw Cave Geology-layer tag. Same three names redacted from the research staging notes (`hilltowns_extractions_all.md`) for consistency. Non-fatality-tagged historical names (e.g. Murderer's Creek's 1813 Sally Hamilton, a 200-year-old named legend) were left alone — different in kind from a modern person's death record.
