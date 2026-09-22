@@ -1,4 +1,4 @@
-# NY Hilltowners Folk Atlas — Session Handoff (2026-09-22, v830)
+# NY Hilltowners Folk Atlas — Session Handoff (2026-09-22, v832)
 
 This ZIP is a **complete, self-contained source tree**. A new chat can unzip it,
 run the build, and continue exactly where this session left off. Everything here
@@ -120,6 +120,8 @@ Fixed-hinge wingbeat, 4 white wing-spots. Day-only, reduced-motion safe. The
 
 ## UX state (recent)
 
+- **v832 (2026-09-22): Mine Kill + Explore-nearby ranking.** Adventures: 'Mine Kill State Park Pool' → **Mine Kill State Park** (year-round Dawn-Dusk, weather permitting; parks.ny.gov/visit/state-parks/mine-kill-state-park); Keleher Preserve glyph 🌲 → 🚵. `calendar.html`: NEARBY_PRIORITY += The Huyck Preserve, Thacher State Park; NEARBY_DEMOTE (tier 1) += Capital Ceramic Supply, T&J Soaps, Town Line Auto, Schoharie Sheriff, Greenville Dental, The Gristmill, Big Hollow Road Trail Head, The Woodhouse Lodge, Love Albany Center, Winter Clove Inn. Note: 'the gristmill' is a substring match — check no other Gristmill-named place is caught.
+- **v831 (2026-09-22): Z's Nutty Ridge** added to Flowers & Garden (🌰 hazelnut/chestnut nursery & orchardists, 5296 Town Line Rd, McGraw/Cortland Co. — Places-confirmed; znutty.com; no published hours; out of core footprint ~110 mi W).
 - **v830 (2026-09-22): Restaurants edits** — The Babbling Brook glyph 🍟 → 🍔; **Wunderstop** added (☕ coffee/cafe/pastries/chocolate inside the Hudson Amtrak Station, 69 South Front St; same coordinates as the station's Transportation pin; Mon–Fri 6–5, Sat–Sun 7–5; wunderstop.com).
 - **v829 (2026-09-22): Explore-nearby priority** — Via Ravioli (Restaurants) and ThTree (Wellness) added to `NEARBY_PRIORITY` in `calendar.html` (tier −1: picked into the panel before everyone else, still shown in distance order).
 - **v828 (2026-09-22): second research-chat merge — storm-scan batches (intake Events 333–369).** Workbook `climate_geology_intake_FILLED.xlsx` re-delivered with 307–369; 307–332, the 19 pins, karst, folklore and sources were already in v826 and were skipped. **30 new Events added (333–342, 344–346, 349–353, 355–357, 359–361, 364–369)** — newspaper-scan windstorms, blizzards, freshets, ice jams, the 1919 Magnolia Terrace slide, 1938 Delanson tornado, 1925 October snowstorm; mostly B, retrospective-sourced 1833/1839/1853/1869/1925 rows are C. **7 folded as duplicates** into existing rows (enriched, IDs left as gaps): 343→81 Blizzard of '88, 347→93 Feb 1914 blizzard (26 vs 35 in discrepancy recorded), 348→165 Superstorm 1993 (Westerlo named), 354→71 Feb 1857 flood, 358→179 Apr 2003 ice storm, 362→134 Dec 1969 snowstorm, 363→294 Delaware Ave (secondhand c.2000 account). Existence-guard note: 338 (Feb 17 1902) is a separate storm from row 319 (early Feb 1902) — kept both. Merge-notes §§A–F were handled in v826; §K out-of-region backlog is Laurie's call and untouched. `docs_research_leads_2026-09-22.md` (the research chat's coordinate-hunt list) added to the tree for reference. Build: 5,952 records (unchanged — no pins this pass), phenology 432 (+30).
@@ -297,7 +299,7 @@ Big ongoing effort to tame tag sprawl. Started at 2,332 unique tags; now ~2,178.
 7. Clean-room verify: unzip the package fresh, rebuild, confirm BUILD OK.
 8. `present_files` the zip + both xlsx.
 
-Version at handoff: **v830**. Next chat continues from v831.
+Version at handoff: **v832**. Next chat continues from v833.
 
 ---
 

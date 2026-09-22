@@ -785,9 +785,10 @@ h1{font-family:'Montserrat',sans-serif; font-weight:800; text-transform:uppercas
      stops for a slot. Tier 1 fills only after every un-demoted candidate;
      tier 2 (Maple on the Lake) only after tier 1. Matched on name substring. */
   var NEARBY_DEMOTE = [
+    "capital ceramic supply","t&j soaps","town line auto","schoharie sheriff","greenville dental","the gristmill","big hollow road trailhead","the woodhouse lodge","love albany center",   /* 2026-09-22 (Laurie) */
     "maple hill syrup","the paradise inn","catskill mountain springs","narnia escapes",
     "helderberg true value","kaaterskill & east jewett","thunderhart golf","helder herdwyck","everyday's restaurant",
-    "winter clove inn","mine kill state park pool","deer mountain inn","hotel mountain brook","the shell inn",
+    "winter clove inn","deer mountain inn","hotel mountain brook","the shell inn",
     "the tasting lab","seec","penny lane ices","vosburgh swamp","unbridled sanctuary","variety video",
     "westerlo library","medusa branch library","greenville public library","corner gateway printing",
     "windham mountain club","windham mountain outfitters","restaurant matilda","wild hudson valley","2 twisted ladies",
@@ -800,6 +801,7 @@ h1{font-family:'Montserrat',sans-serif; font-weight:800; text-transform:uppercas
      picked.sort is by km, so priority affects selection, not placement. Matched on
      name substring; multi-tab places (Heather Ridge, Kuhar, Be Golden, Six Hands,
      Greenville Arms) match on either tab. */
+  var NEARBY_PRIORITY_EXACT = ["thacher state park"];   /* 2026-09-22 (Laurie): the park itself, not its playground/plant-swap rows */
   var NEARBY_PRIORITY = [
     "bitchin' donuts","heather ridge farm","kuhar family farm","be golden farms",
     "the pub at hilltown commons","the g spot","six hands farm store","the greenville arms",
@@ -808,6 +810,7 @@ h1{font-family:'Montserrat',sans-serif; font-weight:800; text-transform:uppercas
     "hamlet ny",   /* 2026-09-16 (Laurie) — Hamlet NY, Rensselaerville */
     "nocturne bakehouse","the sweet spot",   /* 2026-09-17 (Laurie) — both Greenville */
     "via ravioli","thtree"   /* 2026-09-22 (Laurie) — Via Ravioli (Restaurants), ThTree (Wellness) */
+    ,"the huyck preserve"   /* 2026-09-22 (Laurie) */
   ].map(function(x){ return x.replace(/\u2019/g,"'"); });
   /* 2026-09-13 (Laurie): down-weight American Legion posts and post offices /
      mailing / business centers in Explore-nearby — matched by kind (glyph/name/tags)
@@ -829,6 +832,7 @@ h1{font-family:'Montserrat',sans-serif; font-weight:800; text-transform:uppercas
   }
   function demoteTier(p){
     var n = String(p.t||"").toLowerCase().replace(/\u2019/g,"'");
+    if(NEARBY_PRIORITY_EXACT.indexOf(n) >= 0) return -1;
     if(NEARBY_PRIORITY.some(function(f){ return n === f || n.indexOf(f) >= 0; })) return -1;
     if(NEARBY_DEMOTE_LAST.some(function(f){ return n.indexOf(f) >= 0; })) return 2;
     if(NEARBY_DEMOTE.some(function(f){ return n === f || n.indexOf(f) >= 0; })) return 1;
