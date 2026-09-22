@@ -55,9 +55,9 @@ Folk Atlas / Lore Map and the land project.
 
 | # | Name, age | Location | Mechanism | Date | Grade | Approx. coord (verify) | Dock / note |
 |---|---|---|---|---|---|---|---|
-| 1 | Sharon Stein, 68 | Clarksville (New Scotland); creek-side home | **Flood drowning** — swept by the swollen **Onesquethaw Creek** while packing a car to evacuate; body found lodged against trees the same day | 2011-08-28 | B | ~42.60, −74.00 | Ties directly to rows 205/164 + the Onesquethaw Subsidence entry → the Onesquethaw **fatal-flood** pattern. |
-| 2 | Stephen Terleckey, 72 | of Amsterdam; killed on **Route 5S, Montgomery Co.** (wife Karen raised in Altamont) | **Flood drowning** — drove a pickup past barriers onto a washed-out road section | 2011-08-29 (day after) | B | ~42.92, −74.15 (5S corridor) | Regional (Montgomery Co); outside the Hilltowns but same storm. |
-| 3 | Elizabeth Slagle, 88 | McKownville (Parkwood Ave, Guilderland) | **Indirect** — fell down basement stairs checking flooding; found Mon Aug 29 | 2011-08-28/29 | B | ~42.688, −73.852 | Ruled **"secondary"** by Guilderland police chief C. Lawlor (interpretive). **Data note:** counts as a storm death only under a broad/attributable definition — decide a rule before tallying (see §6.4). |
+| 1 | Age 68 | Clarksville (New Scotland); creek-side home | **Flood drowning** — swept by the swollen **Onesquethaw Creek** while packing a car to evacuate; body found lodged against trees the same day | 2011-08-28 | B | ~42.60, −74.00 | Ties directly to rows 205/164 + the Onesquethaw Subsidence entry → the Onesquethaw **fatal-flood** pattern. |
+| 2 | Age 72 | killed on **Route 5S, Montgomery Co.** | **Flood drowning** — drove a pickup past barriers onto a washed-out road section | 2011-08-29 (day after) | B | ~42.92, −74.15 (5S corridor) | Regional (Montgomery Co); outside the Hilltowns but same storm. |
+| 3 | Age 88 | McKownville (Parkwood Ave, Guilderland) | **Indirect** — fell down basement stairs checking flooding; found Mon Aug 29 | 2011-08-28/29 | B | ~42.688, −73.852 | Ruled **"secondary"** by Guilderland police (interpretive). **Data note:** counts as a storm death only under a broad/attributable definition — decide a rule before tallying (see §6.4). |
 
 ---
 
@@ -74,13 +74,13 @@ Folk Atlas / Lore Map and the land project.
 
 - **Altamont: >11 in** of rain — Mayor James Gaughan, quoted; sewer/water infrastructure overstressed, cellar flooding during an extended power outage. **B.** A specific municipal anchor to attach to row 204's "4–12, locally 18."
 - East Berne: **golf-ball-sized hail**; rain so heavy a mailbox 10 ft away was invisible (R. Stempel). **C** (anecdotal intensity).
-- **Sequence anchors:** Aug 27 (pre-Irene Westerlo house fire, 4 firefighters injured) → Aug 28 (Irene) → Aug 29 Mon (2nd Westerlo fire, 4:29 a.m.; Slagle found) → Aug 31 (President Obama federal disaster declaration for NY).
+- **Sequence anchors:** Aug 27 (pre-Irene Westerlo house fire, 4 firefighters injured) → Aug 28 (Irene) → Aug 29 Mon (2nd Westerlo fire, 4:29 a.m.; the third victim found) → Aug 31 (President Obama federal disaster declaration for NY).
 
 ---
 
 ### 5. Municipal impact & flood-hydrology log (creek-by-creek)
 
-- **Onesquethaw Creek** (Clarksville / New Scotland): fatal flooding (Stein); main Clarksville road shut; **Wolf Hill, Krumkill, Indian Ledge Roads** severely damaged; Onesquethaw VFC ordered evacuation, shelter at Clarksville school. *(Karst-linked creek — row 205.)*
+- **Onesquethaw Creek** (Clarksville / New Scotland): fatal flooding; main Clarksville road shut; **Wolf Hill, Krumkill, Indian Ledge Roads** severely damaged; Onesquethaw VFC ordered evacuation, shelter at Clarksville school. *(Karst-linked creek — row 205.)*
 - **Fox Creek** (Berne): extreme — Berne Mill scour; garage torn off a house; debris (dishwashers, dryers, hardware-store stock embedded in guardrails, power poles split in two) carried a half-mile downstream. "I never saw water come down the road like that" (S. Lendrum, Agway owner).
 - **Catskill Creek** (Preston Hollow, Rensselaerville): "devastated"; a **mobile home floated down the creek**; homes left uninhabitable (Supervisor Marie Dermody).
 - **Normans Kill** (Guilderland): boat rescue of a couple trapped on Johnston Road; Guilderland Center FD logged **80 storm calls** (mostly pump-outs), 2 water rescues (Chief D. Dodge).
@@ -93,10 +93,10 @@ Folk Atlas / Lore Map and the land project.
 
 ### 6. Dots to connect (the reason to capture all of this)
 
-1. **Onesquethaw = a repeat killer-flood karst system.** 1991 (row 164, students nearly drowned to the ceiling) + 2011 (Stein drowned; new sink, row 205). The same sinking-stream cave that fills to its ceiling after intense rain is now tied to a human death — the strongest human-hazard signal in the karst layer.
+1. **Onesquethaw = a repeat killer-flood karst system.** 1991 (row 164, students nearly drowned to the ceiling) + 2011 (a drowning; new sink, row 205). The same sinking-stream cave that fills to its ceiling after intense rain is now tied to a human death — the strongest human-hazard signal in the karst layer.
 2. **Irene as trigger, two mechanisms in one storm.** Karst collapse (Onesquethaw hole, Barber Farm sinks) *and* a non-karst **scour** "sinkhole" (Berne Mill) — a clean teaching contrast for the mechanism taxonomy. Don't let them merge under the shared word.
 3. **Rainfall gradient.** Altamont ~11″ (village/valley) vs the register's 18″ on the Catskill escarpment — a plateau-vs-escarpment intensity contrast worth mapping against elevation.
-4. **"Secondary" deaths.** Slagle's fall-death classification forces a rule: does the register count direct-only, or storm-attributable? Set it before any fatality tally, and tag each death with its class.
+4. **"Secondary" deaths.** The third, indirect-death classification forces a rule: does the register count direct-only, or storm-attributable? Set it before any fatality tally, and tag each death with its class.
 
 ---
 
@@ -114,9 +114,9 @@ Folk Atlas / Lore Map and the land project.
 
 *Schema-aligned stubs for `register_build.py`. Not yet written — see promotion note below.*
 
-- **Fatality — Stein** · Category: *Flood fatality* · Area: Clarksville / New Scotland (Onesquethaw Creek) · Key measurement: 1 drowning (swept from creek-side home during evacuation) · Anchor 2011-08-28 (day) · Grade B · Source: *Altamont Enterprise* 2011-12-29 · Note: companion to rows 205/164.
-- **Fatality — Terleckey** · Category: *Flood fatality* · Area: Route 5S, Montgomery Co. · Key measurement: 1 drowning (drove past barriers, washed-out road) · Anchor 2011-08-29 · Grade B · Source: same.
-- **Fatality — Slagle (secondary)** · Category: *Flood fatality (indirect)* · Area: McKownville / Guilderland · Key measurement: 1 fall death checking basement flooding; ruled "secondary" · Anchor 2011-08-29 · Grade B · Source: same · Note: count-rule dependent (§6.4).
+- **Fatality — Onesquethaw Creek** · Category: *Flood fatality* · Area: Clarksville / New Scotland (Onesquethaw Creek) · Key measurement: 1 drowning (swept from creek-side home during evacuation) · Anchor 2011-08-28 (day) · Grade B · Source: *Altamont Enterprise* 2011-12-29 · Note: companion to rows 205/164.
+- **Fatality — Route 5S** · Category: *Flood fatality* · Area: Route 5S, Montgomery Co. · Key measurement: 1 drowning (drove past barriers, washed-out road) · Anchor 2011-08-29 · Grade B · Source: same.
+- **Fatality — McKownville (secondary)** · Category: *Flood fatality (indirect)* · Area: McKownville / Guilderland · Key measurement: 1 fall death checking basement flooding; ruled "secondary" · Anchor 2011-08-29 · Grade B · Source: same · Note: count-rule dependent (§6.4).
 - **Berne Mill scour-sinkhole** · Category: *Flood scour / subsidence (NON-karst)* · Area: Berne hamlet (Fox Creek) · Key measurement: mill front dropped into a "cavernous" scour hole; garage torn off adjacent home · Anchor 2011-08-28 · Grade B · Source: same · Note: **do not file under karst.**
 - **Augment row 204** (do not duplicate the event): add municipal rainfall detail — *Altamont >11″ (Mayor Gaughan); Hilltowns among hardest hit; Onesquethaw/Fox/Catskill Creek/Normans Kill all in flood.*
 

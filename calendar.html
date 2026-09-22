@@ -774,7 +774,9 @@ h1{font-family:'Montserrat',sans-serif; font-weight:800; text-transform:uppercas
     /* 2026-09-06 (Laurie) — hidden + kept out of Explore-nearby even if pin is ever re-enabled */
     "double h ranch",
     /* 2026-09-18 (Laurie): county offices nobody "explores nearby" for */
-    "schoharie county office of agricultural development","schoharie county legal defense of indigents"
+    "schoharie county office of agricultural development","schoharie county legal defense of indigents",
+    /* 2026-09-21 (Laurie): fully excluded, not just demoted */
+    "thompsons lake state campground","phoenicia black bear campground"
   ].map(function(x){ return x.replace(/\u2019/g,"'"); });
   /* exact-name exclusions — for places whose name is a prefix of something
      that SHOULD show (Hilltown Commons itself is out; The Pub at Hilltown Commons stays) */
@@ -783,7 +785,7 @@ h1{font-family:'Montserrat',sans-serif; font-weight:800; text-transform:uppercas
      stops for a slot. Tier 1 fills only after every un-demoted candidate;
      tier 2 (Maple on the Lake) only after tier 1. Matched on name substring. */
   var NEARBY_DEMOTE = [
-    "maple hill syrup","the paradise inn","catskill mountain springs","narnia escapes","thompsons lake state campground",
+    "maple hill syrup","the paradise inn","catskill mountain springs","narnia escapes",
     "helderberg true value","kaaterskill & east jewett","thunderhart golf","helder herdwyck","everyday's restaurant",
     "winter clove inn","mine kill state park pool","deer mountain inn","hotel mountain brook","the shell inn",
     "the tasting lab","seec","penny lane ices","vosburgh swamp","unbridled sanctuary","variety video",

@@ -120,6 +120,11 @@ Fixed-hinge wingbeat, 4 white wing-spots. Day-only, reduced-motion safe. The
 
 ## UX state (recent)
 
+- **v793-794 (2026-09-21): first "far-flung" pins, per Laurie** — places outside the Hilltowns region she plans to add occasionally for fun, no special tagging (Laurie declined the "Easter Egg" tag in v794 — plain regional tags only, same as everywhere else). This round: Veselka + Ippudo NY (East Village, NYC), Zelda's Original Gourmet Pizza (Sacramento), London Bridge Pub (Monterey), Trish's Mini Donuts (Pier 39, SF).
+
+- **v791 (2026-09-21), Laurie: no victim names on the site.** Anonymized the three Irene fatality rows in `data/climate_events.xlsx` (Events 265-267) — kept as hazard records (age, mechanism, location, date) with names stripped from the title and key-measurement fields; also stripped a name that had leaked into the Onesquethaw Cave Geology-layer tag. Same three names redacted from the research staging notes (`hilltowns_extractions_all.md`) for consistency. Non-fatality-tagged historical names (e.g. Murderer's Creek's 1813 Sally Hamilton, a 200-year-old named legend) were left alone — different in kind from a modern person's death record.
+- **Thompsons Lake State Campground and Phoenicia Black Bear Campground fully excluded from Explore Nearby** (moved from demote-only to `NEARBY_EXCLUDE` in `calendar.html`), per Laurie.
+
 - **v790 BUGFIX (2026-09-21): hamburger menu was invisible on the atlas page.** A leftover `#menuToggle{display:none;}` rule from before the v719/v730 hamburger-at-all-widths redesign never got cleaned out of `index.template.html`'s own `<style>` block, and — same ID selector, later in the cascade — it silently overrode the `.menubtn, #menuToggle{display:flex;}` rule that was supposed to show it. Removed. Only `index.template.html` had this; calendar/signals/tradingpost were clean.
 
 - **v789 (2026-09-21): every Geology-layer pin now has a source Description.** 9 Catskill Geologist (Titus) pins credit thecatskillgeologist.com; the karst-cave inventory (~22 pins) credits Nardacci's Altamont Enterprise "Back Roads Geology" column, with Knox Cave and McFail's Cave also citing their specific extra sources (the 2025 Pomeroy marker, the 2005 caving-symposium paper); Murderer's Creek cites the 1841 Barber & Howe text on archive.org; Natural Stone Bridge, Bartholomew's Cobble, Rosendale/Widow Jane Mine and Tory Cave each cite their own official/marker source. The 21 wild-cave rows keep their caving-grotto note too — both live in Description now, appended together.
@@ -186,7 +191,7 @@ Fixed-hinge wingbeat, 4 white wing-spots. Day-only, reduced-motion safe. The
 
 ## Events pipeline / recurrence schema
 
-Latest drop-in: **events_72**. Schema carries 4 recurrence columns after `Agenda`:
+Latest drop-in: **events_73**. Schema carries 4 recurrence columns after `Agenda`:
 `Recur Weeks` / `Recur Days` / `Recur Except` / `Recur Time`.
 
 **Model A contract:** the ingestor emits ONE fully-dated row per occurrence and
