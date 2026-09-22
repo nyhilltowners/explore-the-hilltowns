@@ -1841,6 +1841,10 @@ function cmpListOrder(a, b){
     return a.dist - b.dist;
   }
   if(af !== bf) return af ? -1 : 1;
+  /* 2026-09-22 (Laurie): a curated Feature Rank on any POI sheet leads the
+     explore-nearby list ahead of proximity (ThTree, Via Ravioli first). */
+  var pa = (a.fr!=null) ? a.fr : Infinity, pb = (b.fr!=null) ? b.fr : Infinity;
+  if(pa !== pb) return pa - pb;
   return a.dist - b.dist;
 }
 var LIST_ORDER = [];   /* sidebar's current order (kept; prev/next removed 2026-09-05) */
