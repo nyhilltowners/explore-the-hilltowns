@@ -1,4 +1,4 @@
-# NY Hilltowners Folk Atlas — Session Handoff (2026-09-22, v835)
+# NY Hilltowners Folk Atlas — Session Handoff (2026-09-22, v836)
 
 This ZIP is a **complete, self-contained source tree**. A new chat can unzip it,
 run the build, and continue exactly where this session left off. Everything here
@@ -120,6 +120,7 @@ Fixed-hinge wingbeat, 4 white wing-spots. Day-only, reduced-motion safe. The
 
 ## UX state (recent)
 
+- **v836 (2026-09-22): Vly Creek biosolids/PFAS pin** (💧, new glyph on the layer) — 2025 New Scotland well contamination near the Vly Creek Reservoir, from the Altamont Enterprise Feb 9 2026. Anchored to Places' Vly Creek (stream) result, Anchor Type approximate, tagged Coordinates Needed — the article names no farm or street and the affected home is private, so nothing tighter was attempted. Not a climate-register event (hydrogeology).
 - **v835 (2026-09-22): four coordinate gaps closed per Laurie.** Geology pins added: Schoharie Creek Thruway bridge collapse 1987 (⚠️, exact — Laurie's coordinate; register row enriched with the NTSB sequence: pier 3 → spans 3–4 → pier 2 ~90 min → pier 1 shift; ~50-yr flood, ~150 mm rain + snowmelt; Mill Point Bridge lost a section 6 days later ~3.1 mi upstream — NO pin, coordinate still needed); 4th & Federal St sinkhole, Troy 2023 (🕳️, exact — Laurie's coordinate); Berne Mill site at 2978 Berne-Altamont Rd (⚠️, Places-confirmed address); Barber farm sinkholes at 3621 NY-30, Middleburgh (🕳️, Places-confirmed address). Still coordinate-less: Rossman 1948, Broadway/890 1996, 1st Ave 2004, Blue Cross Rte 85 (also undated), Kaaterskill Clove 2006, Mill Point Bridge 1987, railroad-era slides.
 - **v834 (2026-09-22): ⚠️ for slides + coverage pass.** Landslide/slump/mudslide Geology pins re-glyphed ⛰️ → ⚠️ (26 pins; deep-time sites — deltas, outcrops, falls, cloves, fossil forest — keep ⛰️). Coverage check of the register against pins: every event with a confirmable tight locus is pinned; two more added this pass with Places-confirmed loci — Magnolia Terrace landslide, Albany (1919) and the Hudson ice jam at The Glen (1903). Still register-only, deliberately: region-wide storms/blizzards/cold waves/heat/drought (no point), reach-scale Mohawk/Hudson jams and freshets, county-centroid tornadoes, the 1987 Thruway bridge collapse (Places won't resolve the bridge — needs a coordinate from a source), 4th & Federal Troy 2023, Rossman 1948, Kaaterskill Clove 2006, Broadway/890 1996, 1st Ave 2004, Berne Mill, Barber farm, Blue Cross Rte 85, and the railroad-era slides — all listed in RESEARCH_LEADS / v827 entry.
 - **v833 (2026-09-22): Susan's hours + karst layer merge.** Adventures: Susan's Pleasant Pheasant Farm & Kayak Rentals hours → By appointment. Research package `Hilltowns_Atlas_Handoff_2026-09-22.zip` ingested: its register workbook was byte-identical to the one merged in v826/v828 (Events 307–369) — skipped. **Karst sinkholes → 54 Geology pins** (🕳️, USGS SIR 2021-5094 / P9AYMP94 v4.0 closed-depression centroids, Anchor Type exact): 35 confident carbonate-hosted sinkholes Display=Yes; 5 ambiguous + 14 shale-covered candidates Display=No (manifest said 36/4 — the CSVs carry 35/5). Named by host unit/region/# (no place names exist for them). **Not pinned:** the 10,926-row five-state USGS landslide CSV (PA-heavy, needs clustering; NY only 153 rows) and `six_county_landslides.csv` (15 rows — the 8 undated debris-flow points already sit at Display=No; the dated local ones are already pinned). Everything shipped is kept in `data/layers/research_2026-09-22/` (polygons, GeoJSON, county cave table, 1891 Coeymans Hollow phenology diary, RESEARCH_LEADS, SEARCH_TERMS) for a future clustered landslide layer / county choropleth. Research chat suggested 🛘 (U+1F6D8) for landslides — not adopted; it's Unicode 15.1 and boxes on older devices; ⛰️ stays. Build below.
@@ -302,7 +303,7 @@ Big ongoing effort to tame tag sprawl. Started at 2,332 unique tags; now ~2,178.
 7. Clean-room verify: unzip the package fresh, rebuild, confirm BUILD OK.
 8. `present_files` the zip + both xlsx.
 
-Version at handoff: **v835**. Next chat continues from v836.
+Version at handoff: **v836**. Next chat continues from v837.
 
 ---
 
