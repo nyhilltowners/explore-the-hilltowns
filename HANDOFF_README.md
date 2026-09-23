@@ -1,4 +1,4 @@
-# NY Hilltowners Folk Atlas — Session Handoff (2026-09-23, v854)
+# NY Hilltowners Folk Atlas — Session Handoff (2026-09-23, v858)
 
 This ZIP is a **complete, self-contained source tree**. A new chat can unzip it,
 run the build, and continue exactly where this session left off. Everything here
@@ -120,6 +120,10 @@ Fixed-hinge wingbeat, 4 white wing-spots. Day-only, reduced-motion safe. The
 
 ## UX state (recent)
 
+- **v858 (2026-09-23): World Imagery Wayback added** to Other Necessities as a citizen-science directory resource (🛰️, Anchor Type none, no pin) per Laurie.
+- **v857 (2026-09-23): 11 DEC state lands added to Adventures** from pages Laurie supplied — Dutton Ridge, Leonard Hill, High Knob, Mount Pisgah, Bates, Cole Hill, Scott Patent, Stone Store state forests (🌲) and Franklinton Vlaie, Partridge Run, Margaret Burke WMAs (🦆). One pin per property at a DEC-listed parking/access coordinate; every other DEC access point is in Notes. Partridge Run State Forest already existed. Stone Store coordinate flagged suspect (DEC page's text and map link disagree; approximate).
+- **v856 (2026-09-23): Rte 157A / Sawmill Rd 'Ames Acres' sink pinned** (🕳️, approximate — Laurie's map-identified closed depression; not yet matched to the 1988 parcel). Karst sheet row 40 updated. All karst-sheet loci now have coordinates.
+- **v855 (2026-09-23): Fox Creek swimming-hole sinkhole pinned** (🕳️, approximate at the Bradt Hollow Rd bridge — coordinate from Laurie; pool just downstream). Karst sheet row updated. Remaining karst locus without a coordinate: Rte 157A/Sawmill Rd sink, Berne.
 - **v854 (2026-09-23): places of concern + wind history.** New pin type ❗ 'Place of Concern' (tag 'Not an Event'): Krumkill Rd ravine-fill mudslide fear (2003, approx). Rte 443 ditch sinkhole in Berne hamlet (2004) pinned 🕳️ approx at the BKW campus, carrying the hamlet karst/gas-station concern in its notes. Vly Creek PFAS (v836) is the third concern-type pin. Web check of straight-line wind history against the Wind sheet: coverage already good (1950 83-mph all-time gust, 1976 flash freeze 67 mph, 1995 derecho, 1998 outbreak, 2002 microburst, 2019 Halloween, 2020 Oct 7 derecho); enriched 119 (NWS: 83 mph record, $20M) and 167 (77 mph at ALB 6:41 a.m.); row 381's 'Thanksgiving 1961' flagged as a probable memory slip for 1950. Christmas 2020 rain-on-snow flood and the Dec 16–17 snowstorm were already rows 239/240 — nothing added. Fox Creek/Bradt Hollow bridge still not Places-resolvable (returns Fox Creek Park) — needs a coordinate.
 - **v853 (2026-09-23): 9 Enterprise scans 2002–07.** ENRICHED 191 (Tax Day nor'easter Apr 2007 — Knox/Onesquethaw pump-outs, Berne road closures, Johnston Rd, FEMA/state 100% reimbursement), the 2002-08-14 microburst wind row + its pin (Lone Pine area second core, two homes condemned). NEW karst row: spring-2004 sinkhole in the Rte 443 ditch, Berne hamlet, 200 ft W of the BKW bus garage (Coordinates Needed — Places-able). The two Nardacci columns (Knox Cave Oct 2004, Skull Cave Jan 2005) were already in the pins from v826; the 2003 Krumkill Rd fill/mudslide-fear item is context only.
 - **v852 (2026-09-23): 14 Enterprise scans 1987–2002.** NEW rows 382 Oct 18 1990 Westerlo windstorm (Fields Rd barn lifted, Rte 404 willow — in core) and 383 June/July 13 1996 Hilltowns flash floods (7–8 in/12 hrs at Knox). ENRICHED 159 (Oct 4 1987 snowstorm — 200k out, Voorheesville–East Berne line last), 169 (Jan 1996 floods — Hilltowns FEMA tally, Altamont ice jams), 173 (May 31 1998 tornadoes — 46 warnings, Derbyshire Rd towers), 175 (Floyd — Western Ave collapse, Knox/Berne/Westerlo/Rensselaerville road detail). Karst sheet: Fox Creek sinkhole locus pinned down (pool below the Bradt Hollow Rd bridge, ~60 m wide, West Berne/Knox — Places-able next pass); NEW karst row for the Rte 157A/Sawmill Rd sinkhole, Berne (1988 Ames Acres file). Skipped: 1988 GEPOD, 1989 master-plan maps, 2002 karst guide (context only), Dec 1992 Doc Murphy boat (NJ). No pins this pass.
@@ -321,7 +325,7 @@ Big ongoing effort to tame tag sprawl. Started at 2,332 unique tags; now ~2,178.
 7. Clean-room verify: unzip the package fresh, rebuild, confirm BUILD OK.
 8. `present_files` the zip + both xlsx.
 
-Version at handoff: **v854**. Next chat continues from v855.
+Version at handoff: **v858**. Next chat continues from v859.
 
 ---
 
