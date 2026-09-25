@@ -1,4 +1,4 @@
-# NY Hilltowners Folk Atlas — Session Handoff (2026-09-25, v867)
+# NY Hilltowners Folk Atlas — Session Handoff (2026-09-25, v868)
 
 This ZIP is a **complete, self-contained source tree**. A new chat can unzip it,
 run the build, and continue exactly where this session left off. Everything here
@@ -120,6 +120,7 @@ Fixed-hinge wingbeat, 4 white wing-spots. Day-only, reduced-motion safe. The
 
 ## UX state (recent)
 
+- **v868 (2026-09-25): phenology rewrite, batch 1 + Apiary first** — Radio tuner: Apiary is now the first preset (and the default for anyone without a saved station). Microseasons: season 18 (Sept 16–30, Dogwood Berries White) replaced verbatim with Laurie's edit — scientific-with-an-edge tone, no Ghost section, tender-crops entry moved to Garden, two duplicate/attic entries dropped; season 19 (Oct 1–15) rewritten to match: Ghost entries folded into Flora (reduced canopy, chestnut/elm) and Garden (apple harvest), garlic moved Health Watch → Garden, the two buck-sign entries merged, Orionids moved to season 20 where the dates belong. Both `Entries (Long Form)` and `Calendar Matrix` updated (matrix rebuilt from long-form for 18–20). Ghost column kept for now; remove when all 24 are done. Pre-edit workbook at /tmp/microseasons_pre_v868.xlsx (session only). NEXT BATCHES: seasons 20–24, then 1–17 — slow, one or two per pass, Laurie reviews tone.
 - **v867 (2026-09-25): Independent Media removed from the Atlas page** — new manifest flag `"atlas": false` (emitted as `c.atlas`); the atlas category loop skips it and forces the layer off, so no checkbox and no pins. It stays in the Directory untouched. Same flag works for any future directory-only category.
 - **v866 (2026-09-25): Geology layer relabeled 'Natural History'** (manifest label only — sheet, key and `NEARBY_EXCLUDE_CATS` updated; the workbook sheet is still named Geology). **Signs + Signals link shown in header and footer nav.** Every event pin on the layer now carries its year(s) in the title (21 renamed: landslides, mudslides, erosion, Berne Mill/Irene; Mount Ida and Hudson/Claverack list multiple years); non-events labeled as such — '(karst feature)', '(deep time)', USGS centroids '(2021 survey)'. Standing rule: a Natural History event pin's Name includes its year.
 - **v865 (2026-09-25): Signals page edits (Laurie)** — page subhead removed; phenology window title gold with the season name in italics; phenology subheads (Sky & Light etc.) gold (were white: `.sg-wrap div` outranked `.ph-sech`); the '24 microseasons in N entries…' line removed; Air grid forced to 4 columns ≥1000px (`#air-grid`); barometer now shows a 3-hour tendency (arrow + ±hPa/3 h + rising/falling/steady, WMO-style bands, from Open-Meteo hourly surface_pressure past_hours=6); Degree-days / Water station picker defaults to Alcove Dam; 'What people are actually finding out there this week' removed; `.sg-btn` (all of them, incl. earlier/later and year-by-year) now solid gold with dark text.
@@ -334,7 +335,7 @@ Big ongoing effort to tame tag sprawl. Started at 2,332 unique tags; now ~2,178.
 7. Clean-room verify: unzip the package fresh, rebuild, confirm BUILD OK.
 8. `present_files` the zip + both xlsx.
 
-Version at handoff: **v867**. Next chat continues from v868.
+Version at handoff: **v868**. Next chat continues from v869.
 
 ---
 

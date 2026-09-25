@@ -252,6 +252,7 @@ window.hfa = { skyKind: skyKind, compass: compass, nearestHour: nearestHour, moo
   var STATIONS = [
     /* Order per Laurie, 2026-09-18. Dropped from the tuner (still reachable elsewhere): WAMC HD2,
        WGXC 90.7 (Wave Farm's terrestrial station), Solar Radio, Weather Warlock, Traffic Saxx, Here GOES. */
+    {id:'apiary', name:'Apiary', sub:'The Listening Apiary · inside a honeybee hive at Wave Farm', url:'https://audio.wavefarm.org/listening-apiary.mp3', verified:true}, /* first per Laurie 2026-09-25 */
     {id:'wjff', name:'Radio Catskill', sub:'WJFF 90.5 · Jeffersonville / Sullivan County', url:'https://stream1.rcast.net/69645', verified:true},,
     {id:'wamc', name:'WAMC', sub:'Northeast Public Radio · Albany', url:'https://playerservices.streamtheworld.com/api/livestream-redirect/WAMCFM.mp3', verified:true},,
     {id:'wfmu', name:'WFMU', sub:'WFMU 91.1 Jersey City · freeform, listener-supported, independent', url:'https://stream0.wfmu.org/freeform-128k', verified:false},,
@@ -260,8 +261,7 @@ window.hfa = { skyKind: skyKind, compass: compass, nearestHour: nearestHour, moo
     {id:'bbcws', name:'BBC World Service', sub:'BBC World Service · English · global news', url:'https://stream.live.vc.bbcmedia.co.uk/bbc_world_service', verified:false},
     {id:'kexp', name:'KEXP', sub:'KEXP 90.3 Seattle · independent music radio', url:'https://kexp-mp3-128.streamguys1.com/kexp128.mp3', verified:false},
     {id:'swr', name:'Standing Wave', sub:'Wave Farm · transmission art / experimental sound', url:'https://audio.wavefarm.org/transmissionarts.mp3', verified:true},
-    {id:'pond', name:'Pond', sub:'Pond Station · inside a Wave Farm pond, dawn to sundown', url:'https://audio.wavefarm.org/pondstation.mp3', verified:true},
-    {id:'apiary', name:'Apiary', sub:'The Listening Apiary · inside a honeybee hive at Wave Farm', url:'https://audio.wavefarm.org/listening-apiary.mp3', verified:true}
+    {id:'pond', name:'Pond', sub:'Pond Station · inside a Wave Farm pond, dawn to sundown', url:'https://audio.wavefarm.org/pondstation.mp3', verified:true}
   ];
   var css = '#hfaRadio{position:fixed;left:14px;bottom:14px;z-index:5000;font-family:Montserrat,sans-serif;font-size:11px;letter-spacing:.04em;color:var(--ink-blue,#1a1f5e);background:var(--paper,#f4ecd8);border:1px solid var(--ink-blue,#1a1f5e);border-radius:10px;box-shadow:0 4px 14px rgba(0,0,0,.18);padding:8px 10px;display:flex;align-items:center;gap:8px;max-width:calc(100vw - 28px)}'
     + '#hfaRadio button{font:inherit;cursor:pointer;border:1px solid var(--ink-blue,#1a1f5e);background:transparent;color:inherit;border-radius:6px;padding:4px 7px;line-height:1}'
