@@ -2273,6 +2273,7 @@ function buildCats(){
   var liveCounts = {};
   records.forEach(function(r){ if(!isExpired(r) && evVisible(r) && !(r.rgate && !recurActiveNow(r)) && !(r.hgate && isClosedNow(r))) liveCounts[r.cat]=(liveCounts[r.cat]||0)+1; });
   CATEGORIES.forEach(function(c){
+    if(c.atlas===false){ catsOn[c.label]=false; return; } /* 2026-09-25 (v867, atlas session) (Laurie): directory-only category — no checkbox, no pins (Independent Media) */
     if(!liveCounts[c.label]) return; /* nothing to show yet — hide until it has data */
     if(!(c.label in catsOn)) catsOn[c.label] = catDefault(c);
     var lb = document.createElement('label'); lb.className='catbox';

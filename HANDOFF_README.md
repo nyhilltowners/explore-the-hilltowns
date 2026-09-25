@@ -1,4 +1,4 @@
-# NY Hilltowners Folk Atlas — Session Handoff (2026-09-25, v865)
+# NY Hilltowners Folk Atlas — Session Handoff (2026-09-25, v867)
 
 This ZIP is a **complete, self-contained source tree**. A new chat can unzip it,
 run the build, and continue exactly where this session left off. Everything here
@@ -120,6 +120,8 @@ Fixed-hinge wingbeat, 4 white wing-spots. Day-only, reduced-motion safe. The
 
 ## UX state (recent)
 
+- **v867 (2026-09-25): Independent Media removed from the Atlas page** — new manifest flag `"atlas": false` (emitted as `c.atlas`); the atlas category loop skips it and forces the layer off, so no checkbox and no pins. It stays in the Directory untouched. Same flag works for any future directory-only category.
+- **v866 (2026-09-25): Geology layer relabeled 'Natural History'** (manifest label only — sheet, key and `NEARBY_EXCLUDE_CATS` updated; the workbook sheet is still named Geology). **Signs + Signals link shown in header and footer nav.** Every event pin on the layer now carries its year(s) in the title (21 renamed: landslides, mudslides, erosion, Berne Mill/Irene; Mount Ida and Hudson/Claverack list multiple years); non-events labeled as such — '(karst feature)', '(deep time)', USGS centroids '(2021 survey)'. Standing rule: a Natural History event pin's Name includes its year.
 - **v865 (2026-09-25): Signals page edits (Laurie)** — page subhead removed; phenology window title gold with the season name in italics; phenology subheads (Sky & Light etc.) gold (were white: `.sg-wrap div` outranked `.ph-sech`); the '24 microseasons in N entries…' line removed; Air grid forced to 4 columns ≥1000px (`#air-grid`); barometer now shows a 3-hour tendency (arrow + ±hPa/3 h + rising/falling/steady, WMO-style bands, from Open-Meteo hourly surface_pressure past_hours=6); Degree-days / Water station picker defaults to Alcove Dam; 'What people are actually finding out there this week' removed; `.sg-btn` (all of them, incl. earlier/later and year-by-year) now solid gold with dark text.
 - **v864 (2026-09-24): events master replaced with Laurie's `events (74).xlsx`** — 2,322 event rows (130 new since the v863 master, 2 removed; 127 of the new rows carry 'AUTO — needs review'). Out-of-region auto-ingest leaks set Display=No (Secret Riso Club ×~5 Brooklyn, Tatter Brooklyn, Temenos Retreat Center); Glenville Oktoberfest coordinate flagged (~200 km off). 14 new rows have no coordinate (online webinars, Zoom clubs, and a few venues that need geocoding: New Baltimore Fire District, Shamrock House, St Paul Lutheran, Island Green Golf, Magic Forest Farm). Pre-replacement master saved at /tmp only — the workbook Laurie uploaded is the new master.
 - **v863 (2026-09-24): Catskill Creek bridges article ingested** (Knapp & Miller, NY Almanack Apr 2025) — register Events 384–389 (1804 freshets, Mar 1818 ice, May 1869 span collapse, spring 1870 ice, June 1874 flood/3 bridges, Apr 1 1875 LOC ice-gorge photo), one 🧊 Geology pin at Bridge St, Catskill (with the 1882 'West Shore piers as ice dam' concern in notes), folklore H-742 (Burr's 1802 draw-bridge). 1818 vs 1870 quotations flagged as possibly conflated in the source. Register next ID 390; folklore H-743.
@@ -332,7 +334,7 @@ Big ongoing effort to tame tag sprawl. Started at 2,332 unique tags; now ~2,178.
 7. Clean-room verify: unzip the package fresh, rebuild, confirm BUILD OK.
 8. `present_files` the zip + both xlsx.
 
-Version at handoff: **v865**. Next chat continues from v866.
+Version at handoff: **v867**. Next chat continues from v868.
 
 ---
 

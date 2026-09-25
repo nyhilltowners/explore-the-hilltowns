@@ -113,7 +113,7 @@
     },
     {
       "key": "geology",
-      "label": "Geology",
+      "label": "Natural History",
       "sheet": "Geology",
       "workbook": "data/points_of_interest.xlsx",
       "schema": "poi",
@@ -129,7 +129,8 @@
       "schema": "poi",
       "glyph": "📻",
       "color": "#8a4b2f",
-      "default_on": true
+      "default_on": true,
+      "atlas": false
     },
     {
       "key": "transportation",

@@ -842,7 +842,7 @@ h1{font-family:'Montserrat',sans-serif; font-weight:800; text-transform:uppercas
   /* 2026-09-21 (Laurie): whole categories excluded from Explore-nearby, not just
      names — Geology (caves/karst/deep-time sites) for now; add more keys here
      if other layers need the same treatment. */
-  var NEARBY_EXCLUDE_CATS = ["Geology"];
+  var NEARBY_EXCLUDE_CATS = ["Natural History"]; /* 2026-09-25 (v866, atlas session): layer renamed Geology → Natural History (sheet still "Geology") */
   function nearbyExcluded(p){
     if(NEARBY_EXCLUDE_CATS.indexOf(p.cat) >= 0) return true;
     var n = String(p.t||"").toLowerCase().replace(/\u2019/g,"'").trim();
