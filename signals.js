@@ -59,14 +59,20 @@
     var url = 'https://api.open-meteo.com/v1/forecast?'+Q
       + '&current=temperature_2m,relative_humidity_2m,apparent_temperature,surface_pressure,wind_speed_10m,wind_direction_10m,wind_gusts_10m,weather_code,is_day,cloud_cover'
       + '&daily=temperature_2m_max,temperature_2m_min,precipitation_sum&forecast_days=1'
+      + '&hourly=surface_pressure&past_hours=6&forecast_hours=1&timeformat=unixtime' /* v865 (2026-09-25, Laurie): 3-h pressure tendency */
       + '&temperature_unit=fahrenheit&wind_speed_unit=kn&precipitation_unit=inch';
     fetch(url).then(function(r){ return r.json(); }).then(function(j){
       var c = j.current; if(!c){ status('Surface weather: '+(j.reason||'no data')); return; }
       safe(function(){ gauge('temp', c.temperature_2m, -20, 110, Math.round(c.temperature_2m)+'°F', 'feels like '+Math.round(c.apparent_temperature)+'° · '+Math.round(f2c(c.temperature_2m))+'°C');
       });
       safe(function(){ gauge('hum', c.relative_humidity_2m, 0, 100, c.relative_humidity_2m+'%', 'relative humidity'); });
-      safe(function(){ var inHg = c.surface_pressure*0.02953;
-      gauge('pres', inHg, 28.5, 31, inHg.toFixed(2)+' inHg', Math.round(c.surface_pressure)+' hPa at the surface');
+      safe(function(){ var inHg = c.surface_pressure*0.02953, tr='';
+        /* v865 (2026-09-25, Laurie): 3-hour tendency from the hourly series (past 6 h + now); WMO-style bands */
+        var hp = j.hourly && j.hourly.surface_pressure, ht = j.hourly && j.hourly.time;
+        if(hp && ht){ var nowMs=Date.now(), iNow=-1; for(var i=0;i<ht.length;i++){ if(hp[i]!=null && (typeof ht[i]==='number'?ht[i]*1000:Date.parse(ht[i]))<=nowMs) iNow=i; }
+          if(iNow>=3 && hp[iNow-3]!=null){ var d=hp[iNow]-hp[iNow-3], a=Math.abs(d), word = a<1?'steady':(a<3?(d>0?'rising slowly':'falling slowly'):(a<6?(d>0?'rising':'falling'):(d>0?'rising rapidly':'falling rapidly'))), arrow = a<1?'→':(d>0?(a<3?'↗':'↑'):(a<3?'↘':'↓'));
+            tr = ' · '+arrow+' '+(d>=0?'+':'−')+a.toFixed(1)+' hPa / 3 h, '+word; } }
+        gauge('pres', inHg, 28.5, 31, inHg.toFixed(2)+' inHg', Math.round(c.surface_pressure)+' hPa at the surface'+tr);
       });
       safe(function(){ gauge('cloud', c.cloud_cover, 0, 100, c.cloud_cover+'%', 'cloud cover · '+(skyKind ? skyKind(c.weather_code, c.is_day)[1] : ''));
       });
@@ -96,7 +102,7 @@
     var mean=(mx+mn)/2; if(mean<65) out.h=65-mean; else out.c=mean-65;
     var gm=(Math.min(86,mx)+Math.max(50,mn))/2; if(gm>50) out.g=gm-50; return out; }
   var _ddCache = null;
-  function buildPicker(){ var sel=$('st-pick'), ALL=window.STATION_DD; if(!sel||!ALL||sel.options.length) return; Object.keys(ALL.stations).forEach(function(k){ var S=ALL.stations[k], o=document.createElement('option'); o.value=k; o.textContent=S.name+' · '+S.first+'–'+S.last+(S.active?'':' (closed)'); sel.appendChild(o); }); sel.onchange=function(){ if(_ddCache) renderDD(_ddCache); }; }
+  function buildPicker(){ var sel=$('st-pick'), ALL=window.STATION_DD; if(!sel||!ALL||sel.options.length) return; Object.keys(ALL.stations).forEach(function(k){ var S=ALL.stations[k], o=document.createElement('option'); o.value=k; o.textContent=S.name+' · '+S.first+'–'+S.last+(S.active?'':' (closed)'); sel.appendChild(o); }); if(ALL.stations['alcove_dam']) sel.value='alcove_dam'; /* v865 (2026-09-25, Laurie): default Alcove Dam */ sel.onchange=function(){ if(_ddCache) renderDD(_ddCache); }; }
   function fetchDD(){
     buildPicker();
     if(_ddCache){ renderDD(_ddCache); return; }
@@ -202,7 +208,7 @@
       /* Albany observed (station_dd.js), same date, same formulas */
       /* Observed station (picker; station_dd.js carries several) */
       var ALL = window.STATION_DD, doy = Math.round((Date.UTC(t.getFullYear(),t.getMonth(),t.getDate())-Date.UTC(t.getFullYear(),0,1))/86400000)+1;
-      var sel = $('st-pick'), key = (sel && sel.value) || (ALL && Object.keys(ALL.stations)[0]);
+      var sel = $('st-pick'), key = (sel && sel.value) || (ALL && (ALL.stations['alcove_dam']?'alcove_dam':Object.keys(ALL.stations)[0]));
       var SD = ALL && ALL.stations[key], sy = SD && SD.years[thisYear], sn = null;
       if(SD){ var acc={h:0,c:0,g:0}, k=0, y1=null, y2=null; Object.keys(SD.years).forEach(function(yy){ yy=+yy; var Y=SD.years[yy]; if(yy<thisYear && Y && Y.n>=360 && Y.h){ acc.h+=Y.h[doy-1]; acc.c+=Y.c[doy-1]; acc.g+=Y.g[doy-1]; k++; y1=y1==null?yy:Math.min(y1,yy); y2=y2==null?yy:Math.max(y2,yy); } }); if(k>=5){ sn={h:acc.h/k,c:acc.c/k,g:acc.g/k,n:k,y1:y1,y2:y2}; } }
       /* water + extremes for the chosen station */
@@ -261,8 +267,8 @@
       return '<div class="ph-pair" id="ph-win-'+idx+'">'+hist+exCard+'</div>';
     }).join('');
     var ys=EV.map(function(e){ return e.y; });
-    $('ph-note').textContent = EX.length+' microseasons in '+(EX.length?EX.reduce(function(n,x){ return n+x.sections.reduce(function(m,s){ return m+s.items.length; },0); },0):0)+' entries · '+EV.length+' events on the register, '+Math.min.apply(null,ys)+'–'+Math.max.apply(null,ys)+' · multi-day and seasonal events sit at their anchor date · hill dates, not valley dates.';
-    function setTitle(idx){ var w=wins[idx], ex=EX[idx]; $('ph-title').textContent=(idx===curIdx?'Now: ':'')+MON[w.m-1]+' '+w.lo+'–'+(w.hi===15?15:dim(w.m))+(ex?' · '+ex.name:''); }
+    if($('ph-note')) $('ph-note').textContent = EX.length+' microseasons in '+(EX.length?EX.reduce(function(n,x){ return n+x.sections.reduce(function(m,s){ return m+s.items.length; },0); },0):0)+' entries · '+EV.length+' events on the register, '+Math.min.apply(null,ys)+'–'+Math.max.apply(null,ys)+' · multi-day and seasonal events sit at their anchor date · hill dates, not valley dates.';
+    function setTitle(idx){ var w=wins[idx], ex=EX[idx]; $('ph-title').innerHTML=esc((idx===curIdx?'Now: ':'')+MON[w.m-1]+' '+w.lo+'–'+(w.hi===15?15:dim(w.m)))+(ex?' · <em>'+esc(ex.name)+'</em>':''); }
     function go(idx){ var el=$('ph-win-'+idx); if(el) row.scrollTo({left: el.offsetLeft - row.offsetLeft, behavior:'smooth'}); setTitle(idx); }
     var cur=curIdx; setTitle(cur);
     $('ph-prev').onclick=function(){ cur=(cur+23)%24; go(cur); };

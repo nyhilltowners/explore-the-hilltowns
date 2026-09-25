@@ -169,6 +169,13 @@ a.link:hover{background:rgba(252,163,21,.14);}
 @media (max-width:1180px){ .skyline .sky-moon{display:none;} }
 @media (max-width:960px){ .skyline{display:none;} }
 
+/* v865 (2026-09-25, Laurie): phenology subheads + window title gold (beats the .sg-wrap div white rule), season name italic; Air in 4 columns on desktop; solid gold buttons */
+.sg-wrap .ph-sech, .sg-wrap .ph-title{color:var(--gold,#c9a227) !important;}
+.ph-title em{font-style:italic; font-weight:700;}
+@media (min-width:1000px){ #air-grid{grid-template-columns:repeat(4,1fr);} }
+.sg-wrap .sg-btn, .sg-wrap a.sg-btn{background:var(--gold,#c9a227); border:1px solid var(--gold,#c9a227); color:var(--gold-ink,#2b2410) !important;}
+.sg-wrap .sg-btn:hover{filter:brightness(1.08);}
+.pres-trend{display:inline-block; margin-right:4px;}
 </style>
 
 
@@ -306,13 +313,11 @@ a.link:hover{background:rgba(252,163,21,.14);}
 
 <main class="sg-wrap">
   <h1 class="sg-head">Signs + Signals</h1>
-  <p class="sg-sub">Sky, wind, and the slow arithmetic of the seasons, read from Berne, NY.</p>
   <p id="sg-status"></p>
 
   <h2 class="sg-sec">Phenology</h2>
   <div class="ph-nav"><button type="button" class="sg-btn" id="ph-prev">&larr; earlier</button><div class="ph-title" id="ph-title"></div><button type="button" class="sg-btn" id="ph-next">later &rarr;</button></div>
   <div class="ph-row" id="ph-row"></div>
-  <p class="sg-note" id="ph-note"></p>
 
   <h2 class="sg-sec">Sky</h2>
   <div class="sg-grid">
@@ -322,7 +327,7 @@ a.link:hover{background:rgba(252,163,21,.14);}
   </div>
 
   <h2 class="sg-sec">Air</h2>
-  <div class="sg-grid">
+  <div class="sg-grid" id="air-grid">
     <div class="sg-row"><div class="sg-ico" ><svg viewBox="0 0 24 24"><path d="M14 14.8V5a2 2 0 0 0-4 0v9.8a4 4 0 1 0 4 0z"/></svg></div><div><p class="sg-eye">Temperature</p><p class="sg-val" id="temp-val">—</p><p class="sg-det" id="temp-sub"></p></div></div><div class="sg-row"><div class="sg-ico" ><svg viewBox="0 0 24 24"><path d="M12 3s6 6.5 6 11a6 6 0 0 1-12 0c0-4.5 6-11 6-11z"/></svg></div><div><p class="sg-eye">Humidity</p><p class="sg-val" id="hum-val">—</p><p class="sg-det" id="hum-sub"></p></div></div><div class="sg-row"><div class="sg-ico" ><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 12l4-4M12 7v1M17 12h-1M12 17v-1M7 12h1"/></svg></div><div><p class="sg-eye">Barometer</p><p class="sg-val" id="pres-val">—</p><p class="sg-det" id="pres-sub"></p></div></div><div class="sg-row"><div class="sg-ico" ><svg viewBox="0 0 24 24"><path d="M7 18a4 4 0 0 1-.5-8A6 6 0 0 1 18 9a4 4 0 0 1 0 9H7z"/></svg></div><div><p class="sg-eye">Sky</p><p class="sg-val" id="cloud-val">—</p><p class="sg-det" id="cloud-sub"></p></div></div>
   </div>
 
@@ -379,7 +384,7 @@ a.link:hover{background:rgba(252,163,21,.14);}
   <p class="sg-note">Weather, winds and history by <a href="https://open-meteo.com/" target="_blank" rel="noopener">Open-Meteo</a> (CC BY 4.0); winds aloft from the Canadian GEM Global model with GFS as fallback; sun and moon computed locally. Refreshes every 15 minutes.</p>
 
   <h2 class="sg-sec">Seen lately · iNaturalist</h2>
-  <p class="sg-det" style="margin:0 0 10px">Research-grade observations from the Hilltowns box (Helderbergs to the northern Catskills, Schoharie to the Hudson), newest first. What people are actually finding out there this week.</p>
+  <p class="sg-det" style="margin:0 0 10px">Research-grade observations from the Hilltowns box (Helderbergs to the northern Catskills, Schoharie to the Hudson), newest first.</p>
   <div class="sg-grid" id="inat-grid"><p class="ph-empty">Loading observations…</p></div>
   <div id="inat-list"></div>
   <p class="sg-note" id="inat-note"></p>
