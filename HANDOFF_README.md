@@ -1,4 +1,4 @@
-# NY Hilltowners Folk Atlas — Session Handoff (2026-09-23, v858)
+# NY Hilltowners Folk Atlas — Session Handoff (2026-09-24, v864)
 
 This ZIP is a **complete, self-contained source tree**. A new chat can unzip it,
 run the build, and continue exactly where this session left off. Everything here
@@ -120,6 +120,12 @@ Fixed-hinge wingbeat, 4 white wing-spots. Day-only, reduced-motion safe. The
 
 ## UX state (recent)
 
+- **v864 (2026-09-24): events master replaced with Laurie's `events (74).xlsx`** — 2,322 event rows (130 new since the v863 master, 2 removed; 127 of the new rows carry 'AUTO — needs review'). Out-of-region auto-ingest leaks set Display=No (Secret Riso Club ×~5 Brooklyn, Tatter Brooklyn, Temenos Retreat Center); Glenville Oktoberfest coordinate flagged (~200 km off). 14 new rows have no coordinate (online webinars, Zoom clubs, and a few venues that need geocoding: New Baltimore Fire District, Shamrock House, St Paul Lutheran, Island Green Golf, Magic Forest Farm). Pre-replacement master saved at /tmp only — the workbook Laurie uploaded is the new master.
+- **v863 (2026-09-24): Catskill Creek bridges article ingested** (Knapp & Miller, NY Almanack Apr 2025) — register Events 384–389 (1804 freshets, Mar 1818 ice, May 1869 span collapse, spring 1870 ice, June 1874 flood/3 bridges, Apr 1 1875 LOC ice-gorge photo), one 🧊 Geology pin at Bridge St, Catskill (with the 1882 'West Shore piers as ice dam' concern in notes), folklore H-742 (Burr's 1802 draw-bridge). 1818 vs 1870 quotations flagged as possibly conflated in the source. Register next ID 390; folklore H-743.
+- **v862 (2026-09-24): H-741 'When did New York stop speaking Dutch?'** (Kieran O'Keefe, NY Almanack 2019) added as region-wide language-history context, anchored in-core by the 1842 Herald line sending readers to 'the Helderburgh' for pure Dutch; Berne-hamlet stand-in pin. Folklore next free ID: H-742.
+- **v861 (2026-09-24): Berne Historical Project (bernehistory.org) added** to Independent Media as a directory-only reference (📜, Anchor none), alongside the Harold Miller entry.
+- **v860 (2026-09-24): Harold Miller series ingested (6 of 8 remaining articles) + directory entry** — folklore H-735 West Mountain ME church & Swiss bell; H-736 Zeh & Warner sawmill / Weidman mill / East Berne origin; H-737 squatters-above-the-escarpment thesis (Bleeker 1767, Cockburn 1787); H-738 Fischer–Wood House (also a 🏛️ Points of Interest pin at Stranahan Lane); H-739 slavery in Berne / Jack Deitz; H-740 Dietz Massacre re-dated to Sept 1 1781. Harold Miller (d. 2022) added to Independent Media, directory-only. PENDING (Almanack 502s): 'Morgan Filkins returns the Civil War dead' (Jan 11 2022) and 'Berne & Knox: German Heritage' (Feb 1 2022). All pins approximate (Places road/cemetery centroids); coordinate hunts noted in each row. Folklore next free ID: H-741.
+- **v859 (2026-09-23): West Mountain history (Berne) added** — folklore H-734 from Harold Miller's New York Almanack article (settlement 1790s, Taylor 1799, Peasleys, buckwheat exhaustion, 1935 Resettlement Administration buyout at $2–4/ac, Katie Wood's refusal, 1940s $1 state lease); Partridge Run WMA pin cross-referenced. DEC vs Miller acreage/date discrepancy noted, not resolved. Folklore next free ID: H-735.
 - **v858 (2026-09-23): World Imagery Wayback added** to Other Necessities as a citizen-science directory resource (🛰️, Anchor Type none, no pin) per Laurie.
 - **v857 (2026-09-23): 11 DEC state lands added to Adventures** from pages Laurie supplied — Dutton Ridge, Leonard Hill, High Knob, Mount Pisgah, Bates, Cole Hill, Scott Patent, Stone Store state forests (🌲) and Franklinton Vlaie, Partridge Run, Margaret Burke WMAs (🦆). One pin per property at a DEC-listed parking/access coordinate; every other DEC access point is in Notes. Partridge Run State Forest already existed. Stone Store coordinate flagged suspect (DEC page's text and map link disagree; approximate).
 - **v856 (2026-09-23): Rte 157A / Sawmill Rd 'Ames Acres' sink pinned** (🕳️, approximate — Laurie's map-identified closed depression; not yet matched to the 1988 parcel). Karst sheet row 40 updated. All karst-sheet loci now have coordinates.
@@ -325,7 +331,7 @@ Big ongoing effort to tame tag sprawl. Started at 2,332 unique tags; now ~2,178.
 7. Clean-room verify: unzip the package fresh, rebuild, confirm BUILD OK.
 8. `present_files` the zip + both xlsx.
 
-Version at handoff: **v858**. Next chat continues from v859.
+Version at handoff: **v864**. Next chat continues from v865.
 
 ---
 
