@@ -1467,7 +1467,7 @@ def emit_phenology_expected():
         WARNS.append("microseasons.xlsx: no 'Entries (Long Form)' sheet"); return
     rows = list(wb["Entries (Long Form)"].iter_rows(values_only=True))
     ix = {str(h).strip().lower(): i for i, h in enumerate(rows[0]) if h}
-    CATS = ["Sky & Light", "Weather & Ground", "Flora & Phenology", "Birds", "Animals", "Insects & Fungi", "Garden", "Foodways", "Ghost", "Health Watch"]
+    CATS = ["Sky & Light", "Weather & Ground", "Flora & Phenology", "Birds", "Animals", "Insects & Fungi", "Garden", "Foodways", "Health Watch"]  # Ghost retired v876 (2026-09-25)
     out, byn = [], {}
     for r in rows[1:]:
         g = lambda k: (str(r[ix[k]]).strip() if ix.get(k) is not None and r[ix[k]] is not None else "")
@@ -1503,6 +1503,7 @@ def main() -> int:
         categories.append({"key": cat["key"], "label": label, "schema": schema,
                            "color": cat.get("color", ""),
                            "default_on": cat.get("default_on", True),
+                           "atlas": cat.get("atlas", True),  # v867: false = directory-only category, no atlas checkbox or pins
                            "glyph": cat.get("glyph", "")})
         if schema not in PARSERS:
             fail(f"manifest: unknown schema '{schema}' for '{label}'")
