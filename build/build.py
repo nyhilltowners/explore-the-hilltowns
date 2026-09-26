@@ -1469,7 +1469,7 @@ def emit_phenology_expected():
         WARNS.append("microseasons.xlsx: no 'Entries (Long Form)' sheet"); return
     rows = list(wb["Entries (Long Form)"].iter_rows(values_only=True))
     ix = {str(h).strip().lower(): i for i, h in enumerate(rows[0]) if h}
-    CATS = ["Sky & Light", "Weather & Ground", "Flora & Phenology", "Birds", "Animals", "Insects & Fungi", "Garden", "Foodways", "Health Watch"]  # Ghost retired v876 (2026-09-25)
+    CATS = ["Sky & Light", "Weather & Ground", "Flora & Phenology", "Birds", "Animals", "Insects & Fungi", "Garden & Orchard", "Foodways", "Nature Health Watch"]  # renamed v890  # Ghost retired v876 (2026-09-25)
     out, byn = [], {}
     for r in rows[1:]:
         g = lambda k: (str(r[ix[k]]).strip() if ix.get(k) is not None and r[ix[k]] is not None else "")

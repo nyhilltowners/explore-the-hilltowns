@@ -347,12 +347,12 @@
     var esc=function(v){ return String(v||'').replace(/[&<>"]/g,function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); };
     var wins=[]; for(var m=1;m<=12;m++){ wins.push({m:m,lo:1,hi:15}); wins.push({m:m,lo:16,hi:31}); }
     var now=new Date(), curIdx=(now.getMonth())*2+(now.getDate()<=15?0:1);
-    var TAG={ghost:'Ghost',health:'Health watch',garden:'Garden',foodways:'Foodways'};
+    var TAG={ghost:'Ghost',health:'Nature health watch',garden:'Garden & orchard',foodways:'Foodways'};
     row.innerHTML = wins.map(function(w,idx){
       var label = MON[w.m-1]+' '+w.lo+'–'+(w.hi===15?15:dim(w.m));
       var ex = EX[idx];
       var exCard = '<article class="ph-card'+(idx===curIdx?' cur':'')+'"><div class="ph-head"><div><p class="ph-sub">Expected</p><div class="ph-win">'+(ex?esc(ex.name):label)+'</div></div><div class="ph-count">'+label+'</div></div>'
-        + (ex ? ex.sections.map(function(sec){ var k=({'Ghost':'ghost','Health Watch':'health','Garden':'garden','Foodways':'foodways'})[sec.cat]||'plain'; return '<div class="ph-sec"><div class="ph-sech">'+esc(sec.cat)+'</div><ul class="ph-list">'+sec.items.map(function(h){ return '<li><div class="ph-kind '+k+'">'+h+'</div></li>'; }).join('')+'</ul></div>'; }).join('') : '<p class="ph-empty">No microseason text for this window.</p>')+'</article>';
+        + (ex ? ex.sections.map(function(sec){ var k=({'Ghost':'ghost','Health Watch':'health','Nature Health Watch':'health','Garden':'garden','Garden & Orchard':'garden','Foodways':'foodways'})[sec.cat]||'plain'; return '<div class="ph-sec"><div class="ph-sech">'+esc(sec.cat)+'</div><ul class="ph-list">'+sec.items.map(function(h){ return '<li><div class="ph-kind '+k+'">'+h+'</div></li>'; }).join('')+'</ul></div>'; }).join('') : '<p class="ph-empty">No microseason text for this window.</p>')+'</article>';
       var items = EV.filter(function(e){ return e.m===w.m && e.d>=w.lo && e.d<=w.hi; }).sort(function(a,b){ return (a.y-b.y)||(a.d-b.d); });
       var hist = '<article class="ph-card'+(idx===curIdx?' cur':'')+'"><div class="ph-head"><div><p class="ph-sub">On record</p><div class="ph-win">'+label+'</div></div><div class="ph-count">'+items.length+' event'+(items.length===1?'':'s')+'</div></div>'
         + (items.length ? '<ol class="ph-list">'+items.map(function(e){
