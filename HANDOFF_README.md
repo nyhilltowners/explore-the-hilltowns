@@ -1,4 +1,4 @@
-# NY Hilltowners Folk Atlas — Session Handoff (2026-09-26, v888)
+# NY Hilltowners Folk Atlas — Session Handoff (2026-09-26, v889)
 
 This ZIP is a **complete, self-contained source tree**. A new chat can unzip it,
 run the build, and continue exactly where this session left off. Everything here
@@ -120,6 +120,7 @@ Fixed-hinge wingbeat, 4 white wing-spots. Day-only, reduced-motion safe. The
 
 ## UX state (recent)
 
+- **v889 (2026-09-26): three Irene hazard loci pinned (Laurie: 'I want to know where the historical hazards are')** — Shingle Kill / Arizona Mountain debris flow (⚠️, approximate at the mountain), Onesquethaw Creek drowning at Clarksville + 1991 cave near-drowning (🌊, approximate at the cave preserve), McKownville indirect basement death (🌊, approximate at Parkwood Ave). Route 5S (Montgomery Co.) stays register-only. OPEN: register row says the Barber Family Farm sinkholes are in Knox; the pin is at 3621 NY-30 Middleburgh (Laurie's address) — check the McLean letter (Enterprise, Nov 19 2014).
 - **v888 (2026-09-26): gas-station glow window (Laurie)** — ⛽ pins glow only between 10 pm and 6 am ET, and then only when their posted hours say open; outside that window they never glow (the 10 am–6 pm neutral no-glow/no-fade rule from 09-21 is unchanged). Constants `GAS_GLOW_FROM` / `GAS_GLOW_TO` in index.template.html (minutes after midnight, wrap-aware) for tweaking.
 - **v887 (2026-09-26): charts-blank fix.** Laurie's screenshot showed empty charts and no station options after v883–886: the single archive request had grown to five daily variables and (most likely) came back as an API error, and an error JSON blanked everything. Now: the temperature request is exactly as it was pre-v883; rain/snow/total are a separate `fetchMoisture` request merged in on arrival (charts redraw), with its own failure note that leaves the temperature charts alone; `renderYearChart` and the DD fetch surface the API's `reason` in the status line instead of failing silently. Also fixed: literal `\\u25B6`/`\\u00b0`-style escapes that had been written into the JS source as text (Play/Stop labels, the ▾ on the picker, the ° unit — which also disabled the 'freezing' line).
 - **v886 (2026-09-26): snowfall by winter (Laurie)** — toggle above the snow chart: 'By calendar year' (default) / 'By winter (July–June)'. Winter mode re-indexes daily snowfall so each line runs Jul 1 → Jun 30 and is keyed to the starting year (label '1994–95'); x-axis months J A S O N D J F M A M J; the shared year picker applies by starting year. Works for both the ERA5 source (daily snowfall_sum) and stations (daily snow reconstructed from the cumulative arrays in station_dd.js). `drawChart` gained an `opts` arg ({shift, label}); Play and hover use the winter label.
@@ -355,7 +356,7 @@ Big ongoing effort to tame tag sprawl. Started at 2,332 unique tags; now ~2,178.
 7. Clean-room verify: unzip the package fresh, rebuild, confirm BUILD OK.
 8. `present_files` the zip + both xlsx.
 
-Version at handoff: **v888**. Next chat continues from v889.
+Version at handoff: **v889**. Next chat continues from v890.
 
 ---
 
