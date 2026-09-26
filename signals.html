@@ -223,9 +223,7 @@ a.link:hover{background:rgba(252,163,21,.14);}
 .inat a{color:var(--gold,#c9a227) !important; text-decoration:none;}
 .eb{display:flex; gap:10px; align-items:center; padding:8px 4px; border-bottom:1px solid rgba(255,255,255,.14);}
 .eb .img{flex:none; width:56px; height:56px; border-radius:8px; object-fit:cover; background:rgba(255,255,255,.08);}
-.eb-grid .eb .img{width:88px; height:88px;} /* 2026-09-27 (v898, Laurie): bigger photos in the birds grid only — the iNat 'without photo' list stays compact */
 .eb .img.ph{display:flex; align-items:center; justify-content:center; font-size:22px;}
-.eb-grid .eb .img.ph{font-size:34px;}
 .inat-list .eb .img{width:44px; height:44px;}
 .eb .c{flex:none; min-width:34px; font-weight:800; text-align:right; color:var(--gold,#c9a227) !important;}
 .eb .n{font-weight:700;}
@@ -234,6 +232,7 @@ a.link:hover{background:rgba(252,163,21,.14);}
 .eb a{color:var(--gold,#c9a227) !important; text-decoration:none;}
 .eb-band{margin:0 0 10px; padding:10px 12px; border:1px solid var(--gold,#c9a227); border-radius:10px;}
 .eb-band .t{font-size:11px; letter-spacing:.14em; text-transform:uppercase; color:var(--gold,#c9a227) !important; margin-bottom:4px;}
+.eb-card.rare{border-color:var(--gold,#c9a227);} /* 2026-09-27 (v899, Laurie): birds grid now uses the same card layout/size as the iNat grid */
 .sg-eye{font-size:10px; letter-spacing:.16em; text-transform:uppercase; opacity:.95; margin:0 0 2px; font-weight:700;} /* 2026-09-27 (v898, Laurie): bold eyebrows */
 .sg-val{font-size:22px; font-weight:800; margin:0; line-height:1.15;}
 .sg-val .c{font-weight:400; opacity:.95; font-size:16px; margin-left:6px;}
@@ -388,26 +387,26 @@ a.link:hover{background:rgba(252,163,21,.14);}
   <div class="sg-chart"><svg id="ch-precip" viewBox="0 0 1000 420" preserveAspectRatio="none" role="img" aria-label="Total precipitation, accumulating"></svg><div class="sg-tip" id="ch-precip-tip"></div></div>
   <p class="sg-note" id="yr-note"></p>
 
+  <h2 class="sg-sec">Degree days · year to date</h2>
+  <p class="sg-det" style="margin:0 0 10px">Compare against an observed station: <select id="st-pick" class="sg-sel"></select></p>
+  <!-- 2026-09-27 (v899, Laurie): one selector now serves both the degree-days grid and the water grid below it -->
+  <div class="dd">
+    <div class="sg-row"><div class="sg-ico" ><svg viewBox="0 0 24 24"><path d="M12 3c1 4 5 5 5 10a5 5 0 0 1-10 0c0-2 1-3 2-4 0 2 1 3 2 3 0-4-1-6 1-9z"/></svg></div><div><p class="sg-eye">Heating</p><p class="sg-val" id="dd-h">—</p><p class="sg-det" id="dd-h-d"></p></div></div><div class="sg-row"><div class="sg-ico" ><svg viewBox="0 0 24 24"><path d="M12 2v20M2 12h20M5 5l14 14M19 5L5 19"/></svg></div><div><p class="sg-eye">Cooling</p><p class="sg-val" id="dd-c">—</p><p class="sg-det" id="dd-c-d"></p></div></div><div class="sg-row"><div class="sg-ico" ><svg viewBox="0 0 24 24"><path d="M12 22V10M12 10c0-4 3-6 7-6 0 4-3 6-7 6zM12 14c0-3-2.5-5-6-5 0 3 2.5 5 6 5z"/></svg></div><div><p class="sg-eye">Growing</p><p class="sg-val" id="dd-g">—</p><p class="sg-det" id="dd-g-d"></p></div></div>
+  </div>
+
   <h2 class="sg-sec">Water · year to date</h2>
-  <p class="sg-det" style="margin:0 0 10px">Observed at the station chosen below.</p>
   <div class="sg-grid" id="water-grid">
     <div class="sg-row"><div class="sg-ico"><svg viewBox="0 0 24 24"><path d="M12 3s6 6.5 6 11a6 6 0 0 1-12 0c0-4.5 6-11 6-11z"/></svg></div><div><p class="sg-eye">Precipitation</p><p class="sg-val" id="w-p">—</p><p class="sg-det" id="w-p-d"></p></div></div>
     <div class="sg-row"><div class="sg-ico"><svg viewBox="0 0 24 24"><path d="M12 2v20M2 12h20M5 5l14 14M19 5L5 19"/></svg></div><div><p class="sg-eye">Snowfall</p><p class="sg-val" id="w-s">—</p><p class="sg-det" id="w-s-d"></p></div></div>
     <div class="sg-row"><div class="sg-ico"><svg viewBox="0 0 24 24"><path d="M14 14.8V5a2 2 0 0 0-4 0v9.8a4 4 0 1 0 4 0z"/></svg></div><div><p class="sg-eye">Extremes this year</p><p class="sg-val" id="w-x">—</p><p class="sg-det" id="w-x-d"></p></div></div>
   </div>
 
-  <h2 class="sg-sec">Degree days · year to date</h2>
-  <p class="sg-det" style="margin:0 0 10px">Compare against an observed station: <select id="st-pick" class="sg-sel"></select></p>
-  <div class="dd">
-    <div class="sg-row"><div class="sg-ico" ><svg viewBox="0 0 24 24"><path d="M12 3c1 4 5 5 5 10a5 5 0 0 1-10 0c0-2 1-3 2-4 0 2 1 3 2 3 0-4-1-6 1-9z"/></svg></div><div><p class="sg-eye">Heating</p><p class="sg-val" id="dd-h">—</p><p class="sg-det" id="dd-h-d"></p></div></div><div class="sg-row"><div class="sg-ico" ><svg viewBox="0 0 24 24"><path d="M12 2v20M2 12h20M5 5l14 14M19 5L5 19"/></svg></div><div><p class="sg-eye">Cooling</p><p class="sg-val" id="dd-c">—</p><p class="sg-det" id="dd-c-d"></p></div></div><div class="sg-row"><div class="sg-ico" ><svg viewBox="0 0 24 24"><path d="M12 22V10M12 10c0-4 3-6 7-6 0 4-3 6-7 6zM12 14c0-3-2.5-5-6-5 0 3 2.5 5 6 5z"/></svg></div><div><p class="sg-eye">Growing</p><p class="sg-val" id="dd-g">—</p><p class="sg-det" id="dd-g-d"></p></div></div>
-  </div>
-  <p class="sg-note" id="dd-note">Loading…</p>
   <button type="button" id="dd-toggle" class="sg-btn" style="display:none" onclick="var h=document.getElementById('dd-hist');var o=h.style.display!=='block';h.style.display=o?'block':'none';this.textContent=o?'Hide the year-by-year record':'Every year since 1940, year by year';">Every year since 1940, year by year</button>
   <div id="dd-hist" style="display:none"></div>
-  <p class="sg-note">Weather, winds and history by <a href="https://open-meteo.com/" target="_blank" rel="noopener">Open-Meteo</a> (CC BY 4.0); winds aloft from the Canadian GEM Global model with GFS as fallback; sun and moon computed locally. Refreshes every 15 minutes.</p>
+  <p class="sg-note" id="dd-note">Loading…</p>
 
   <h2 class="sg-sec">Seen lately · iNaturalist</h2>
-  <p class="sg-det" style="margin:0 0 10px">Research-grade observations from the Hilltowns box (Helderbergs to the northern Catskills, Schoharie to the Hudson), newest first.</p>
+  <p class="sg-det" style="margin:0 0 10px">Research-grade observations from the Hilltowns (Helderbergs to the northern Catskills, Schoharie to the Hudson), newest first.</p>
   <div class="sg-grid" id="inat-grid"><p class="ph-empty">Loading observations…</p></div>
   <div id="inat-list"></div>
   <p class="sg-note" id="inat-note"></p>
@@ -415,7 +414,7 @@ a.link:hover{background:rgba(252,163,21,.14);}
   <h2 class="sg-sec">Birds lately · eBird</h2>
   <p class="sg-det" style="margin:0 0 10px">Reported within 25 km of Berne in the last 14 days, newest first. Rarities and out-of-season birds are flagged. The <a href="https://dashboard.birdcast.info/region/US-NY-001" target="_blank" rel="noopener" style="color:var(--gold,#c9a227)">BirdCast migration dashboard for Albany County</a> has tonight's radar forecast.</p>
   <div id="ebird-notable"></div>
-  <div class="sg-grid eb-grid" id="ebird-grid"><p class="ph-empty">Loading sightings…</p></div>
+  <div class="sg-grid" id="ebird-grid"><p class="ph-empty">Loading sightings…</p></div>
   <p class="sg-note" id="ebird-note"></p>
 
 </main>

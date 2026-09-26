@@ -326,7 +326,7 @@
       $('dd-h-d').innerHTML='<b>'+dev(cur.td.h,norm.h)+'</b>'+obs('h')+'<br>Base 65°F: each degree the daily mean falls below 65 is one heating degree day.';
       $('dd-c-d').innerHTML='<b>'+dev(cur.td.c,norm.c)+'</b>'+obs('c')+'<br>Base 65°F, the other direction: heat the season has thrown at us.';
       $('dd-g-d').innerHTML='<b>'+dev(cur.td.g,norm.g)+'</b>'+obs('g')+'<br>Base 50°F, capped at 86°F (the corn scale). Insects, weeds and crops keep their calendars in these units.';
-      $('dd-note').textContent='Jan 1 – '+end+' · Berne, NY at ~1,700 ft: ERA5 reanalysis via Open-Meteo. Observed: '+(SD?SD.name+', ~'+SD.elev.toLocaleString()+' ft, record '+SD.first+'–'+SD.last+(SD.active?' (active)':' (closed)')+', '+ALL.source:'no station loaded')+'. Averages are the full period of record through this same date (complete years only, current year excluded), same formulas for both.';
+      $('dd-note').innerHTML='Jan 1 – '+end+' · Berne, NY at ~1,700 ft: ERA5 reanalysis via Open-Meteo. Observed: '+(SD?SD.name+', ~'+SD.elev.toLocaleString()+' ft, record '+SD.first+'–'+SD.last+(SD.active?' (active)':' (closed)')+', '+ALL.source:'no station loaded')+'. Averages are the full period of record through this same date (complete years only, current year excluded), same formulas for both. Weather, winds and history by <a href="https://open-meteo.com/" target="_blank" rel="noopener">Open-Meteo</a> (CC BY 4.0); winds aloft from the Canadian GEM Global model with GFS as fallback; sun and moon computed locally. Refreshes every 15 minutes.'; /* 2026-09-27 (v899, Laurie): the two footnotes consolidated into one note, now below the button/table */
       /* year-by-year table (collapsed) */
       var ys=Object.keys(years).map(Number).sort(function(a,b){ return b-a; });
       var h='<table class="ddtab"><thead><tr><th>Year</th><th colspan="3">Berne · through '+mmdd.replace('-','/')+'</th><th colspan="3">Berne · full year</th>'+(SD?'<th colspan="3">'+SD.name.split(' ·')[0]+' observed · through '+mmdd.replace('-','/')+'</th><th colspan="6">'+SD.name.split(' ·')[0]+' · full year</th>':'')+'</tr><tr><th></th><th>Heat</th><th>Cool</th><th>Grow</th><th>Heat</th><th>Cool</th><th>Grow</th>'+(SD?'<th>Heat</th><th>Cool</th><th>Grow</th><th>Precip</th><th>Snow</th><th>Hi</th><th>Lo</th><th>≥90°</th><th>≤0°</th><th>Depth</th>':'')+'</tr></thead><tbody>';
@@ -414,21 +414,22 @@
     var base='https://api.ebird.org/v2/data/obs/geo/recent', q='?lat='+LAT.toFixed(4)+'&lng='+LNG.toFixed(4)+'&dist='+EBIRD_DIST+'&back='+EBIRD_BACK+'&maxResults=10000'; /* 2026-09-27 (v898, Laurie): was capped at 60 records, which read as a fixed species count; the eBird max is 10000 */
     var opt={headers:{'X-eBirdApiToken':EBIRD_KEY}};
     var esc=function(v){ return String(v||'').replace(/[&<>"]/g,function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); };
-    var row=function(o,rare){ return '<div class="eb'+(rare?' rare':'')+'" data-sci="'+esc(o.sciName)+'"><div class="img ph">🐦</div><div class="c">'+(o.howMany!=null?o.howMany:'')+'</div><div><div class="n">'+esc(o.comName)+' <span class="sci" style="font-weight:400;font-style:italic;opacity:.85">'+esc(o.sciName)+'</span>'+(rare?' · <span class="ph-tag">notable</span>':'')+'</div><div class="m">'+esc((o.obsDt||'').slice(0,16))+'</div></div></div>'; }; /* 2026-09-27 (v898, Laurie): location + checklist link dropped per Laurie */
+    var row=function(o,rare){ return '<div class="eb'+(rare?' rare':'')+'" data-sci="'+esc(o.sciName)+'"><div class="img ph">🐦</div><div class="c">'+(o.howMany!=null?o.howMany:'')+'</div><div><div class="n">'+esc(o.comName)+' <span class="sci" style="font-weight:400;font-style:italic;opacity:.85">'+esc(o.sciName)+'</span>'+(rare?' · <span class="ph-tag">notable</span>':'')+'</div><div class="m">'+esc((o.obsDt||'').slice(0,16))+'</div></div></div>'; }; /* notable band keeps the compact row */
+    var card=function(o,rare){ return '<div class="inat eb-card'+(rare?' rare':'')+'" data-sci="'+esc(o.sciName)+'"><div class="img ph">🐦</div><div class="b"><div class="n">'+esc(o.comName)+(rare?' <span class="ph-tag">notable</span>':'')+'</div><div class="sci">'+esc(o.sciName)+'</div><div class="m">'+esc((o.obsDt||'').slice(0,16))+'</div></div></div>'; }; /* 2026-09-27 (v899, Laurie): main grid now matches the iNat card layout */
     Promise.all([fetch(base+'/notable'+q,opt).then(function(r){ return r.ok?r.json():[]; }).catch(function(){ return []; }),
                  fetch(base+q,opt).then(function(r){ if(!r.ok) throw new Error('eBird HTTP '+r.status); return r.json(); })])
     .then(function(res){ var notable=res[0]||[], recent=res[1]||[];
       var srt=function(a,b){ return (b.obsDt||'').localeCompare(a.obsDt||''); }; notable.sort(srt); recent.sort(srt);
       band.innerHTML = notable.length ? '<div class="eb-band"><div class="t">Notable · '+notable.length+'</div>'+notable.slice(0,12).map(function(o){ return row(o,true); }).join('')+'</div>' : '';
       var seen={}; recent=recent.filter(function(o){ var k=o.speciesCode; if(seen[k]) return false; seen[k]=1; return true; });   /* one line per species, most recent report */
-      grid.innerHTML = recent.length ? '<div style="grid-column:1/-1">'+recent.map(function(o){ return row(o,false); }).join('')+'</div>' : '<p class="ph-empty">No reports in the window.</p>';
+      grid.innerHTML = recent.length ? recent.map(function(o){ return card(o,false); }).join('') : '<p class="ph-empty">No reports in the window.</p>';
       wikiPics(); 
       $('ebird-note').textContent = recent.length+' species reported in the last '+EBIRD_BACK+' days within '+EBIRD_DIST+' km of Berne, most recent report of each · data © eBird / Cornell Lab of Ornithology.';
     }).catch(function(e){ grid.innerHTML='<p class="ph-empty">eBird is unreachable right now.</p>'; status('eBird: '+(e && e.message || 'fetch failed')+' (if this says HTTP 403 the key is wrong; if it says "Failed to fetch" eBird refused the cross-site request and the feed must move to build time)'); });
   }
 
   function wikiPics(){
-    var els=document.querySelectorAll('.eb[data-sci]'), cache={}; try{ cache=JSON.parse(sessionStorage.getItem('hfa.wiki')||'{}'); }catch(e){}
+    var els=document.querySelectorAll('.eb[data-sci], .eb-card[data-sci]'), cache={}; /* 2026-09-27 (v899, Laurie): picks up both the notable-band rows and the new grid cards */ try{ cache=JSON.parse(sessionStorage.getItem('hfa.wiki')||'{}'); }catch(e){}
     var pending={};
     Array.prototype.forEach.call(els,function(el){ var sci=el.getAttribute('data-sci'); if(!sci) return;
       var put=function(u){ if(!u) return; var im=document.createElement('img'); im.className='img'; im.alt=''; im.loading='lazy'; im.src=u; var ph=el.querySelector('.img.ph'); if(ph) el.replaceChild(im,ph); };
