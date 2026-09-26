@@ -1,4 +1,4 @@
-# NY Hilltowners Folk Atlas — Session Handoff (2026-09-27, v896)
+# NY Hilltowners Folk Atlas — Session Handoff (2026-09-27, v897)
 
 This ZIP is a **complete, self-contained source tree**. A new chat can unzip it,
 run the build, and continue exactly where this session left off. Everything here
@@ -120,6 +120,7 @@ Fixed-hinge wingbeat, 4 white wing-spots. Day-only, reduced-motion safe. The
 
 ## UX state (recent)
 
+- **v897 (2026-09-27): same-day events expire at their end time (Laurie)** — `isExpired` now consults the Time field in now mode: an event whose last date is today drops off the agenda/map 15 minutes after its parsed end time (two+ times → last is the end; one time → assumed 3 h; unparseable → day granularity as before; past-midnight spans left alone). Recurring events get the same test on their next occurrence. Plan-ahead mode unchanged. The 60s map-refresh timer now also calls renderList() in now mode, since the agenda list previously only redrew on a filter click and could show an already-ended event for a while. Note: the page evaluates on load/refresh; an open tab doesn't re-evaluate by itself unless the existing minute timer re-renders.
 - **v896 (2026-09-27): events master replaced with Laurie's `events (75).xlsx`** — 2,213 rows (43 new, 152 expired rows pruned since v864's file). Laurie's copy predated the v864/v877 fixes, so those were re-applied by event key: Display=No on the Brooklyn/Temenos auto-ingest leaks and the five Places geocodes (New Baltimore FD, Shamrock House, Island Green, Magic Forest Farm, Glenville Oktoberfest → Maalwyck Park). Three new rows are online-only (no coordinate by design).
 - **v895 (2026-09-26): phenology second pass COMPLETE — all 24 seasons** in Laurie's register (direct, contractions, sensory cues, British spelling, no 'Hills' branding, no elegy). Insects & Fungi 29 → 69 entries; Foodways 26 → 44 (directory/calendar links where a venue is the point). 612 entries total. Full-year review doc at outputs/phenology-review-full-year-v895.md. Helper /tmp/apply_season.py was session-only.
 - **v894 (2026-09-26): second-pass tone on seasons 23–24 (December) and 1–2 (January)** while Laurie is away, in her Sept register (direct, contractions OK, sensory cues, no elegy). December: 'Look up after 10 pm', 'Crush a needle and you'll know', 'Go out and look; go out and listen', the feeder-snow tracking entry; Insects & Fungi added (snow fleas; egg cases on bare twigs; fungi working in the cold); Foodways added (the December cellar; the midwinter feast across traditions); a bark health-watch entry (blonding, Nectria target cankers, frozen sap); CBC entry gets a directory link. January: cues throughout ('Count the dees', 'Stand still in a thicket', 'Crush one; it smells of gin', 'cut a twig and look at the end'); Insects & Fungi added (Jan 1–15: the January insects — snow fleas, winter crane flies, stoneflies on the ice; Jan 16–31: mourning cloak on a mild afternoon); Foodways added (Jan 16–31: checking sap buckets and spiles, wooden spiles vs bark-cut methods). 'Hills' shadow' → 'the ridge to the west' (S24). 16+11+29+27 → 20+15+28+28.
@@ -362,7 +363,7 @@ Big ongoing effort to tame tag sprawl. Started at 2,332 unique tags; now ~2,178.
 7. Clean-room verify: unzip the package fresh, rebuild, confirm BUILD OK.
 8. `present_files` the zip + both xlsx.
 
-Version at handoff: **v896**. Next chat continues from v897.
+Version at handoff: **v897**. Next chat continues from v898.
 
 ---
 

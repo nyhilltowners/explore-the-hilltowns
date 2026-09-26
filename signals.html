@@ -202,7 +202,7 @@ a.link:hover{background:rgba(252,163,21,.14);}
 .sg-sec{margin:28px 0 8px; font-weight:700; text-transform:uppercase; letter-spacing:.16em; font-size:12px; color:var(--gold,#c9a227); display:flex; align-items:center; gap:10px;}
 .sg-sec:after{content:""; flex:1; height:1px; background:currentColor; opacity:.35;}
 .sg-grid{display:grid; grid-template-columns:repeat(auto-fill, minmax(250px,1fr)); gap:12px 24px;}
-.sg-row{display:flex; align-items:flex-start; gap:14px; padding:12px 4px; border-bottom:1px solid rgba(255,255,255,.2);}
+.sg-row{display:flex; align-items:flex-start; gap:14px; padding:12px 4px;} /* 2026-09-27 (v898, Laurie): row divider removed — the gold section-header rule is now the only line */
 .sg-ico{flex:none; width:34px; height:34px; color:var(--gold,#c9a227);}
 .sg-ico svg{width:34px; height:34px; display:block; stroke:currentColor; fill:none; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round;}
 .sg-ico .arrow{transition:transform .6s ease; transform-origin:50% 50%;}
@@ -223,7 +223,9 @@ a.link:hover{background:rgba(252,163,21,.14);}
 .inat a{color:var(--gold,#c9a227) !important; text-decoration:none;}
 .eb{display:flex; gap:10px; align-items:center; padding:8px 4px; border-bottom:1px solid rgba(255,255,255,.14);}
 .eb .img{flex:none; width:56px; height:56px; border-radius:8px; object-fit:cover; background:rgba(255,255,255,.08);}
+.eb-grid .eb .img{width:88px; height:88px;} /* 2026-09-27 (v898, Laurie): bigger photos in the birds grid only — the iNat 'without photo' list stays compact */
 .eb .img.ph{display:flex; align-items:center; justify-content:center; font-size:22px;}
+.eb-grid .eb .img.ph{font-size:34px;}
 .inat-list .eb .img{width:44px; height:44px;}
 .eb .c{flex:none; min-width:34px; font-weight:800; text-align:right; color:var(--gold,#c9a227) !important;}
 .eb .n{font-weight:700;}
@@ -232,7 +234,7 @@ a.link:hover{background:rgba(252,163,21,.14);}
 .eb a{color:var(--gold,#c9a227) !important; text-decoration:none;}
 .eb-band{margin:0 0 10px; padding:10px 12px; border:1px solid var(--gold,#c9a227); border-radius:10px;}
 .eb-band .t{font-size:11px; letter-spacing:.14em; text-transform:uppercase; color:var(--gold,#c9a227) !important; margin-bottom:4px;}
-.sg-eye{font-size:10px; letter-spacing:.16em; text-transform:uppercase; opacity:.95; margin:0 0 2px;}
+.sg-eye{font-size:10px; letter-spacing:.16em; text-transform:uppercase; opacity:.95; margin:0 0 2px; font-weight:700;} /* 2026-09-27 (v898, Laurie): bold eyebrows */
 .sg-val{font-size:22px; font-weight:800; margin:0; line-height:1.15;}
 .sg-val .c{font-weight:400; opacity:.95; font-size:16px; margin-left:6px;}
 .sg-det{font-size:13px; margin:3px 0 0; opacity:1; line-height:1.4; font-family:inherit; color:#fff;}
@@ -270,13 +272,11 @@ a.link:hover{background:rgba(252,163,21,.14);}
 .ph-count{font-size:11px; letter-spacing:.12em; text-transform:uppercase;}
 .ph-list{list-style:none; margin:0; padding:0;}
 .ph-list li{display:flex; gap:12px; padding:9px 0; border-top:1px solid rgba(255,255,255,.14);}
-.ph-kind{font-size:13px; line-height:1.45;}
+.ph-kind{font-size:13px; line-height:1.45; border-left:3px solid var(--gold,#c9a227); padding-left:10px;} /* 2026-09-27 (v898, Laurie): gold rule on every entry, not just garden/foodways */
 .ph-sec{margin:10px 0 2px;}
 .ph-sech{font-size:10px; letter-spacing:.16em; text-transform:uppercase; color:var(--gold,#c9a227) !important; margin:0 0 2px; padding-bottom:2px; border-bottom:1px solid rgba(201,162,39,.35);}
 .ph-sec .ph-list li{padding:6px 0; border-top:none;}
-.ph-kind.ghost{border-left:3px solid rgba(255,255,255,.35); padding-left:10px; font-style:italic;}
-.ph-kind.health{border-left:3px solid #f0b67f; padding-left:10px;}
-.ph-kind.garden,.ph-kind.foodways{border-left:3px solid var(--gold,#c9a227); padding-left:10px;}
+.ph-kind.ghost{font-style:italic;} /* 2026-09-27 (v898, Laurie): kept italic; border now shared by the base .ph-kind rule */
 .ph-tag{font-size:10px; letter-spacing:.14em; text-transform:uppercase; color:var(--gold,#c9a227) !important; margin-right:6px;}
 .ph-sub{font-size:11px; letter-spacing:.14em; text-transform:uppercase; margin:0 0 2px;}
 .ph-y{flex:none; width:52px; font-size:17px; font-weight:800; color:var(--gold,#c9a227) !important; line-height:1.2;}
@@ -356,8 +356,8 @@ a.link:hover{background:rgba(252,163,21,.14);}
     <div class="sg-cap"><svg viewBox="0 0 24 24"><path d="M12 2l1.8 5.6H20l-4.7 3.4 1.8 5.6L12 13.2 6.9 16.6l1.8-5.6L4 7.6h6.2z"/></svg></div>
   </div>
 
-  <h2 class="sg-sec">The year, drawn</h2>
-  <p class="sg-det" style="margin:0 0 10px">Every year on record, January to December, raw daily values — no smoothing. This year is white; earlier years run from pale lavender back to deep violet, oldest darkest. Hover to name a year; use the Years picker above any chart to compare a few — the choice applies to every chart — and Play to watch the years draw in from oldest to newest.</p>
+  <h2 class="sg-sec">Year-by-year weather history</h2>
+  <p class="sg-det" style="margin:0 0 10px">Raw daily values. This year is white; earlier years run from pale lavender back to deep violet, oldest darkest. Hover to see the year, or use the dropdown in the charts to explore different years and datasets.</p>
   <p class="sg-det" style="margin:0 0 14px">Source: <select id="ch-src" class="sg-sel"><option value="berne">Berne reanalysis (ERA5 grid cell, 1940–)</option></select> <span id="ch-src-note"></span></p>
   <h3 class="sg-h3">Daily mean temperature</h3>
   <p class="sg-det" style="margin:0 0 8px"></p>
@@ -369,22 +369,22 @@ a.link:hover{background:rgba(252,163,21,.14);}
   <p class="sg-det" style="margin:0 0 8px"></p>
   <div class="sg-chart"><svg id="ch-lo" viewBox="0 0 1000 420" preserveAspectRatio="none" role="img" aria-label="Daily low"></svg><div class="sg-tip" id="ch-lo-tip"></div></div>
   <h3 class="sg-h3">Heating degree days, accumulating</h3>
-  <p class="sg-det" style="margin:0 0 8px">Base 65°F. Each line climbs through the cold months and flattens in summer; a higher line is a colder year.</p>
+  <p class="sg-det" style="margin:0 0 8px">Base 65°F.</p>
   <div class="sg-chart"><svg id="ch-hdd" viewBox="0 0 1000 420" preserveAspectRatio="none" role="img" aria-label="Heating degree days, accumulating"></svg><div class="sg-tip" id="ch-hdd-tip"></div></div>
   <h3 class="sg-h3">Cooling degree days, accumulating</h3>
-  <p class="sg-det" style="margin:0 0 8px">Base 65°F. Flat until late spring, then climbs; a higher line is a hotter summer.</p>
+  <p class="sg-det" style="margin:0 0 8px">Base 65°F.</p>
   <div class="sg-chart"><svg id="ch-cdd" viewBox="0 0 1000 420" preserveAspectRatio="none" role="img" aria-label="Cooling degree days, accumulating"></svg><div class="sg-tip" id="ch-cdd-tip"></div></div>
   <h3 class="sg-h3">Growing degree days, accumulating</h3>
-  <p class="sg-det" style="margin:0 0 8px">Base 50°F, capped at 86°F. The season's heat budget for everything that grows; a steeper spring means an earlier bloom.</p>
+  <p class="sg-det" style="margin:0 0 8px">Base 50°F, capped at 86°F.</p>
   <div class="sg-chart"><svg id="ch-gdd" viewBox="0 0 1000 420" preserveAspectRatio="none" role="img" aria-label="Growing degree days, accumulating"></svg><div class="sg-tip" id="ch-gdd-tip"></div></div>
   <h3 class="sg-h3">Rain, accumulating</h3>
-  <p class="sg-det" style="margin:0 0 8px">Inches of rain since January 1. A steep stretch is a wet spell; a flat one is a dry one. Rain, snow and total precipitation load a moment after the temperature charts. <span id="ch-rain-note"></span></p>
+  <p class="sg-det" style="margin:0 0 8px">Inches of rain since January 1. <span id="ch-rain-note"></span></p>
   <div class="sg-chart"><svg id="ch-rain" viewBox="0 0 1000 420" preserveAspectRatio="none" role="img" aria-label="Rain, accumulating"></svg><div class="sg-tip" id="ch-rain-tip"></div></div>
   <h3 class="sg-h3">Snowfall, accumulating</h3>
   <p class="sg-det" style="margin:0 0 8px">Depth as it fell, not water content. <span id="snow-mode" class="sg-seg"><a href="#" data-mode="year" class="on">By calendar year</a> <a href="#" data-mode="winter">By winter (July–June)</a></span> — winter mode keys each line to the year it began (1994–95 counts with 1994 in the picker), so one snow season is one line.</p>
   <div class="sg-chart"><svg id="ch-snow" viewBox="0 0 1000 420" preserveAspectRatio="none" role="img" aria-label="Snowfall, accumulating"></svg><div class="sg-tip" id="ch-snow-tip"></div></div>
   <h3 class="sg-h3">Total precipitation, accumulating</h3>
-  <p class="sg-det" style="margin:0 0 8px">All moisture as water — rain plus the melted equivalent of snow — since January 1. The line every drought and every flood year bends.</p>
+  <p class="sg-det" style="margin:0 0 8px">All moisture as water — rain plus the melted equivalent of snow — since January 1.</p>
   <div class="sg-chart"><svg id="ch-precip" viewBox="0 0 1000 420" preserveAspectRatio="none" role="img" aria-label="Total precipitation, accumulating"></svg><div class="sg-tip" id="ch-precip-tip"></div></div>
   <p class="sg-note" id="yr-note"></p>
 
@@ -415,7 +415,7 @@ a.link:hover{background:rgba(252,163,21,.14);}
   <h2 class="sg-sec">Birds lately · eBird</h2>
   <p class="sg-det" style="margin:0 0 10px">Reported within 25 km of Berne in the last 14 days, newest first. Rarities and out-of-season birds are flagged. The <a href="https://dashboard.birdcast.info/region/US-NY-001" target="_blank" rel="noopener" style="color:var(--gold,#c9a227)">BirdCast migration dashboard for Albany County</a> has tonight's radar forecast.</p>
   <div id="ebird-notable"></div>
-  <div class="sg-grid" id="ebird-grid"><p class="ph-empty">Loading sightings…</p></div>
+  <div class="sg-grid eb-grid" id="ebird-grid"><p class="ph-empty">Loading sightings…</p></div>
   <p class="sg-note" id="ebird-note"></p>
 
 </main>

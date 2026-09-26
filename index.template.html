@@ -849,12 +849,25 @@ function crossesMidnight(r){
   var ts = _parseTimes(r.tm||'');
   return ts.length>=2 && ts[ts.length-1] <= ts[0];
 }
+/* 2026-09-27 (v897, Laurie): in now mode, a same-day event also expires once its end time has passed
+   (15-minute grace). Uses the Time field; two or more times → the last one is the end;
+   a single time → assume a 3-hour event; no parseable time → day granularity as before.
+   Plan-ahead mode and multi-day runs are unaffected. */
+var SAME_DAY_GRACE_MIN = 15, SINGLE_TIME_ASSUMED_LEN_MIN = 180;
+function endedToday(r){
+  if(planDate) return false;
+  var ts = _parseTimes(r.tm||''); if(!ts.length) return false;
+  var endMin = ts.length>=2 ? ts[ts.length-1] : ts[0]+SINGLE_TIME_ASSUMED_LEN_MIN;
+  if(ts.length>=2 && endMin <= ts[0]) return false;   /* runs past midnight — leave it */
+  return nyMinutesNow() > endMin + SAME_DAY_GRACE_MIN;
+}
 function isExpired(r){
   if(r.ty!=='events') return false;
-  if(r.nextOcc) return r.nextOcc < TODAY_E;   /* recurring: honor next occurrence */
+  if(r.nextOcc){ if(r.nextOcc < TODAY_E) return true; return r.nextOcc===TODAY_E && endedToday(r); }   /* recurring: honor next occurrence */
   var end = crossesMidnight(r) ? r.d1 : (r.d2 || r.d1);
   if(!end) return false;
-  return end < TODAY_E;
+  if(end < TODAY_E) return true;
+  return end===TODAY_E && endedToday(r);
 }
 var planDate = null;   /* ISO yyyy-mm-dd when planning ahead; null = now mode */
 /* 2026-09-03 (Laurie): "now mode" shows only events in the next 24 hours —
@@ -2801,6 +2814,9 @@ setInterval(function(){
   if(map && map.getSource && map.getSource('folk')){
     map.getSource('folk').setData(toFC(currentFilter(true)));
   }
+  if(!planDate) renderList();   /* 2026-09-27 (v897, Laurie): the agenda list only redrew on filter changes, so a same-day
+     event that just ended (see endedToday) sat visible until the next click. Now mode only — plan-ahead
+     view doesn't need a clock tick, and re-rendering it would fight an open detail panel or scroll position. */
 }, 60000);   /* re-stamp every 60s so open/dim/glow/twinkle track the clock (was 300s — a pin that just closed kept twinkling) */
 renderList(); /* list renders immediately; map data attaches once loaded */
 if(!map) applyHash();
