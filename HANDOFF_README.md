@@ -1,4 +1,4 @@
-# NY Hilltowners Folk Atlas — Session Handoff (2026-09-26, v886)
+# NY Hilltowners Folk Atlas — Session Handoff (2026-09-26, v888)
 
 This ZIP is a **complete, self-contained source tree**. A new chat can unzip it,
 run the build, and continue exactly where this session left off. Everything here
@@ -120,6 +120,8 @@ Fixed-hinge wingbeat, 4 white wing-spots. Day-only, reduced-motion safe. The
 
 ## UX state (recent)
 
+- **v888 (2026-09-26): gas-station glow window (Laurie)** — ⛽ pins glow only between 10 pm and 6 am ET, and then only when their posted hours say open; outside that window they never glow (the 10 am–6 pm neutral no-glow/no-fade rule from 09-21 is unchanged). Constants `GAS_GLOW_FROM` / `GAS_GLOW_TO` in index.template.html (minutes after midnight, wrap-aware) for tweaking.
+- **v887 (2026-09-26): charts-blank fix.** Laurie's screenshot showed empty charts and no station options after v883–886: the single archive request had grown to five daily variables and (most likely) came back as an API error, and an error JSON blanked everything. Now: the temperature request is exactly as it was pre-v883; rain/snow/total are a separate `fetchMoisture` request merged in on arrival (charts redraw), with its own failure note that leaves the temperature charts alone; `renderYearChart` and the DD fetch surface the API's `reason` in the status line instead of failing silently. Also fixed: literal `\\u25B6`/`\\u00b0`-style escapes that had been written into the JS source as text (Play/Stop labels, the ▾ on the picker, the ° unit — which also disabled the 'freezing' line).
 - **v886 (2026-09-26): snowfall by winter (Laurie)** — toggle above the snow chart: 'By calendar year' (default) / 'By winter (July–June)'. Winter mode re-indexes daily snowfall so each line runs Jul 1 → Jun 30 and is keyed to the starting year (label '1994–95'); x-axis months J A S O N D J F M A M J; the shared year picker applies by starting year. Works for both the ERA5 source (daily snowfall_sum) and stations (daily snow reconstructed from the cumulative arrays in station_dd.js). `drawChart` gained an `opts` arg ({shift, label}); Play and hover use the winter label.
 - **v885 (2026-09-26): Play button on every chart (Laurie)** — top-right inside each chart box; draws the currently shown years in chronological order, each line stroke-animated in (stroke-dasharray/offset), with the running year shown large; step auto-scales so a full 85-year run takes ~9 s; click again to stop and show all. Redrawing a chart (picker or source change) resets any running animation.
 - **v884 (2026-09-26): chart tweaks (Laurie)** — year picker moved to the right edge above each chart (panel opens leftward); line ramp changed from night-sky blue (oldest nearly invisible) to a violet ramp: oldest deep violet rgb(150,70,235) at 0.6 opacity → newest pale lavender rgb(220,220,255) at 0.95, current year still white; stroke 1.1.
@@ -353,7 +355,7 @@ Big ongoing effort to tame tag sprawl. Started at 2,332 unique tags; now ~2,178.
 7. Clean-room verify: unzip the package fresh, rebuild, confirm BUILD OK.
 8. `present_files` the zip + both xlsx.
 
-Version at handoff: **v886**. Next chat continues from v887.
+Version at handoff: **v888**. Next chat continues from v889.
 
 ---
 

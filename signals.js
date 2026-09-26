@@ -108,10 +108,19 @@
     if(_ddCache){ renderDD(_ddCache); return; }
     var t = new Date(Date.now()-86400000), end = t.getFullYear()+'-'+String(t.getMonth()+1).padStart(2,'0')+'-'+String(t.getDate()).padStart(2,'0');
     var thisYear = t.getFullYear(), mmdd = end.slice(5);
-    var url = 'https://archive-api.open-meteo.com/v1/archive?'+Q+'&start_date=1940-01-01&end_date='+end+'&daily=temperature_2m_max,temperature_2m_min,precipitation_sum,rain_sum,snowfall_sum&temperature_unit=fahrenheit&precipitation_unit=inch'; /* v883 (2026-09-26, Laurie): rain/snow/total for the moisture charts */
+    var url = 'https://archive-api.open-meteo.com/v1/archive?'+Q+'&start_date=1940-01-01&end_date='+end+'&daily=temperature_2m_max,temperature_2m_min&temperature_unit=fahrenheit'; /* v887 (2026-09-26): moisture is fetched separately (fetchMoisture) so a failure there cannot blank the temperature charts */
     $('dd-note').textContent = 'Loading 1940–'+thisYear+' history…';
-    fetch(url).then(function(r){ return r.json(); }).then(function(j){ _ddCache=j; renderDD(j); }).catch(function(e){ $('dd-note').textContent='Degree-day history unavailable right now.'; status('Degree days: '+(e && e.message || 'fetch failed')); });
+    fetch(url).then(function(r){ return r.json(); }).then(function(j){ if(!j||!j.daily){ throw new Error(j&&j.reason?j.reason:'no daily data'); } _ddCache=j; renderDD(j); fetchMoisture(end); }).catch(function(e){ $('dd-note').textContent='Degree-day history unavailable right now.'; status('Degree days: '+(e && e.message || 'fetch failed')); });
   }
+  /* v887 (2026-09-26): second request for the moisture charts; merged into the year series when it arrives */
+  var _moist=null;
+  function fetchMoisture(end){
+    if(_moist){ return; }
+    var url='https://archive-api.open-meteo.com/v1/archive?'+Q+'&start_date=1940-01-01&end_date='+end+'&daily=precipitation_sum,rain_sum,snowfall_sum&precipitation_unit=inch';
+    fetch(url).then(function(r){ return r.json(); }).then(function(m){ if(!m||!m.daily) throw new Error(m&&m.reason?m.reason:'no daily data'); _moist=m; if(_ddCache){ mergeMoisture(_ddCache,m); renderYearChart(_ddCache); } })
+      .catch(function(e){ status('Rain/snow history: '+(e && e.message || 'fetch failed')); var rn=$('ch-rain-note'); if(rn) rn.textContent='Rain and snow history could not be loaded from the reanalysis right now.'; });
+  }
+  function mergeMoisture(j,m){ var idx={}; m.daily.time.forEach(function(t,i){ idx[t]=i; }); ['precipitation_sum','rain_sum','snowfall_sum'].forEach(function(k){ j.daily[k]=j.daily.time.map(function(t){ var i=idx[t]; return i==null?null:m.daily[k][i]; }); }); }
   /* ---------- the year, drawn: one chart builder, six charts ---------- */
   function yearSeries(j){
     var T=j.daily.time, mx=j.daily.temperature_2m_max, mn=j.daily.temperature_2m_min, pp=j.daily.precipitation_sum||[], rr=j.daily.rain_sum||[], ss=j.daily.snowfall_sum||[], out={};
@@ -185,17 +194,17 @@
     /* v885 (2026-09-26, Laurie): play button — draw the shown years in chronologically, oldest first */
     var ctl=svg.parentNode.querySelector('.ch-play'); if(!ctl){ ctl=document.createElement('button'); ctl.type='button'; ctl.className='ch-play'; svg.parentNode.appendChild(ctl); }
     var yl=svg.parentNode.querySelector('.ch-year'); if(!yl){ yl=document.createElement('div'); yl.className='ch-year'; svg.parentNode.appendChild(yl); }
-    ctl.textContent='\u25B6 Play'; yl.style.display='none';
+    ctl.textContent='▶ Play'; yl.style.display='none';
     if(svg._timer){ clearTimeout(svg._timer); svg._timer=null; }
     ctl.onclick=function(){
       var lines=ys.map(function(y){ return svg.querySelector('polyline[data-y="'+y+'"]'); }).filter(Boolean);
       if(svg._timer){ /* stop: show everything */
-        clearTimeout(svg._timer); svg._timer=null; lines.forEach(function(el){ el.style.transition='none'; el.style.strokeDasharray=''; el.style.strokeDashoffset=''; el.style.visibility=''; }); ctl.textContent='\u25B6 Play'; yl.style.display='none'; return; }
+        clearTimeout(svg._timer); svg._timer=null; lines.forEach(function(el){ el.style.transition='none'; el.style.strokeDasharray=''; el.style.strokeDashoffset=''; el.style.visibility=''; }); ctl.textContent='▶ Play'; yl.style.display='none'; return; }
       if(!lines.length) return;
       lines.forEach(function(el){ var len=el.getTotalLength(); el.style.transition='none'; el.style.strokeDasharray=len; el.style.strokeDashoffset=len; el.style.visibility='hidden'; });
-      ctl.textContent='\u25A0 Stop'; yl.style.display='block';
+      ctl.textContent='■ Stop'; yl.style.display='block';
       var i=0, step=Math.max(60, Math.min(220, Math.round(9000/lines.length))), draw=Math.round(step*2.2);
-      var tick=function(){ if(i>=lines.length){ svg._timer=null; ctl.textContent='\u25B6 Play'; yl.style.display='none'; return; }
+      var tick=function(){ if(i>=lines.length){ svg._timer=null; ctl.textContent='▶ Play'; yl.style.display='none'; return; }
         var el=lines[i]; yl.textContent=lab(+el.getAttribute('data-y')); el.style.visibility='visible'; svg.appendChild(el);
         requestAnimationFrame(function(){ el.style.transition='stroke-dashoffset '+draw+'ms linear'; el.style.strokeDashoffset='0'; });
         i++; svg._timer=setTimeout(tick, step); };
@@ -222,7 +231,7 @@
   function syncPickers(){
     var n=yearsShown().length, tot=_pickYears.length;
     document.querySelectorAll('.yr-pick').forEach(function(d){
-      d.querySelector('summary').textContent='Years: '+(n===tot?'all '+tot:(n===0?'none':n+' of '+tot))+' \u25BE';
+      d.querySelector('summary').textContent='Years: '+(n===tot?'all '+tot:(n===0?'none':n+' of '+tot))+' ▾';
       d.querySelectorAll('input[type=checkbox]').forEach(function(cb){ cb.checked=!_yearSel||_yearSel[+cb.value]!==false; });
     });
   }
@@ -233,7 +242,7 @@
       var svg=$(id); if(!svg) return; var box=svg.parentNode, host=box.previousElementSibling;
       var old=box.parentNode.querySelector('.yr-pick[data-for="'+id+'"]'); if(old) old.parentNode.removeChild(old);
       var d=document.createElement('details'); d.className='yr-pick'; d.setAttribute('data-for',id);
-      var h='<summary></summary><div class="yr-pick-panel"><div class="yr-pick-tools"><a href="#" data-act="all">Select all</a> \u00b7 <a href="#" data-act="clear">Clear</a></div><div class="yr-pick-grid">';
+      var h='<summary></summary><div class="yr-pick-panel"><div class="yr-pick-tools"><a href="#" data-act="all">Select all</a> · <a href="#" data-act="clear">Clear</a></div><div class="yr-pick-grid">';
       _pickYears.forEach(function(y){ h+='<label><input type="checkbox" value="'+y+'" checked> '+y+'</label>'; });
       d.innerHTML=h+'</div></div>';
       d.addEventListener('change',function(e){ var cb=e.target; if(cb && cb.type==='checkbox') setYear(+cb.value, cb.checked); });
@@ -244,25 +253,25 @@
   }
   function drawCharts(){
     var years=_curYears; if(!years) return;
-    drawChart('ch-mean', years, 'mean', -20, 95, false, '\u00b0');
-    drawChart('ch-hi',   years, 'hi',  -10, 105, false, '\u00b0');
-    drawChart('ch-lo',   years, 'lo',  -35,  80, false, '\u00b0');
+    drawChart('ch-mean', years, 'mean', -20, 95, false, '°');
+    drawChart('ch-hi',   years, 'hi',  -10, 105, false, '°');
+    drawChart('ch-lo',   years, 'lo',  -35,  80, false, '°');
     drawChart('ch-hdd',  years, 'hdd',   0, 8500, false, 'HDD');
     drawChart('ch-cdd',  years, 'cdd',   0, 1400, false, 'CDD');
     drawChart('ch-gdd',  years, 'gdd',   0, 4000, false, 'GDD');
     drawChart('ch-rain', years, 'rain',  0,  60, false, ' in');
-    if(_snowMode==='winter' && _curWinter){ var wsel={}; Object.keys(_curWinter).forEach(function(w){ wsel[w]=_curWinter[w]; }); drawChart('ch-snow', wsel, 'snow', 0, 160, false, ' in', {shift:6, label:function(y){ return y+'\u2013'+String(y+1).slice(2); }}); }
+    if(_snowMode==='winter' && _curWinter){ var wsel={}; Object.keys(_curWinter).forEach(function(w){ wsel[w]=_curWinter[w]; }); drawChart('ch-snow', wsel, 'snow', 0, 160, false, ' in', {shift:6, label:function(y){ return y+'–'+String(y+1).slice(2); }}); }
     else drawChart('ch-snow', years, 'snow',  0, 160, false, ' in');
     var sm=$('snow-mode'); if(sm){ sm.querySelectorAll('a').forEach(function(a){ a.classList.toggle('on', a.getAttribute('data-mode')===_snowMode); }); }
     drawChart('ch-precip', years, 'precip', 0, 70, false, ' in');
     var rn=$('ch-rain-note'); if(rn) rn.textContent = (_curSrc==='berne') ? '' : 'Rain alone is not recorded at a NOAA co-op station — total precipitation (next chart down) is the liquid total including melted snow. Switch the source to the Berne reanalysis to see rain and snow separated.';
-    var ys=yearsShown(), nn=$('yr-note'); if(nn) nn.textContent = (ys.length?ys.length+' of '+_pickYears.length+' years shown ('+Math.min.apply(null,ys)+'\u2013'+Math.max.apply(null,ys)+')':'No years selected')+' \u00b7 '+_curNote+' \u00b7 raw daily values.';
+    var ys=yearsShown(), nn=$('yr-note'); if(nn) nn.textContent = (ys.length?ys.length+' of '+_pickYears.length+' years shown ('+Math.min.apply(null,ys)+'–'+Math.max.apply(null,ys)+')':'No years selected')+' · '+_curNote+' · raw daily values.';
   }
   var _curYears=null, _curNote='', _curSrc='berne', _curWinter=null;
   var _yearsBerne=null;
   document.addEventListener('DOMContentLoaded',function(){ var sm=$('snow-mode'); if(sm) sm.addEventListener('click',function(e){ var a=e.target.closest&&e.target.closest('a[data-mode]'); if(!a) return; e.preventDefault(); _snowMode=a.getAttribute('data-mode'); drawCharts(); }); });
   function renderYearChart(j){
-    if(!j||!j.daily) return;
+    if(!j||!j.daily){ status('Year charts: '+(j&&j.reason?j.reason:'no data')); return; }
     _yearsBerne=yearSeries(j); _winterBerne=winterFromDaily(j.daily.time, j.daily.snowfall_sum||[]);
     var sel=$('ch-src'), ALL=window.STATION_DD;
     if(sel && ALL && sel.options.length<2){ Object.keys(ALL.stations).forEach(function(k){ var S=ALL.stations[k]; if(!S.daily) return; var o=document.createElement('option'); o.value=k; o.textContent=S.name+' observed ('+S.first+'–'+S.last+')'; sel.appendChild(o); }); sel.onchange=drawAll; }
