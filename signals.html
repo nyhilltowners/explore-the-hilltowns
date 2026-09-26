@@ -176,6 +176,13 @@ a.link:hover{background:rgba(252,163,21,.14);}
 .sg-wrap .sg-btn, .sg-wrap a.sg-btn{background:var(--gold,#c9a227); border:1px solid var(--gold,#c9a227); color:var(--gold-ink,#2b2410) !important;}
 .sg-wrap .sg-btn:hover{filter:brightness(1.08);}
 .pres-trend{display:inline-block; margin-right:4px;}
+/* v882 (2026-09-26, Laurie): year picker above each chart */
+.yr-pick{margin:0 0 6px; font:600 12px "Montserrat",sans-serif; color:#fff; position:relative;}
+.yr-pick summary{list-style:none; cursor:pointer; display:inline-block; padding:5px 10px; border:1px solid rgba(255,255,255,.35); border-radius:8px; background:rgba(0,0,0,.25); color:var(--gold,#c9a227) !important; user-select:none;}
+.yr-pick summary::-webkit-details-marker{display:none;}
+.yr-pick-panel{position:absolute; z-index:20; left:0; top:calc(100% + 4px); background:#0d1421; border:1px solid rgba(255,255,255,.3); border-radius:10px; padding:8px 10px; box-shadow:0 8px 24px rgba(0,0,0,.5); max-height:300px; overflow:auto; min-width:280px;}
+.yr-pick-tools{margin:0 0 6px; font-weight:600;} .yr-pick-tools a{color:var(--gold,#c9a227) !important; text-decoration:underline;}
+.yr-pick-grid{display:grid; grid-template-columns:repeat(4,auto); gap:3px 12px; font-weight:500;} .yr-pick-grid label{white-space:nowrap; cursor:pointer;} .yr-pick-grid input{margin:0 4px 0 0; accent-color:var(--gold,#c9a227);}
 </style>
 
 
@@ -343,7 +350,7 @@ a.link:hover{background:rgba(252,163,21,.14);}
   </div>
 
   <h2 class="sg-sec">The year, drawn</h2>
-  <p class="sg-det" style="margin:0 0 10px">Every year on record, January to December, raw daily values — no smoothing. This year is white; each earlier year a shade closer to the night sky, oldest darkest. Hover to name a year.</p>
+  <p class="sg-det" style="margin:0 0 10px">Every year on record, January to December, raw daily values — no smoothing. This year is white; each earlier year a shade closer to the night sky, oldest darkest. Hover to name a year; use the Years picker above any chart to compare a few — the choice applies to all six.</p>
   <p class="sg-det" style="margin:0 0 14px">Source: <select id="ch-src" class="sg-sel"><option value="berne">Berne reanalysis (ERA5 grid cell, 1940–)</option></select> <span id="ch-src-note"></span></p>
   <h3 class="sg-h3">Daily mean temperature</h3>
   <p class="sg-det" style="margin:0 0 8px"></p>
@@ -363,6 +370,15 @@ a.link:hover{background:rgba(252,163,21,.14);}
   <h3 class="sg-h3">Growing degree days, accumulating</h3>
   <p class="sg-det" style="margin:0 0 8px">Base 50°F, capped at 86°F. The season's heat budget for everything that grows; a steeper spring means an earlier bloom.</p>
   <div class="sg-chart"><svg id="ch-gdd" viewBox="0 0 1000 420" preserveAspectRatio="none" role="img" aria-label="Growing degree days, accumulating"></svg><div class="sg-tip" id="ch-gdd-tip"></div></div>
+  <h3 class="sg-h3">Rain, accumulating</h3>
+  <p class="sg-det" style="margin:0 0 8px">Inches of rain since January 1. A steep stretch is a wet spell; a flat one is a dry one. <span id="ch-rain-note"></span></p>
+  <div class="sg-chart"><svg id="ch-rain" viewBox="0 0 1000 420" preserveAspectRatio="none" role="img" aria-label="Rain, accumulating"></svg><div class="sg-tip" id="ch-rain-tip"></div></div>
+  <h3 class="sg-h3">Snowfall, accumulating</h3>
+  <p class="sg-det" style="margin:0 0 8px">Inches of snow since January 1 — depth as it fell, not water content. Winters straddle the year end, so each line carries only the January–spring half of one winter and the autumn start of the next.</p>
+  <div class="sg-chart"><svg id="ch-snow" viewBox="0 0 1000 420" preserveAspectRatio="none" role="img" aria-label="Snowfall, accumulating"></svg><div class="sg-tip" id="ch-snow-tip"></div></div>
+  <h3 class="sg-h3">Total precipitation, accumulating</h3>
+  <p class="sg-det" style="margin:0 0 8px">All moisture as water — rain plus the melted equivalent of snow — since January 1. The line every drought and every flood year bends.</p>
+  <div class="sg-chart"><svg id="ch-precip" viewBox="0 0 1000 420" preserveAspectRatio="none" role="img" aria-label="Total precipitation, accumulating"></svg><div class="sg-tip" id="ch-precip-tip"></div></div>
   <p class="sg-note" id="yr-note"></p>
 
   <h2 class="sg-sec">Water · year to date</h2>

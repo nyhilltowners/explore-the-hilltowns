@@ -1423,6 +1423,8 @@ def emit_phenology_history():
     out = []
     rows, ix = sheet_rows("Events")
     for r in rows:
+        if g(r, ix, "show on timeline").strip().lower() in ("no", "n"):
+            continue  # v882: optional column; "No" keeps a register row off the Historical Phenology timeline
         iso = g(r, ix, "timeline anchor (iso)") or g(r, ix, "start date")
         if not re.match(r"^-?\d{3,4}-\d{2}-\d{2}", iso):
             continue

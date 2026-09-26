@@ -108,36 +108,45 @@
     if(_ddCache){ renderDD(_ddCache); return; }
     var t = new Date(Date.now()-86400000), end = t.getFullYear()+'-'+String(t.getMonth()+1).padStart(2,'0')+'-'+String(t.getDate()).padStart(2,'0');
     var thisYear = t.getFullYear(), mmdd = end.slice(5);
-    var url = 'https://archive-api.open-meteo.com/v1/archive?'+Q+'&start_date=1940-01-01&end_date='+end+'&daily=temperature_2m_max,temperature_2m_min&temperature_unit=fahrenheit';
+    var url = 'https://archive-api.open-meteo.com/v1/archive?'+Q+'&start_date=1940-01-01&end_date='+end+'&daily=temperature_2m_max,temperature_2m_min,precipitation_sum,rain_sum,snowfall_sum&temperature_unit=fahrenheit&precipitation_unit=inch'; /* v883 (2026-09-26, Laurie): rain/snow/total for the moisture charts */
     $('dd-note').textContent = 'Loading 1940–'+thisYear+' history…';
     fetch(url).then(function(r){ return r.json(); }).then(function(j){ _ddCache=j; renderDD(j); }).catch(function(e){ $('dd-note').textContent='Degree-day history unavailable right now.'; status('Degree days: '+(e && e.message || 'fetch failed')); });
   }
   /* ---------- the year, drawn: one chart builder, six charts ---------- */
   function yearSeries(j){
-    var T=j.daily.time, mx=j.daily.temperature_2m_max, mn=j.daily.temperature_2m_min, out={};
-    for(var i=0;i<T.length;i++){ if(typeof mx[i]!=='number'||typeof mn[i]!=='number') continue;
+    var T=j.daily.time, mx=j.daily.temperature_2m_max, mn=j.daily.temperature_2m_min, pp=j.daily.precipitation_sum||[], rr=j.daily.rain_sum||[], ss=j.daily.snowfall_sum||[], out={};
+    var mk=function(){ return {hi:new Array(366),lo:new Array(366),mean:new Array(366),hdd:new Array(366),cdd:new Array(366),gdd:new Array(366),rain:new Array(366),snow:new Array(366),precip:new Array(366),_h:0,_c:0,_g:0,_r:0,_s:0,_p:0}; };
+    for(var i=0;i<T.length;i++){
       var y=+T[i].slice(0,4), d=new Date(T[i]+'T00:00:00Z'), doy=Math.round((d-Date.UTC(y,0,1))/86400000);
-      var Y=out[y]||(out[y]={hi:new Array(366),lo:new Array(366),mean:new Array(366),hdd:new Array(366),cdd:new Array(366),gdd:new Array(366),_h:0,_c:0,_g:0});
-      var mean=(mx[i]+mn[i])/2; Y.hi[doy]=mx[i]; Y.lo[doy]=mn[i]; Y.mean[doy]=mean;
-      Y._h+=Math.max(0,65-mean); Y._c+=Math.max(0,mean-65); Y._g+=Math.max(0,(Math.min(86,mx[i])+Math.max(50,mn[i]))/2-50);
-      Y.hdd[doy]=Y._h; Y.cdd[doy]=Y._c; Y.gdd[doy]=Y._g; }
+      var Y=out[y]||(out[y]=mk());
+      if(typeof mx[i]==='number'&&typeof mn[i]==='number'){
+        var mean=(mx[i]+mn[i])/2; Y.hi[doy]=mx[i]; Y.lo[doy]=mn[i]; Y.mean[doy]=mean;
+        Y._h+=Math.max(0,65-mean); Y._c+=Math.max(0,mean-65); Y._g+=Math.max(0,(Math.min(86,mx[i])+Math.max(50,mn[i]))/2-50);
+        Y.hdd[doy]=Y._h; Y.cdd[doy]=Y._c; Y.gdd[doy]=Y._g; }
+      /* v883 (2026-09-26, Laurie): accumulating moisture — rain and total in inches of water, snowfall in inches of snow (Open-Meteo reports snowfall in inches when precipitation_unit=inch) */
+      if(typeof rr[i]==='number'){ Y._r+=rr[i]; Y.rain[doy]=Y._r; }
+      if(typeof ss[i]==='number'){ Y._s+=ss[i]; Y.snow[doy]=Y._s; }
+      if(typeof pp[i]==='number'){ Y._p+=pp[i]; Y.precip[doy]=Y._p; } }
     return out;
   }
   function stationSeries(S){
     var out={}; Object.keys(S.years).forEach(function(y){ var Y=S.years[y]; if(!Y.dhi) return;
-      var o={hi:new Array(366),lo:new Array(366),mean:new Array(366),hdd:new Array(366),cdd:new Array(366),gdd:new Array(366)}, h=0,c=0,g=0;
+      var o={hi:new Array(366),lo:new Array(366),mean:new Array(366),hdd:new Array(366),cdd:new Array(366),gdd:new Array(366),rain:new Array(366),snow:new Array(366),precip:new Array(366)}, h=0,c=0,g=0;
       for(var d=0;d<366;d++){ var mx=Y.dhi[d], mn=Y.dlo[d]; if(typeof mx!=='number'||typeof mn!=='number') continue;
         var mean=(mx+mn)/2; o.hi[d]=mx; o.lo[d]=mn; o.mean[d]=mean; h+=Math.max(0,65-mean); c+=Math.max(0,mean-65); g+=Math.max(0,(Math.min(86,mx)+Math.max(50,mn))/2-50); o.hdd[d]=h; o.cdd[d]=c; o.gdd[d]=g; }
+      /* v883 (2026-09-26, Laurie): station precipitation (liquid, incl. melted snow) and snowfall are cumulative by day-of-year in station_dd.js; rain alone is not observed at a NOAA co-op station */
+      if(Y.np>0 && Y.p){ for(var d2=0; d2<366 && d2<Y.p.length; d2++){ o.precip[d2]=Y.p[d2]; o.snow[d2]=Y.s[d2]; } }
       out[y]=o; });
     return out;
   }
   function drawChart(id, years, key, tMin, tMax, smooth, unit){
     var svg=$(id), tip=$(id+'-tip'); if(!svg) return;
-    var ys=Object.keys(years).map(Number).sort(function(a,b){ return a-b; }), y0=ys[0], yN=ys[ys.length-1];
+    var allYs=Object.keys(years).map(Number).sort(function(a,b){ return a-b; }), y0=allYs[0], yN=allYs[allYs.length-1];
+    var ys=allYs.filter(function(y){ return !_yearSel || _yearSel[y]!==false; }); /* v882 (2026-09-26, Laurie): year picker — colours keyed to the full range so a year keeps its shade when others are hidden */
     var W=1000,H=420,L=48,R=10,Tp=10,B=28;
     var X=function(doy){ return L+(W-L-R)*doy/365; }, Y=function(t){ return Tp+(H-Tp-B)*(1-(t-tMin)/(tMax-tMin)); };
     var h='', mdays=[0,31,59,90,120,151,181,212,243,273,304,334], mon=['J','F','M','A','M','J','J','A','S','O','N','D'];
-    var step=(tMax-tMin)>=2000?1000:((tMax-tMin)>=200?200:20);
+    var step=(tMax-tMin)>=2000?1000:((tMax-tMin)>=200?200:((tMax-tMin)>=150?20:((tMax-tMin)<=70&&unit===' in'?10:20)));
     for(var t=Math.ceil(tMin/step)*step;t<=tMax;t+=step){ h+='<line class="ax" x1="'+L+'" y1="'+Y(t)+'" x2="'+(W-R)+'" y2="'+Y(t)+'"/><text class="lbl" x="'+(L-6)+'" y="'+(Y(t)+4)+'" text-anchor="end">'+t.toLocaleString()+unit+'</text>'; }
     for(var m=0;m<12;m++){ h+='<line class="ax" x1="'+X(mdays[m])+'" y1="'+Tp+'" x2="'+X(mdays[m])+'" y2="'+(H-B)+'"/><text class="lbl" x="'+X(mdays[m]+15)+'" y="'+(H-8)+'" text-anchor="middle">'+mon[m]+'</text>'; }
     if(unit==='°' && tMin<32 && tMax>32) h+='<line class="ax" x1="'+L+'" y1="'+Y(32)+'" x2="'+(W-R)+'" y2="'+Y(32)+'" style="stroke:rgba(255,255,255,.45); stroke-dasharray:4 4"/><text class="lbl" x="'+(W-R-4)+'" y="'+(Y(32)-4)+'" text-anchor="end">freezing</text>';
@@ -166,6 +175,49 @@
     };
     svg.onmouseleave=function(){ if(lastHl) lastHl.classList.remove('hl'); tip.style.display='none'; };
   }
+  /* v882 (2026-09-26, Laurie): shared year selection for the six charts. null = all years; otherwise {year:false} for hidden years. */
+  var _yearSel=null, _pickYears=[];
+  function yearsShown(){ return _pickYears.filter(function(y){ return !_yearSel || _yearSel[y]!==false; }); }
+  function setYear(y,on){ if(!_yearSel){ _yearSel={}; } if(on) delete _yearSel[y]; else _yearSel[y]=false; if(!Object.keys(_yearSel).length) _yearSel=null; syncPickers(); drawCharts(); }
+  function setAllYears(on){ if(on){ _yearSel=null; } else { _yearSel={}; _pickYears.forEach(function(y){ _yearSel[y]=false; }); } syncPickers(); drawCharts(); }
+  function syncPickers(){
+    var n=yearsShown().length, tot=_pickYears.length;
+    document.querySelectorAll('.yr-pick').forEach(function(d){
+      d.querySelector('summary').textContent='Years: '+(n===tot?'all '+tot:(n===0?'none':n+' of '+tot))+' \u25BE';
+      d.querySelectorAll('input[type=checkbox]').forEach(function(cb){ cb.checked=!_yearSel||_yearSel[+cb.value]!==false; });
+    });
+  }
+  function buildPickers(years){
+    _pickYears=Object.keys(years).map(Number).sort(function(a,b){ return b-a; });
+    _yearSel=null;
+    ['ch-mean','ch-hi','ch-lo','ch-hdd','ch-cdd','ch-gdd','ch-rain','ch-snow','ch-precip'].forEach(function(id){
+      var svg=$(id); if(!svg) return; var box=svg.parentNode, host=box.previousElementSibling;
+      var old=box.parentNode.querySelector('.yr-pick[data-for="'+id+'"]'); if(old) old.parentNode.removeChild(old);
+      var d=document.createElement('details'); d.className='yr-pick'; d.setAttribute('data-for',id);
+      var h='<summary></summary><div class="yr-pick-panel"><div class="yr-pick-tools"><a href="#" data-act="all">Select all</a> \u00b7 <a href="#" data-act="clear">Clear</a></div><div class="yr-pick-grid">';
+      _pickYears.forEach(function(y){ h+='<label><input type="checkbox" value="'+y+'" checked> '+y+'</label>'; });
+      d.innerHTML=h+'</div></div>';
+      d.addEventListener('change',function(e){ var cb=e.target; if(cb && cb.type==='checkbox') setYear(+cb.value, cb.checked); });
+      d.addEventListener('click',function(e){ var a=e.target.closest && e.target.closest('a[data-act]'); if(a){ e.preventDefault(); setAllYears(a.getAttribute('data-act')==='all'); } });
+      box.parentNode.insertBefore(d, box);
+    });
+    syncPickers();
+  }
+  function drawCharts(){
+    var years=_curYears; if(!years) return;
+    drawChart('ch-mean', years, 'mean', -20, 95, false, '\u00b0');
+    drawChart('ch-hi',   years, 'hi',  -10, 105, false, '\u00b0');
+    drawChart('ch-lo',   years, 'lo',  -35,  80, false, '\u00b0');
+    drawChart('ch-hdd',  years, 'hdd',   0, 8500, false, 'HDD');
+    drawChart('ch-cdd',  years, 'cdd',   0, 1400, false, 'CDD');
+    drawChart('ch-gdd',  years, 'gdd',   0, 4000, false, 'GDD');
+    drawChart('ch-rain', years, 'rain',  0,  60, false, ' in');
+    drawChart('ch-snow', years, 'snow',  0, 160, false, ' in');
+    drawChart('ch-precip', years, 'precip', 0, 70, false, ' in');
+    var rn=$('ch-rain-note'); if(rn) rn.textContent = (_curSrc==='berne') ? '' : 'Rain alone is not recorded at a NOAA co-op station — total precipitation (next chart down) is the liquid total including melted snow. Switch the source to the Berne reanalysis to see rain and snow separated.';
+    var ys=yearsShown(), nn=$('yr-note'); if(nn) nn.textContent = (ys.length?ys.length+' of '+_pickYears.length+' years shown ('+Math.min.apply(null,ys)+'\u2013'+Math.max.apply(null,ys)+')':'No years selected')+' \u00b7 '+_curNote+' \u00b7 raw daily values.';
+  }
+  var _curYears=null, _curNote='', _curSrc='berne';
   var _yearsBerne=null;
   function renderYearChart(j){
     if(!j||!j.daily) return;
@@ -180,14 +232,9 @@
     else { var S=ALL.stations[src]; years=stationSeries(S); note='Observed at '+S.name+', ~'+S.elev.toLocaleString()+' ft — NOAA thermometer readings, gaps where the observer missed a day.'; }
     var n=$('ch-src-note'); if(n) n.textContent=note;
     if(!years) return;
-    var ys=Object.keys(years).map(Number);
-    drawChart('ch-mean', years, 'mean', -20, 95, false, '°');
-    drawChart('ch-hi',   years, 'hi',  -10, 105, false, '°');
-    drawChart('ch-lo',   years, 'lo',  -35,  80, false, '°');
-    drawChart('ch-hdd',  years, 'hdd',   0, 8500, false, 'HDD');
-    drawChart('ch-cdd',  years, 'cdd',   0, 1400, false, 'CDD');
-    drawChart('ch-gdd',  years, 'gdd',   0, 4000, false, 'GDD');
-    var nn=$('yr-note'); if(nn) nn.textContent = ys.length+' years ('+Math.min.apply(null,ys)+'–'+Math.max.apply(null,ys)+') · '+(src==='berne'?'ERA5 reanalysis for Berne via Open-Meteo':'NOAA GHCN-Daily via xmACIS2')+' · raw daily values.';
+    _curSrc=src; _curYears=years; _curNote=(src==='berne'?'ERA5 reanalysis for Berne via Open-Meteo':'NOAA GHCN-Daily via xmACIS2');
+    buildPickers(years); /* source change resets the selection to all years */
+    drawCharts();
   }
 
   function renderDD(j){

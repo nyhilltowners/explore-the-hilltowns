@@ -1,4 +1,4 @@
-# NY Hilltowners Folk Atlas — Session Handoff (2026-09-25, v881)
+# NY Hilltowners Folk Atlas — Session Handoff (2026-09-26, v883)
 
 This ZIP is a **complete, self-contained source tree**. A new chat can unzip it,
 run the build, and continue exactly where this session left off. Everything here
@@ -120,6 +120,8 @@ Fixed-hinge wingbeat, 4 white wing-spots. Day-only, reduced-motion safe. The
 
 ## UX state (recent)
 
+- **v883 (2026-09-26): three moisture charts** under 'The year, drawn' — Rain, Snowfall and Total precipitation, all accumulating from Jan 1, same year-picker and colour scheme as the temperature/degree-day charts (nine charts share one selection). Berne source: Open-Meteo ERA5 daily rain_sum / snowfall_sum / precipitation_sum, inches (fetchDD now requests them; the DD panel ignores the extra columns). Station source: precipitation and snowfall from station_dd.js cumulative arrays; rain is not observed at co-op stations, so the rain chart is empty with a note. Snow axis 0–160 in, precip 0–70, rain 0–60, 10-in gridlines.
+- **v882 (2026-09-26): Hoffman Car Wash off the timeline, onto the map + year picker on the charts.** Register: new optional `Show on timeline` column (Events); row 295 = No, so the 2025–26 closure no longer sits in Historical Phenology; build.py skips No rows. Natural History: new ⚠️ pin at 55 Delaware Ave, Delmar (exact), same slope as the 2000 pin. Signals: a `Years ▾` picker (details/summary dropdown) above each of the six charts — checkboxes for every year, default all checked, `Select all · Clear` links; one shared selection drives all six charts; year colours keyed to the full record so a year keeps its shade when others are hidden; the note line reports 'n of N years shown'; switching the source station resets to all.
 - **v881 (2026-09-25): Miller series complete** — the Feb 2022 'German Heritage & Genealogy' piece is a sources note, folded into the Harold Miller directory entry (Our Heritage 1977, Knox Sesquicentennial 1973, Barker & Jones Palatine genealogies, where to buy the books). All nine Almanack articles accounted for: H-734–H-740, H-743, plus this.
 - **v880 (2026-09-25): H-743 Morgan Filkins / the 177th's dead (1863)** — the pending Miller article, fetched once the Almanack came back; cross-linked to H-735 (Joel Wilson's West Mountain grave) and H-738 (Jesse D. Wood). One Miller article left: 'Berne & Knox: German Heritage' (Feb 1 2022). Folklore next free ID: H-744.
 - **v879 (2026-09-25): Zeh–Warner mill locus found** — the Pine Grove Lutheran Cemetery (Zeh–Warner burying ground, earliest stone 1777) sits on the 1797 church/mill lot, marked by the 'Lutheran Church' state marker on Rte 443 (HMDB m132604, 42.61743, -74.09987). H-736 re-pinned there (approximate; the sawmill on Fox Creek just south still unlocated to the foot); cemetery/marker added or enriched as a Points of Interest pin. Remaining Miller coordinate hunt: West Mountain ME church (H-735).
@@ -348,7 +350,7 @@ Big ongoing effort to tame tag sprawl. Started at 2,332 unique tags; now ~2,178.
 7. Clean-room verify: unzip the package fresh, rebuild, confirm BUILD OK.
 8. `present_files` the zip + both xlsx.
 
-Version at handoff: **v881**. Next chat continues from v882.
+Version at handoff: **v883**. Next chat continues from v884.
 
 ---
 
