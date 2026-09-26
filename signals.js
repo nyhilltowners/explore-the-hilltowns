@@ -414,31 +414,95 @@
     var base='https://api.ebird.org/v2/data/obs/geo/recent', q='?lat='+LAT.toFixed(4)+'&lng='+LNG.toFixed(4)+'&dist='+EBIRD_DIST+'&back='+EBIRD_BACK+'&maxResults=10000'; /* 2026-09-27 (v898, Laurie): was capped at 60 records, which read as a fixed species count; the eBird max is 10000 */
     var opt={headers:{'X-eBirdApiToken':EBIRD_KEY}};
     var esc=function(v){ return String(v||'').replace(/[&<>"]/g,function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); };
-    var row=function(o,rare){ return '<div class="eb'+(rare?' rare':'')+'" data-sci="'+esc(o.sciName)+'"><div class="img ph">🐦</div><div class="c">'+(o.howMany!=null?o.howMany:'')+'</div><div><div class="n">'+esc(o.comName)+' <span class="sci" style="font-weight:400;font-style:italic;opacity:.85">'+esc(o.sciName)+'</span>'+(rare?' · <span class="ph-tag">notable</span>':'')+'</div><div class="m">'+esc((o.obsDt||'').slice(0,16))+(o.locName?' \u00b7 '+esc(o.locName):'')+'</div></div></div>'; }; /* notable band keeps the compact row; location name restored per Laurie, coords/checklist still dropped */
-    var card=function(o,rare){ return '<div class="inat eb-card'+(rare?' rare':'')+'" data-sci="'+esc(o.sciName)+'"><div class="img ph">🐦</div><div class="b"><div class="n">'+esc(o.comName)+(rare?' <span class="ph-tag">notable</span>':'')+'</div><div class="sci">'+esc(o.sciName)+'</div><div class="m">'+esc((o.obsDt||'').slice(0,16))+(o.locName?' \u00b7 '+esc(o.locName):'')+'</div></div></div>'; }; /* 2026-09-27 (v900, Laurie): location name restored per Laurie, coords/checklist still dropped */
+    /* 2026-09-27 (v901, Laurie): totals across the whole 14-day window, not just the single most-recent report:
+       sum of howMany per species, and how many separate checklists reported it. Some checklists
+       give a count of "X" (present, not counted); those add to the report tally but not the sum,
+       so a "+" after the number means the true total is at least that high. */
+    var countMeta = function(recentAll, code){
+      var sum=0, reports=0, anyUnknown=false;
+      recentAll.forEach(function(o){ if(o.speciesCode!==code) return; reports++; if(o.howMany!=null) sum+=o.howMany; else anyUnknown=true; });
+      return {sum:sum, reports:reports, anyUnknown:anyUnknown};
+    };
+    var countBadge = function(m){ if(!m.reports) return ''; return (m.sum||m.anyUnknown) ? ((m.sum||0)+(m.anyUnknown?'+':'')) : ''; };
+    var reportsNote = function(m){ return m.reports>1 ? m.reports+' reports' : '1 report'; };
+    /* 2026-09-27 (v902, Laurie): row() (compact eBird strip) retired — the notable band now uses the same card as the main grid */
+    var card=function(o,rare,m){ return '<div class="inat eb-card'+(rare?' rare':'')+'" data-sci="'+esc(o.sciName)+'" data-subid="'+esc(o.subId||'')+'"><div class="img ph">🐦</div><div class="b"><div class="n">'+esc(o.comName)+(countBadge(m)?' <span class="c">'+countBadge(m)+'</span>':'')+'</div><div class="sci">'+esc(o.sciName)+'</div><div class="m">'+esc((o.obsDt||'').slice(0,16))+(o.locName?' \u00b7 '+esc(o.locName):'')+' \u00b7 '+reportsNote(m)+'<span class="obs-by"></span><br><span class="photo-credit" style="opacity:.7">species photo: Wikipedia</span></div></div></div>'; }; /* 2026-09-27 (v902, Laurie): the 'notable' tag dropped — no reason code is available from eBird to say what made it notable, and the section heading already carries that meaning */ /* 2026-09-27 (v901, Laurie): total-count badge, report count, and (async) observer restored; photo stays a generic species image from Wikipedia, labelled as such since eBird does not expose per-sighting photo credit the way iNaturalist does */
     Promise.all([fetch(base+'/notable'+q,opt).then(function(r){ return r.ok?r.json():[]; }).catch(function(){ return []; }),
                  fetch(base+q,opt).then(function(r){ if(!r.ok) throw new Error('eBird HTTP '+r.status); return r.json(); })])
     .then(function(res){ var notable=res[0]||[], recent=res[1]||[];
       var srt=function(a,b){ return (b.obsDt||'').localeCompare(a.obsDt||''); }; notable.sort(srt); recent.sort(srt);
-      band.innerHTML = notable.length ? '<div class="eb-band"><div class="t">Notable · '+notable.length+'</div>'+notable.slice(0,12).map(function(o){ return row(o,true); }).join('')+'</div>' : '';
-      var seen={}; recent=recent.filter(function(o){ var k=o.speciesCode; if(seen[k]) return false; seen[k]=1; return true; });   /* one line per species, most recent report */
-      grid.innerHTML = recent.length ? recent.map(function(o){ return card(o,false); }).join('') : '<p class="ph-empty">No reports in the window.</p>';
-      wikiPics(); 
-      $('ebird-note').textContent = recent.length+' species reported in the last '+EBIRD_BACK+' days within '+EBIRD_DIST+' km of Berne, most recent report of each · data © eBird / Cornell Lab of Ornithology.';
+      band.innerHTML = notable.length ? '<div class="eb-band"><div class="t">Big Deal Birdos \u00b7 '+notable.length+'</div><div class="sg-grid">'+notable.slice(0,12).map(function(o){ return card(o,false,countMeta(recent,o.speciesCode)); }).join('')+'</div></div>' : ''; /* 2026-09-27 (v902, Laurie): every individual sighting kept separate (no per-species merge); same card size as the main grid; the 'notable' tag is dropped below since the section heading already says so, and eBird gives no reason code for why a sighting is flagged */
+      var seen={}, uniq=recent.filter(function(o){ var k=o.speciesCode; if(seen[k]) return false; seen[k]=1; return true; });   /* one card per species, most recent report */
+      grid.innerHTML = uniq.length ? uniq.map(function(o){ return card(o,false,countMeta(recent,o.speciesCode)); }).join('') : '<p class="ph-empty">No reports in the window.</p>';
+      wikiPics();
+      fetchObservers();
+      $('ebird-note').textContent = uniq.length+' species reported in the last '+EBIRD_BACK+' days within '+EBIRD_DIST+' km of Berne, most recent report of each, with the total individuals and reports for the whole window \u00b7 data \u00a9 eBird / Cornell Lab of Ornithology.';
     }).catch(function(e){ grid.innerHTML='<p class="ph-empty">eBird is unreachable right now.</p>'; status('eBird: '+(e && e.message || 'fetch failed')+' (if this says HTTP 403 the key is wrong; if it says "Failed to fetch" eBird refused the cross-site request and the feed must move to build time)'); });
   }
+  /* 2026-09-27 (v901, Laurie): observer name per most-recent checklist, filled in after the grid renders so a
+     slow or failed lookup never blocks the page. Cached in sessionStorage by checklist id. */
+  function fetchObservers(){
+    var els=document.querySelectorAll('[data-subid]'), cache={}; try{ cache=JSON.parse(sessionStorage.getItem('hfa.ebobs')||'{}'); }catch(e){}
+    var pending={};
+    Array.prototype.forEach.call(els,function(el){ var sid=el.getAttribute('data-subid'); if(!sid) return;
+      var put=function(name){ if(!name) return; var s=el.querySelector('.obs-by'); if(s) s.textContent=' \u00b7 by '+name; };
+      if(cache[sid]!=null){ put(cache[sid]); return; }
+      if(pending[sid]){ pending[sid].push(put); return; }
+      pending[sid]=[put];
+      fetch('https://api.ebird.org/v2/product/checklist/view/'+encodeURIComponent(sid),{headers:{'X-eBirdApiToken':EBIRD_KEY}}).then(function(r){ return r.ok?r.json():null; }).then(function(cl){
+        var name=cl&&cl.userDisplayName||''; cache[sid]=name; try{ sessionStorage.setItem('hfa.ebobs',JSON.stringify(cache)); }catch(e){}
+        pending[sid].forEach(function(f){ f(name); });
+      }).catch(function(){ cache[sid]=''; pending[sid].forEach(function(f){ f(''); }); });
+    });
+  }
 
+  /* 2026-09-27 (v903, Laurie): fetch the licence and photographer for the Wikipedia thumbnail itself, not just
+     the image, and print it as the credit line. Wikipedia taxobox photos are almost always hosted
+     on Commons under a free licence (Wikipedia requires this for mainspace use); the rare local,
+     non-free upload is skipped rather than mis-credited. Cached under a new key (hfa.wiki2) since
+     the old cache only ever held a bare URL. */
+  var wpEsc=function(v){ return String(v||'').replace(/[&<>"]/g,function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); };
+  function fileCreditFromUrl(u){
+    if(!u) return Promise.resolve(null);
+    var onCommons = u.indexOf('/wikipedia/commons/') !== -1;
+    var apiHost = onCommons ? 'https://commons.wikimedia.org/w/api.php' : 'https://en.wikipedia.org/w/api.php';
+    var parts = u.split('/'), last = parts[parts.length-1];
+    var fname = /^\d+px-/.test(last) ? parts[parts.length-2] : last;
+    try{ fname = decodeURIComponent(fname); }catch(e){}
+    if(!fname) return Promise.resolve(null);
+    var url = apiHost+'?action=query&titles='+encodeURIComponent('File:'+fname)+'&prop=imageinfo&iiprop=extmetadata&format=json&origin=*';
+    return fetch(url).then(function(r){ return r.ok?r.json():null; }).then(function(j2){
+      if(!j2) return null;
+      var pages = j2.query && j2.query.pages; if(!pages) return null;
+      var pg = pages[Object.keys(pages)[0]]; var info = pg && pg.imageinfo && pg.imageinfo[0]; var meta = info && info.extmetadata;
+      if(!meta) return null;
+      var strip = function(s){ return String(s||'').replace(/<[^>]+>/g,'').replace(/\s+/g,' ').trim(); };
+      var artist = strip(meta.Artist && meta.Artist.value);
+      var lic = strip(meta.LicenseShortName && meta.LicenseShortName.value) || 'licence unlisted';
+      var fileUrl = (onCommons?'https://commons.wikimedia.org/wiki/File:':'https://en.wikipedia.org/wiki/File:')+encodeURIComponent(fname);
+      return {artist:artist, lic:lic, fileUrl:fileUrl};
+    }).catch(function(){ return null; });
+  }
   function wikiPics(){
-    var els=document.querySelectorAll('.eb[data-sci], .eb-card[data-sci]'), cache={}; /* 2026-09-27 (v899, Laurie): picks up both the notable-band rows and the new grid cards */ try{ cache=JSON.parse(sessionStorage.getItem('hfa.wiki')||'{}'); }catch(e){}
+    var els=document.querySelectorAll('.eb[data-sci], .eb-card[data-sci]'), cache={}; /* 2026-09-27 (v899, Laurie): picks up both the notable-band rows and the new grid cards */ try{ cache=JSON.parse(sessionStorage.getItem('hfa.wiki2')||'{}'); }catch(e){}
     var pending={};
     Array.prototype.forEach.call(els,function(el){ var sci=el.getAttribute('data-sci'); if(!sci) return;
-      var put=function(u){ if(!u) return; var im=document.createElement('img'); im.className='img'; im.alt=''; im.loading='lazy'; im.src=u; var ph=el.querySelector('.img.ph'); if(ph) el.replaceChild(im,ph); };
+      var put=function(d){ if(!d||!d.url) return;
+        var im=document.createElement('img'); im.className='img'; im.alt=''; im.loading='lazy'; im.src=d.url; var ph=el.querySelector('.img.ph'); if(ph) el.replaceChild(im,ph);
+        var cr=el.querySelector('.photo-credit');
+        if(cr && d.credit){
+          cr.innerHTML = 'photo: '+(d.credit.artist?wpEsc(d.credit.artist)+' \u00b7 ':'')+'<a href="'+wpEsc(d.credit.fileUrl)+'" target="_blank" rel="noopener" style="color:inherit;text-decoration:underline">'+wpEsc(d.credit.lic)+'</a> (Wikimedia Commons)';
+        }
+      };
       if(cache[sci]){ put(cache[sci]); return; }
       if(pending[sci]){ pending[sci].push(put); return; }
       pending[sci]=[put];
       fetch('https://en.wikipedia.org/api/rest_v1/page/summary/'+encodeURIComponent(sci.replace(/ /g,'_'))).then(function(r){ return r.ok?r.json():null; }).then(function(p){
-        var u=p&&p.thumbnail&&p.thumbnail.source||''; cache[sci]=u; try{ sessionStorage.setItem('hfa.wiki',JSON.stringify(cache)); }catch(e){}
-        pending[sci].forEach(function(f){ f(u); });
+        var u=p&&p.thumbnail&&p.thumbnail.source||'';
+        fileCreditFromUrl(u).then(function(credit){
+          var d={url:u, credit:credit}; cache[sci]=d; try{ sessionStorage.setItem('hfa.wiki2',JSON.stringify(cache)); }catch(e){}
+          pending[sci].forEach(function(f){ f(d); });
+        });
       }).catch(function(){});
     });
   }

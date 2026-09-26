@@ -709,7 +709,7 @@ h1{font-family:'Montserrat',sans-serif; font-weight:800; text-transform:uppercas
       /* 2026-09-19 (Laurie): on TODAY, events that have already ended fold away so the evening
          is visible without scrolling. "Ended" = end time + 30 min grace, or, with no end time,
          start + 2 h. All-day / untimed rows stay. A one-line toggle brings them back. */
-      var isToday = (dstr === ymd(TODAY)), nowMin = TODAY.getHours()*60 + TODAY.getMinutes(), hidden = 0, showPast = group.dataset.showPast === "1";
+      var isToday = (dstr === ymd(TODAY)), _now = new Date(), nowMin = _now.getHours()*60 + _now.getMinutes(), hidden = 0, showPast = group.dataset.showPast === "1"; /* 2026-09-27 (v904, Laurie): nowMin was reading from TODAY, which is zeroed to midnight above — "now" always came out as 0, so a same-day event never counted as ended. Read the clock from a fresh Date instead. */
       byDay[dstr].forEach(function(ev){
         if(isToday && !window.__showPastToday){
           var ts = agendaMinutes(ev.tm);
