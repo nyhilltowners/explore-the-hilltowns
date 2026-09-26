@@ -129,6 +129,24 @@
       if(typeof pp[i]==='number'){ Y._p+=pp[i]; Y.precip[doy]=Y._p; } }
     return out;
   }
+  /* v886 (2026-09-26, Laurie): snowfall by winter — key = the July year, index 0 = Jul 1, accumulating through Jun 30 */
+  var _winterBerne=null;
+  function winterFromDaily(T, ss){
+    var out={}, doyOf=function(y,d){ return Math.round((d-Date.UTC(y,0,1))/86400000); };
+    for(var i=0;i<T.length;i++){ if(typeof ss[i]!=='number') continue;
+      var y=+T[i].slice(0,4), d=new Date(T[i]+'T00:00:00Z'), doy=doyOf(y,d), jul=(y%4===0&&(y%100!==0||y%400===0))?182:181;
+      var wy=doy>=jul?y:y-1, idx=doy>=jul?doy-jul:doy+184;
+      var W=out[wy]||(out[wy]={snow:new Array(366),_s:0}); W._s+=ss[i]; W.snow[idx]=W._s; }
+    return out;
+  }
+  function winterFromStation(S){
+    var out={}; Object.keys(S.years).map(Number).sort().forEach(function(y){ var Y=S.years[y]; if(!Y.np||!Y.s) return;
+      var jul=(y%4===0&&(y%100!==0||y%400===0))?182:181;
+      for(var d=0; d<Y.s.length; d++){ var daily=Y.s[d]-(d?Y.s[d-1]:0); var wy=d>=jul?y:y-1, idx=d>=jul?d-jul:d+184;
+        var W=out[wy]||(out[wy]={snow:new Array(366),_s:0}); W._s+=daily; W.snow[idx]=W._s; } });
+    return out;
+  }
+  var _snowMode='year';
   function stationSeries(S){
     var out={}; Object.keys(S.years).forEach(function(y){ var Y=S.years[y]; if(!Y.dhi) return;
       var o={hi:new Array(366),lo:new Array(366),mean:new Array(366),hdd:new Array(366),cdd:new Array(366),gdd:new Array(366),rain:new Array(366),snow:new Array(366),precip:new Array(366)}, h=0,c=0,g=0;
@@ -139,13 +157,15 @@
       out[y]=o; });
     return out;
   }
-  function drawChart(id, years, key, tMin, tMax, smooth, unit){
+  function drawChart(id, years, key, tMin, tMax, smooth, unit, opts){
+    opts=opts||{}; var shift=opts.shift||0, lab=opts.label||function(y){ return String(y); }; /* v886 (2026-09-26, Laurie): shift=6 → July-first winter axis */
     var svg=$(id), tip=$(id+'-tip'); if(!svg) return;
     var allYs=Object.keys(years).map(Number).sort(function(a,b){ return a-b; }), y0=allYs[0], yN=allYs[allYs.length-1];
     var ys=allYs.filter(function(y){ return !_yearSel || _yearSel[y]!==false; }); /* v882 (2026-09-26, Laurie): year picker — colours keyed to the full range so a year keeps its shade when others are hidden */
     var W=1000,H=420,L=48,R=10,Tp=10,B=28;
     var X=function(doy){ return L+(W-L-R)*doy/365; }, Y=function(t){ return Tp+(H-Tp-B)*(1-(t-tMin)/(tMax-tMin)); };
-    var h='', mdays=[0,31,59,90,120,151,181,212,243,273,304,334], mon=['J','F','M','A','M','J','J','A','S','O','N','D'];
+    var h='', mdays0=[0,31,59,90,120,151,181,212,243,273,304,334], mon0=['J','F','M','A','M','J','J','A','S','O','N','D'];
+    var mdays=mdays0, mon=mon0; if(shift){ var base=mdays0[shift]; mdays=mdays0.slice(shift).map(function(v){ return v-base; }).concat(mdays0.slice(0,shift).map(function(v){ return v+365-base; })); mon=mon0.slice(shift).concat(mon0.slice(0,shift)); }
     var step=(tMax-tMin)>=2000?1000:((tMax-tMin)>=200?200:((tMax-tMin)>=150?20:((tMax-tMin)<=70&&unit===' in'?10:20)));
     for(var t=Math.ceil(tMin/step)*step;t<=tMax;t+=step){ h+='<line class="ax" x1="'+L+'" y1="'+Y(t)+'" x2="'+(W-R)+'" y2="'+Y(t)+'"/><text class="lbl" x="'+(L-6)+'" y="'+(Y(t)+4)+'" text-anchor="end">'+t.toLocaleString()+unit+'</text>'; }
     for(var m=0;m<12;m++){ h+='<line class="ax" x1="'+X(mdays[m])+'" y1="'+Tp+'" x2="'+X(mdays[m])+'" y2="'+(H-B)+'"/><text class="lbl" x="'+X(mdays[m]+15)+'" y="'+(H-8)+'" text-anchor="middle">'+mon[m]+'</text>'; }
@@ -153,7 +173,7 @@
     var vals={};   /* smoothed values per year for hover */
     ys.forEach(function(y){
       var v=years[y][key], pts=[], sv=new Array(366), f=(y-y0)/Math.max(1,(yN-1-y0)), cur=(y===yN);
-      var col=cur?'#ffffff':'rgb('+Math.round(40+110*f)+','+Math.round(60+130*f)+','+Math.round(140+95*f)+')', op=cur?1:(0.35+0.5*f), sw=cur?2.4:1;
+      var col=cur?'#ffffff':'rgb('+Math.round(150+70*f)+','+Math.round(70+150*f)+','+Math.round(235+20*f)+')', op=cur?1:(0.6+0.35*f), sw=cur?2.4:1.1; /* v884 (2026-09-26, Laurie): oldest = deep violet, newest = pale lavender, all readable; this year white */
       for(var d=0;d<366;d++){ var val=null;
         if(smooth){ var s_=0,n=0; for(var q=-3;q<=3;q++){ var x=v[d+q]; if(typeof x==='number'){ s_+=x; n++; } } if(n>=4) val=s_/n; }
         else if(typeof v[d]==='number') val=v[d];
@@ -162,6 +182,25 @@
       if(pts.length>1) h+='<polyline data-y="'+y+'" fill="none" stroke="'+col+'" stroke-width="'+sw+'" stroke-opacity="'+op+'" stroke-linejoin="round" points="'+pts.join(' ')+'"/>';
     });
     svg.innerHTML=h;
+    /* v885 (2026-09-26, Laurie): play button — draw the shown years in chronologically, oldest first */
+    var ctl=svg.parentNode.querySelector('.ch-play'); if(!ctl){ ctl=document.createElement('button'); ctl.type='button'; ctl.className='ch-play'; svg.parentNode.appendChild(ctl); }
+    var yl=svg.parentNode.querySelector('.ch-year'); if(!yl){ yl=document.createElement('div'); yl.className='ch-year'; svg.parentNode.appendChild(yl); }
+    ctl.textContent='\u25B6 Play'; yl.style.display='none';
+    if(svg._timer){ clearTimeout(svg._timer); svg._timer=null; }
+    ctl.onclick=function(){
+      var lines=ys.map(function(y){ return svg.querySelector('polyline[data-y="'+y+'"]'); }).filter(Boolean);
+      if(svg._timer){ /* stop: show everything */
+        clearTimeout(svg._timer); svg._timer=null; lines.forEach(function(el){ el.style.transition='none'; el.style.strokeDasharray=''; el.style.strokeDashoffset=''; el.style.visibility=''; }); ctl.textContent='\u25B6 Play'; yl.style.display='none'; return; }
+      if(!lines.length) return;
+      lines.forEach(function(el){ var len=el.getTotalLength(); el.style.transition='none'; el.style.strokeDasharray=len; el.style.strokeDashoffset=len; el.style.visibility='hidden'; });
+      ctl.textContent='\u25A0 Stop'; yl.style.display='block';
+      var i=0, step=Math.max(60, Math.min(220, Math.round(9000/lines.length))), draw=Math.round(step*2.2);
+      var tick=function(){ if(i>=lines.length){ svg._timer=null; ctl.textContent='\u25B6 Play'; yl.style.display='none'; return; }
+        var el=lines[i]; yl.textContent=lab(+el.getAttribute('data-y')); el.style.visibility='visible'; svg.appendChild(el);
+        requestAnimationFrame(function(){ el.style.transition='stroke-dashoffset '+draw+'ms linear'; el.style.strokeDashoffset='0'; });
+        i++; svg._timer=setTimeout(tick, step); };
+      tick();
+    };
     /* hover: nearest line at the cursor's day */
     var lastHl=null;
     svg.onmousemove=function(e){
@@ -170,7 +209,7 @@
       ys.forEach(function(y){ var v=vals[y][doy]; if(v==null) return; var d=Math.abs(Y(v)-py); if(d<bd){ bd=d; best=y; } });
       if(lastHl) lastHl.classList.remove('hl');
       if(best!=null && bd<18){ var el=svg.querySelector('polyline[data-y="'+best+'"]'); if(el){ el.classList.add('hl'); svg.appendChild(el); lastHl=el; }
-        var v=vals[best][doy]; tip.style.display='block'; tip.textContent=best+' · '+(unit==='°'?Math.round(v)+'°F':Math.round(v).toLocaleString()+' '+unit)+' on '+mon[Math.max(0,mdays.findIndex(function(md,i){ return doy<(mdays[i+1]||366); }))]+' '+(doy-mdays[Math.max(0,mdays.findIndex(function(md,i){ return doy<(mdays[i+1]||366); }))]+1); }
+        var v=vals[best][doy]; tip.style.display='block'; tip.textContent=lab(best)+' · '+(unit==='°'?Math.round(v)+'°F':Math.round(v).toLocaleString()+' '+unit)+' on '+mon[Math.max(0,mdays.findIndex(function(md,i){ return doy<(mdays[i+1]||366); }))]+' '+(doy-mdays[Math.max(0,mdays.findIndex(function(md,i){ return doy<(mdays[i+1]||366); }))]+1); }
       else { tip.style.display='none'; }
     };
     svg.onmouseleave=function(){ if(lastHl) lastHl.classList.remove('hl'); tip.style.display='none'; };
@@ -212,24 +251,27 @@
     drawChart('ch-cdd',  years, 'cdd',   0, 1400, false, 'CDD');
     drawChart('ch-gdd',  years, 'gdd',   0, 4000, false, 'GDD');
     drawChart('ch-rain', years, 'rain',  0,  60, false, ' in');
-    drawChart('ch-snow', years, 'snow',  0, 160, false, ' in');
+    if(_snowMode==='winter' && _curWinter){ var wsel={}; Object.keys(_curWinter).forEach(function(w){ wsel[w]=_curWinter[w]; }); drawChart('ch-snow', wsel, 'snow', 0, 160, false, ' in', {shift:6, label:function(y){ return y+'\u2013'+String(y+1).slice(2); }}); }
+    else drawChart('ch-snow', years, 'snow',  0, 160, false, ' in');
+    var sm=$('snow-mode'); if(sm){ sm.querySelectorAll('a').forEach(function(a){ a.classList.toggle('on', a.getAttribute('data-mode')===_snowMode); }); }
     drawChart('ch-precip', years, 'precip', 0, 70, false, ' in');
     var rn=$('ch-rain-note'); if(rn) rn.textContent = (_curSrc==='berne') ? '' : 'Rain alone is not recorded at a NOAA co-op station — total precipitation (next chart down) is the liquid total including melted snow. Switch the source to the Berne reanalysis to see rain and snow separated.';
     var ys=yearsShown(), nn=$('yr-note'); if(nn) nn.textContent = (ys.length?ys.length+' of '+_pickYears.length+' years shown ('+Math.min.apply(null,ys)+'\u2013'+Math.max.apply(null,ys)+')':'No years selected')+' \u00b7 '+_curNote+' \u00b7 raw daily values.';
   }
-  var _curYears=null, _curNote='', _curSrc='berne';
+  var _curYears=null, _curNote='', _curSrc='berne', _curWinter=null;
   var _yearsBerne=null;
+  document.addEventListener('DOMContentLoaded',function(){ var sm=$('snow-mode'); if(sm) sm.addEventListener('click',function(e){ var a=e.target.closest&&e.target.closest('a[data-mode]'); if(!a) return; e.preventDefault(); _snowMode=a.getAttribute('data-mode'); drawCharts(); }); });
   function renderYearChart(j){
     if(!j||!j.daily) return;
-    _yearsBerne=yearSeries(j);
+    _yearsBerne=yearSeries(j); _winterBerne=winterFromDaily(j.daily.time, j.daily.snowfall_sum||[]);
     var sel=$('ch-src'), ALL=window.STATION_DD;
     if(sel && ALL && sel.options.length<2){ Object.keys(ALL.stations).forEach(function(k){ var S=ALL.stations[k]; if(!S.daily) return; var o=document.createElement('option'); o.value=k; o.textContent=S.name+' observed ('+S.first+'–'+S.last+')'; sel.appendChild(o); }); sel.onchange=drawAll; }
     drawAll();
   }
   function drawAll(){
     var sel=$('ch-src'), ALL=window.STATION_DD, src=sel?sel.value:'berne', years, note='';
-    if(src==='berne'||!ALL||!ALL.stations[src]){ years=_yearsBerne; note=''; }
-    else { var S=ALL.stations[src]; years=stationSeries(S); note='Observed at '+S.name+', ~'+S.elev.toLocaleString()+' ft — NOAA thermometer readings, gaps where the observer missed a day.'; }
+    if(src==='berne'||!ALL||!ALL.stations[src]){ years=_yearsBerne; _curWinter=_winterBerne; note=''; }
+    else { var S=ALL.stations[src]; years=stationSeries(S); _curWinter=winterFromStation(S); note='Observed at '+S.name+', ~'+S.elev.toLocaleString()+' ft — NOAA thermometer readings, gaps where the observer missed a day.'; }
     var n=$('ch-src-note'); if(n) n.textContent=note;
     if(!years) return;
     _curSrc=src; _curYears=years; _curNote=(src==='berne'?'ERA5 reanalysis for Berne via Open-Meteo':'NOAA GHCN-Daily via xmACIS2');

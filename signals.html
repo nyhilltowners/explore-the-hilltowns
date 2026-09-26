@@ -177,12 +177,19 @@ a.link:hover{background:rgba(252,163,21,.14);}
 .sg-wrap .sg-btn:hover{filter:brightness(1.08);}
 .pres-trend{display:inline-block; margin-right:4px;}
 /* v882 (2026-09-26, Laurie): year picker above each chart */
-.yr-pick{margin:0 0 6px; font:600 12px "Montserrat",sans-serif; color:#fff; position:relative;}
+.yr-pick{margin:0 0 6px; font:600 12px "Montserrat",sans-serif; color:#fff; position:relative; text-align:right;} /* v884 (2026-09-26, Laurie): picker on the right */
 .yr-pick summary{list-style:none; cursor:pointer; display:inline-block; padding:5px 10px; border:1px solid rgba(255,255,255,.35); border-radius:8px; background:rgba(0,0,0,.25); color:var(--gold,#c9a227) !important; user-select:none;}
 .yr-pick summary::-webkit-details-marker{display:none;}
-.yr-pick-panel{position:absolute; z-index:20; left:0; top:calc(100% + 4px); background:#0d1421; border:1px solid rgba(255,255,255,.3); border-radius:10px; padding:8px 10px; box-shadow:0 8px 24px rgba(0,0,0,.5); max-height:300px; overflow:auto; min-width:280px;}
+.yr-pick-panel{position:absolute; z-index:20; right:0; left:auto; text-align:left; top:calc(100% + 4px); background:#0d1421; border:1px solid rgba(255,255,255,.3); border-radius:10px; padding:8px 10px; box-shadow:0 8px 24px rgba(0,0,0,.5); max-height:300px; overflow:auto; min-width:280px;}
 .yr-pick-tools{margin:0 0 6px; font-weight:600;} .yr-pick-tools a{color:var(--gold,#c9a227) !important; text-decoration:underline;}
 .yr-pick-grid{display:grid; grid-template-columns:repeat(4,auto); gap:3px 12px; font-weight:500;} .yr-pick-grid label{white-space:nowrap; cursor:pointer;} .yr-pick-grid input{margin:0 4px 0 0; accent-color:var(--gold,#c9a227);}
+/* v885 (2026-09-26, Laurie): play button + running year label inside each chart */
+.ch-play{position:absolute; top:10px; right:14px; z-index:5; font:600 11px "Montserrat",sans-serif; padding:4px 9px; border-radius:7px; border:1px solid var(--gold,#c9a227); background:rgba(0,0,0,.45); color:var(--gold,#c9a227) !important; cursor:pointer;}
+.ch-play:hover{background:rgba(201,162,39,.2);}
+.ch-year{position:absolute; top:34px; right:14px; z-index:5; font:800 22px "Montserrat",sans-serif; color:#fff; opacity:.9; pointer-events:none; text-shadow:0 1px 4px rgba(0,0,0,.7);}
+/* v886 (2026-09-26, Laurie): snow chart mode switch */
+.sg-seg a{display:inline-block; padding:2px 8px; margin:0 2px; border:1px solid rgba(255,255,255,.35); border-radius:6px; color:#fff !important; text-decoration:none; font-weight:600; font-size:11px;}
+.sg-seg a.on{background:var(--gold,#c9a227); border-color:var(--gold,#c9a227); color:var(--gold-ink,#2b2410) !important;}
 </style>
 
 
@@ -350,7 +357,7 @@ a.link:hover{background:rgba(252,163,21,.14);}
   </div>
 
   <h2 class="sg-sec">The year, drawn</h2>
-  <p class="sg-det" style="margin:0 0 10px">Every year on record, January to December, raw daily values — no smoothing. This year is white; each earlier year a shade closer to the night sky, oldest darkest. Hover to name a year; use the Years picker above any chart to compare a few — the choice applies to all six.</p>
+  <p class="sg-det" style="margin:0 0 10px">Every year on record, January to December, raw daily values — no smoothing. This year is white; earlier years run from pale lavender back to deep violet, oldest darkest. Hover to name a year; use the Years picker above any chart to compare a few — the choice applies to every chart — and Play to watch the years draw in from oldest to newest.</p>
   <p class="sg-det" style="margin:0 0 14px">Source: <select id="ch-src" class="sg-sel"><option value="berne">Berne reanalysis (ERA5 grid cell, 1940–)</option></select> <span id="ch-src-note"></span></p>
   <h3 class="sg-h3">Daily mean temperature</h3>
   <p class="sg-det" style="margin:0 0 8px"></p>
@@ -374,7 +381,7 @@ a.link:hover{background:rgba(252,163,21,.14);}
   <p class="sg-det" style="margin:0 0 8px">Inches of rain since January 1. A steep stretch is a wet spell; a flat one is a dry one. <span id="ch-rain-note"></span></p>
   <div class="sg-chart"><svg id="ch-rain" viewBox="0 0 1000 420" preserveAspectRatio="none" role="img" aria-label="Rain, accumulating"></svg><div class="sg-tip" id="ch-rain-tip"></div></div>
   <h3 class="sg-h3">Snowfall, accumulating</h3>
-  <p class="sg-det" style="margin:0 0 8px">Inches of snow since January 1 — depth as it fell, not water content. Winters straddle the year end, so each line carries only the January–spring half of one winter and the autumn start of the next.</p>
+  <p class="sg-det" style="margin:0 0 8px">Depth as it fell, not water content. <span id="snow-mode" class="sg-seg"><a href="#" data-mode="year" class="on">By calendar year</a> <a href="#" data-mode="winter">By winter (July–June)</a></span> — winter mode keys each line to the year it began (1994–95 counts with 1994 in the picker), so one snow season is one line.</p>
   <div class="sg-chart"><svg id="ch-snow" viewBox="0 0 1000 420" preserveAspectRatio="none" role="img" aria-label="Snowfall, accumulating"></svg><div class="sg-tip" id="ch-snow-tip"></div></div>
   <h3 class="sg-h3">Total precipitation, accumulating</h3>
   <p class="sg-det" style="margin:0 0 8px">All moisture as water — rain plus the melted equivalent of snow — since January 1. The line every drought and every flood year bends.</p>
