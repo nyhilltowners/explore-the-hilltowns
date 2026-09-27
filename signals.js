@@ -399,6 +399,71 @@
     return String(s);
   }
   function stripCoords(s){ return String(s||'').replace(/\s*\([\-\d.]+,\s*[\-\d.]+\)\s*$/,''); }
+  /* 2026-09-27 (v920, Laurie): live USGS water levels via the classic Water Services instantaneous-values API
+     (waterservices.usgs.gov) — no key needed, CORS-open, same "just fetch it from the browser"
+     pattern as Open-Meteo/eBird/iNaturalist elsewhere on this page. One request, a bounding box
+     around Berne, several parameter codes at once; USGS returns whatever each site actually has. */
+  var WATER_BBOX_KM = 40;
+  function waterBBox(){
+    var dLat = WATER_BBOX_KM/111, dLng = WATER_BBOX_KM/(111*Math.cos(LAT*Math.PI/180));
+    return (LNG-dLng).toFixed(4)+','+(LAT-dLat).toFixed(4)+','+(LNG+dLng).toFixed(4)+','+(LAT+dLat).toFixed(4);
+  }
+  function haversineKm(lat1,lng1,lat2,lng2){
+    var R=6371, toRad=function(d){ return d*Math.PI/180; };
+    var dLat=toRad(lat2-lat1), dLng=toRad(lng2-lng1);
+    var a=Math.sin(dLat/2)*Math.sin(dLat/2)+Math.cos(toRad(lat1))*Math.cos(toRad(lat2))*Math.sin(dLng/2)*Math.sin(dLng/2);
+    return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
+  }
+  var WATER_PARAMS = {
+    '00060':{kind:'stream', label:'Streamflow', fmt:function(v){ return Number(v).toLocaleString()+' ft\u00b3/s'; }},
+    '00065':{kind:'stream', label:'Gage height', fmt:function(v){ return Number(v).toFixed(2)+' ft'; }},
+    '62615':{kind:'lake',   label:'Water surface elevation', fmt:function(v){ return Number(v).toFixed(2)+' ft'; }},
+    '00054':{kind:'lake',   label:'Reservoir storage', fmt:function(v){ return Number(v).toLocaleString()+' acre-ft'; }},
+    '72019':{kind:'well',   label:'Depth to water', fmt:function(v){ return Number(v).toFixed(2)+' ft below surface'; }},
+    '62611':{kind:'well',   label:'Groundwater level', fmt:function(v){ return Number(v).toFixed(2)+' ft (NAVD88)'; }}
+  };
+  var WATER_ICON = {
+    stream:'<svg viewBox="0 0 24 24"><path d="M2 8c2-2 4-2 6 0s4 2 6 0 4-2 6 0M2 14c2-2 4-2 6 0s4 2 6 0 4-2 6 0M2 20c2-2 4-2 6 0s4 2 6 0 4-2 6 0"/></svg>',
+    lake:'<svg viewBox="0 0 24 24"><path d="M12 3s6 6.5 6 11a6 6 0 0 1-12 0c0-4.5 6-11 6-11z"/></svg>',
+    well:'<svg viewBox="0 0 24 24"><path d="M12 2v13M7 11l5 5 5-5M5 20h14"/></svg>'
+  };
+  var WATER_LABEL = {stream:'Stream', lake:'Lake / reservoir', well:'Groundwater well'};
+  var WATER_CAP = {stream:4, lake:3, well:4};
+  function fetchWater(){
+    var grid=$('water-live-grid'); if(!grid) return;
+    var url='https://waterservices.usgs.gov/nwis/iv/?format=json&bBox='+waterBBox()+'&parameterCd='+Object.keys(WATER_PARAMS).join(',')+'&siteStatus=active';
+    fetch(url).then(function(r){ return r.ok?r.json():Promise.reject(new Error('HTTP '+r.status)); }).then(function(j){
+      var ts=(j&&j.value&&j.value.timeSeries)||[];
+      var bySite={};
+      ts.forEach(function(t){
+        var code=(t.variable&&t.variable.variableCode&&t.variable.variableCode[0]&&t.variable.variableCode[0].value)||'';
+        var meta=WATER_PARAMS[code]; if(!meta) return;
+        var vals=(t.values&&t.values[0]&&t.values[0].value)||[]; if(!vals.length) return;
+        var last=vals[vals.length-1]; if(last.value==null || last.value==='-999999') return;
+        var si=t.sourceInfo||{}, sc=(si.siteCode&&si.siteCode[0]&&si.siteCode[0].value)||'';
+        var geo=si.geoLocation&&si.geoLocation.geogLocation;
+        if(!sc || !geo) return;
+        var d=bySite[sc] || (bySite[sc]={name:si.siteName||sc, lat:+geo.latitude, lng:+geo.longitude, kind:meta.kind, readings:[]});
+        d.readings.push({label:meta.label, text:meta.fmt(last.value), when:last.dateTime||''});
+      });
+      var sites=Object.keys(bySite).map(function(sc){ var d=bySite[sc]; d.km=haversineKm(LAT,LNG,d.lat,d.lng); return d; });
+      sites.sort(function(a,b){ return a.km-b.km; });
+      var byKind={stream:[], lake:[], well:[]};
+      sites.forEach(function(d){ if(byKind[d.kind] && byKind[d.kind].length<WATER_CAP[d.kind]) byKind[d.kind].push(d); });
+      var esc=function(v){ return String(v||'').replace(/[&<>"]/g,function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); };
+      var fmtWhen=function(s){ var m=String(s).match(/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})/); if(!m) return ''; var hh=+m[4],mm=m[5],ap=hh>=12?'pm':'am',h12=hh%12; if(h12===0) h12=12; return h12+':'+mm+ap; };
+      var rows=[];
+      ['stream','lake','well'].forEach(function(kind){
+        byKind[kind].forEach(function(d){
+          var main=d.readings[0], extra=d.readings.slice(1);
+          rows.push('<div class="sg-row"><div class="sg-ico">'+WATER_ICON[kind]+'</div><div><p class="sg-eye">'+WATER_LABEL[kind]+'</p><p class="sg-val">'+esc(main.text)+'</p><p class="sg-det"><b>'+esc(d.name)+'</b> \u00b7 '+d.km.toFixed(0)+' km away'+(extra.length?'<br>'+extra.map(function(e){ return esc(e.label)+': '+esc(e.text); }).join(' \u00b7 '):'')+(main.when?'<br>as of '+fmtWhen(main.when):'')+'</p></div></div>');
+        });
+      });
+      grid.innerHTML = rows.length ? rows.join('') : '<p class="ph-empty">No active USGS gauges reporting within '+WATER_BBOX_KM+' km right now.</p>';
+      var missing=['stream','lake','well'].filter(function(k){ return !byKind[k].length; }).map(function(k){ return WATER_LABEL[k].toLowerCase()+'s'; });
+      $('water-live-note').textContent = missing.length ? 'No active '+missing.join(' or ')+' gauges in range right now.' : '';
+    }).catch(function(e){ grid.innerHTML='<p class="ph-empty">USGS water data is unreachable right now.</p>'; status('Water levels: '+(e && e.message || 'fetch failed')); });
+  }
   function fetchINat(){
     var grid=$('inat-grid'); if(!grid) return;
     var esc=function(v){ return String(v||'').replace(/[&<>"]/g,function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); };
@@ -528,6 +593,6 @@
     });
   }
 
-  function init(){ fetchINat(); fetchEBird(); renderPhenology(); renderSunMoon(); fetchWx(); fetchDD(); setInterval(renderSunMoon, 60000); setInterval(fetchWx, 15*60000); }
+  function init(){ fetchINat(); fetchEBird(); fetchWater(); renderPhenology(); renderSunMoon(); fetchWx(); fetchDD(); setInterval(renderSunMoon, 60000); setInterval(fetchWx, 15*60000); setInterval(fetchWater, 15*60000); } /* 2026-09-27 (v920, Laurie): live water refreshes on the same 15-min cadence as current weather */
   if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', init); else init();
 })();
