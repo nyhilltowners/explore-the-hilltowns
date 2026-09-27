@@ -738,12 +738,8 @@ h1{font-family:'Montserrat',sans-serif; font-weight:800; text-transform:uppercas
           }; })(ev, row, btn, dstr);
         }
       });
-      if(hidden){
-        var t = document.createElement("button"); t.type="button"; t.className="pastbtn";
-        t.textContent = hidden+" earlier today \u2014 show";
-        t.onclick = function(){ window.__showPastToday = true; renderAgenda(); };
-        group.appendChild(t);
-      }
+      /* 2026-09-27 (v911, Laurie): "N earlier today — show" button removed — past events on today's
+         row now just stay hidden, with no way to reveal them. */
       agenda.appendChild(group);
     });
   }

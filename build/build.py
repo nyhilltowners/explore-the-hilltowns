@@ -1315,7 +1315,7 @@ def emit_trading_post(items):
 # observed Tmax/Tmin — same formulas the Signals page applies to the reanalysis, so the two
 # are comparable. Missing days (M) are skipped, not zeroed.
 # ---------------------------------------------------------------------------
-DAILY_STATIONS = {"alcove_dam", "albany_ap", "slide_mountain", "cobleskill_2ese", "indian_lake_2sw", "old_forge", "mohonk_lake", "central_park", "blue_hill"}   # continuous records: raw daily highs/lows shipped for the year charts
+DAILY_STATIONS = {"alcove_dam", "albany_ap", "slide_mountain", "cobleskill_2ese", "indian_lake_2sw", "old_forge", "mohonk_lake", "central_park", "blue_hill", "athens_co_op", "west_berne", "freehold_2nw"}   # continuous records: raw daily highs/lows shipped for the year charts
 STATIONS = [   # (slug, display name, elevation ft, active?)  — see data/stations/README.md
     # 2026-09-21 (Laurie): dropped conklingville_dam, phoenicia, saratoga_springs_4sw — thin/low-value,
     # were bloating station_dd.js for little comparative payoff. CSVs stay in data/stations/ (harmless,
@@ -1330,11 +1330,59 @@ STATIONS = [   # (slug, display name, elevation ft, active?)  — see data/stati
     ("cobleskill_2ese", "Cobleskill 2 ESE (co-op)",            1200,  False),
     ("cairo_3nw",       "Cairo 3 NW (co-op)",                   600,  False),
     ("windham_3e",      "Windham 3 E (co-op) · Greene Co.",    1600,  False),
-    # """+P+""" (Laurie): the two longest continuous records in the Northeast, for context —
-    # out of core (NYC / eastern MA) but useful baselines. CSVs pending from Laurie (xmACIS2
-    # export); build skips a station cleanly if its CSV is not yet in data/stations/.
+    # 2026-09-27 (v905, atlas session) (Laurie): the two longest continuous records in the Northeast,
+    # for context — out of core (NYC / eastern MA) but useful baselines. CSVs pending from Laurie
+    # (xmACIS2 export); build skips a station cleanly if its CSV is not yet in data/stations/.
     ("central_park",    "Central Park (NWS first-order) · Manhattan, NY", 140, True),   # GHCND:USW00094728, continuous since 1869-01-01 — the longest active NY record
     ("blue_hill",        "Blue Hill Observatory (co-op) · Milton, MA",     635, True),   # GHCND:USC00190736, continuous since 1885 — longest continuously operated site in the US, unchanged instruments/location
+    # 2026-09-27 (v908, atlas session) (Laurie): nine local CoCoRaHS/co-op precipitation stations from xmACIS2 PDFs —
+    # precip/snow only, no temperature record (all MaxT/MinT are "M" in the source), EXCEPT
+    # rensselaerville_2nw which carries ~44 days of real temps at the very end of its short run —
+    # too thin to bother with degree-days, so none of these nine are in DAILY_STATIONS. They still
+    # populate the Water · year to date grid (precipitation, snowfall, wet days) once picked.
+    # Elevations are ROUGH ESTIMATES from the surrounding hamlet, not measured at the station site
+    # itself — xmACIS2's CoCoRaHS export carries no elevation field. Flag any that look wrong.
+    # coeymans.pdf, also uploaded, is byte-for-byte the same file as xmACIS2_gville_e.pdf — same
+    # station (Greenville 0.7 E), mislabeled; not added twice.
+    ("berne_2s",              "Berne 2 S (co-op) · Albany Co. — elev. approx.",                 1300, False),  # 1966-06 → 1983-07; precip/snow only
+    ("berne_5sw",             "Berne 5 SW (co-op) · Albany Co. — elev. approx.",                1500, False),  # 1983-12 → 1998-07; precip/snow only
+    ("east_berne",            "East Berne 2.7 NE (CoCoRaHS) · Albany Co. — elev. approx.",      1200, True),   # 2021-03 → present; precip only
+    ("greenville_07e",        "Greenville 0.7 E (CoCoRaHS) · Greene Co. — elev. approx.",         650, True),   # 2012-05 → present; precip/snow
+    ("greenville_07ene",      "Greenville 0.7 ENE (CoCoRaHS) · Greene Co. — elev. approx.",       650, True),   # 2023-08 → present; precip only
+    ("rensselaerville_21nnw", "Rensselaerville 2.1 NNW (CoCoRaHS) · Albany Co. — elev. approx.", 1550, True),   # 2008-10 → present; precip/snow
+    ("rensselaerville_2nw",   "Rensselaerville 2 NW (co-op) · Albany Co. — elev. approx.",       1550, False),  # 1971-06 → 1974-11; precip/snow, brief temps at the end
+    ("westerlo_2",            "Westerlo (co-op) · Albany Co. — elev. approx.",                  1550, False),  # 1948-05 → 1959-06; precip only
+    ("clarksville",           "Clarksville 2.7 S (CoCoRaHS) · Albany Co. — elev. approx.",        600, False),  # 2019-05 → 2021-08; precip only, station discontinued
+    # 2026-09-27 (v909, atlas session) (Laurie): second batch, same terms as v908 — CoCoRaHS/co-op precip stations,
+    # elevations estimated, none in DAILY_STATIONS unless noted. Two exceptions worth having:
+    # athens_co_op has 18 years of REAL daily temps (1901-1919, 6,097 of 6,605 days) — added to
+    # DAILY_STATIONS; knox has ~13 months of real temps (2000-01 to 2001-02, 327 of 406 days) —
+    # real but too short for the year-by-year chart, so degree-days only, not DAILY_STATIONS.
+    # The source PDF names Athens' old co-op station "ATNENS" — a typo carried in NOAA's own
+    # station metadata, not ours; corrected in the display name.
+    ("altamont_29sw",   "Altamont 2.9 SW (CoCoRaHS) · Albany Co. — elev. approx.",        900, False),  # 2019-05 → 2021-01; precip/snow, closed
+    ("altamont_04se",   "Altamont 0.4 SE (CoCoRaHS) · Albany Co. — elev. approx.",        700, True),   # 2023-06 → present; precip/snow, active
+    ("altamont_35nw",   "Altamont 3.5 NW (CoCoRaHS) · Albany Co. — elev. approx.",       1100, True),   # 2021-07 → present; precip only, active
+    ("altamont_27ssw",  "Altamont 2.7 SSW (CoCoRaHS) · Albany Co. — elev. approx.",       800, True),   # 2007-11 → present; precip/snow, active — 19 years, the deepest CoCoRaHS record in this batch
+    ("athens_22nnw",    "Athens 2.2 NNW (CoCoRaHS) · Greene Co. — elev. approx.",         400, True),   # 2017-04 → present; precip only, active
+    ("athens_co_op",    "Athens (co-op, historic) · Greene Co. — elev. approx.",          200, False),  # 1901-10 → 1919-10; REAL daily temps, 18 years, closed — source PDF misspells it "Atnens"
+    ("berne_2nw",       "Berne 2 NW (co-op) · Albany Co. — elev. approx.",               1400, False),  # 1963-08 → 1966-05; precip/snow only, closed
+    ("catskill_41nnw",  "Catskill 4.1 NNW (CoCoRaHS) · Greene Co. — elev. approx.",       500, True),   # 2024-06 → present; precip only, active
+    ("fleischmanns_57n","Fleischmanns 5.7 N (CoCoRaHS) · Delaware Co. — elev. approx.",  2000, False),  # 2015-01 → 2024-11; precip/snow, Catskills high country, closed
+    ("knox",            "Knox (co-op, historic) · Albany Co. — elev. approx.",           1600, False),  # 2000-01 → 2001-02; REAL daily temps, ~13 months, closed
+    ("ravena_14nnw",    "Ravena 1.4 NNW (CoCoRaHS) · Albany Co. — elev. approx.",         200, True),   # 2018-10 → present; precip only, active
+    # 2026-09-27 (v910, atlas session) (Laurie): third batch. Two exceptional finds — West Berne is the oldest and
+    # most locally central real-temperature record in the whole set: 1898-1932, right in the
+    # Hilltowns, both in DAILY_STATIONS. Freehold 2 NW is a solid mid-century real-temp record too.
+    # Voorheesville has real temps but under a year — degree-days only, like Knox. The rest are
+    # precip-only CoCoRaHS/co-op gauges, same terms as v908/v909.
+    ("freehold_2nw",      "Freehold 2 NW (co-op) · Greene Co. — elev. approx.",              900, False),  # 1963-08 → 1978-11; REAL daily temps, 15 years, closed
+    ("freehold_34e",      "Freehold 3.4 E (CoCoRaHS) · Greene Co. — elev. approx.",           900, True),   # 2011-08 → present; precip only, active
+    ("middleburgh_63ese", "Middleburgh 6.3 ESE (CoCoRaHS) · Schoharie Co. — elev. approx.",  1000, False),  # 2021-01 → 2025-12; precip/snow, discontinued
+    ("oak_hill",          "Oak Hill (co-op) · Greene Co. — elev. approx.",                    900, False),  # 1948-05 → 1962-09; precip only, closed
+    ("preston_hollow",    "Preston Hollow (co-op) · Albany Co. — elev. approx.",              900, False),  # 1948-05 → 1963-02; precip only, closed
+    ("voorheesville",     "Voorheesville (co-op, historic) · Albany Co. — elev. approx.",     300, False),  # 1950-04 → 1951-02; REAL daily temps, ~11 months, closed
+    ("west_berne",        "West Berne (co-op, historic) · Albany Co. — elev. approx.",       1300, False),  # 1898-08 → 1932-12; REAL daily temps, 34 years — the oldest and most local record in the set, closed
 ]
 
 def _station_years(path, keep_daily=False):
@@ -1347,7 +1395,16 @@ def _station_years(path, keep_daily=False):
         if v in ("", "M"): return None
         if v == "T": return 0.0
         try: return float(v)
-        except ValueError: return None
+        except ValueError:
+            pass
+        # 2026-09-27 (v908, atlas session): xmACIS2 CoCoRaHS/co-op exports flag a value with a trailing letter —
+        # "0.33A" (accumulated over several missing days), "0.00i" (incomplete day) — the number
+        # itself is real, only the flag is metadata. A bare letter with no number ("S") carries no
+        # value and stays missing. Strip a single trailing letter and retry once.
+        if len(v) > 1 and v[-1].isalpha():
+            try: return float(v[:-1])
+            except ValueError: return None
+        return None
     years = {}
     with path.open(encoding="utf-8") as f:
         for row in _csv.DictReader(f):
