@@ -184,7 +184,7 @@ a.link:hover{background:rgba(252,163,21,.14);}
 .yr-pick-tools{margin:0 0 6px; font-weight:600;} .yr-pick-tools a{color:var(--gold,#c9a227) !important; text-decoration:underline;}
 .yr-pick-grid{display:grid; grid-template-columns:repeat(4,auto); gap:3px 12px; font-weight:500;} .yr-pick-grid label{white-space:nowrap; cursor:pointer;} .yr-pick-grid input{margin:0 4px 0 0; accent-color:var(--gold,#c9a227);}
 /* v885 (2026-09-26, Laurie): play button + running year label inside each chart */
-.ch-play{position:absolute; top:10px; right:14px; z-index:5; font:600 11px "Montserrat",sans-serif; padding:4px 9px; border-radius:7px; border:1px solid var(--gold,#c9a227); background:rgba(0,0,0,.45); color:var(--gold,#c9a227) !important; cursor:pointer;}
+.ch-play{position:absolute; top:10px; left:14px; z-index:6; font:600 11px "Montserrat",sans-serif; padding:4px 9px; border-radius:7px; border:1px solid var(--gold,#c9a227); background:rgba(0,0,0,.45); color:var(--gold,#c9a227) !important; cursor:pointer;} /* 2026-09-27 (v914, Laurie): moved to the opposite corner from the year label so Play can never sit on top of it */
 .ch-play:hover{background:rgba(201,162,39,.2);}
 .ch-year{position:absolute; top:34px; right:14px; z-index:5; font:800 22px "Montserrat",sans-serif; color:#fff; opacity:.9; pointer-events:none; text-shadow:0 1px 4px rgba(0,0,0,.7);}
 /* v886 (2026-09-26, Laurie): snow chart mode switch */
@@ -248,7 +248,8 @@ a.link:hover{background:rgba(252,163,21,.14);}
 .ddtab thead th{color:var(--gold,#c9a227); font-size:11px; letter-spacing:.1em; text-transform:uppercase;}
 .ddtab tr.cur td{font-weight:800;}
 .obs{opacity:1;}
-.sg-h3{margin:18px 0 4px; font-size:13px; letter-spacing:.1em; text-transform:uppercase; color:var(--gold,#c9a227);}
+.sg-h3{margin:18px 0 4px; font-size:13px; letter-spacing:.1em; text-transform:uppercase; color:var(--gold,#c9a227); display:flex; align-items:center; justify-content:space-between; gap:14px; flex-wrap:wrap;} /* 2026-09-27 (v914, Laurie): the Years picker moves onto this row, at the right, via buildPickers() */
+.sg-h3 .yr-pick{margin:0; text-transform:none; letter-spacing:normal; font-weight:400;}
 .sg-chart{background:rgba(0,0,0,.18); border:1px solid rgba(255,255,255,.18); border-radius:12px; padding:6px; position:relative;}
 .sg-tip{position:absolute; top:10px; right:14px; font:700 13px "Montserrat",sans-serif; color:#fff; background:rgba(0,0,0,.55); padding:4px 8px; border-radius:6px; pointer-events:none; display:none;}
 .sg-chart polyline.hl{stroke:#ffd166 !important; stroke-opacity:1 !important; stroke-width:2.6 !important;}
@@ -389,22 +390,18 @@ a.link:hover{background:rgba(252,163,21,.14);}
   <div class="sg-chart"><svg id="ch-precip" viewBox="0 0 1000 420" preserveAspectRatio="none" role="img" aria-label="Total precipitation, accumulating"></svg><div class="sg-tip" id="ch-precip-tip"></div></div>
   <p class="sg-note" id="yr-note"></p>
 
-  <h2 class="sg-sec">Degree days · year to date</h2>
-  <p class="sg-det" style="margin:0 0 10px">Compare against an observed station: <select id="st-pick" class="sg-sel"></select></p>
-  <!-- 2026-09-27 (v899, Laurie): one selector now serves both the degree-days grid and the water grid below it -->
-  <div class="dd">
-    <div class="sg-row"><div class="sg-ico" ><svg viewBox="0 0 24 24"><path d="M12 3c1 4 5 5 5 10a5 5 0 0 1-10 0c0-2 1-3 2-4 0 2 1 3 2 3 0-4-1-6 1-9z"/></svg></div><div><p class="sg-eye">Heating</p><p class="sg-val" id="dd-h">—</p><p class="sg-det" id="dd-h-d"></p></div></div><div class="sg-row"><div class="sg-ico" ><svg viewBox="0 0 24 24"><path d="M12 2v20M2 12h20M5 5l14 14M19 5L5 19"/></svg></div><div><p class="sg-eye">Cooling</p><p class="sg-val" id="dd-c">—</p><p class="sg-det" id="dd-c-d"></p></div></div><div class="sg-row"><div class="sg-ico" ><svg viewBox="0 0 24 24"><path d="M12 22V10M12 10c0-4 3-6 7-6 0 4-3 6-7 6zM12 14c0-3-2.5-5-6-5 0 3 2.5 5 6 5z"/></svg></div><div><p class="sg-eye">Growing</p><p class="sg-val" id="dd-g">—</p><p class="sg-det" id="dd-g-d"></p></div></div>
-  </div>
-
+  <!-- 2026-09-27 (v915, Laurie): the "Degree days · year to date" module (Heating/Cooling/Growing cards) and the
+       year-by-year table both removed — Laurie: they weren't showing anything the charts above
+       don't already show, and most stations in the picker have no temperature record at all
+       (precip/snow-only CoCoRaHS gauges), which made the cards read as broken ("0 · no average")
+       for the majority of the list. The station picker itself is still needed, for Water below. -->
   <h2 class="sg-sec">Water · year to date</h2>
+  <p class="sg-det" style="margin:0 0 10px">Compare against an observed station: <select id="st-pick" class="sg-sel"></select></p>
   <div class="sg-grid" id="water-grid">
     <div class="sg-row"><div class="sg-ico"><svg viewBox="0 0 24 24"><path d="M12 3s6 6.5 6 11a6 6 0 0 1-12 0c0-4.5 6-11 6-11z"/></svg></div><div><p class="sg-eye">Precipitation</p><p class="sg-val" id="w-p">—</p><p class="sg-det" id="w-p-d"></p></div></div>
     <div class="sg-row"><div class="sg-ico"><svg viewBox="0 0 24 24"><path d="M12 2v20M2 12h20M5 5l14 14M19 5L5 19"/></svg></div><div><p class="sg-eye">Snowfall</p><p class="sg-val" id="w-s">—</p><p class="sg-det" id="w-s-d"></p></div></div>
     <div class="sg-row"><div class="sg-ico"><svg viewBox="0 0 24 24"><path d="M14 14.8V5a2 2 0 0 0-4 0v9.8a4 4 0 1 0 4 0z"/></svg></div><div><p class="sg-eye">Extremes this year</p><p class="sg-val" id="w-x">—</p><p class="sg-det" id="w-x-d"></p></div></div>
   </div>
-
-  <button type="button" id="dd-toggle" class="sg-btn" style="display:none" onclick="var h=document.getElementById('dd-hist');var o=h.style.display!=='block';h.style.display=o?'block':'none';this.textContent=o?'Hide the year-by-year record':'Every year since 1940, year by year';">Every year since 1940, year by year</button>
-  <div id="dd-hist" style="display:none"></div>
   <p class="sg-note" id="dd-note">Loading…</p>
 
   <h2 class="sg-sec">Seen lately · iNaturalist</h2>
