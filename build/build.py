@@ -1315,7 +1315,7 @@ def emit_trading_post(items):
 # observed Tmax/Tmin — same formulas the Signals page applies to the reanalysis, so the two
 # are comparable. Missing days (M) are skipped, not zeroed.
 # ---------------------------------------------------------------------------
-DAILY_STATIONS = {"alcove_dam", "albany_ap", "slide_mountain", "cobleskill_2ese", "indian_lake_2sw", "old_forge", "mohonk_lake"}   # continuous records: raw daily highs/lows shipped for the year charts
+DAILY_STATIONS = {"alcove_dam", "albany_ap", "slide_mountain", "cobleskill_2ese", "indian_lake_2sw", "old_forge", "mohonk_lake", "central_park", "blue_hill"}   # continuous records: raw daily highs/lows shipped for the year charts
 STATIONS = [   # (slug, display name, elevation ft, active?)  — see data/stations/README.md
     # 2026-09-21 (Laurie): dropped conklingville_dam, phoenicia, saratoga_springs_4sw — thin/low-value,
     # were bloating station_dd.js for little comparative payoff. CSVs stay in data/stations/ (harmless,
@@ -1330,6 +1330,11 @@ STATIONS = [   # (slug, display name, elevation ft, active?)  — see data/stati
     ("cobleskill_2ese", "Cobleskill 2 ESE (co-op)",            1200,  False),
     ("cairo_3nw",       "Cairo 3 NW (co-op)",                   600,  False),
     ("windham_3e",      "Windham 3 E (co-op) · Greene Co.",    1600,  False),
+    # """+P+""" (Laurie): the two longest continuous records in the Northeast, for context —
+    # out of core (NYC / eastern MA) but useful baselines. CSVs pending from Laurie (xmACIS2
+    # export); build skips a station cleanly if its CSV is not yet in data/stations/.
+    ("central_park",    "Central Park (NWS first-order) · Manhattan, NY", 140, True),   # GHCND:USW00094728, continuous since 1869-01-01 — the longest active NY record
+    ("blue_hill",        "Blue Hill Observatory (co-op) · Milton, MA",     635, True),   # GHCND:USC00190736, continuous since 1885 — longest continuously operated site in the US, unchanged instruments/location
 ]
 
 def _station_years(path, keep_daily=False):

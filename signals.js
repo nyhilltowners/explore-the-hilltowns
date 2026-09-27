@@ -103,22 +103,35 @@
     var gm=(Math.min(86,mx)+Math.max(50,mn))/2; if(gm>50) out.g=gm-50; return out; }
   var _ddCache = null;
   function buildPicker(){ var sel=$('st-pick'), ALL=window.STATION_DD; if(!sel||!ALL||sel.options.length) return; Object.keys(ALL.stations).forEach(function(k){ var S=ALL.stations[k], o=document.createElement('option'); o.value=k; o.textContent=S.name+' · '+S.first+'–'+S.last+(S.active?'':' (closed)'); sel.appendChild(o); }); if(ALL.stations['alcove_dam']) sel.value='alcove_dam'; /* v865 (2026-09-25, Laurie): default Alcove Dam */ sel.onchange=function(){ if(_ddCache) renderDD(_ddCache); }; }
+  /* 2026-09-27 (v906, Laurie): both archive requests are 86 years of daily data — big enough that reloading the
+     page repeatedly could run into Open-Meteo's free-tier daily request cap ("Daily API request
+     limit exceeded"), which is what blanked every chart. Cache each response in localStorage,
+     keyed by the end date, so the same browser only re-fetches once per day rather than once per
+     page load. A cache-read failure (quota, private browsing, corrupt JSON) just falls through to
+     a normal fetch. */
+  function lsGet(key){ try{ return JSON.parse(localStorage.getItem(key)); }catch(e){ return null; } }
+  function lsSet(key, val){ try{ localStorage.setItem(key, JSON.stringify(val)); }catch(e){} }
   function fetchDD(){
     buildPicker();
     if(_ddCache){ renderDD(_ddCache); return; }
     var t = new Date(Date.now()-86400000), end = t.getFullYear()+'-'+String(t.getMonth()+1).padStart(2,'0')+'-'+String(t.getDate()).padStart(2,'0');
     var thisYear = t.getFullYear(), mmdd = end.slice(5);
+    var cacheKey = 'hfa.dd.'+end;
+    var cached = lsGet(cacheKey);
+    if(cached && cached.daily){ _ddCache=cached; renderDD(cached); fetchMoisture(end); return; }
     var url = 'https://archive-api.open-meteo.com/v1/archive?'+Q+'&start_date=1940-01-01&end_date='+end+'&daily=temperature_2m_max,temperature_2m_min&temperature_unit=fahrenheit'; /* v887 (2026-09-26): moisture is fetched separately (fetchMoisture) so a failure there cannot blank the temperature charts */
     $('dd-note').textContent = 'Loading 1940–'+thisYear+' history…';
-    fetch(url).then(function(r){ return r.json(); }).then(function(j){ if(!j||!j.daily){ throw new Error(j&&j.reason?j.reason:'no daily data'); } _ddCache=j; renderDD(j); fetchMoisture(end); }).catch(function(e){ $('dd-note').textContent='Degree-day history unavailable right now.'; status('Degree days: '+(e && e.message || 'fetch failed')); });
+    fetch(url).then(function(r){ return r.json(); }).then(function(j){ if(!j||!j.daily){ throw new Error(j&&j.reason?j.reason:'no daily data'); } _ddCache=j; lsSet(cacheKey,j); renderDD(j); fetchMoisture(end); }).catch(function(e){ $('dd-note').textContent='Degree-day history unavailable right now'+(/limit/i.test(e&&e.message||'')?' — Open-Meteo\u2019s free daily request limit was reached; this resets tomorrow.':'.'); status('Degree days: '+(e && e.message || 'fetch failed')); });
   }
   /* v887 (2026-09-26): second request for the moisture charts; merged into the year series when it arrives */
   var _moist=null;
   function fetchMoisture(end){
     if(_moist){ return; }
+    var cacheKey='hfa.moist.'+end, cached=lsGet(cacheKey);
+    if(cached && cached.daily){ _moist=cached; if(_ddCache){ mergeMoisture(_ddCache,cached); renderYearChart(_ddCache); } return; }
     var url='https://archive-api.open-meteo.com/v1/archive?'+Q+'&start_date=1940-01-01&end_date='+end+'&daily=precipitation_sum,rain_sum,snowfall_sum&precipitation_unit=inch';
-    fetch(url).then(function(r){ return r.json(); }).then(function(m){ if(!m||!m.daily) throw new Error(m&&m.reason?m.reason:'no daily data'); _moist=m; if(_ddCache){ mergeMoisture(_ddCache,m); renderYearChart(_ddCache); } })
-      .catch(function(e){ status('Rain/snow history: '+(e && e.message || 'fetch failed')); var rn=$('ch-rain-note'); if(rn) rn.textContent='Rain and snow history could not be loaded from the reanalysis right now.'; });
+    fetch(url).then(function(r){ return r.json(); }).then(function(m){ if(!m||!m.daily) throw new Error(m&&m.reason?m.reason:'no daily data'); _moist=m; lsSet(cacheKey,m); if(_ddCache){ mergeMoisture(_ddCache,m); renderYearChart(_ddCache); } })
+      .catch(function(e){ status('Rain/snow history: '+(e && e.message || 'fetch failed')); var rn=$('ch-rain-note'); if(rn) rn.textContent='Rain and snow history could not be loaded'+(/limit/i.test(e&&e.message||'')?' — Open-Meteo\u2019s free daily request limit was reached; this resets tomorrow.':' right now.'); });
   }
   function mergeMoisture(j,m){ var idx={}; m.daily.time.forEach(function(t,i){ idx[t]=i; }); ['precipitation_sum','rain_sum','snowfall_sum'].forEach(function(k){ j.daily[k]=j.daily.time.map(function(t){ var i=idx[t]; return i==null?null:m.daily[k][i]; }); }); }
   /* ---------- the year, drawn: one chart builder, six charts ---------- */
@@ -379,6 +392,22 @@
   /* 2026-09-27 (v898, Laurie): two independent queries so the layout is always consistent — 24 with a
      displayable (openly licensed) photo, then 12 more recent ones without, below. */
   var INAT_CC = 'cc0,cc-by,cc-by-nc,cc-by-sa,cc-by-nc-sa,cc-by-nd,cc-by-nc-nd';
+  /* 2026-09-27 (v906, Laurie): shared date/time formatting for both the iNat and eBird sections — "7:12am,
+     Sept 22" instead of a raw "2026-09-22 07:12", read straight off the digits in the source
+     string so it is never reinterpreted through the browser's own timezone. Also strips a
+     trailing "(lat, lng)" that eBird bakes into some auto-generated location names, since
+     coordinates were dropped from these cards on purpose. */
+  var MON3=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sept','Oct','Nov','Dec'];
+  function fmtWhen(s){
+    if(!s) return '';
+    var m = String(s).match(/^(\d{4})-(\d{2})-(\d{2})(?:[ T](\d{2}):(\d{2}))/);
+    if(m){ var day=+m[3], mon=MON3[+m[2]-1], hh=+m[4], mm=m[5], ap=hh>=12?'pm':'am', h12=hh%12; if(h12===0) h12=12;
+      return h12+':'+mm+ap+', '+mon+' '+day; }
+    var m2 = String(s).match(/^(\d{4})-(\d{2})-(\d{2})/);
+    if(m2) return MON3[+m2[2]-1]+' '+(+m2[3]);
+    return String(s);
+  }
+  function stripCoords(s){ return String(s||'').replace(/\s*\([\-\d.]+,\s*[\-\d.]+\)\s*$/,''); }
   function fetchINat(){
     var grid=$('inat-grid'); if(!grid) return;
     var esc=function(v){ return String(v||'').replace(/[&<>"]/g,function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); };
@@ -388,7 +417,7 @@
     var ICON={Aves:'🐦',Insecta:'🦋',Plantae:'🌿',Fungi:'🍄',Mammalia:'🦌',Amphibia:'🐸',Reptilia:'🐢',Arachnida:'🕷️'};
     var info=function(o){ var t=o.taxon||{}, ph=(o.photos&&o.photos[0])||null, lic=ph&&ph.license_code;
       return {t:t, name:t.preferred_common_name||t.name||'Unidentified', sci:t.preferred_common_name?t.name:'', img:(ph&&lic)?ph.url.replace('square','medium'):null, lic:lic,
-              when:o.observed_on_string||o.observed_on||'', who:o.user&&(o.user.name||o.user.login)||'', where:o.place_guess||'', url:'https://www.inaturalist.org/observations/'+o.id}; };
+              when:o.time_observed_at||o.observed_on||'', who:o.user&&(o.user.name||o.user.login)||'', where:stripCoords(o.place_guess)||'', url:'https://www.inaturalist.org/observations/'+o.id}; }; /* 2026-09-27 (v906, Laurie): time_observed_at over observed_on_string — a real timestamp fmtWhen can read digit-for-digit, not free text in whatever format the observer typed */
     Promise.all([
       fetch(withUrl).then(function(r){ return r.json(); }).catch(function(){ return {results:[]}; }),
       fetch(withoutUrl).then(function(r){ return r.json(); }).catch(function(){ return {results:[]}; })
@@ -397,10 +426,10 @@
       if(!withPic.length && !noPic.length){ grid.innerHTML='<p class="ph-empty">No research-grade observations came back.</p>'; return; }
       grid.innerHTML = withPic.length ? withPic.map(function(o){ var d=info(o);
         return '<a class="inat" href="'+d.url+'" target="_blank" rel="noopener"><img src="'+esc(d.img)+'" alt="'+esc(d.name)+'" loading="lazy">'
-          +'<div class="b"><div class="n">'+esc(d.name)+'</div>'+(d.sci?'<div class="sci">'+esc(d.sci)+'</div>':'')+'<div class="m">'+esc(d.when)+(d.where?' · '+esc(d.where):'')+(d.who?'<br>by '+esc(d.who):'')+'<br><span style="opacity:.7">photo '+esc(d.lic.toUpperCase())+'</span></div></div></a>';
+          +'<div class="b"><div class="n">'+esc(d.name)+'</div>'+(d.sci?'<div class="sci">'+esc(d.sci)+'</div>':'')+'<div class="m"><b>'+esc(fmtWhen(d.when))+'</b>'+(d.where?' · <b>'+esc(d.where)+'</b>':'')+(d.who?'<br>by '+esc(d.who):'')+'<br><span style="opacity:.7">photo '+esc(d.lic.toUpperCase())+'</span></div></div></a>'; /* 2026-09-27 (v906, Laurie): date/time and location bold */
       }).join('') : '<p class="ph-empty">No openly licensed photos in the latest batch.</p>';
       $('inat-list').innerHTML = noPic.length ? '<div class="inat-list">'+noPic.map(function(o){ var d=info(o);
-        return '<div class="eb"><div class="img ph">'+(ICON[d.t.iconic_taxon_name]||'🔍')+'</div><div><div class="n"><a href="'+d.url+'" target="_blank" rel="noopener">'+esc(d.name)+'</a>'+(d.sci?' <span class="sci" style="font-weight:400;font-style:italic;opacity:.85">'+esc(d.sci)+'</span>':'')+'</div><div class="m">'+esc(d.when)+(d.where?' · '+esc(d.where):'')+(d.who?' · '+esc(d.who):'')+'</div></div></div>';
+        return '<div class="eb"><div class="img ph">'+(ICON[d.t.iconic_taxon_name]||'🔍')+'</div><div><div class="n"><a href="'+d.url+'" target="_blank" rel="noopener">'+esc(d.name)+'</a>'+(d.sci?' <span class="sci" style="font-weight:400;font-style:italic;opacity:.85">'+esc(d.sci)+'</span>':'')+'</div><div class="m"><b>'+esc(fmtWhen(d.when))+'</b>'+(d.where?' · <b>'+esc(d.where)+'</b>':'')+(d.who?' · '+esc(d.who):'')+'</div></div></div>'; /* 2026-09-27 (v906, Laurie): date/time and location bold */
       }).join('')+'</div>' : '';
       var shown=withPic.length+noPic.length, tot=(res[0].total_results||0)+(res[1].total_results||0);
       $('inat-note').textContent='Showing '+shown+' of '+(tot||shown).toLocaleString()+' research-grade observations.· Data © iNaturalist contributors; Creative Commons photos displayed here, click to review others on iNaturalist.';
@@ -415,18 +444,19 @@
     var opt={headers:{'X-eBirdApiToken':EBIRD_KEY}};
     var esc=function(v){ return String(v||'').replace(/[&<>"]/g,function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); };
     /* 2026-09-27 (v901, Laurie): totals across the whole 14-day window, not just the single most-recent report:
-       sum of howMany per species, and how many separate checklists reported it. Some checklists
-       give a count of "X" (present, not counted); those add to the report tally but not the sum,
-       so a "+" after the number means the true total is at least that high. */
+       sum of howMany per species, and how many separate checklists reported it. A checklist
+       marking a species "X" (present, no count given) still means at least one bird — counted as
+       1 here, not 0 — so the number is always a true floor; the "+" then means the real total may
+       be higher than what's shown. */
     var countMeta = function(recentAll, code){
       var sum=0, reports=0, anyUnknown=false;
-      recentAll.forEach(function(o){ if(o.speciesCode!==code) return; reports++; if(o.howMany!=null) sum+=o.howMany; else anyUnknown=true; });
+      recentAll.forEach(function(o){ if(o.speciesCode!==code) return; reports++; if(o.howMany!=null) sum+=o.howMany; else { sum+=1; anyUnknown=true; } });
       return {sum:sum, reports:reports, anyUnknown:anyUnknown};
     };
-    var countBadge = function(m){ if(!m.reports) return ''; return (m.sum||m.anyUnknown) ? ((m.sum||0)+(m.anyUnknown?'+':'')) : ''; };
+    var countBadge = function(m){ if(!m.reports) return ''; return m.sum+(m.anyUnknown?'+':''); }; /* 2026-09-27 (v907, Laurie): every report guarantees at least one bird, so this is never a bare "0" — "1+" for a single unmarked sighting, per Laurie */
     var reportsNote = function(m){ return m.reports>1 ? m.reports+' reports' : '1 report'; };
     /* 2026-09-27 (v902, Laurie): row() (compact eBird strip) retired — the notable band now uses the same card as the main grid */
-    var card=function(o,rare,m){ return '<div class="inat eb-card'+(rare?' rare':'')+'" data-sci="'+esc(o.sciName)+'" data-subid="'+esc(o.subId||'')+'"><div class="img ph">🐦</div><div class="b"><div class="n">'+esc(o.comName)+(countBadge(m)?' <span class="c">'+countBadge(m)+'</span>':'')+'</div><div class="sci">'+esc(o.sciName)+'</div><div class="m">'+esc((o.obsDt||'').slice(0,16))+(o.locName?' \u00b7 '+esc(o.locName):'')+' \u00b7 '+reportsNote(m)+'<span class="obs-by"></span><br><span class="photo-credit" style="opacity:.7">species photo: Wikipedia</span></div></div></div>'; }; /* 2026-09-27 (v902, Laurie): the 'notable' tag dropped — no reason code is available from eBird to say what made it notable, and the section heading already carries that meaning */ /* 2026-09-27 (v901, Laurie): total-count badge, report count, and (async) observer restored; photo stays a generic species image from Wikipedia, labelled as such since eBird does not expose per-sighting photo credit the way iNaturalist does */
+    var card=function(o,rare,m){ return '<div class="inat eb-card'+(rare?' rare':'')+'" data-sci="'+esc(o.sciName)+'" data-subid="'+esc(o.subId||'')+'"><div class="img ph">🐦</div><div class="b"><div class="n">'+esc(o.comName)+(countBadge(m)?' <span class="c">'+countBadge(m)+'<span class="c-lbl"> sightings</span></span>':'')+'</div><div class="sci">'+esc(o.sciName)+'</div><div class="m"><b>'+esc(fmtWhen(o.obsDt))+'</b>'+(o.locName?' \u00b7 <b>'+esc(stripCoords(o.locName))+'</b>':'')+' \u00b7 '+reportsNote(m)+'<span class="obs-by"></span><br><span class="photo-credit" style="opacity:.7">species photo: Wikipedia</span></div></div></div>'; }; /* 2026-09-27 (v906, Laurie): date/time and location bold, coordinates stripped from locName; count badge relabelled "sightings" — see countBadge() for what the number means */
     Promise.all([fetch(base+'/notable'+q,opt).then(function(r){ return r.ok?r.json():[]; }).catch(function(){ return []; }),
                  fetch(base+q,opt).then(function(r){ if(!r.ok) throw new Error('eBird HTTP '+r.status); return r.json(); })])
     .then(function(res){ var notable=res[0]||[], recent=res[1]||[];
@@ -436,7 +466,7 @@
       grid.innerHTML = uniq.length ? uniq.map(function(o){ return card(o,false,countMeta(recent,o.speciesCode)); }).join('') : '<p class="ph-empty">No reports in the window.</p>';
       wikiPics();
       fetchObservers();
-      $('ebird-note').textContent = uniq.length+' species reported in the last '+EBIRD_BACK+' days within '+EBIRD_DIST+' km of Berne, most recent report of each, with the total individuals and reports for the whole window \u00b7 data \u00a9 eBird / Cornell Lab of Ornithology.';
+      $('ebird-note').textContent = uniq.length+' species reported in the last '+EBIRD_BACK+' days within '+EBIRD_DIST+' km of Berne, most recent report of each shown. \u00b7 data \u00a9 eBird / Cornell Lab of Ornithology.';
     }).catch(function(e){ grid.innerHTML='<p class="ph-empty">eBird is unreachable right now.</p>'; status('eBird: '+(e && e.message || 'fetch failed')+' (if this says HTTP 403 the key is wrong; if it says "Failed to fetch" eBird refused the cross-site request and the feed must move to build time)'); });
   }
   /* 2026-09-27 (v901, Laurie): observer name per most-recent checklist, filled in after the grid renders so a

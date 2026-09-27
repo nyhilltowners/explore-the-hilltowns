@@ -23,3 +23,5 @@ STATIONS in build.py with its display name and rough elevation.
 | windham_3e | Windham 3 E (co-op) | 1900-01 → 2017-04 | closed; the oldest and highest (~1,600 ft) — temperatures only for part of the record |
 | conklingville_dam | Conklingville Dam (co-op) | 1948-05 → present | Sacandaga Reservoir, Saratoga Co., ~780 ft; active |
 | prattsville | Prattsville (co-op) | 1948-05 → 2017-04 | closed |
+| central_park | Central Park (NWS first-order, USW00094728) | 1869-01 → present | ~140 ft, Manhattan; the longest continuous active weather record in New York; out of core, added for context |
+| blue_hill | Blue Hill Observatory (co-op, USC00190736) | 1885-01 → present | ~635 ft, Milton, MA; longest continuously operated weather site in the US, same hilltop and instrument type throughout; out of core, added for context |
