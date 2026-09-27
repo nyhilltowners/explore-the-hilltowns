@@ -11,6 +11,8 @@
 <link rel="icon" href="images/favicon.svg">
 <link rel="apple-touch-icon" href="images/apple-touch-icon.png">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lato:ital,wght@0,400;0,700;1,400&family=Montserrat:ital,wght@0,400;0,600;0,700;0,800;1,600&display=swap">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/maplibre-gl/4.7.1/maplibre-gl.min.css"> <!-- 2026-09-27 (v923, Laurie): the water-levels map -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/maplibre-gl/4.7.1/maplibre-gl.min.js"></script>
 <style>
 :root{
   --ink:#00004d; --paper:#feffff; --parchment:#f4efe1; --parchment-line:#e3dcc8;
@@ -235,6 +237,8 @@ a.link:hover{background:rgba(252,163,21,.14);}
 .eb-card.rare{border-color:var(--gold,#c9a227);} /* 2026-09-27 (v899, Laurie): birds grid now uses the same card layout/size as the iNat grid */
 .eb-card .n .c{font-weight:800; color:var(--gold,#c9a227) !important; margin-left:4px;} /* 2026-09-27 (v901, Laurie): total-count badge inside the card title */
 .eb-card .n .c .c-lbl{font-weight:400; font-size:10px; letter-spacing:.04em; text-transform:none; opacity:.8;} /* 2026-09-27 (v906, Laurie) */
+.inat .n .c{font-weight:800; color:var(--gold,#c9a227) !important; margin-left:4px;} /* 2026-09-27 (v922, Laurie): same count badge on the iNat cards, with-photo and fallback alike */
+.inat .n .c .c-lbl{font-weight:400; font-size:10px; letter-spacing:.04em; text-transform:none; opacity:.8;}
 .sg-eye{font-size:10px; letter-spacing:.16em; text-transform:uppercase; opacity:.95; margin:0 0 2px; font-weight:700;} /* 2026-09-27 (v898, Laurie): bold eyebrows */
 .sg-val{font-size:22px; font-weight:800; margin:0; line-height:1.15;}
 .sg-val .c{font-weight:400; opacity:.95; font-size:16px; margin-left:6px;}
@@ -404,10 +408,13 @@ a.link:hover{background:rgba(252,163,21,.14);}
   </div>
   <p class="sg-note" id="dd-note">Loading…</p>
 
-  <!-- 2026-09-27 (v920, Laurie): live USGS water levels — streams, lakes/reservoirs, groundwater wells -->
+  <!-- 2026-09-27 (v923, Laurie): live USGS water levels — streams, lakes/reservoirs, groundwater wells -->
   <h2 class="sg-sec">Water levels, live</h2>
-  <p class="sg-det" style="margin:0 0 10px">The nearest active USGS gauges within 40&nbsp;km of Berne, whatever each one reports — streamflow or gage height for streams, elevation or storage for lakes and reservoirs, depth to water for wells. Not every gauge reports every kind of reading, and coverage thins out fast this far from the Hudson. <span id="water-live-note"></span></p>
-  <div class="sg-grid" id="water-live-grid"><p class="ph-empty">Loading USGS gauges…</p></div>
+  <div id="water-map" style="height:320px; border-radius:12px; overflow:hidden; margin:0 0 12px; background:rgba(0,0,0,.18); border:1px solid rgba(255,255,255,.18);"></div>
+  <h3 class="sg-h3" style="margin-top:0">Named local waters</h3>
+  <div class="sg-grid" id="water-named-grid"><p class="ph-empty">Loading…</p></div>
+  <h3 class="sg-h3">Other nearby gauges</h3>
+  <div class="sg-grid" id="water-live-grid"><p class="ph-empty">Loading…</p></div>
   <p class="sg-note" id="water-live-src">Data © USGS Water Data for the Nation (waterservices.usgs.gov), provisional and subject to revision. Refreshes every 15 minutes.</p>
 
   <h2 class="sg-sec">Seen lately · iNaturalist</h2>

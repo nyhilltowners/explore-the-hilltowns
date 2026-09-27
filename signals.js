@@ -403,7 +403,7 @@
      (waterservices.usgs.gov) — no key needed, CORS-open, same "just fetch it from the browser"
      pattern as Open-Meteo/eBird/iNaturalist elsewhere on this page. One request, a bounding box
      around Berne, several parameter codes at once; USGS returns whatever each site actually has. */
-  var WATER_BBOX_KM = 40;
+  var WATER_BBOX_KM = 50;
   function waterBBox(){
     var dLat = WATER_BBOX_KM/111, dLng = WATER_BBOX_KM/(111*Math.cos(LAT*Math.PI/180));
     return (LNG-dLng).toFixed(4)+','+(LAT-dLat).toFixed(4)+','+(LNG+dLng).toFixed(4)+','+(LAT+dLat).toFixed(4);
@@ -427,10 +427,60 @@
     lake:'<svg viewBox="0 0 24 24"><path d="M12 3s6 6.5 6 11a6 6 0 0 1-12 0c0-4.5 6-11 6-11z"/></svg>',
     well:'<svg viewBox="0 0 24 24"><path d="M12 2v13M7 11l5 5 5-5M5 20h14"/></svg>'
   };
+  var WATER_COLOR = {stream:'#5aa9e6', lake:'#2ec4b6', well:'#c9a227'};
   var WATER_LABEL = {stream:'Stream', lake:'Lake / reservoir', well:'Groundwater well'};
-  var WATER_CAP = {stream:4, lake:3, well:4};
+  var WATER_CAP = {stream:3, lake:3, well:3};
+  /* 2026-09-27 (v923, Laurie): the specific local waters Laurie asked about by name. Matched against each
+     site's own USGS name rather than hardcoded site numbers, so this keeps working if a gauge is
+     retired or a better one comes online \u2014 whichever active site currently carries the name
+     wins, nearest first. If none of Laurie's named waters have a live USGS site at all (true for
+     the Alcove and Basic Creek Reservoirs \u2014 both are City of Albany water-supply reservoirs,
+     monitored by the city itself, not on the public USGS network), that's said plainly rather than
+     the water just silently not appearing. */
+  var NAMED_WATERS = [
+    {key:'catskill', re:/catskill creek/i, label:'Catskill Creek'},
+    {key:'basicres', re:/basic creek reservoir/i, label:'Basic Creek Reservoir'},
+    {key:'basic',    re:/basic creek(?! reservoir)/i, label:'Basic Creek'},
+    {key:'normans',  re:/normans? ?kill/i, label:'Normans Kill'},
+    {key:'alcove',   re:/alcove reservoir/i, label:'Alcove Reservoir'},
+    {key:'hudson',   re:/hudson river/i, label:'Hudson River'}
+  ];
+  /* 2026-09-27 (v923, Laurie): USGS site names for wells with no descriptive name read like "Local number,
+     So-528, Westerlo NY" \u2014 an internal well ID, not useful to show. Strip that prefix and
+     just keep whatever place name follows it, or fall back to a generic label. */
+  function cleanSiteName(raw, kind){
+    var n = String(raw||'').trim();
+    var m = n.match(/^local number,\s*[a-z0-9\-]+,?\s*(.*)$/i);
+    if(m){ return m[1] ? m[1].replace(/\s*NY$/i,'').trim() || (WATER_LABEL[kind]||'Well') : (WATER_LABEL[kind]||'Well'); }
+    return n;
+  }
+  var _waterMap=null, _waterMarkers=[];
+  function ensureWaterMap(){
+    if(_waterMap || typeof maplibregl==='undefined' || !$('water-map')) return _waterMap;
+    _waterMap = new maplibregl.Map({
+      container:'water-map',
+      style:{version:8, sources:{'topo':{type:'raster', tiles:['https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}'], tileSize:256, attribution:'Esri'}}, layers:[{id:'topo', type:'raster', source:'topo'}]},
+      center:[LNG,LAT], zoom:8.3, attributionControl:true
+    });
+    _waterMap.addControl(new maplibregl.NavigationControl({showCompass:false}), 'top-right');
+    return _waterMap;
+  }
+  function plotWaterMarkers(sites){
+    var map=ensureWaterMap(); if(!map) return;
+    _waterMarkers.forEach(function(m){ m.remove(); }); _waterMarkers=[];
+    var render=function(){
+      sites.forEach(function(d){
+        var el=document.createElement('div');
+        el.style.cssText='width:16px;height:16px;border-radius:50%;border:2px solid #fff;box-shadow:0 0 4px rgba(0,0,0,.6);background:'+WATER_COLOR[d.kind];
+        var popupHtml='<b>'+d.displayName+'</b><br>'+d.readings.map(function(r){ return r.label+': '+r.text; }).join('<br>');
+        var mk=new maplibregl.Marker({element:el}).setLngLat([d.lng,d.lat]).setPopup(new maplibregl.Popup({offset:12}).setHTML(popupHtml)).addTo(map);
+        _waterMarkers.push(mk);
+      });
+    };
+    if(map.loaded()) render(); else map.on('load', render);
+  }
   function fetchWater(){
-    var grid=$('water-live-grid'); if(!grid) return;
+    var namedGrid=$('water-named-grid'), grid=$('water-live-grid'); if(!grid || !namedGrid) return;
     var url='https://waterservices.usgs.gov/nwis/iv/?format=json&bBox='+waterBBox()+'&parameterCd='+Object.keys(WATER_PARAMS).join(',')+'&siteStatus=active';
     fetch(url).then(function(r){ return r.ok?r.json():Promise.reject(new Error('HTTP '+r.status)); }).then(function(j){
       var ts=(j&&j.value&&j.value.timeSeries)||[];
@@ -443,57 +493,74 @@
         var si=t.sourceInfo||{}, sc=(si.siteCode&&si.siteCode[0]&&si.siteCode[0].value)||'';
         var geo=si.geoLocation&&si.geoLocation.geogLocation;
         if(!sc || !geo) return;
-        var d=bySite[sc] || (bySite[sc]={name:si.siteName||sc, lat:+geo.latitude, lng:+geo.longitude, kind:meta.kind, readings:[]});
-        d.readings.push({label:meta.label, text:meta.fmt(last.value), when:last.dateTime||''});
+        var d=bySite[sc] || (bySite[sc]={rawName:si.siteName||sc, lat:+geo.latitude, lng:+geo.longitude, kind:meta.kind, readings:[]});
+        d.readings.push({label:meta.label, text:meta.fmt(last.value)});
       });
-      var sites=Object.keys(bySite).map(function(sc){ var d=bySite[sc]; d.km=haversineKm(LAT,LNG,d.lat,d.lng); return d; });
+      var sites=Object.keys(bySite).map(function(sc){ var d=bySite[sc]; d.km=haversineKm(LAT,LNG,d.lat,d.lng); d.displayName=cleanSiteName(d.rawName,d.kind); return d; });
       sites.sort(function(a,b){ return a.km-b.km; });
-      var byKind={stream:[], lake:[], well:[]};
-      sites.forEach(function(d){ if(byKind[d.kind] && byKind[d.kind].length<WATER_CAP[d.kind]) byKind[d.kind].push(d); });
       var esc=function(v){ return String(v||'').replace(/[&<>"]/g,function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); };
-      var fmtWhen=function(s){ var m=String(s).match(/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})/); if(!m) return ''; var hh=+m[4],mm=m[5],ap=hh>=12?'pm':'am',h12=hh%12; if(h12===0) h12=12; return h12+':'+mm+ap; };
-      var rows=[];
-      ['stream','lake','well'].forEach(function(kind){
-        byKind[kind].forEach(function(d){
-          var main=d.readings[0], extra=d.readings.slice(1);
-          rows.push('<div class="sg-row"><div class="sg-ico">'+WATER_ICON[kind]+'</div><div><p class="sg-eye">'+WATER_LABEL[kind]+'</p><p class="sg-val">'+esc(main.text)+'</p><p class="sg-det"><b>'+esc(d.name)+'</b> \u00b7 '+d.km.toFixed(0)+' km away'+(extra.length?'<br>'+extra.map(function(e){ return esc(e.label)+': '+esc(e.text); }).join(' \u00b7 '):'')+(main.when?'<br>as of '+fmtWhen(main.when):'')+'</p></div></div>');
-        });
+      var card=function(d,eyebrow){ var main=d.readings[0], extra=d.readings.slice(1);
+        return '<div class="sg-row"><div class="sg-ico">'+WATER_ICON[d.kind]+'</div><div><p class="sg-eye">'+esc(eyebrow||WATER_LABEL[d.kind])+'</p><p class="sg-val">'+esc(main.text)+'</p><p class="sg-det"><b>'+esc(d.displayName)+'</b>'+(extra.length?'<br>'+extra.map(function(e){ return esc(e.label)+': '+esc(e.text); }).join(' \u00b7 '):'')+'</p></div></div>';
+      };
+      /* named waters: nearest matching site per key, or a "no public gauge" line */
+      var used={}, namedRows=[], namedSites=[];
+      NAMED_WATERS.forEach(function(nw){
+        var hit=sites.find(function(d){ return !used[d.rawName+d.kind] && nw.re.test(d.rawName); });
+        if(hit){ used[hit.rawName+hit.kind]=true; namedSites.push(hit); namedRows.push(card(hit, nw.label)); }
+        else { namedRows.push('<div class="sg-row"><div class="sg-ico">'+WATER_ICON.lake+'</div><div><p class="sg-eye">'+esc(nw.label)+'</p><p class="sg-val" style="opacity:.6">\u2014</p><p class="sg-det">No public USGS gauge found here.</p></div></div>'); }
       });
-      grid.innerHTML = rows.length ? rows.join('') : '<p class="ph-empty">No active USGS gauges reporting within '+WATER_BBOX_KM+' km right now.</p>';
-      var missing=['stream','lake','well'].filter(function(k){ return !byKind[k].length; }).map(function(k){ return WATER_LABEL[k].toLowerCase()+'s'; });
-      $('water-live-note').textContent = missing.length ? 'No active '+missing.join(' or ')+' gauges in range right now.' : '';
-    }).catch(function(e){ grid.innerHTML='<p class="ph-empty">USGS water data is unreachable right now.</p>'; status('Water levels: '+(e && e.message || 'fetch failed')); });
+      namedGrid.innerHTML = namedRows.join('');
+      /* everything else: nearest few per kind, excluding whatever's already shown above */
+      var byKind={stream:[], lake:[], well:[]};
+      sites.forEach(function(d){ if(used[d.rawName+d.kind]) return; if(byKind[d.kind] && byKind[d.kind].length<WATER_CAP[d.kind]) byKind[d.kind].push(d); });
+      var genericSites=[];
+      var rows=[];
+      ['stream','lake','well'].forEach(function(kind){ byKind[kind].forEach(function(d){ genericSites.push(d); rows.push(card(d)); }); });
+      grid.innerHTML = rows.length ? rows.join('') : '<p class="ph-empty">No other active USGS gauges within '+WATER_BBOX_KM+' km right now.</p>';
+      plotWaterMarkers(namedSites.concat(genericSites));
+    }).catch(function(e){ grid.innerHTML='<p class="ph-empty">USGS water data is unreachable right now.</p>'; namedGrid.innerHTML=''; status('Water levels: '+(e && e.message || 'fetch failed')); });
   }
   function fetchINat(){
     var grid=$('inat-grid'); if(!grid) return;
     var esc=function(v){ return String(v||'').replace(/[&<>"]/g,function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); };
     var box='&nelat='+INAT_BOX.nelat+'&nelng='+INAT_BOX.nelng+'&swlat='+INAT_BOX.swlat+'&swlng='+INAT_BOX.swlng;
-    var withUrl='https://api.inaturalist.org/v1/observations?quality_grade=research&photos=true&photo_license='+INAT_CC+'&order_by=observed_on&order=desc&per_page=24'+box;
-    var withoutUrl='https://api.inaturalist.org/v1/observations?quality_grade=research&photos=false&order_by=observed_on&order=desc&per_page=12'+box;
-    var ICON={Aves:'🐦',Insecta:'🦋',Plantae:'🌿',Fungi:'🍄',Mammalia:'🦌',Amphibia:'🐸',Reptilia:'🐢',Arachnida:'🕷️'};
+    var d1=new Date(Date.now()-14*86400000).toISOString().slice(0,10);
+    /* 2026-09-27 (v922, Laurie): one query instead of two — photos=true (any licence) already excludes every
+       sound-only observation, which answers "get rid of the sound-file section" on its own: iNat
+       has nothing to show for those anyway. Consolidate by species client-side, same as the birds
+       above: latest observation's photo (if its licence lets us show it) plus a gold count of how
+       many times that species was logged in the window. A species with photos but no openly
+       licensed one falls back to the same Wikipedia-credit card the birds use — wikiPics() and
+       fileCreditFromUrl() already do this and don't care what kind of animal or plant it is. */
+    var url='https://api.inaturalist.org/v1/observations?quality_grade=research&photos=true&order_by=observed_on&order=desc&per_page=200&d1='+d1+box;
+    var ICON={Aves:'\uD83D\uDC26',Insecta:'\uD83E\uDD8B',Plantae:'\uD83C\uDF3F',Fungi:'\uD83C\uDF44',Mammalia:'\uD83E\uDD8C',Amphibia:'\uD83D\uDC38',Reptilia:'\uD83D\uDC22',Arachnida:'\uD83D\uDD77\uFE0F'};
     var info=function(o){ var t=o.taxon||{}, ph=(o.photos&&o.photos[0])||null, lic=ph&&ph.license_code;
-      return {t:t, name:t.preferred_common_name||t.name||'Unidentified', sci:t.preferred_common_name?t.name:'', img:(ph&&lic)?ph.url.replace('square','medium'):null, lic:lic,
-              when:o.time_observed_at||o.observed_on||'', who:o.user&&(o.user.name||o.user.login)||'', where:stripCoords(o.place_guess)||'', url:'https://www.inaturalist.org/observations/'+o.id}; }; /* 2026-09-27 (v906, Laurie): time_observed_at over observed_on_string — a real timestamp fmtWhen can read digit-for-digit, not free text in whatever format the observer typed */
-    Promise.all([
-      fetch(withUrl).then(function(r){ return r.json(); }).catch(function(){ return {results:[]}; }),
-      fetch(withoutUrl).then(function(r){ return r.json(); }).catch(function(){ return {results:[]}; })
-    ]).then(function(res){
-      var withPic=(res[0].results||[]), noPic=(res[1].results||[]);
-      if(!withPic.length && !noPic.length){ grid.innerHTML='<p class="ph-empty">No research-grade observations came back.</p>'; return; }
-      grid.innerHTML = withPic.length ? withPic.map(function(o){ var d=info(o);
+      return {t:t, name:t.preferred_common_name||t.name||'Unidentified', sci:t.preferred_common_name?t.name:'', sciKey:t.name||'', img:(ph&&lic)?ph.url.replace('square','medium'):null, lic:lic,
+              when:o.time_observed_at||o.observed_on||'', who:o.user&&(o.user.name||o.user.login)||'', where:stripCoords(o.place_guess)||'', url:'https://www.inaturalist.org/observations/'+o.id}; };
+    fetch(url).then(function(r){ return r.json(); }).then(function(j){
+      var res=(j.results||[]);
+      if(!res.length){ grid.innerHTML='<p class="ph-empty">No research-grade observations with photos came back.</p>'; $('inat-list').innerHTML=''; $('inat-note').textContent=''; return; }
+      var bySpecies={};
+      res.forEach(function(o){ var d=info(o), key=d.sciKey||d.name;
+        var g=bySpecies[key] || (bySpecies[key]={best:null, count:0, icon:ICON[d.t.iconic_taxon_name]||'\uD83D\uDD0D'});
+        g.count++;
+        if(!g.best || (d.img && !g.best.img)) g.best=d;   /* keep the most recent; upgrade to one with a displayable photo if the very latest lacked one */
+      });
+      var species=Object.keys(bySpecies).map(function(k){ return bySpecies[k]; });
+      var withPic=species.filter(function(g){ return g.best.img; });
+      var noPic=species.filter(function(g){ return !g.best.img; });
+      var cbadge=function(g){ return g.count>1?' <span class="c">'+g.count+'<span class="c-lbl"> sightings</span></span>':''; };
+      grid.innerHTML = withPic.length ? withPic.map(function(g){ var d=g.best;
         return '<a class="inat" href="'+d.url+'" target="_blank" rel="noopener"><img src="'+esc(d.img)+'" alt="'+esc(d.name)+'" loading="lazy">'
-          +'<div class="b"><div class="n">'+esc(d.name)+'</div>'+(d.sci?'<div class="sci">'+esc(d.sci)+'</div>':'')+'<div class="m"><b>'+esc(fmtWhen(d.when))+'</b>'+(d.where?' · <b>'+esc(d.where)+'</b>':'')+(d.who?'<br>by '+esc(d.who):'')+'<br><span style="opacity:.7">photo '+esc(d.lic.toUpperCase())+'</span></div></div></a>'; /* 2026-09-27 (v906, Laurie): date/time and location bold */
-      }).join('') : '<p class="ph-empty">No openly licensed photos in the latest batch.</p>';
-      $('inat-list').innerHTML = noPic.length ? '<div class="inat-list">'+noPic.map(function(o){ var d=info(o);
-        return '<div class="eb"><div class="img ph">'+(ICON[d.t.iconic_taxon_name]||'🔍')+'</div><div><div class="n"><a href="'+d.url+'" target="_blank" rel="noopener">'+esc(d.name)+'</a>'+(d.sci?' <span class="sci" style="font-weight:400;font-style:italic;opacity:.85">'+esc(d.sci)+'</span>':'')+'</div><div class="m"><b>'+esc(fmtWhen(d.when))+'</b>'+(d.where?' · <b>'+esc(d.where)+'</b>':'')+(d.who?' · '+esc(d.who):'')+'</div></div></div>'; /* 2026-09-27 (v906, Laurie): date/time and location bold */
+          +'<div class="b"><div class="n">'+esc(d.name)+cbadge(g)+'</div>'+(d.sci?'<div class="sci">'+esc(d.sci)+'</div>':'')+'<div class="m"><b>'+esc(fmtWhen(d.when))+'</b>'+(d.where?' \u00b7 <b>'+esc(d.where)+'</b>':'')+(d.who?'<br>by '+esc(d.who):'')+'<br><span style="opacity:.7">photo '+esc(d.lic.toUpperCase())+'</span></div></div></a>';
+      }).join('') : '<p class="ph-empty">No openly licensed photos in the last two weeks.</p>';
+      $('inat-list').innerHTML = noPic.length ? '<div class="inat-list">'+noPic.map(function(g){ var d=g.best;
+        return '<div class="inat eb-card" data-sci="'+esc(d.sciKey)+'"><div class="img ph">'+g.icon+'</div><div class="b"><div class="n">'+esc(d.name)+cbadge(g)+'</div>'+(d.sci?'<div class="sci">'+esc(d.sci)+'</div>':'')+'<div class="m"><b>'+esc(fmtWhen(d.when))+'</b>'+(d.where?' \u00b7 <b>'+esc(d.where)+'</b>':'')+'<br><span class="photo-credit" style="opacity:.7">species photo: Wikipedia</span></div></div></div>';
       }).join('')+'</div>' : '';
-      var shown=withPic.length+noPic.length, tot=(res[0].total_results||0)+(res[1].total_results||0);
-      $('inat-note').textContent='Showing '+shown+' of '+(tot||shown).toLocaleString()+' research-grade observations.· Data © iNaturalist contributors; Creative Commons photos displayed here, click to review others on iNaturalist.';
+      wikiPics();
+      $('inat-note').textContent='Showing '+species.length+' species from the last 14 days (research-grade, photographed) \u00b7 Data \u00a9 iNaturalist contributors; Creative Commons photos displayed here, click to review others on iNaturalist.';
     }).catch(function(e){ grid.innerHTML='<p class="ph-empty">iNaturalist is unreachable right now.</p>'; status('iNaturalist: '+(e && e.message || 'fetch failed')); });
   }
-
-  /* ---------- eBird: recent + notable sightings near Berne (key per Laurie, 2026-09-20) ---------- */
-  var EBIRD_KEY='dce779eb-603d-4505-9113-a04103e6d8d5', EBIRD_DIST=25, EBIRD_BACK=14;
   function fetchEBird(){
     var grid=$('ebird-grid'), band=$('ebird-notable'); if(!grid) return;
     var base='https://api.ebird.org/v2/data/obs/geo/recent', q='?lat='+LAT.toFixed(4)+'&lng='+LNG.toFixed(4)+'&dist='+EBIRD_DIST+'&back='+EBIRD_BACK+'&maxResults=10000'; /* 2026-09-27 (v898, Laurie): was capped at 60 records, which read as a fixed species count; the eBird max is 10000 */
