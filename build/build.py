@@ -824,7 +824,7 @@ GLYPH_RULES = [
  (r"\bastrolog(y|ical|er)\b|\bhoroscopes?\b|\btarot\b|\breikk?i\b|\bpsychics?\b", "🔮"),
  (r"\bbee ?keep(er|ers|ing)?\b|\bbeekep\w*\b", "🍯"),
  (r"\bnative trees?\b", "🌲"),
- (r"\bnative plants?\b", "🌿"),
+ (r"\bnative plants?\b", "🪴"),   # 2026-09-27 (v917, Laurie): was 🌿 — that's the hand-set glyph for dispensaries (Back Home Dispensary), so native-plant sales get their own icon
  (r"\bzba\b|\btown (hall|board) meeting\b|\bbudget town hall\b", "🇺🇸"),
  (r"(?<!baseball )\bbats?\b(?! mitzvah)(?!man)|\bbat (walk|night|watch|count)\b", "🦇"),
  (r"\bhik(e|es|ing)\b|\btrail (run|walk|preview|day)\b|\btrail ?blaz(e|ing|er|ers)\b|\bramble\b|\bmeander\b|\bnature walk\b|\bwalks?\b|\bwalking\b", "🥾"),
