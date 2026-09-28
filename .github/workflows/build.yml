@@ -6,12 +6,15 @@ on:
     paths:
       - "data/**"
       - "build/**"
+      - "partials/**"
+      - "scripts/**"
       - "*.html"
+      - "*.js"            # signals.js, skyline.js, and any future page script — v944 (2026-09-28): signals.js was missing, so a commit touching only it never built
+      - "*.md"
       - "manifest.json"
-      - "skyline.js"
       - "images/**"
       - ".github/workflows/build.yml"
-  workflow_dispatch:
+  workflow_dispatch:   # "Run workflow" button in the Actions tab
 
 permissions:
   contents: read
@@ -20,21 +23,27 @@ permissions:
 
 concurrency:
   group: pages
-  cancel-in-progress: false
+  cancel-in-progress: false   # let a running deploy finish; queue the next
 
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
+
       - run: pip install openpyxl
+
+      # build.py exits 1 on any validation ERROR, which fails this step and
+      # leaves the previously deployed site untouched.
       - name: Build site
         run: |
           rm -rf site
           python3 build/build.py
+
       - uses: actions/upload-pages-artifact@v3
         with:
           path: site
