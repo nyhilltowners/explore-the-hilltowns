@@ -654,12 +654,42 @@
         if(rows>0) lsSet(ck, cache);
         job.pairs.forEach(function(p){ p.d.stats[p.code]=cache[p.key]||null; });
         renderWaterCard(job.d);                       /* redraw just this card as its numbers land */
-      }).catch(function(e){ failed++; }).then(function(){ if(tm) clearTimeout(tm); });
+      }).catch(function(e){ failed++; }).then(function(){ if(tm) clearTimeout(tm); })
+      .then(function(){ return fetchRange30(job.d); });   /* v951: readings with no long-term statistics get a 30-day range instead */
     };
     var i=0, workers=[];
     var next=function(){ if(i>=jobs.length) return Promise.resolve(); var j=jobs[i++]; return one(j).then(next); };
     for(var w=0; w<4 && w<jobs.length; w++) workers.push(next());
     return Promise.all(workers).then(function(){ waterStatNote(sites, failed, jobs.length); });
+  }
+  /* v951 (2026-09-28, Laurie: "bars for both flow and height"): USGS publishes long-term daily statistics for flow at
+     nearly every gauge but for stage at only some, so a height bar was often impossible. For any reading whose
+     this-date statistics came back empty, fetch that gauge's own last 30 days (one small iv request per gauge) and
+     draw a range bar from it: low, high, median - captioned "· 30 d" so it is never mistaken for a record range.
+     Cached per gauge per calendar day. */
+  function fetchRange30(d){
+    var codes=d.readings.filter(function(r){ return !(d.stats&&d.stats[r.code]) && !WATER_PARAMS[r.code].nobar; }).map(function(r){ return r.code; });
+    if(!codes.length) return Promise.resolve();
+    var today=waterToday(), ck='hfa.w30.v1.'+today.key, cache=lsGet(ck)||{};
+    try{ Object.keys(localStorage).forEach(function(k){ if(k.indexOf('hfa.w30.v1.')===0 && k!==ck) localStorage.removeItem(k); }); }catch(e){}
+    d.range30=d.range30||{};
+    var need=codes.filter(function(c){ return cache[d.siteNo+'|'+c]===undefined; });
+    codes.forEach(function(c){ if(cache[d.siteNo+'|'+c]) d.range30[c]=cache[d.siteNo+'|'+c]; });
+    if(!need.length){ renderWaterCard(d); return Promise.resolve(); }
+    var url='https://waterservices.usgs.gov/nwis/iv/?format=json&sites='+d.siteNo+'&parameterCd='+need.join(',')+'&period=P30D&siteStatus=all';
+    var ctl=(typeof AbortController!=='undefined')?new AbortController():null, tm=ctl?setTimeout(function(){ ctl.abort(); },20000):null;
+    return fetch(url, ctl?{signal:ctl.signal}:{}).then(function(r){ return r.ok?r.json():Promise.reject(new Error('HTTP '+r.status)); }).then(function(j){
+      var ts=(j&&j.value&&j.value.timeSeries)||[], got={};
+      ts.forEach(function(t){
+        var code=(t.variable&&t.variable.variableCode&&t.variable.variableCode[0]&&t.variable.variableCode[0].value)||''; if(need.indexOf(code)<0 || got[code]) return;
+        var vals=((t.values&&t.values[0]&&t.values[0].value)||[]).map(function(v){ return parseFloat(v.value); }).filter(function(x){ return isFinite(x) && x>-999990; });
+        if(vals.length<24) return;
+        vals.sort(function(a,b){ return a-b; });
+        got[code]={min:vals[0], max:vals[vals.length-1], med:vals[Math.floor(vals.length/2)], n:vals.length};
+      });
+      need.forEach(function(c){ cache[d.siteNo+'|'+c]=got[c]||null; if(got[c]) d.range30[c]=got[c]; });
+      lsSet(ck, cache); renderWaterCard(d);
+    }).catch(function(){}).then(function(){ if(tm) clearTimeout(tm); });
   }
   /* v945: a plain sentence under the cards about the statistics - present, partly missing, or unavailable. */
   function waterStatNote(sites, failed, asked){
@@ -773,7 +803,9 @@
      falling; 'avg' always prints, on the right of the tick, since the end labels moved above and below the
      track where nothing can collide with them; a reading beyond the record range sits just past the end. */
   function gaugeOne(d, rd){
-    var s=d.stats && d.stats[rd.code], meta=WATER_PARAMS[rd.code]; if(!s || meta.nobar || s.max==null || s.min==null || !isFinite(rd.value)) return '';
+    var meta=WATER_PARAMS[rd.code], s=d.stats && d.stats[rd.code], r30=null;
+    if(meta.nobar || !isFinite(rd.value)) return '';
+    if(!s || s.max==null || s.min==null){ r30=d.range30 && d.range30[rd.code]; if(!r30) return ''; s={min:r30.min, max:r30.max, mean:r30.med}; }
     /* v949 (Laurie): LINEAR always - she reads the bar as a ruler: Prattsville's 308 avg sits near the bottom of a 5.8-6,220
        range and today's 1,840 about a third of the way up. The log scale was mathematically defensible and visually a lie.
        Also v949: the average's VALUE prints beside its tick, the end labels are left-anchored so nothing collides, and the
@@ -785,8 +817,9 @@
     var yOf=function(v){ var t=(v-lo)/span; if(meta.invert) t=1-t; return Y1-(Math.max(-0.08,Math.min(1.08,t)))*(Y1-Y0); };
     var yNow=yOf(rd.value), yAvg=(s.mean!=null)?yOf(s.mean):null;
     var dir=rd.trend?rd.trend.dir:'flat';
-    var cap=WATER_SHORT[rd.code]||meta.label;
-    var title=statLine(d, rd) || (cap+': now vs this date’s record range');
+    var cap=(WATER_SHORT[rd.code]||meta.label)+(r30?' \u00b7 30 d':'');
+    var title=r30 ? ('Last 30 days at this gauge: low '+f(r30.min)+' \u00b7 high '+f(r30.max)+' \u00b7 median '+f(r30.med)+' ('+r30.n+' readings). USGS publishes no long-term daily statistics for this reading here.')
+                  : (statLine(d, rd) || (cap+': now vs this date’s record range'));
     if(meta.invert) title+=' (up = more water)';
     var svg='<svg viewBox="0 0 '+W+' 96" role="img" aria-label="'+waterEsc(title)+'"><title>'+waterEsc(title)+'</title>'
       +'<text class="wg-cap" x="2" y="8">'+waterEsc(cap)+'</text>'
@@ -798,7 +831,7 @@
     if(yAvg!=null){
       var ay=yAvg; if(Math.abs(ay-yNow)<7) ay = (yAvg<=yNow) ? yNow-7 : yNow+7;     /* keep the avg label clear of the now-mark */
       svg+='<line x1="'+(X-7)+'" y1="'+yAvg.toFixed(1)+'" x2="'+(X+7)+'" y2="'+yAvg.toFixed(1)+'" stroke="var(--gold,#c9a227)" stroke-width="2.5"/>'
-         +'<text class="wg-avg" x="'+(X+10)+'" y="'+(ay+3).toFixed(1)+'">avg '+waterEsc(f(s.mean))+'</text>';
+         +'<text class="wg-avg" x="'+(X+10)+'" y="'+(ay+3).toFixed(1)+'">'+(r30?'med ':'avg ')+waterEsc(f(s.mean))+'</text>';
     }
     if(dir==='flat') svg+='<circle cx="'+X+'" cy="'+yNow.toFixed(1)+'" r="3.6" fill="var(--gold,#c9a227)"/>';
     else if(dir==='up') svg+='<path d="M'+(X-5)+' '+(yNow+3).toFixed(1)+' L'+X+' '+(yNow-3.5).toFixed(1)+' L'+(X+5)+' '+(yNow+3).toFixed(1)+'" fill="none" stroke="var(--gold,#c9a227)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>';
@@ -815,7 +848,7 @@
     var main=d.readings[0], extra=d.readings.slice(1), sts=d.readings.map(function(r){ return statLine(d,r); }).filter(Boolean);
     return '<div class="sg-row wcard" data-site="'+waterEsc(d.siteNo)+'"><div class="sg-ico" style="color:'+colorOf(d,'dark')+'">'+WATER_ICON[d.kind]+(d.num?'<span class="wnum" style="background:'+colorOf(d,'dark')+'">'+d.num+'</span>':'')+'</div><div><p class="sg-eye">'+waterEsc(eyebrow(d))+'</p><p class="sg-val">'+waterEsc(main.text)+trendHtml(main)+'</p><p class="sg-det"><b>'+waterEsc(d.displayName)+'</b>'
       +(d.when?'<br><span class="wread">Read '+waterEsc(fmtWhen(d.when))+'</span>':'')
-      +(extra.length?'<br>'+extra.map(function(e){ return waterEsc(e.label)+': '+waterEsc(e.text)+trendHtml(e); }).join(' · '):'')
+      +(extra.length?'<br>'+extra.map(function(e){ return '<span class="wx">'+waterEsc(e.label)+': '+waterEsc(e.text)+trendHtml(e)+'</span>'; }).join(' · '):'')
       +sts.filter(function(st,i){ return !gaugeOne(d, d.readings[i]); }).map(function(st){ return '<br><span class="wstat">'+waterEsc(st)+'</span>'; }).join('')   /* v949: the sentence lives in the bar's tooltip; printed only when there is no bar to hold it */
       +'</p></div>'+gaugeSvg(d)+'</div>';
   }
