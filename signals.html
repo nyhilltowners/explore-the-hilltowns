@@ -192,6 +192,22 @@ a.link:hover{background:rgba(252,163,21,.14);}
 /* v886 (2026-09-26, Laurie): snow chart mode switch */
 .sg-seg a{display:inline-block; padding:2px 8px; margin:0 2px; border:1px solid rgba(255,255,255,.35); border-radius:6px; color:#fff !important; text-decoration:none; font-weight:600; font-size:11px;}
 .sg-seg a.on{background:var(--gold,#c9a227); border-color:var(--gold,#c9a227); color:var(--gold-ink,#2b2410) !important;}
+/* 2026-09-27 (v929, Laurie): water map popups + pins + trend arrows. The popup was rendering blank because the page's
+   white-on-navy text colours were inherited by MapLibre's white popup box — white text on white. */
+.maplibregl-popup-content{color:#111 !important; font:13px/1.45 "Lato",sans-serif; padding:11px 14px 10px; border-radius:10px;}
+.maplibregl-popup-content b{color:#111 !important;}
+.maplibregl-popup-content a{color:#0b5cad !important; text-decoration:underline;}
+.maplibregl-popup-close-button{color:#333 !important; font-size:18px;}
+.wpop .wk{font-size:10px; letter-spacing:.12em; text-transform:uppercase; color:#555; margin:1px 0 6px;}
+.wpop .ws{margin-top:6px; padding-top:6px; border-top:1px solid #ddd; color:#333;}
+.wpop .wl{margin-top:7px;}
+.wpop .wtrend{color:#8a6a00 !important;}
+.wpin{width:30px; height:30px; border-radius:50%; border:2px solid #fff; box-shadow:0 1px 6px rgba(0,0,0,.55); display:flex; align-items:center; justify-content:center; cursor:pointer;}
+.wpin svg{display:block;}
+#water-map .maplibregl-canvas-container.maplibregl-interactive, #water-map .maplibregl-canvas{cursor:default;} /* 2026-09-27 (v930, Laurie): locked map - no grab hand */
+.wtrend{color:var(--gold,#c9a227); font-weight:800; font-size:.8em; margin-left:6px; white-space:nowrap;}
+.wtrend-lbl{font-weight:400; font-size:11px; letter-spacing:.03em;}
+.wstat{opacity:.85; font-size:12px;}
 </style>
 
 
@@ -411,7 +427,7 @@ a.link:hover{background:rgba(252,163,21,.14);}
   <!-- 2026-09-27 (v923, Laurie): live USGS water levels — streams, lakes/reservoirs, groundwater wells -->
   <h2 class="sg-sec">Water levels, live</h2>
   <div id="water-map" style="height:320px; border-radius:12px; overflow:hidden; margin:0 0 12px; background:rgba(0,0,0,.18); border:1px solid rgba(255,255,255,.18);"></div>
-  <h3 class="sg-h3" style="margin-top:0">Named local waters</h3>
+  <h3 class="sg-h3" id="water-named-h" style="margin-top:0">Named local waters</h3>
   <div class="sg-grid" id="water-named-grid"><p class="ph-empty">Loading…</p></div>
   <h3 class="sg-h3">Other nearby gauges</h3>
   <div class="sg-grid" id="water-live-grid"><p class="ph-empty">Loading…</p></div>
