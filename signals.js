@@ -10,6 +10,15 @@
   var compass = H.compass || function(d){ return Math.round(d)+'°'; }, nearestHour = H.nearestHour, skyKind = H.skyKind, SYNODIC = H.SYNODIC || 29.530588853;
   function safe(fn){ try{ fn(); }catch(e){ status(e && e.message || String(e)); } }
   var LAT = (window.BERNE||{}).lat || 42.6248, LNG = (window.BERNE||{}).lng || -74.1350;
+  /* 2026-09-27 (v927, Laurie): EBIRD_DIST/EBIRD_BACK/EBIRD_KEY were referenced throughout fetchEBird() but had
+     no declaration anywhere in this file \u2014 a real regression, most likely dropped during one
+     of the earlier surgical rewrites of that function. Every call to fetchEBird() was throwing
+     "EBIRD_DIST is not defined" as its first statement, before reaching any fetch(). Restored
+     dist/back at the values every note string on this page already claimed (25 km, 14 days).
+     EBIRD_KEY is the one piece I cannot recover \u2014 an API secret isn't something that would
+     ever appear in this file's own history for me to find; it needs to come from Laurie or a
+     fresh key from https://ebird.org/api/keygen. Left blank rather than guessed. */
+  var EBIRD_DIST = 25, EBIRD_BACK = 14, EBIRD_KEY = '';   /* \u26a0\ufe0f EBIRD_KEY blank \u2014 eBird section will 403 until a real key is supplied */
   var Q = 'latitude='+LAT.toFixed(4)+'&longitude='+LNG.toFixed(4)+'&timezone=America%2FNew_York';
   var f2c = function(f){ return (f-32)*5/9; }, c2f = function(c){ return c*9/5+32; };
 
@@ -383,7 +392,9 @@
   }
 
   /* ---------- iNaturalist: research-grade observations in the Hilltowns box, newest observed first ---------- */
-  var INAT_BOX = {nelat:42.72799866533435, nelng:-73.7475942353335, swlat:42.23036745843211, swlng:-74.39711226427585};   /* per Laurie, 2026-09-20 */
+  var INAT_DIST_KM = 25;   /* 2026-09-27 (v927, Laurie): shrunk from a ~53x55 km box (2026-09-20) to match the bird section's 25 km radius */
+  var INAT_BOX = (function(){ var dLat=INAT_DIST_KM/111, dLng=INAT_DIST_KM/(111*Math.cos(LAT*Math.PI/180));
+    return {nelat:LAT+dLat, nelng:LNG+dLng, swlat:LAT-dLat, swlng:LNG-dLng}; })();
   /* 2026-09-27 (v898, Laurie): two independent queries so the layout is always consistent — 24 with a
      displayable (openly licensed) photo, then 12 more recent ones without, below. */
   var INAT_CC = 'cc0,cc-by,cc-by-nc,cc-by-sa,cc-by-nc-sa,cc-by-nd,cc-by-nc-nd';
@@ -590,6 +601,7 @@
   }
   function fetchEBird(){
     var grid=$('ebird-grid'), band=$('ebird-notable'); if(!grid) return;
+    if(!EBIRD_KEY){ grid.innerHTML='<p class="ph-empty">No eBird API key configured.</p>'; if(band) band.innerHTML=''; status('eBird: no API key set (EBIRD_KEY is blank)'); return; }   /* 2026-09-27 (v927, Laurie) */
     var base='https://api.ebird.org/v2/data/obs/geo/recent', q='?lat='+LAT.toFixed(4)+'&lng='+LNG.toFixed(4)+'&dist='+EBIRD_DIST+'&back='+EBIRD_BACK+'&maxResults=10000'; /* 2026-09-27 (v898, Laurie): was capped at 60 records, which read as a fixed species count; the eBird max is 10000 */
     var opt={headers:{'X-eBirdApiToken':EBIRD_KEY}};
     var esc=function(v){ return String(v||'').replace(/[&<>"]/g,function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); };
