@@ -442,7 +442,7 @@
   }
 
   /* ---------- iNaturalist: research-grade observations in the Hilltowns box, newest observed first ---------- */
-  var INAT_DIST_KM = 25;   /* 2026-09-27 (v927, Laurie): shrunk from a ~53x55 km box (2026-09-20) to match the bird section's 25 km radius */
+  var INAT_DIST_KM = 40;   /* v927 shrank this to 25 km to match the birds; v939 (2026-09-27, Laurie): widened to 40 km so the box reaches the Hudson at Albany (~31 km E) and the northern Catskills at Windham (~35 km S) - affordable now that v938 pulls per taxonomic group. Half-width of a square box, not a radius. */
   var INAT_BOX = (function(){ var dLat=INAT_DIST_KM/111, dLng=INAT_DIST_KM/(111*Math.cos(LAT*Math.PI/180));
     return {nelat:LAT+dLat, nelng:LNG+dLng, swlat:LAT-dLat, swlng:LNG-dLng}; })();
   /* 2026-09-27 (v898, Laurie): two independent queries so the layout is always consistent — 24 with a
@@ -491,8 +491,23 @@
     '72019':{kind:'well',   label:'Depth to water',          fmt:function(v){ return Number(v).toFixed(2)+' ft below surface'; }, fmtS:function(v){ return Number(v).toFixed(2)+' ft'; }, abs:0.03, invert:true},
     '62611':{kind:'well',   label:'Groundwater level',       fmt:function(v){ return Number(v).toFixed(2)+' ft (NAVD88)'; }, fmtS:function(v){ return Number(v).toFixed(2)+' ft'; }, abs:0.03}
   };
-  var WATER_ORDER = ['00060','00065','62615','00054','72019','62611'];
-  var WATER_SHORT = {'00060':'flow','00065':'height','62615':'level','00054':'storage','72019':'depth','62611':'level'};   /* v936: caption under each range bar */   /* which reading leads a site's card when it reports several */
+  /* v940 (2026-09-27, Laurie): tidal-Hudson parameters. 62620 = estuary water-surface elevation (NAVD88); 72137 =
+     discharge, tidally filtered (net seaward flow with the tide removed - the only honest "how much water is
+     leaving" number on the estuary); 72254 = current speed at the sensor; 00010 = water temperature. These are
+     requested only for the curated STREAM_SITES, never in the bounding-box sweep. */
+  WATER_PARAMS['62620']={kind:'stream', label:'Water surface (NAVD88)',     fmt:function(v){ return Number(v).toFixed(2)+' ft'; }, abs:0.05, tidal:true};
+  WATER_PARAMS['72137']={kind:'stream', label:'Net flow, tidally filtered', fmt:function(v){ return Number(v).toLocaleString()+' ft\u00b3/s'; }, rel:0.03};
+  WATER_PARAMS['72254']={kind:'stream', label:'Current speed',              fmt:function(v){ return Number(v).toFixed(2)+' ft/s'; }, abs:0.1, tidal:true, nobar:true};
+  WATER_PARAMS['00010']={kind:'stream', label:'Water temp',                 fmt:function(v){ return (Number(v)*9/5+32).toFixed(1)+'\u00b0F'; }, fmtS:function(v){ return (Number(v)*9/5+32).toFixed(0)+'\u00b0F'; }, abs:0.3};
+  var WATER_ORDER = ['00060','72137','00065','62620','62615','00054','72019','62611','72254','00010'];   /* which reading leads a site's card when it reports several */
+  var WATER_SHORT = {'00060':'flow','72137':'net flow','00065':'height','62620':'level','62615':'level','00054':'storage','72019':'depth','62611':'level','72254':'speed','00010':'temp'};   /* v936: caption under each range bar */
+  var CURATED_CODES = ['00060','00065','62620','72137','72254','00010'];
+  /* v940 (2026-09-27, Laurie): the stream row is a curated transect, not a nearest-N sweep - Schoharie Creek from
+     Prattsville down to the Mohawk, the Mohawk at Cohoes, the Hudson at Green Island, the Normans Kill, the
+     tidal Hudson at the Port of Albany, the Esopus at Mount Marion (the big Catskill drainage, entering at
+     Saugerties) and the Hudson below Poughkeepsie. Ordered at render by USGS downstream-order site number.
+     Catskill Creek has no active gauge (Oak Hill 01361500 is dead). */
+  var STREAM_SITES = ['01350000','01350101','01350355','01350480','01350500','01350750','01351200','01351450','01351500','01357500','01358000','01359165','01359525','01364500','01372058'];
   var WATER_ICON = {
     stream:'<svg viewBox="0 0 24 24"><path d="M2 8c2-2 4-2 6 0s4 2 6 0 4-2 6 0M2 14c2-2 4-2 6 0s4 2 6 0 4-2 6 0M2 20c2-2 4-2 6 0s4 2 6 0 4-2 6 0"/></svg>',
     lake:'<svg viewBox="0 0 24 24"><path d="M12 3s6 6.5 6 11a6 6 0 0 1-12 0c0-4.5 6-11 6-11z"/></svg>',
@@ -500,7 +515,7 @@
   };
   var WATER_COLOR = {stream:'#3f8fd0', lake:'#1f9d91', well:'#b8901c'};
   var WATER_LABEL = {stream:'Stream', lake:'Lake / reservoir', well:'Groundwater well'};
-  var WATER_CAP = {stream:6, lake:3, well:3};   /* v934: named waters count toward the cap; streams get two rows' worth so the Schoharie-side creeks survive */
+  var WATER_CAP = {stream:99, lake:3, well:3};   /* v934: named waters count toward the cap; streams get two rows' worth so the Schoharie-side creeks survive */
   var TREND_TXT = {up:'\u2191 rising', down:'\u2193 falling', flat:'\u2192 steady'};
   /* The specific local waters Laurie asked about by name, matched against each site's own USGS name
      rather than hardcoded site numbers. v929: any of them with no live USGS gauge is now simply
@@ -564,11 +579,11 @@
     var url='https://waterservices.usgs.gov/nwis/stat/?format=rdb&sites='+Object.keys(siteNos).join(',')+'&statReportType=daily&statTypeCd=mean,max,min&parameterCd='+Object.keys(codes).join(',');
     var num=function(v){ var x=parseFloat(v); return isNaN(x)?null:x; };
     return fetch(url).then(function(r){
-      if(r.status===404) return '';                       /* USGS says "no statistics for any of these" - a real answer, cache it */
+      if(r.status===404) return '';                       /* "no statistics for any of these" - or a wobble; treated as empty below */
       if(!r.ok) throw new Error('HTTP '+r.status);        /* anything else may be transient - don't cache */
       return r.text();
     }).then(function(txt){
-      var header=null, idx={}, skipFmt=false;
+      var header=null, idx={}, skipFmt=false, rows=0;
       String(txt).split('\n').forEach(function(line){
         if(!line || line.charAt(0)==='#') return;
         var c=line.replace(/\r$/,'').split('\t');
@@ -577,11 +592,17 @@
         if(+c[idx.month_nu]!==today.m || +c[idx.day_nu]!==today.d) return;
         var key=c[idx.site_no]+'|'+c[idx.parameter_cd];
         if(cache[key]) return;
+        rows++;
         cache[key]={mean:num(c[idx.mean_va]), max:num(c[idx.max_va]), maxYr:c[idx.max_va_yr]||'', min:num(c[idx.min_va]), minYr:c[idx.min_va_yr]||'', begin:c[idx.begin_yr]||'', end:c[idx.end_yr]||''};
       });
-      need.forEach(function(p){ if(cache[p.key]===undefined) cache[p.key]=null; });
-      lsSet(ck, cache); apply();
-    }).catch(function(){ apply(); });   /* statistics are a bonus - never let them break the live readings */
+      /* v939 (2026-09-27, Laurie: "we lost the visualisations"): an EMPTY answer used to be cached as "no
+         statistics" for every pair for the rest of the day, so one USGS wobble (a 404 or blank body during an
+         outage) blanked every bar until midnight. Now the per-pair nulls are only remembered when the service
+         plainly answered - at least one row came back - and an empty reply is simply retried next cycle. */
+      if(rows>0){ need.forEach(function(p){ if(cache[p.key]===undefined) cache[p.key]=null; }); lsSet(ck, cache); }
+      else throw new Error('empty');
+      apply();
+    }).catch(function(){ apply(); if(!fetchWaterStats._retried){ fetchWaterStats._retried=true; setTimeout(function(){ fetchWaterStats._retried=false; fetchWaterStats(sites).then(renderWater); }, 45000); } });   /* statistics are a bonus - never let them break the live readings; one 45 s retry per failure */
   }
   /* v936 (2026-09-27, Laurie): land-surface altitude per site from the USGS site file (alt_va, feet), so
      wells can be ordered highest ground to lowest. Altitudes don't change, so the cache never expires. */
@@ -632,11 +653,11 @@
     return _waterMap;
   }
   var waterEsc=function(v){ return String(v==null?'':v).replace(/[&<>"]/g,function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); };
-  var trendHtml=function(rd){ return rd.trend ? ' <span class="wtrend" title="'+TREND_TXT[rd.trend.dir].slice(2)+' over the last '+rd.trend.hours+' h">'+TREND_TXT[rd.trend.dir].charAt(0)+'<span class="wtrend-lbl"> '+TREND_TXT[rd.trend.dir].slice(2)+'</span></span>' : ''; };
+  var trendHtml=function(rd){ var tidal=WATER_PARAMS[rd.code]&&WATER_PARAMS[rd.code].tidal; return rd.trend ? ' <span class="wtrend" title="'+TREND_TXT[rd.trend.dir].slice(2)+' over the last '+rd.trend.hours+' h'+(tidal?' (tide-driven)':'')+'">'+TREND_TXT[rd.trend.dir].charAt(0)+'<span class="wtrend-lbl"> '+TREND_TXT[rd.trend.dir].slice(2)+(tidal?' (tide)':'')+'</span></span>' : ''; };
   var siteUrl=function(d){ return 'https://waterdata.usgs.gov/monitoring-location/USGS-'+encodeURIComponent(d.siteNo)+'/'; };
   function popupHtml(d){
     var sts=d.readings.map(function(r){ return statLine(d,r); }).filter(Boolean);
-    return '<div class="wpop"><b>'+waterEsc(d.displayName)+'</b><div class="wk">'+waterEsc(WATER_LABEL[d.kind])+(d.when?' · read '+waterEsc(fmtWhen(d.when)):'')+'</div>'
+    return '<div class="wpop"><b>'+waterEsc(d.displayName)+'</b><div class="wk">'+waterEsc(d.tidal?'Tidal river':WATER_LABEL[d.kind])+(d.when?' · read '+waterEsc(fmtWhen(d.when)):'')+'</div>'
       +d.readings.map(function(r){ return '<div>'+waterEsc(r.label)+': <b>'+waterEsc(r.text)+'</b>'+trendHtml(r)+'</div>'; }).join('')
       +(sts.length?'<div class="ws">'+sts.map(waterEsc).join('<br>')+'</div>':'')
       +'<div class="wl"><a href="'+siteUrl(d)+'" target="_blank" rel="noopener">USGS data for this site ↗</a></div></div>';
@@ -673,7 +694,7 @@
      falling; 'avg' always prints, on the right of the tick, since the end labels moved above and below the
      track where nothing can collide with them; a reading beyond the record range sits just past the end. */
   function gaugeOne(d, rd){
-    var s=d.stats && d.stats[rd.code], meta=WATER_PARAMS[rd.code]; if(!s || s.max==null || s.min==null || !isFinite(rd.value)) return '';
+    var s=d.stats && d.stats[rd.code], meta=WATER_PARAMS[rd.code]; if(!s || meta.nobar || s.max==null || s.min==null || !isFinite(rd.value)) return '';
     var f=meta.fmtS||meta.fmt, lg=(meta.rel!=null && s.min>0 && rd.value>0);
     var tr=function(v){ return lg?Math.log10(v):v; };
     var lo=tr(s.min), hi=tr(s.max); if(!(hi>lo)) return '';
@@ -705,7 +726,7 @@
   function renderWater(){
     var host=$('water-cards'); if(!_wm || !host) return;
     var card=function(d){ var main=d.readings[0], extra=d.readings.slice(1), sts=d.readings.map(function(r){ return statLine(d,r); }).filter(Boolean);
-      return '<div class="sg-row wcard"><div class="sg-ico">'+WATER_ICON[d.kind]+'</div><div><p class="sg-eye">'+waterEsc(WATER_LABEL[d.kind])+'</p><p class="sg-val">'+waterEsc(main.text)+trendHtml(main)+'</p><p class="sg-det"><b>'+waterEsc(d.displayName)+'</b>'
+      return '<div class="sg-row wcard"><div class="sg-ico">'+WATER_ICON[d.kind]+'</div><div><p class="sg-eye">'+waterEsc(d.tidal?'Tidal river':WATER_LABEL[d.kind])+'</p><p class="sg-val">'+waterEsc(main.text)+trendHtml(main)+'</p><p class="sg-det"><b>'+waterEsc(d.displayName)+'</b>'
         +(d.when?'<br><span class="wread">Read '+waterEsc(fmtWhen(d.when))+'</span>':'')
         +(extra.length?'<br>'+extra.map(function(e){ return waterEsc(e.label)+': '+waterEsc(e.text)+trendHtml(e); }).join(' \u00b7 '):'')
         +sts.map(function(st){ return '<br><span class="wstat">'+waterEsc(st)+'</span>'; }).join('')+'</p></div>'+gaugeSvg(d)+'</div>';
@@ -718,9 +739,15 @@
   function fetchWater(){
     var host=$('water-cards'); if(!host) return;
     /* period=P1D: the last 24 h of readings per gauge instead of just the latest, so each one can carry a trend arrow */
-    var url='https://waterservices.usgs.gov/nwis/iv/?format=json&bBox='+waterBBox()+'&parameterCd='+Object.keys(WATER_PARAMS).join(',')+'&siteStatus=active&period=P1D';
-    fetch(url).then(function(r){ return r.ok?r.json():Promise.reject(new Error('HTTP '+r.status)); }).then(function(j){
-      var ts=(j&&j.value&&j.value.timeSeries)||[];
+    /* v940: two requests - the curated stream transect by site number (any distance), and the bounding-box sweep
+       for lakes/reservoirs and wells. Tidal codes are only asked of the curated list. */
+    var sweepCodes=Object.keys(WATER_PARAMS).filter(function(c){ return CURATED_CODES.indexOf(c)<0 || c==='00060' || c==='00065'; });
+    var urlA='https://waterservices.usgs.gov/nwis/iv/?format=json&sites='+STREAM_SITES.join(',')+'&parameterCd='+CURATED_CODES.join(',')+'&siteStatus=all&period=P1D';
+    var urlB='https://waterservices.usgs.gov/nwis/iv/?format=json&bBox='+waterBBox()+'&parameterCd='+sweepCodes.join(',')+'&siteStatus=active&period=P1D';
+    var get=function(u){ return fetch(u).then(function(r){ return r.ok?r.json():Promise.reject(new Error('HTTP '+r.status)); }); };
+    Promise.all([get(urlA).catch(function(e){ status('Water levels (transect): '+(e&&e.message||'fetch failed')); return null; }), get(urlB).catch(function(e){ status('Water levels (nearby): '+(e&&e.message||'fetch failed')); return null; })]).then(function(js){
+      if(!js[0] && !js[1]) throw new Error('both requests failed');
+      var ts=[]; js.forEach(function(j){ ts=ts.concat((j&&j.value&&j.value.timeSeries)||[]); });
       var bySite={};
       ts.forEach(function(t){
         var code=(t.variable&&t.variable.variableCode&&t.variable.variableCode[0]&&t.variable.variableCode[0].value)||'';
@@ -732,7 +759,9 @@
         var si=t.sourceInfo||{}, sc=(si.siteCode&&si.siteCode[0]&&si.siteCode[0].value)||'';
         var geo=si.geoLocation&&si.geoLocation.geogLocation;
         if(!sc || !geo) return;
-        var d=bySite[sc] || (bySite[sc]={siteNo:sc, rawName:si.siteName||sc, lat:+geo.latitude, lng:+geo.longitude, readings:[], whenT:0, when:''});
+        var stc=''; (si.siteProperty||[]).forEach(function(pp){ if(pp.name==='siteTypeCd') stc=pp.value; });
+        var d=bySite[sc] || (bySite[sc]={siteNo:sc, rawName:si.siteName||sc, lat:+geo.latitude, lng:+geo.longitude, readings:[], whenT:0, when:'', tidal:/^(ST-TS|ES)$/.test(stc)});
+        if(d.readings.some(function(r){ return r.code===code; })) return;   /* a site can publish the same parameter from two sensors (Prattsville's radar backup) - first one wins */
         d.readings.push({code:code, label:meta.label, value:last.v, text:meta.fmt(last.v), trend:trendOf(code, series)});
         /* v934 (Laurie): timestamp of the newest reading at the site. USGS stamps in the gauge's own local
            time with an offset; fmtWhen reads the digits as printed, so it stays Eastern wherever the reader is. */
@@ -747,11 +776,12 @@
          local waters (Normans Kill, Hudson, Catskill Creek...) are still guaranteed a card when a gauge
          exists; they simply lead their kind's row instead of sitting in a section of their own. */
       var used={}, byKind={stream:[], lake:[], well:[]};
+      sites.forEach(function(d){ if(d.kind==='stream' && STREAM_SITES.indexOf(d.siteNo)>=0){ used[d.siteNo]=true; byKind.stream.push(d); } });   /* v940: streams are the curated transect only */
       NAMED_WATERS.forEach(function(nw){
-        var hit=sites.find(function(d){ return !used[d.siteNo] && nw.re.test(d.rawName); });
+        var hit=sites.find(function(d){ return !used[d.siteNo] && d.kind!=='stream' && nw.re.test(d.rawName); });
         if(hit){ used[hit.siteNo]=true; byKind[hit.kind].push(hit); }
       });
-      sites.forEach(function(d){ if(used[d.siteNo]) return; if(byKind[d.kind].length<WATER_CAP[d.kind]){ used[d.siteNo]=true; byKind[d.kind].push(d); } });
+      sites.forEach(function(d){ if(used[d.siteNo] || d.kind==='stream') return; if(byKind[d.kind].length<WATER_CAP[d.kind]){ used[d.siteNo]=true; byKind[d.kind].push(d); } });
       var all=[].concat(byKind.stream, byKind.lake, byKind.well);
       _wm={byKind:byKind, all:all};
       renderWater();                                  /* live readings first ... */
