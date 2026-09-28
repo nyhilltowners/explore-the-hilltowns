@@ -46,3 +46,12 @@ Now the fixes live as data in `events_carryover.json` (keyed by Event Name [+ Ve
 Read the diff first: anything the master has that the drop-in lacks is either (a) an atlas fix to carry — add it to the
 JSON if it isn't there — or (b) a deliberate upstream edit — leave it. Remove a JSON entry once the ingestor carries
 the fix itself (drop-in 78 already carried every Display/Agenda correction, so none of those are listed).
+
+## mrds_ingest.py (v966)
+Builds the `Mines & Quarries` sheet from a USGS MRDS state shapefile: `python3 scripts/mrds_ingest.py data/layers/mrds/mrds-fUS36 v966`. Refuses to run if the sheet already exists (delete the sheet first to re-ingest). Never writes the MRDS URL to Website (build preview fetch would hang).
+
+## swmf_ingest.py (v967)
+Ingests a NYSDEC Solid Waste Management Facilities CSV into `Waste & Contamination`: `python3 scripts/swmf_ingest.py data/layers/dec_swmf/<export>.csv v967`. Idempotent (skips sites already present by name+coords). Footprint bbox and the major-polluter regexes are at the top of the script.
+
+## waste_extras_ingest.py / remediation_cso_ingest.py (v968)
+Both append to `Waste & Contamination` from CSVs in `data/layers/dec_waste_extras/` and are idempotent on (name, rounded coords): `python3 scripts/waste_extras_ingest.py v968` (tire abatement, Title V, MSGP, PWL estuary) and `python3 scripts/remediation_cso_ingest.py v968` (remediation sites from the gzipped CSV, CSOs). Footprint bbox + major/legacy rules are at the top of each script.

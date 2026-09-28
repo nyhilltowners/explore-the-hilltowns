@@ -122,6 +122,26 @@
       "default_on": false
     },
     {
+      "key": "mines",
+      "label": "Mines & Quarries",
+      "sheet": "Mines & Quarries",
+      "workbook": "data/points_of_interest.xlsx",
+      "schema": "poi",
+      "glyph": "⛏️",
+      "color": "#8b4513",
+      "default_on": false
+    },
+    {
+      "key": "waste",
+      "label": "Waste & Contamination",
+      "sheet": "Waste & Contamination",
+      "workbook": "data/points_of_interest.xlsx",
+      "schema": "poi",
+      "glyph": "🏭",
+      "color": "#6e7f3e",
+      "default_on": false
+    },
+    {
       "key": "independent_media",
       "label": "Independent Media",
       "sheet": "Independent Media",
