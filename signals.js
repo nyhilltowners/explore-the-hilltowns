@@ -82,14 +82,18 @@
       $('day-det').textContent = 'forecast high / low · '+(d.precipitation_sum[0]||0).toFixed(2)+' in precipitation expected'; });
     }).catch(function(e){ status('Surface weather: '+(e && e.message || 'fetch failed')); });
     var lv = ['850','500','100','10'];
-    var q2 = Q+'&hourly='+lv.map(function(l){ return 'wind_speed_'+l+'hPa,wind_direction_'+l+'hPa,geopotential_height_'+l+'hPa'; }).join(',')+'&wind_speed_unit=kn&past_hours=3&forecast_hours=6';
+    var q2 = Q+'&hourly='+lv.map(function(l){ return 'wind_speed_'+l+'hPa,wind_direction_'+l+'hPa,geopotential_height_'+l+'hPa'; }).join(',')+',relative_humidity_850hPa&wind_speed_unit=kn&past_hours=3&forecast_hours=6'; /* 2026-09-27 (v924, Laurie): humidity only at 850 — the level moisture actually shows up at */
+    function nearestIdx(j){ if(!j||!j.hourly||!j.hourly.time) return -1; var t=j.hourly.time, now=Date.now(), best=-1,bd=1e18; for(var i=0;i<t.length;i++){ var ms=new Date(t[i]+(j.utc_offset_seconds?'':'Z')).getTime()-(j.utc_offset_seconds||0)*1000; var d=Math.abs(ms-now); if(d<bd){ bd=d; best=i; } } return bd>4*3600*1000?-1:best; }   /* 2026-09-27 (v924, Laurie): mirrors skyline.js's nearestHour matching, just to pull one extra field (humidity) it doesn't expose */
     var tries = ['https://api.open-meteo.com/v1/gem?'+q2+'&models=cmc_gem_global','https://api.open-meteo.com/v1/gfs?'+q2+'&models=gfs_global'];
     (function attempt(i){
       if(i>=tries.length){ lv.forEach(function(l){ windDial(l==='10'?'w10hpa':'w'+l, null); }); return; }
       fetch(tries[i]).then(function(r){ return r.ok ? r.json() : null; }).then(function(j){
         var ok = false;
+        var rhIdx = nearestIdx(j), rh850 = (rhIdx>=0 && j.hourly && j.hourly.relative_humidity_850hPa) ? j.hourly.relative_humidity_850hPa[rhIdx] : null;
         lv.forEach(function(l){ var h = nearestHour ? nearestHour(j,'wind_speed_'+l+'hPa','wind_direction_'+l+'hPa','geopotential_height_'+l+'hPa') : null;
-          var pid = (l==='10') ? 'w10hpa' : 'w'+l; if(h){ ok = true; windDial(pid, h.kt, h.dir, (h.gph/1000).toFixed(1)+' km up'); } else windDial(pid, null); });
+          var pid = (l==='10') ? 'w10hpa' : 'w'+l;
+          var extra = h ? (h.gph/1000).toFixed(1)+' km up'+(l==='850'&&typeof rh850==='number'?' \u00b7 '+Math.round(rh850)+'% RH':'') : null; /* 2026-09-27 (v924, Laurie): relative humidity appended to the 850 hPa row only */
+          if(h){ ok = true; windDial(pid, h.kt, h.dir, extra); } else windDial(pid, null); });
         if(!ok) attempt(i+1);
       }).catch(function(e){ if(i===tries.length-1) status('Winds aloft: '+(e && e.message || 'fetch failed')); attempt(i+1); });
     })(0);
@@ -524,41 +528,64 @@
     var grid=$('inat-grid'); if(!grid) return;
     var esc=function(v){ return String(v||'').replace(/[&<>"]/g,function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); };
     var box='&nelat='+INAT_BOX.nelat+'&nelng='+INAT_BOX.nelng+'&swlat='+INAT_BOX.swlat+'&swlng='+INAT_BOX.swlng;
-    var d1=new Date(Date.now()-14*86400000).toISOString().slice(0,10);
-    /* 2026-09-27 (v922, Laurie): one query instead of two — photos=true (any licence) already excludes every
-       sound-only observation, which answers "get rid of the sound-file section" on its own: iNat
-       has nothing to show for those anyway. Consolidate by species client-side, same as the birds
-       above: latest observation's photo (if its licence lets us show it) plus a gold count of how
-       many times that species was logged in the window. A species with photos but no openly
-       licensed one falls back to the same Wikipedia-credit card the birds use — wikiPics() and
-       fileCreditFromUrl() already do this and don't care what kind of animal or plant it is. */
-    var url='https://api.inaturalist.org/v1/observations?quality_grade=research&photos=true&order_by=observed_on&order=desc&per_page=200&d1='+d1+box;
+    var iso=function(daysAgo){ return new Date(Date.now()-daysAgo*86400000).toISOString().slice(0,10); };
+    /* 2026-09-27 (v925, Laurie): v922's single 14-day query was quietly truncating itself \u2014 iNat's per_page
+       caps at 200 raw observations, and this area produces enough research-grade photo records
+       that 200 of them only reached back about 5 days, not 14, so "14 days" was a lie the whole
+       time and a lot of real observations never got fetched at all. Two separate, narrower windows
+       fixes both problems: each one comfortably fits under 200 raw records, and species get sorted
+       by actual recency instead of by which byte happened to survive the cap.
+       Recent (last 5 days): full card, 3 across, exactly as before \u2014 real iNat photo when the
+       licence allows it, Wikipedia-credit fallback card when it doesn't.
+       Older (6\u201310 days back): a species with no sighting in the last 5 days doesn't earn a full
+       card \u2014 just its Wikipedia thumbnail, common name, scientific name, and how many times it
+       was logged in this window. Nothing here needs its own photo license fetch since it never
+       shows a real iNat photo. */
     var ICON={Aves:'\uD83D\uDC26',Insecta:'\uD83E\uDD8B',Plantae:'\uD83C\uDF3F',Fungi:'\uD83C\uDF44',Mammalia:'\uD83E\uDD8C',Amphibia:'\uD83D\uDC38',Reptilia:'\uD83D\uDC22',Arachnida:'\uD83D\uDD77\uFE0F'};
     var info=function(o){ var t=o.taxon||{}, ph=(o.photos&&o.photos[0])||null, lic=ph&&ph.license_code;
       return {t:t, name:t.preferred_common_name||t.name||'Unidentified', sci:t.preferred_common_name?t.name:'', sciKey:t.name||'', img:(ph&&lic)?ph.url.replace('square','medium'):null, lic:lic,
               when:o.time_observed_at||o.observed_on||'', who:o.user&&(o.user.name||o.user.login)||'', where:stripCoords(o.place_guess)||'', url:'https://www.inaturalist.org/observations/'+o.id}; };
-    fetch(url).then(function(r){ return r.json(); }).then(function(j){
-      var res=(j.results||[]);
-      if(!res.length){ grid.innerHTML='<p class="ph-empty">No research-grade observations with photos came back.</p>'; $('inat-list').innerHTML=''; $('inat-note').textContent=''; return; }
+    var groupBySpecies=function(res){
       var bySpecies={};
       res.forEach(function(o){ var d=info(o), key=d.sciKey||d.name;
         var g=bySpecies[key] || (bySpecies[key]={best:null, count:0, icon:ICON[d.t.iconic_taxon_name]||'\uD83D\uDD0D'});
         g.count++;
-        if(!g.best || (d.img && !g.best.img)) g.best=d;   /* keep the most recent; upgrade to one with a displayable photo if the very latest lacked one */
+        if(!g.best || (d.img && !g.best.img)) g.best=d;
       });
-      var species=Object.keys(bySpecies).map(function(k){ return bySpecies[k]; });
-      var withPic=species.filter(function(g){ return g.best.img; });
-      var noPic=species.filter(function(g){ return !g.best.img; });
+      return bySpecies;
+    };
+    var recentUrl='https://api.inaturalist.org/v1/observations?quality_grade=research&photos=true&order_by=observed_on&order=desc&per_page=200&d1='+iso(5)+box;
+    var olderUrl='https://api.inaturalist.org/v1/observations?quality_grade=research&photos=true&order_by=observed_on&order=desc&per_page=200&d1='+iso(10)+'&d2='+iso(6)+box;
+    Promise.all([
+      fetch(recentUrl).then(function(r){ return r.json(); }).catch(function(){ return {results:[]}; }),
+      fetch(olderUrl).then(function(r){ return r.json(); }).catch(function(){ return {results:[]}; })
+    ]).then(function(res){
+      var recentSpecies=groupBySpecies(res[0].results||[]);
+      var olderSpecies=groupBySpecies(res[1].results||[]);
+      Object.keys(recentSpecies).forEach(function(k){ delete olderSpecies[k]; });   /* a species with any sighting in the last 5 days only shows there */
+      var recent=Object.keys(recentSpecies).map(function(k){ return recentSpecies[k]; });
+      var older=Object.keys(olderSpecies).map(function(k){ return olderSpecies[k]; });
+      if(!recent.length && !older.length){ grid.innerHTML='<p class="ph-empty">No research-grade observations with photos came back.</p>'; $('inat-list').innerHTML=''; $('inat-note').textContent=''; return; }
+      var withPic=recent.filter(function(g){ return g.best.img; });
+      var noPic=recent.filter(function(g){ return !g.best.img; });
       var cbadge=function(g){ return g.count>1?' <span class="c">'+g.count+'<span class="c-lbl"> sightings</span></span>':''; };
       grid.innerHTML = withPic.length ? withPic.map(function(g){ var d=g.best;
         return '<a class="inat" href="'+d.url+'" target="_blank" rel="noopener"><img src="'+esc(d.img)+'" alt="'+esc(d.name)+'" loading="lazy">'
           +'<div class="b"><div class="n">'+esc(d.name)+cbadge(g)+'</div>'+(d.sci?'<div class="sci">'+esc(d.sci)+'</div>':'')+'<div class="m"><b>'+esc(fmtWhen(d.when))+'</b>'+(d.where?' \u00b7 <b>'+esc(d.where)+'</b>':'')+(d.who?'<br>by '+esc(d.who):'')+'<br><span style="opacity:.7">photo '+esc(d.lic.toUpperCase())+'</span></div></div></a>';
-      }).join('') : '<p class="ph-empty">No openly licensed photos in the last two weeks.</p>';
-      $('inat-list').innerHTML = noPic.length ? '<div class="inat-list">'+noPic.map(function(g){ var d=g.best;
+      }).join('') : '<p class="ph-empty">No openly licensed photos in the last five days.</p>';
+      var noPicHtml = noPic.map(function(g){ var d=g.best;
         return '<div class="inat eb-card" data-sci="'+esc(d.sciKey)+'"><div class="img ph">'+g.icon+'</div><div class="b"><div class="n">'+esc(d.name)+cbadge(g)+'</div>'+(d.sci?'<div class="sci">'+esc(d.sci)+'</div>':'')+'<div class="m"><b>'+esc(fmtWhen(d.when))+'</b>'+(d.where?' \u00b7 <b>'+esc(d.where)+'</b>':'')+'<br><span class="photo-credit" style="opacity:.7">species photo: Wikipedia</span></div></div></div>';
-      }).join('')+'</div>' : '';
+      });
+      /* 2026-09-27 (v925, Laurie): older-than-5-days group \u2014 thumbnail, common name, sci name, count. Nothing else. */
+      var olderHtml = older.map(function(g){ var d=g.best;
+        return '<div class="eb" data-sci="'+esc(d.sciKey)+'"><div class="img ph">'+g.icon+'</div><div><div class="n">'+esc(d.name)+' <span class="c">'+g.count+'<span class="c-lbl"> sightings, last 10 days</span></span></div>'+(d.sci?'<div class="sci" style="font-style:italic;opacity:.85;font-size:12px">'+esc(d.sci)+'</div>':'')+'</div></div>';
+      });
+      $('inat-list').innerHTML = (noPicHtml.length || olderHtml.length)
+        ? (noPicHtml.length ? '<div class="inat-list">'+noPicHtml.join('')+'</div>' : '')+(olderHtml.length ? '<p class="sg-eye" style="margin:14px 0 4px">Seen 6\u201310 days ago</p><div class="inat-list inat-older">'+olderHtml.join('')+'</div>' : '')
+        : '';
       wikiPics();
-      $('inat-note').textContent='Showing '+species.length+' species from the last 14 days (research-grade, photographed) \u00b7 Data \u00a9 iNaturalist contributors; Creative Commons photos displayed here, click to review others on iNaturalist.';
+      var parts=[]; if(recent.length) parts.push(recent.length+' species in the last 5 days'); if(older.length) parts.push(older.length+' more from 6\u201310 days ago');
+      $('inat-note').textContent=(parts.join(', ')||'Nothing recent')+' \u00b7 Data \u00a9 iNaturalist contributors; Creative Commons photos displayed here, click to review others on iNaturalist.';
     }).catch(function(e){ grid.innerHTML='<p class="ph-empty">iNaturalist is unreachable right now.</p>'; status('iNaturalist: '+(e && e.message || 'fetch failed')); });
   }
   function fetchEBird(){
@@ -660,6 +687,22 @@
     });
   }
 
-  function init(){ fetchINat(); fetchEBird(); fetchWater(); renderPhenology(); renderSunMoon(); fetchWx(); fetchDD(); setInterval(renderSunMoon, 60000); setInterval(fetchWx, 15*60000); setInterval(fetchWater, 15*60000); } /* 2026-09-27 (v920, Laurie): live water refreshes on the same 15-min cadence as current weather */
+  /* 2026-09-27 (v926, Laurie): one section throwing before it even reaches its fetch() used to take every
+     later section down with it \u2014 init() called them all back-to-back with nothing to stop a
+     synchronous error from aborting the rest of the list. Each call is now its own try/catch, so a
+     bug in one section shows up as a status-line message and an empty card, never a blank page. */
+  function safeCall(name, fn){ try{ fn(); }catch(e){ status(name+': '+(e && e.message || 'failed to start')); } }
+  function init(){
+    safeCall('iNaturalist', fetchINat);
+    safeCall('eBird', fetchEBird);
+    safeCall('Water levels', fetchWater);
+    safeCall('Phenology', renderPhenology);
+    safeCall('Sun/moon', renderSunMoon);
+    safeCall('Surface weather', fetchWx);
+    safeCall('Degree days', fetchDD);
+    setInterval(function(){ safeCall('Sun/moon', renderSunMoon); }, 60000);
+    setInterval(function(){ safeCall('Surface weather', fetchWx); }, 15*60000);
+    setInterval(function(){ safeCall('Water levels', fetchWater); }, 15*60000);
+  }
   if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', init); else init();
 })();
