@@ -223,6 +223,10 @@ a.link:hover{background:rgba(252,163,21,.14);}
 /* v945 (2026-09-28, Laurie): transect numbers - on the card icon and on the map pin */
 .sg-ico{position:relative;}
 .wnum{position:absolute; right:-6px; bottom:-4px; min-width:18px; height:18px; padding:0 4px; border-radius:9px; background:var(--gold,#c9a227); color:#1a1608 !important; font:800 11px/18px "Montserrat","Lato",sans-serif; text-align:center;}
+.w7-panel{min-height:28px; margin:2px 0 10px; padding:0 2px;} .w7-panel .sg-row{padding:8px 0;} .w7-panel .w7-hint{font-size:12px; opacity:.7; font-style:italic;}
+.w7-panel.pinned{border-left:3px solid var(--gold,#c9a227); padding-left:10px;}
+.wpin.hot{transform:scale(1.35); z-index:3; box-shadow:0 0 0 3px #fff, 0 2px 10px rgba(0,0,0,.6);}
+.sg-chart svg polyline{cursor:pointer;}
 .wcard.wdead .sg-val{opacity:.55;} .wcard.wdead .sg-ico{opacity:.6;} /* v946: gauge with no usable data stays on the board, dimmed */
 #water-layout{display:grid; grid-template-columns:minmax(300px,36%) 1fr; gap:22px; align-items:start;}
 #water-map-col{position:sticky; top:86px;} /* clears the fixed site header */
@@ -326,7 +330,7 @@ a.link:hover{background:rgba(252,163,21,.14);}
 /* v758 (Laurie): nothing on this page inherits the site's ink-blue text — everything is white or gold */
 .sg-wrap, .sg-wrap p, .sg-wrap span, .sg-wrap b, .sg-wrap td, .sg-wrap li, .sg-wrap div, .sg-eye, .sg-val, .sg-val .c, .sg-sub, .sg-det, .sg-note, .obs, .ddtab td{color:#ffffff !important; opacity:1;}
 .sg-wrap h1, .sg-wrap h2, .sg-wrap h3, .sg-head, .sg-sec, .sg-h3, .ddtab thead th, .sg-note a, .sg-btn, .sg-sel{color:var(--gold,#c9a227) !important;}
-.sg-eye{opacity:.92;} .sg-val .c{opacity:.92;} .sg-note{opacity:.92;}
+.sg-eye{opacity:.92;} .sg-val .c{opacity:.92;} .sg-note{opacity:.92; font-style:italic;} /* v961 (Laurie): footnotes/sources italic */
 .ph-nav{display:flex; align-items:center; justify-content:space-between; gap:12px; margin:0 0 10px;}
 .ph-title{font-weight:800; font-size:18px; letter-spacing:.04em; text-align:center; flex:1;}
 .ph-row{display:flex; gap:14px; overflow-x:auto; scroll-snap-type:x mandatory; padding:4px 2px 14px; -webkit-overflow-scrolling:touch; scrollbar-width:thin;}
@@ -401,7 +405,7 @@ a.link:hover{background:rgba(252,163,21,.14);}
   <div class="ph-row" id="ph-row"></div>
 
   <h2 class="sg-sec">Sky</h2>
-  <p class="sg-det" style="margin:0 0 8px">For Berne, NY, ~1,700 ft. Sun and moon are computed here; today's forecast, the air and the winds are Open-Meteo model values for this spot, not a station.</p> <!-- v954 (2026-09-28, Laurie): these blocks are pinned to Berne; the station picker below governs only the station-based sections -->
+  <p class="sg-det" style="margin:0 0 8px">For Berne, NY, ~1,700 ft. Sun and moon are computed here; today's forecast, the air and the winds are Open-Meteo model values.</p> <!-- v954 (2026-09-28, Laurie): these blocks are pinned to Berne; the station picker below governs only the station-based sections -->
   <div class="sg-grid">
     <div class="sg-row"><div class="sg-ico" ><svg viewBox="0 0 24 24"><path d="M3 18h18M5 14a7 7 0 0 1 14 0"/><path d="M12 3v4M8 8l1.5 1.5M16 8l-1.5 1.5"/></svg></div><div><p class="sg-eye">Sunrise · sunset</p><p class="sg-val" id="sun-times">—</p><p class="sg-det" id="sun-det"></p></div></div>
     <div class="sg-row"><div class="sg-ico" id="moon-ico"><svg viewBox="0 0 24 24"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg></div><div><p class="sg-eye">Moon</p><p class="sg-val" id="moon-phase">—</p><p class="sg-det" id="moon-det"></p></div></div>
@@ -429,34 +433,6 @@ a.link:hover{background:rgba(252,163,21,.14);}
        don't already show, and most stations in the picker have no temperature record at all
        (precip/snow-only CoCoRaHS gauges), which made the cards read as broken ("0 · no average")
        for the majority of the list. The station picker itself is still needed, for Water below. -->
-  <!-- 2026-09-27 (v923, Laurie): live USGS water levels — streams, lakes/reservoirs, groundwater wells.
-       v934 (Laurie): one section, "Water levels"; streams on the top row, reservoirs in the middle, wells at the bottom (renderWater builds one grid per kind into #water-cards) -->
-  <h2 class="sg-sec">Water levels</h2>
-  <!-- v949 (2026-09-28, Laurie): map is a tall sticky column on the left; chains on the right -->
-  <div id="water-layout">
-    <div id="water-map-col"><div id="water-map"></div></div>
-    <div id="water-cards-col"><div id="water-cards"><p class="ph-empty">Loading…</p></div>
-    <p class="sg-note" id="water-stat-note"></p></div>
-  </div>
-  <!-- v955 (2026-09-28, Laurie): three 7-day charts, one per kind. Each line = change since its own reading a week ago (ft), wells flipped so up = more water. -->
-  <!-- v958: one 7-day chart per river chain, own axis each -->
-  <h3 class="sg-h3 wchain-h"><span class="wsw" style="background:#3987e5"></span>Schoharie Creek → Mohawk, last 7 days <span class="wcount">change in stage since a week ago, ft</span></h3>
-  <div class="sg-chart"><svg id="w7-schoharie" viewBox="0 0 1000 320" preserveAspectRatio="none" role="img" aria-label="Schoharie chain, last 7 days: change in stage since a week ago"></svg><div class="sg-tip" id="w7-schoharie-tip"></div></div>
-  <h3 class="sg-h3 wchain-h"><span class="wsw" style="background:#d95926"></span>Mohawk River → Hudson, last 7 days <span class="wcount">change in stage since a week ago, ft</span></h3>
-  <div class="sg-chart"><svg id="w7-mohawk" viewBox="0 0 1000 320" preserveAspectRatio="none" role="img" aria-label="Mohawk chain, last 7 days: change in stage since a week ago"></svg><div class="sg-tip" id="w7-mohawk-tip"></div></div>
-  <h3 class="sg-h3 wchain-h"><span class="wsw" style="background:#199e70"></span>Hudson · head of tide, Normans Kill, last 7 days <span class="wcount">change in stage since a week ago, ft</span></h3>
-  <div class="sg-chart"><svg id="w7-hudson" viewBox="0 0 1000 320" preserveAspectRatio="none" role="img" aria-label="Hudson chain (non-tidal gauges), last 7 days: change in stage since a week ago"></svg><div class="sg-tip" id="w7-hudson-tip"></div></div>
-  <h3 class="sg-h3 wchain-h"><span class="wsw" style="background:#c98500"></span>Esopus Creek → Hudson, last 7 days <span class="wcount">change in stage since a week ago, ft</span></h3>
-  <div class="sg-chart"><svg id="w7-esopus" viewBox="0 0 1000 320" preserveAspectRatio="none" role="img" aria-label="Esopus chain, last 7 days: change in stage since a week ago"></svg><div class="sg-tip" id="w7-esopus-tip"></div></div>
-  <h3 class="sg-h3">Tidal Hudson, last 7 days <span class="wcount">water surface, ft above NAVD88 · the tide, twice a day</span></h3>
-  <div class="sg-chart"><svg id="w7-tidal" viewBox="0 0 1000 320" preserveAspectRatio="none" role="img" aria-label="Tidal Hudson, last 7 days: water surface elevation"></svg><div class="sg-tip" id="w7-tidal-tip"></div></div>
-  <h3 class="sg-h3">Wells, last 7 days <span class="wcount">change in the water table since a week ago, ft · up = more water</span></h3>
-  <div class="sg-chart"><svg id="w7-wells" viewBox="0 0 1000 320" preserveAspectRatio="none" role="img" aria-label="Wells, last 7 days: change in water table since a week ago"></svg><div class="sg-tip" id="w7-wells-tip"></div></div>
-  <h3 class="sg-h3">Lakes &amp; reservoirs, last 7 days <span class="wcount">change in surface elevation since a week ago, ft</span></h3>
-  <div class="sg-chart"><svg id="w7-lakes" viewBox="0 0 1000 320" preserveAspectRatio="none" role="img" aria-label="Lakes and reservoirs, last 7 days: change in surface elevation since a week ago"></svg><div class="sg-tip" id="w7-lakes-tip"></div></div>
-  <p class="sg-note" id="water-live-src">Data © USGS Water Data for the Nation (waterservices.usgs.gov), provisional and subject to revision. Refreshes every 15 minutes.</p>
-
-
   <!-- v954 (2026-09-28, Laurie): ONE picker — Berne reanalysis (default) or an active observed station — governs Rain & snow and the year-by-year charts -->
   <div class="sg-pick"><label for="st-pick" class="sg-det" style="margin:0">Station:</label> <select id="st-pick" class="sg-sel"></select> <span class="sg-det" id="st-note" style="margin:0"></span></div>
   <h2 class="sg-sec">Rain &amp; snow · year to date</h2>
@@ -469,7 +445,7 @@ a.link:hover{background:rgba(252,163,21,.14);}
 
 
   <h2 class="sg-sec">Year-by-year weather history</h2>
-  <p class="sg-det" style="margin:0 0 10px">Raw daily values for the station chosen above. This year is white; earlier years run from pale lavender back to deep violet, oldest darkest. Hover to see the year; the Years picker on each chart chooses which years are drawn. <span id="ch-src-note"></span></p>
+  <p class="sg-det" style="margin:0 0 10px">Raw daily values for the station chosen above. This year is white; earlier years run from pale lavender back to deep violet, oldest darkest. <span id="ch-src-note"></span></p>
   <h3 class="sg-h3" data-temp="1">Daily high</h3>
   <p class="sg-det" data-temp="1" style="margin:0 0 8px"></p>
   <div class="sg-chart" data-temp="1"><svg id="ch-hi" viewBox="0 0 1000 420" preserveAspectRatio="none" role="img" aria-label="Daily high"></svg><div class="sg-tip" id="ch-hi-tip"></div></div>
@@ -503,6 +479,22 @@ a.link:hover{background:rgba(252,163,21,.14);}
   </div>
   <p class="sg-note" id="yr-note"></p>
   <p class="sg-note" id="no-temp-note" style="display:none"></p>
+
+  <!-- 2026-09-27 (v923, Laurie): live USGS water levels — streams, lakes/reservoirs, groundwater wells.
+       v934 (Laurie): one section, "Water levels"; streams on the top row, reservoirs in the middle, wells at the bottom (renderWater builds one grid per kind into #water-cards) -->
+  <h2 class="sg-sec">Water levels</h2>
+  <!-- v949 (2026-09-28, Laurie): map is a tall sticky column on the left; chains on the right -->
+  <div id="water-layout">
+    <div id="water-map-col"><div id="water-map"></div></div>
+    <div id="water-cards-col">
+      <!-- v962 (2026-09-28, Laurie): the card list is gone; the seven 7-day charts live beside the map. Hover a line for that gauge's full detail below the chart; click to pin it. -->
+      <div id="water-charts"></div>
+      <p class="sg-note" id="water-stat-note"></p>
+    </div>
+  </div>
+  <p class="sg-note" id="water-live-src">Data © USGS Water Data for the Nation (waterservices.usgs.gov), provisional and subject to revision. Refreshes every 15 minutes.</p>
+
+
 
   <h2 class="sg-sec">Seen lately · iNaturalist</h2>
   <p class="sg-det" style="margin:0 0 10px">Research-grade observations within about 40 km of Berne — Helderbergs to the northern Catskills, Schoharie to the Hudson.</p>

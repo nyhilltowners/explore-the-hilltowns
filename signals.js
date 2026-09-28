@@ -43,7 +43,7 @@
       var lenTxt = Math.floor(len)+'h '+Math.round((len%1)*60)+'m of daylight';
       var tmr = new Date(now+86400000), iso = tmr.getFullYear()+'-'+String(tmr.getMonth()+1).padStart(2,'0')+'-'+String(tmr.getDate()).padStart(2,'0');
       var st2 = sunTimes(iso, LAT, LNG), d = st2 ? ((st2.set-st2.rise)-(set-rise))/60000 : 0;
-      $('sun-det').textContent = lenTxt+' · tomorrow '+(d>=0?'+':'')+d.toFixed(1)+' min'+(now<rise?' · before sunrise':(now>set?' · after sunset':''));
+      $('sun-det').textContent = lenTxt+(now<rise?' · before sunrise':(now>set?' · after sunset':''));   /* v961 (Laurie): 'tomorrow ±N min' dropped */
     }
     if(H.moonAge){
       var age = H.moonAge(now), ill = (1-Math.cos(age/SYNODIC*2*Math.PI))/2;
@@ -403,18 +403,18 @@
         var sel=$('st-pick'), src=(sel&&sel.value)||'berne';
         if(src==='berne'){
           var T=j.daily.time, PP=j.daily.precipitation_sum, SS=j.daily.snowfall_sum, MX=j.daily.temperature_2m_max, MN=j.daily.temperature_2m_min;
-          if(!PP){ $('w-p').textContent='…'; $('w-p-d').textContent='Berne reanalysis · loading moisture'; $('w-s').textContent='…'; $('w-s-d').textContent=''; $('w-x').textContent='—'; $('w-x-d').textContent=''; return; }
+          if(!PP){ $('w-p').textContent='…'; $('w-p-d').textContent='loading moisture'; $('w-s').textContent='…'; $('w-s-d').textContent=''; $('w-x').textContent='—'; $('w-x-d').textContent=''; return; }
           var by={}; for(var i=0;i<T.length;i++){ var yy=+T[i].slice(0,4), md=T[i].slice(5); if(md>mmdd) continue; var B=by[yy]||(by[yy]={p:0,s:0,wet:0,hi:null,lo:null,d90:0,d0:0,n:0});
             if(typeof PP[i]==='number'){ B.p+=PP[i]; if(PP[i]>=0.01) B.wet++; } if(typeof SS[i]==='number') B.s+=SS[i];
             if(typeof MX[i]==='number'){ B.hi=B.hi==null?MX[i]:Math.max(B.hi,MX[i]); if(MX[i]>=90) B.d90++; } if(typeof MN[i]==='number'){ B.lo=B.lo==null?MN[i]:Math.min(B.lo,MN[i]); if(MN[i]<=0) B.d0++; } B.n++; }
-          var C=by[thisYear]; if(!C){ $('w-p').textContent='—'; $('w-p-d').textContent='Berne reanalysis · no '+thisYear+' data yet'; return; }
+          var C=by[thisYear]; if(!C){ $('w-p').textContent='—'; $('w-p-d').textContent='no '+thisYear+' data yet'; return; }
           var pa=0, sa=0, k=0; Object.keys(by).forEach(function(yy){ yy=+yy; if(yy<thisYear && by[yy].n>=doy-3){ pa+=by[yy].p; sa+=by[yy].s; k++; } }); if(k){ pa/=k; sa/=k; }
           var diff=C.p-pa;
-          $('w-p').textContent=C.p.toFixed(2)+' in'; $('w-p-d').textContent='Berne reanalysis · '+C.wet+' days with rain or snow · '+(Math.abs(diff)<0.05?'right on':(Math.abs(diff).toFixed(2)+' in '+(diff>0?'above':'below')))+' the '+k+'-year average for this date ('+pa.toFixed(2)+' in)';
-          $('w-s').textContent=C.s.toFixed(1)+' in'; $('w-s-d').textContent='Berne reanalysis · average by this date '+sa.toFixed(1)+' in';
+          $('w-p').textContent=C.p.toFixed(2)+' in'; $('w-p-d').textContent=C.wet+' days with rain or snow · '+(Math.abs(diff)<0.05?'right on':(Math.abs(diff).toFixed(2)+' in '+(diff>0?'above':'below')))+' the '+k+'-year average for this date ('+pa.toFixed(2)+' in)';
+          $('w-s').textContent=C.s.toFixed(1)+' in'; $('w-s-d').textContent='average by this date '+sa.toFixed(1)+' in';
           $('w-x').innerHTML=(C.hi!=null?'↑ '+Math.round(C.hi)+'°<span class="c">↓ '+Math.round(C.lo)+'°</span>':'—');
-          $('w-x-d').textContent='Berne reanalysis · '+C.d90+' days of 90°F or hotter · '+C.d0+' nights of 0°F or colder';
-          var stn=$('st-note'); if(stn) stn.textContent='ERA5 reanalysis for the Berne grid cell via Open-Meteo, 1940 to yesterday — a model reconstruction, not a thermometer.';
+          $('w-x-d').textContent=C.d90+' days of 90°F or hotter · '+C.d0+' nights of 0°F or colder';
+          var stn=$('st-note'); if(stn) stn.textContent='ERA5 reanalysis for the Berne grid cell via Open-Meteo, 1940 to yesterday.';
           return;
         }
         if(!SD){ P.textContent='—'; return; }
@@ -729,9 +729,7 @@
   }
   /* v945: redraw a single water card in place (keyed by site number) so statistics can arrive gauge by gauge. */
   function renderWaterCard(d){
-    var host=$('water-cards'); if(!host) return;
-    var old=host.querySelector('.wcard[data-site="'+d.siteNo+'"]'); if(!old) return;
-    var tmp=document.createElement('div'); tmp.innerHTML=waterCardHtml(d); var nw=tmp.firstChild; if(nw) old.parentNode.replaceChild(nw, old);
+    document.querySelectorAll('.w7-panel[data-site="'+d.siteNo+'"]').forEach(function(pn){ pn.innerHTML=waterCardHtml(d); });   /* v962: panels instead of cards */
     var mk=_waterMarkers.find(function(m){ return m._siteNo===d.siteNo; }); if(mk && mk.getPopup()) mk.getPopup().setHTML(popupHtml(d));
   }
   /* v936 (2026-09-27, Laurie): land-surface altitude per site from the USGS site file (alt_va, feet), so
@@ -879,24 +877,42 @@
       +sts.filter(function(st,i){ return !gaugeOne(d, d.readings[i]); }).map(function(st){ return '<br><span class="wstat">'+waterEsc(st)+'</span>'; }).join('')   /* v949: the sentence lives in the bar's tooltip; printed only when there is no bar to hold it */
       +'</p></div>'+gaugeSvg(d)+'</div>';
   }
+  /* v962 (2026-09-28, Laurie): the seven 7-day charts ARE the water section now. Each chart sits above a detail panel;
+     hovering a line fills the panel with that gauge's full card (name -> USGS, chain/elevation, live readings with
+     trends, this-date record or 30-day range, bars); clicking a line pins the panel so its links can be used; the
+     matching map pin lights up. waterCardHtml() is reused unchanged for the panel. */
+  function waterChartScaffold(){
+    var host=$('water-charts'); if(!host || host.querySelector('.w7-block')) return;
+    var defs=CHAINS.map(function(c){ return {id:'w7-'+c.key, title:c.name+', last 7 days', color:c.dark, sub:''}; }).concat([
+      {id:'w7-tidal', title:'Tidal Hudson, last 7 days', color:KIND_COLOR.lake.dark, sub:'ft above NAVD88'},
+      {id:'w7-wells', title:'Wells, last 7 days', color:KIND_COLOR.well.dark, sub:''},
+      {id:'w7-lakes', title:'Lakes & reservoirs, last 7 days', color:KIND_COLOR.lake.dark, sub:''}
+    ]);
+    host.innerHTML=defs.map(function(g){ return '<div class="w7-block" id="'+g.id+'-block"><h3 class="sg-h3 wchain-h"><span class="wsw" style="background:'+g.color+'"></span>'+waterEsc(g.title)+(g.sub?' <span class="wcount">'+waterEsc(g.sub)+'</span>':'')+'</h3>'
+      +'<div class="sg-chart"><svg id="'+g.id+'" viewBox="0 0 1000 320" preserveAspectRatio="none" role="img" aria-label="'+waterEsc(g.title)+'"></svg><div class="sg-tip" id="'+g.id+'-tip"></div></div>'
+      +'<div class="w7-panel" id="'+g.id+'-panel"><span class="w7-hint">Hover a line for that gauge’s readings and records; click to pin.</span></div></div>'; }).join('');
+  }
   function renderWater(){
-    var host=$('water-cards'); if(!_wm || !host) return;
-    var card=waterCardHtml;
+    if(!_wm) return;
+    waterChartScaffold();
     orderWater(_wm.byKind);
-    /* v949 (Laurie): number within each chain, restarting at 1, in downstream order; lakes and wells unnumbered. */
     var groups=CHAINS.map(function(c){ return {chain:c, rows:_wm.byKind.stream.filter(function(d){ return CHAIN_OF[d.siteNo]===c; })}; });
     groups.forEach(function(g){ g.rows.forEach(function(d,i){ d.num=i+1; d.chain=g.chain; }); });
     _wm.byKind.stream.forEach(function(d){ if(!CHAIN_OF[d.siteNo]){ d.num=null; } });
     _wm.byKind.lake.forEach(function(d){ d.num=null; }); _wm.byKind.well.forEach(function(d){ d.num=null; });
-    var section=function(title, color, rows){ return rows.length?'<div class="wchain"><h3 class="sg-h3 wchain-h"><span class="wsw" style="background:'+color+'"></span>'+waterEsc(title)+' <span class="wcount">'+rows.length+'</span></h3><div class="sg-grid wgrid">'+rows.map(card).join('')+'</div></div>':''; };
-    var html=groups.map(function(g){ return section(g.chain.name, g.chain.dark, g.rows); }).join('')
-      + section('Lakes & reservoirs', KIND_COLOR.lake.dark, _wm.byKind.lake)
-      + section('Groundwater wells', KIND_COLOR.well.dark, _wm.byKind.well);
-    host.innerHTML=html || '<p class="ph-empty">No active USGS gauges within '+WATER_BBOX_KM+' km right now.</p>';
     plotWaterMarkers(_wm.all);
+    if(_w7) drawWater7();
+    document.querySelectorAll('.w7-panel[data-site]').forEach(function(pn){ var d=_wm.all.find(function(x){ return x.siteNo===pn.getAttribute('data-site'); }); if(d) pn.innerHTML=waterCardHtml(d); });
+  }
+  function showWaterPanel(gid, d, pin){
+    var pn=$(gid+'-panel'); if(!pn) return;
+    if(pin!=null){ var was=pn.classList.contains('pinned') && pn.getAttribute('data-site')===d.siteNo; pn.classList.toggle('pinned', !was); }
+    else if(pn.classList.contains('pinned')) return;   /* hovering doesn't disturb a pinned panel */
+    pn.setAttribute('data-site', d.siteNo); pn.innerHTML=waterCardHtml(d);
+    _waterMarkers.forEach(function(m){ var el=m.getElement&&m.getElement(); if(el) el.classList.toggle('hot', m._siteNo===d.siteNo); });
   }
   function fetchWater(){
-    var host=$('water-cards'); if(!host) return;
+    var host=$('water-charts'); if(!host) return;
     /* period=P1D: the last 24 h of readings per gauge instead of just the latest, so each one can carry a trend arrow */
     /* v940: two requests - the curated stream transect by site number (any distance), and the bounding-box sweep
        for lakes/reservoirs and wells. Tidal codes are only asked of the curated list. */
@@ -955,7 +971,7 @@
       Promise.all([fetchWaterStats(all), fetchSiteAlts(all)]).then(renderWater);   /* ... then again once statistics and site altitudes arrive */
       fetchWater7d(all);                               /* v955: the three 7-day charts */
       fetchWater7d(all);                               /* v955: the three 7-day charts */
-    }).catch(function(e){ host.innerHTML='<p class="ph-empty">USGS water data is unreachable right now.</p>'; status('Water levels: '+(e && e.message || 'fetch failed')); });
+    }).catch(function(e){ if(!host.querySelector('.w7-block')) host.innerHTML='<p class="ph-empty">USGS water data is unreachable right now.</p>'; status('Water levels: '+(e && e.message || 'fetch failed')); });
   }
   
   /* ---------- v955 (2026-09-28, Laurie): three 7-day charts - rivers, wells, lakes/reservoirs ----------
@@ -1032,8 +1048,11 @@
           var when=new Intl.DateTimeFormat('en-US',{timeZone:'America/New_York',month:'short',day:'numeric',hour:'numeric',minute:'2-digit'}).format(new Date(best.p.t));
           tip.style.display=''; tip.textContent=(best.sr.d.num?best.sr.d.num+' · ':'')+best.sr.d.displayName+' · '+when+' · '+f(best.p.v)+(g.absolute?'':' ('+(best.p.d>=0?'+':'−')+Math.abs(best.p.d).toFixed(2)+' ft vs a week ago)');
           svg.querySelectorAll('polyline').forEach(function(pl){ var on=pl.getAttribute('data-site')===best.sr.d.siteNo; pl.setAttribute('stroke-opacity', on?'1':'.3'); pl.setAttribute('stroke-width', on?'3':'1.5'); });
+          svg._w7best=best.sr.d; showWaterPanel(g.id, best.sr.d, null);
         });
-        svg.addEventListener('mouseleave', function(){ tip.style.display='none'; svg.querySelectorAll('polyline').forEach(function(pl){ pl.setAttribute('stroke-opacity','.9'); pl.setAttribute('stroke-width','2'); }); });
+        svg.addEventListener('click', function(){ if(svg._w7best) showWaterPanel(g.id, svg._w7best, true); });
+        svg.addEventListener('mouseleave', function(){ tip.style.display='none'; svg.querySelectorAll('polyline').forEach(function(pl){ pl.setAttribute('stroke-opacity','.9'); pl.setAttribute('stroke-width','2'); });
+          var pn=$(g.id+'-panel'); if(pn && !pn.classList.contains('pinned')){ _waterMarkers.forEach(function(m){ var el=m.getElement&&m.getElement(); if(el) el.classList.remove('hot'); }); } });
       }
     });
   }
