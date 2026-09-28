@@ -810,6 +810,8 @@ function fetchINat(){
     var info=function(o){ var t=o.taxon||{}, ph=(o.photos&&o.photos[0])||null, lic=ph&&ph.license_code;
       return {t:t, name:t.preferred_common_name||t.name||'Unidentified', sci:t.preferred_common_name?t.name:'', sciKey:t.name||'', img:(ph&&lic)?ph.url.replace('square','medium'):null, lic:lic,
               when:o.time_observed_at||o.observed_on||'', who:o.user&&(o.user.name||o.user.login)||'', where:stripCoords(o.place_guess)||'', url:'https://www.inaturalist.org/observations/'+o.id}; };
+    /* v942 (2026-09-27, Laurie): common and scientific names link to the Wikipedia species page; the photo keeps the iNaturalist link. */
+    var wikiA=function(sci, txt, title){ return sci ? '<a class="wiki" href="https://en.wikipedia.org/wiki/'+esc(String(sci).replace(/ /g,'_'))+'" target="_blank" rel="noopener" title="'+esc(title||'Wikipedia')+'">'+txt+'</a>' : txt; };
     var groupBySpecies=function(res){
       var bySpecies={};
       res.forEach(function(o){ var d=info(o), key=d.sciKey||d.name;
@@ -895,17 +897,19 @@ function fetchINat(){
       recent=taxonOrder(recent);
       older.sort(function(a,b){ return (b.count-a.count) || byRecency(a,b); });
       var cardFor=function(g){ var d=g.best;
-        var info='<div class="b"><div class="n">'+esc(d.name)+cbadge(g)+'</div>'+(d.sci?'<div class="sci">'+esc(d.sci)+'</div>':'')+'<div class="m"><b>'+esc(fmtWhen(d.when))+'</b>'+(d.where?' \u00b7 <b>'+esc(d.where)+'</b>':'')+(d.who?'<br>by '+esc(d.who):'');
-        if(d.img) return '<a class="inat" href="'+d.url+'" target="_blank" rel="noopener"><img src="'+esc(d.img)+'" alt="'+esc(d.name)+'" loading="lazy">'+info+'<br><span style="opacity:.7">photo '+esc(d.lic.toUpperCase())+'</span></div></div></a>';
+        var info='<div class="b"><div class="n">'+wikiA(d.sciKey, esc(d.name), 'Wikipedia: '+d.name)+cbadge(g)+'</div>'+(d.sci?'<div class="sci">'+wikiA(d.sciKey, esc(d.sci))+'</div>':'')+'<div class="m"><b>'+esc(fmtWhen(d.when))+'</b>'+(d.where?' \u00b7 <b>'+esc(d.where)+'</b>':'')+(d.who?'<br>by '+esc(d.who):'');
+        /* v942: the card is a div; the photo alone links to the observation (title says so), names link to Wikipedia */
+        if(d.img) return '<div class="inat"><a class="img-link" href="'+d.url+'" target="_blank" rel="noopener" title="This observation on iNaturalist"><img src="'+esc(d.img)+'" alt="'+esc(d.name)+'" loading="lazy"></a>'+info+'<br><span style="opacity:.7">photo '+esc(d.lic.toUpperCase())+' \u00b7 <a href="'+d.url+'" target="_blank" rel="noopener" style="color:inherit;text-decoration:underline">on iNaturalist</a></span></div></div></div>';
         /* a div, not an <a>: wikiPics puts a link (the Commons file page) inside the credit line and anchors can't nest */
-        return '<div class="inat eb-card" data-sci="'+esc(d.sciKey)+'"><div class="img ph">'+g.icon+'</div>'+info+'<br><span class="photo-credit" style="opacity:.7">species photo: Wikipedia</span></div></div></div>';
+        return '<div class="inat eb-card" data-sci="'+esc(d.sciKey)+'"><div class="img ph">'+g.icon+'</div>'+info+' \u00b7 <a href="'+d.url+'" target="_blank" rel="noopener" style="color:inherit;text-decoration:underline">on iNaturalist</a><br><span class="photo-credit" style="opacity:.7">species photo: Wikipedia</span></div></div></div>';
       };
       grid.innerHTML = recent.length ? recent.map(cardFor).join('') : '<p class="ph-empty">No research-grade observations with photos in the last five days.</p>';
       /* v937: species leaderboard - thumbnail (Wikipedia/Commons, credited), common name linking to the most recent
          iNaturalist sighting, scientific name linking to the Wikipedia species page, and the 10-day count. */
       var olderHtml = older.map(function(g){ var d=g.latest||g.best;
-        return '<div class="eb" data-sci="'+esc(d.sciKey)+'"><div class="img ph">'+g.icon+'</div><div><div class="n"><a href="'+esc(d.url)+'" target="_blank" rel="noopener" title="Most recent sighting on iNaturalist">'+esc(d.name)+'</a> <span class="c">'+g.count+'<span class="c-lbl"> '+(g.count===1?'sighting':'sightings')+', last 10 days</span></span></div>'
-          +(d.sciKey?'<div class="sci" style="font-style:italic;opacity:.85;font-size:12px"><a href="https://en.wikipedia.org/wiki/'+esc(d.sciKey.replace(/ /g,'_'))+'" target="_blank" rel="noopener" title="Wikipedia species page">'+esc(d.sciKey)+'</a></div>':'')
+        /* v942: names -> Wikipedia; the count badge -> most recent sighting on iNaturalist (thumbnail gets swapped in by wikiPics, so it isn't the link) */
+        return '<div class="eb" data-sci="'+esc(d.sciKey)+'"><div class="img ph">'+g.icon+'</div><div><div class="n">'+wikiA(d.sciKey, esc(d.name), 'Wikipedia: '+d.name)+' <a class="c" href="'+esc(d.url)+'" target="_blank" rel="noopener" title="Most recent sighting on iNaturalist">'+g.count+'<span class="c-lbl"> '+(g.count===1?'sighting':'sightings')+', last 10 days \u2197</span></a></div>'
+          +(d.sciKey?'<div class="sci" style="font-style:italic;opacity:.85;font-size:12px">'+wikiA(d.sciKey, esc(d.sciKey))+'</div>':'')
           +'<div class="photo-credit" style="opacity:.7;font-size:10px"></div></div></div>';
       });
       /* v941 (2026-09-27, Laurie): leaderboard shows the top 10; a "+" button reveals the rest. */
@@ -936,6 +940,7 @@ function fetchINat(){
        marking a species "X" (present, no count given) still means at least one bird — counted as
        1 here, not 0 — so the number is always a true floor; the "+" then means the real total may
        be higher than what's shown. */
+    var wikiLink=function(sci, txt, title){ return sci ? '<a class="wiki" href="https://en.wikipedia.org/wiki/'+esc(String(sci).replace(/ /g,'_'))+'" target="_blank" rel="noopener" title="'+esc(title||'Wikipedia')+'">'+txt+'</a>' : txt; };   /* v942 (Laurie): names -> Wikipedia */
     var countMeta = function(recentAll, code){
       var sum=0, reports=0, anyUnknown=false;
       recentAll.forEach(function(o){ if(o.speciesCode!==code) return; reports++; if(o.howMany!=null) sum+=o.howMany; else { sum+=1; anyUnknown=true; } });
@@ -944,7 +949,7 @@ function fetchINat(){
     var countBadge = function(m){ if(!m.reports) return ''; return m.sum+(m.anyUnknown?'+':''); }; /* 2026-09-27 (v907, Laurie): every report guarantees at least one bird, so this is never a bare "0" — "1+" for a single unmarked sighting, per Laurie */
     var reportsNote = function(m){ return m.reports>1 ? m.reports+' reports' : '1 report'; };
     /* 2026-09-27 (v902, Laurie): row() (compact eBird strip) retired — the notable band now uses the same card as the main grid */
-    var card=function(o,rare,m){ return '<div class="inat eb-card'+(rare?' rare':'')+'" data-sci="'+esc(o.sciName)+'" data-subid="'+esc(o.subId||'')+'"><div class="img ph">🐦</div><div class="b"><div class="n">'+esc(o.comName)+(countBadge(m)?' <span class="c">'+countBadge(m)+'<span class="c-lbl"> sightings</span></span>':'')+'</div><div class="sci">'+esc(o.sciName)+'</div><div class="m"><b>'+esc(fmtWhen(o.obsDt))+'</b>'+(o.locName?' \u00b7 <b>'+esc(stripCoords(o.locName))+'</b>':'')+' \u00b7 '+reportsNote(m)+'<span class="obs-by"></span><br><span class="photo-credit" style="opacity:.7">species photo: Wikipedia</span></div></div></div>'; }; /* 2026-09-27 (v906, Laurie): date/time and location bold, coordinates stripped from locName; count badge relabelled "sightings" — see countBadge() for what the number means */
+    var card=function(o,rare,m){ return '<div class="inat eb-card'+(rare?' rare':'')+'" data-sci="'+esc(o.sciName)+'" data-subid="'+esc(o.subId||'')+'"><div class="img ph">🐦</div><div class="b"><div class="n">'+wikiLink(o.sciName, esc(o.comName), 'Wikipedia: '+o.comName)+(countBadge(m)?' <span class="c">'+countBadge(m)+'<span class="c-lbl"> sightings</span></span>':'')+'</div><div class="sci">'+wikiLink(o.sciName, esc(o.sciName))+'</div><div class="m"><b>'+esc(fmtWhen(o.obsDt))+'</b>'+(o.locName?' \u00b7 <b>'+esc(stripCoords(o.locName))+'</b>':'')+' \u00b7 '+reportsNote(m)+'<span class="obs-by"></span><br><span class="photo-credit" style="opacity:.7">species photo: Wikipedia</span></div></div></div>'; }; /* 2026-09-27 (v906, Laurie): date/time and location bold, coordinates stripped from locName; count badge relabelled "sightings" — see countBadge() for what the number means */
     Promise.all([fetch(base+'/notable'+q,opt).then(function(r){ return r.ok?r.json():[]; }).catch(function(){ return []; }),
                  fetch(base+q,opt).then(function(r){ if(!r.ok) throw new Error('eBird HTTP '+r.status); return r.json(); })])
     .then(function(res){ var notable=res[0]||[], recent=res[1]||[];

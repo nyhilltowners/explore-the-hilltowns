@@ -252,6 +252,10 @@ a.link:hover{background:rgba(252,163,21,.14);}
 .inat .b{padding:10px 12px 12px; font-size:13px; line-height:1.4;}
 .inat .n{font-weight:800; font-size:15px; line-height:1.25;}
 .inat .sci{font-style:italic; opacity:.85;}
+.inat .n a.wiki, .inat .sci a.wiki, .eb .n a.wiki, .eb .sci a.wiki{color:inherit !important; text-decoration:none; border-bottom:1px dotted rgba(255,255,255,.45);} /* v942 (2026-09-27, Laurie): common + scientific names click through to Wikipedia */
+.inat .n a.wiki:hover, .eb .n a.wiki:hover{border-bottom-color:var(--gold,#c9a227);}
+.inat a.img-link{display:block;} .inat a.img-link img{width:100%;}
+.eb .n a.c{text-decoration:none;}
 .inat .m{font-size:12px; opacity:.9; margin-top:4px;}
 .inat a{color:var(--gold,#c9a227) !important; text-decoration:none;}
 .eb{display:flex; gap:10px; align-items:center; padding:8px 4px; border-bottom:1px solid rgba(255,255,255,.14);}
@@ -261,7 +265,7 @@ a.link:hover{background:rgba(252,163,21,.14);}
 .eb .c{flex:none; min-width:34px; font-weight:800; text-align:right; color:var(--gold,#c9a227) !important;}
 .eb .n{font-weight:700;}
 .eb .n .c .c-lbl{font-weight:400; font-size:10px; letter-spacing:.04em; text-transform:none; opacity:.8;} /* v937 (2026-09-27, Laurie): 'sightings, last 10 days' unbolded */
-.inat-older .eb .n a, .inat-older .eb .sci a{color:inherit !important; text-decoration:none; border-bottom:1px dotted rgba(255,255,255,.45);} /* v937: leaderboard links */
+.inat-older .eb .n a, .inat-older .eb .sci a{color:inherit !important; text-decoration:none;} /* v937: leaderboard links; v942: dotted underline now comes from a.wiki */
 .inat-older .eb .photo-credit a{color:inherit !important;}
 .inat-older .eb.lb-more{display:none;} .inat-older.lb-open .eb.lb-more{display:flex;} /* v941 (2026-09-27, Laurie): leaderboard top 10, "+" expands */
 .lb-toggle{margin:10px 0 0; font-size:12px; padding:6px 12px;}
