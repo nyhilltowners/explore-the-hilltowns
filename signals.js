@@ -501,7 +501,10 @@
   WATER_PARAMS['00010']={kind:'stream', label:'Water temp',                 fmt:function(v){ return (Number(v)*9/5+32).toFixed(1)+'\u00b0F'; }, fmtS:function(v){ return (Number(v)*9/5+32).toFixed(0)+'\u00b0F'; }, abs:0.3};
   var WATER_ORDER = ['00060','72137','00065','62620','62615','00054','72019','62611','72254','00010'];   /* which reading leads a site's card when it reports several */
   var WATER_SHORT = {'00060':'flow','72137':'net flow','00065':'height','62620':'level','62615':'level','00054':'storage','72019':'depth','62611':'level','72254':'speed','00010':'temp'};   /* v936: caption under each range bar */
-  var CURATED_CODES = ['00060','00065','62620','72137','72254','00010'];
+  var CURATED_CODES = ['00060','00065','62615','00054','62620','72137','72254','00010','72019','62611'];   /* v946: + reservoir codes; v948: + groundwater codes for the pinned wells */
+  /* v948 (2026-09-28, Laurie): wells asked for by link - always shown, ahead of the nearest-N sweep.
+     421821074012701 = G-390 near Cairo (Greene Co., 408 ft deep, land surface 491 ft NAVD88); 421746074180201 = near Windham/Ashland. */
+  var WELL_SITES = ['421821074012701','421746074180201'];
   /* v940 (2026-09-27, Laurie): the stream row is a curated transect, not a nearest-N sweep - Schoharie Creek from
      Prattsville down to the Mohawk, the Mohawk at Cohoes, the Hudson at Green Island, the Normans Kill, the
      tidal Hudson at the Port of Albany, the Esopus at Mount Marion (the big Catskill drainage, entering at
@@ -510,21 +513,51 @@
   /* v943 (2026-09-27, Laurie): eyebrow shows how each gauge connects - the drainage path down to the Hudson - plus
      the gauge datum elevation from the site file, so the row reads as a descent. */
   var WATER_CHAIN = {
-    '01350000':'Schoharie \u2192 Mohawk \u2192 Hudson', '01350101':'Schoharie \u2192 Mohawk \u2192 Hudson', '01350355':'Schoharie \u2192 Mohawk \u2192 Hudson',
+    '01347000':'Mohawk \u00b7 above the Schoharie', '01349705':'Schoharie headwaters \u2192 Mohawk \u2192 Hudson', '01349950':'Batavia Kill \u2192 Schoharie',
+    '01350212':'Schoharie \u00b7 below Blenheim-Gilboa pumped storage', '01351298':'Cobleskill Creek \u2192 Schoharie', '01354500':'Mohawk (+ Schoharie) \u2192 Hudson',
+    '01359528':'Normans Kill \u2192 Hudson \u00b7 near the mouth', '0136219503':'Esopus headwaters \u00b7 above the tunnel', '0136230002':'Woodland Creek \u2192 Esopus',
+    '01350000':'Schoharie \u2192 Mohawk \u2192 Hudson', '01350100':'Schoharie Reservoir \u00b7 Gilboa Dam \u00b7 NYC supply', '01350101':'Schoharie \u2192 Mohawk \u2192 Hudson', '01350355':'Schoharie \u2192 Mohawk \u2192 Hudson',
     '01350480':'Little Schoharie \u2192 Schoharie', '01350500':'Schoharie \u2192 Mohawk \u2192 Hudson', '01350750':'Schoharie \u2192 Mohawk \u2192 Hudson',
     '01351200':'Fox Creek \u2192 Schoharie', '01351450':'Schoharie \u2192 Mohawk \u2192 Hudson', '01351500':'Schoharie \u2192 Mohawk \u2192 Hudson',
     '01357500':'Mohawk \u2192 Hudson', '01358000':'Hudson \u00b7 head of tide', '01359165':'Hudson \u00b7 tidal',
-    '01359525':'Normans Kill \u2192 Hudson', '01364500':'Esopus \u2192 Hudson', '01372058':'Hudson estuary'
+    '01359525':'Normans Kill \u2192 Hudson', '01362230':'Schoharie Reservoir \u2192 Shandaken Tunnel \u2192 Esopus', '01364500':'Esopus (+ Schoharie via tunnel) \u2192 Hudson', '01372058':'Hudson estuary'
   };
-  var STREAM_SITES = ['01350000','01350101','01350355','01350480','01350500','01350750','01351200','01351450','01351500','01357500','01358000','01359165','01359525','01364500','01372058'];
+  /* v946 (2026-09-28, Laurie): + 01350100 Schoharie Reservoir (the impoundment between Prattsville and Gilboa Dam;
+     a lake-kind site that now lives in the numbered chain rather than the lakes row) and 01362230 'Diversion from
+     Schoharie Reservoir' = the Shandaken Tunnel outlet at Allaben - the water the reservoir sends OUT of the
+     Schoharie basin to the Esopus and New York City (~170 ft\u00b3/s tonight). Its number sorts just before Esopus at
+     Mount Marion, which is right: that gauge sees Schoharie water too. */
+  /* v947 (2026-09-28, Laurie's list): + Schoharie near Lexington 01349705 (headwater), Batavia Kill at Red Falls 01349950
+     (enters at Prattsville), Schoharie near North Blenheim 01350212 (below the Blenheim-Gilboa pumped-storage plant),
+     Cobleskill Creek at Cobleskill 01351298 (enters at Central Bridge), Mohawk near Little Falls 01347000 (the Mohawk
+     BEFORE the Schoharie joins), Mohawk at Freeman's Bridge 01354500 (after), Normans Kill at Albany 01359528 (near
+     the mouth), Esopus at Big Indian 0136219503 (Esopus BEFORE the tunnel water), Woodland Creek above mouth at
+     Phoenicia 0136230002 (per Laurie). Not added, with reasons in the README: Delaware-basin gauges (Tremper Kill,
+     West Branch Delaware, Little Delaware - drain to Delaware Bay), Indian River (Adirondack), Otsquago Creek and
+     Patroon Creek (unrelated), the small Schoharie tributaries (West Kill, East Kill, Bear Kill, Manor Kill, Platter
+     Kill, Mine Kill), Beaver Kill at Mt Tremper, Schoharie AT North Blenheim (duplicate of NEAR). Optional if wanted:
+     Hudson at Fort Edward 01327750 (upper Hudson before the Mohawk), Kinderhook at Rossman 01361000 (east bank). */
+  var STREAM_SITES = ['01347000','01349705','01349950','01350000','01350100','01350101','01350212','01350355','01350480','01350500','01350750','01351200','01351298','01351450','01351500','01354500','01357500','01358000','01359165','01359525','01359528','0136219503','01362230','0136230002','01364500','01372058'];
   var WATER_ICON = {
     stream:'<svg viewBox="0 0 24 24"><path d="M2 8c2-2 4-2 6 0s4 2 6 0 4-2 6 0M2 14c2-2 4-2 6 0s4 2 6 0 4-2 6 0M2 20c2-2 4-2 6 0s4 2 6 0 4-2 6 0"/></svg>',
     lake:'<svg viewBox="0 0 24 24"><path d="M12 3s6 6.5 6 11a6 6 0 0 1-12 0c0-4.5 6-11 6-11z"/></svg>',
     well:'<svg viewBox="0 0 24 24"><path d="M12 2v13M7 11l5 5 5-5M5 20h14"/></svg>'
   };
-  var WATER_COLOR = {stream:'#3f8fd0', lake:'#1f9d91', well:'#b8901c'};
+  /* v949 (2026-09-28, Laurie): the transect is shown as river CHAINS, each numbered from 1 in downstream order and
+     each with its own colour, identical on the map pin and the card badge. Palette = the six validated categorical
+     slots (light-map / dark-page variants), fixed order, dark text on every badge. */
+  var CHAINS = [
+    {key:'schoharie', name:'Schoharie Creek \u2192 Mohawk', light:'#2a78d6', dark:'#3987e5', sites:['01349705','01349950','01350000','01350100','01350101','01350212','01350355','01350480','01350500','01350750','01351200','01351298','01351450','01351500']},
+    {key:'mohawk',    name:'Mohawk River \u2192 Hudson',    light:'#eb6834', dark:'#d95926', sites:['01347000','01354500','01357500']},
+    {key:'hudson',    name:'Hudson River \u00b7 head of tide to estuary', light:'#1baf7a', dark:'#199e70', sites:['01358000','01359165','01359525','01359528','01372058']},
+    {key:'esopus',    name:'Esopus Creek \u2192 Hudson (Catskills)', light:'#eda100', dark:'#c98500', sites:['0136219503','01362230','0136230002','01364500']}
+  ];
+  var CHAIN_OF={}; CHAINS.forEach(function(c){ c.sites.forEach(function(sn){ CHAIN_OF[sn]=c; }); });
+  var KIND_COLOR = {lake:{light:'#e87ba4', dark:'#d55181'}, well:{light:'#008300', dark:'#008300'}};
+  var colorOf=function(d, mode){ var c=CHAIN_OF[d.siteNo]; if(c) return c[mode]; var k=KIND_COLOR[d.kind]; return k?k[mode]:'#6b6f7a'; };
+  var WATER_COLOR = {stream:'#3f8fd0', lake:'#1f9d91', well:'#b8901c'};   /* legacy; colorOf() is what renders now */
   var WATER_LABEL = {stream:'Stream', lake:'Lake / reservoir', well:'Groundwater well'};
-  var WATER_CAP = {stream:99, lake:3, well:3};   /* v934: named waters count toward the cap; streams get two rows' worth so the Schoharie-side creeks survive */
+  var WATER_CAP = {stream:99, lake:3, well:5};   /* v948: pinned wells count toward the cap; 5 so the three nearest still appear alongside Laurie's two */   /* v934: named waters count toward the cap; streams get two rows' worth so the Schoharie-side creeks survive */
   var TREND_TXT = {up:'\u2191 rising', down:'\u2193 falling', flat:'\u2192 steady'};
   /* The specific local waters Laurie asked about by name, matched against each site's own USGS name
      rather than hardcoded site numbers. v929: any of them with no live USGS gauge is now simply
@@ -673,7 +706,10 @@
        reports storage).
      Wells: by land-surface altitude, highest first; nearest-first if the site file didn't answer. */
   function orderWater(byKind){
-    byKind.stream.sort(function(a,b){ return (a.siteNo.length-b.siteNo.length) || (Number(a.siteNo)-Number(b.siteNo)); });
+    /* v947: USGS inserts extra digits BETWEEN neighbours (0136230002 sits between 01362300 and 01362301), so the number is a
+       decimal fraction, not an integer - compare right-padded strings. 15-digit lat-long ids (wells) never reach this sort. */
+    var dkey=function(n){ return (n+'000000000000000').slice(0,15); };
+    byKind.stream.sort(function(a,b){ var A=dkey(a.siteNo), B=dkey(b.siteNo); return A<B?-1:A>B?1:0; });
     var elev=function(d){ var r=d.readings.find(function(x){ return x.code==='62615'; }); return r?r.value:(d.alt!=null?d.alt:-Infinity); };
     byKind.lake.sort(function(a,b){ return elev(b)-elev(a) || a.km-b.km; });
     byKind.well.sort(function(a,b){ var A=a.alt!=null?a.alt:-Infinity, B=b.alt!=null?b.alt:-Infinity; return (B-A) || (a.km-b.km); });
@@ -697,6 +733,7 @@
   var siteUrl=function(d){ return 'https://waterdata.usgs.gov/monitoring-location/USGS-'+encodeURIComponent(d.siteNo)+'/'; };
   function popupHtml(d){
     var sts=d.readings.map(function(r){ return statLine(d,r); }).filter(Boolean);
+    if(d.dead) return '<div class="wpop"><b>'+(d.num?d.num+' · ':'')+waterEsc(d.displayName)+'</b><div class="wk">'+waterEsc(eyebrow(d))+'</div><div>No data \u2014 USGS: '+waterEsc(d.why)+'</div><div class="wl"><a href="'+siteUrl(d)+'" target="_blank" rel="noopener">USGS data for this site \u2197</a></div></div>';
     return '<div class="wpop"><b>'+(d.num?d.num+' · ':'')+waterEsc(d.displayName)+'</b><div class="wk">'+waterEsc(eyebrow(d))+(d.when?' · read '+waterEsc(fmtWhen(d.when)):'')+'</div>'
       +d.readings.map(function(r){ return '<div>'+waterEsc(r.label)+': <b>'+waterEsc(r.text)+'</b>'+trendHtml(r)+'</div>'; }).join('')
       +(sts.length?'<div class="ws">'+sts.map(waterEsc).join('<br>')+'</div>':'')
@@ -715,15 +752,15 @@
     sites.forEach(function(d){
       var el=document.createElement('div');
       el.className='wpin';
-      el.style.background=WATER_COLOR[d.kind];
-      el.innerHTML=(d.num?'<span class="wpin-num">'+d.num+'</span>':WATER_ICON[d.kind].replace('<svg viewBox="0 0 24 24">','<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">'));
+      el.style.background=d.dead?'#9a9ea8':colorOf(d,'light');
+      el.innerHTML=(d.num?'<span class="wpin-num">'+d.num+'</span>':WATER_ICON[d.kind].replace('<svg viewBox="0 0 24 24">','<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="#101010" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">'));
       el.title=(d.num?d.num+' · ':'')+d.displayName;
       var mk=new maplibregl.Marker({element:el}).setLngLat([d.lng,d.lat]).setPopup(new maplibregl.Popup({offset:18, maxWidth:'290px'}).setHTML(popupHtml(d))).addTo(map);
       mk._siteNo=d.siteNo;
       _waterMarkers.push(mk); b.extend([d.lng,d.lat]);
     });
-    if(sites.length){ _waterBounds=b; map.fitBounds(b,{padding:44, maxZoom:11, duration:0}); }
-    if(!window._waterResizeBound){ window._waterResizeBound=true; window.addEventListener('resize', function(){ if(_waterMap && _waterBounds){ _waterMap.resize(); _waterMap.fitBounds(_waterBounds,{padding:44, maxZoom:11, duration:0}); } }); }
+    if(sites.length){ _waterBounds=b; map.resize(); map.fitBounds(b,{padding:34, maxZoom:11, duration:0}); }
+    if(!window._waterResizeBound){ window._waterResizeBound=true; window.addEventListener('resize', function(){ if(_waterMap && _waterBounds){ _waterMap.resize(); _waterMap.fitBounds(_waterBounds,{padding:34, maxZoom:11, duration:0}); } }); }
   }
   /* v934 (2026-09-27, Laurie): a small vertical range bar per reading that has statistics. Bottom = record low
      for THIS calendar date, top = record high, gold tick = average, gold mark = now. Discharge and storage are
@@ -737,25 +774,32 @@
      track where nothing can collide with them; a reading beyond the record range sits just past the end. */
   function gaugeOne(d, rd){
     var s=d.stats && d.stats[rd.code], meta=WATER_PARAMS[rd.code]; if(!s || meta.nobar || s.max==null || s.min==null || !isFinite(rd.value)) return '';
-    var f=meta.fmtS||meta.fmt, lg=(meta.rel!=null && s.min>0 && rd.value>0);
-    var tr=function(v){ return lg?Math.log10(v):v; };
-    var lo=tr(s.min), hi=tr(s.max); if(!(hi>lo)) return '';
+    /* v949 (Laurie): LINEAR always - she reads the bar as a ruler: Prattsville's 308 avg sits near the bottom of a 5.8-6,220
+       range and today's 1,840 about a third of the way up. The log scale was mathematically defensible and visually a lie.
+       Also v949: the average's VALUE prints beside its tick, the end labels are left-anchored so nothing collides, and the
+       whole "this date since ..." sentence (with the record years) lives in the bar's tooltip instead of the card text. */
+    var f=meta.fmtS||meta.fmt;
+    var lo=s.min, hi=s.max; if(!(hi>lo)) return '';
     var span=hi-lo, top=meta.invert?s.min:s.max, bot=meta.invert?s.max:s.min;      /* wells: shallowest depth is the top */
-    var W=62, X=31, Y0=28, Y1=80;                                                  /* track from y=28 (high) to y=80 (low) */
-    var yOf=function(v){ var t=(tr(v)-lo)/span; if(meta.invert) t=1-t; return Y1-(Math.max(-0.08,Math.min(1.08,t)))*(Y1-Y0); };
+    var W=84, X=16, Y0=28, Y1=80;                                                  /* track from y=28 (high) to y=80 (low) */
+    var yOf=function(v){ var t=(v-lo)/span; if(meta.invert) t=1-t; return Y1-(Math.max(-0.08,Math.min(1.08,t)))*(Y1-Y0); };
     var yNow=yOf(rd.value), yAvg=(s.mean!=null)?yOf(s.mean):null;
     var dir=rd.trend?rd.trend.dir:'flat';
     var cap=WATER_SHORT[rd.code]||meta.label;
-    var title=cap+': now vs this date’s record range'+(meta.invert?' (up = more water)':'')+(lg?' · log scale':'');
+    var title=statLine(d, rd) || (cap+': now vs this date’s record range');
+    if(meta.invert) title+=' (up = more water)';
     var svg='<svg viewBox="0 0 '+W+' 96" role="img" aria-label="'+waterEsc(title)+'"><title>'+waterEsc(title)+'</title>'
-      +'<text class="wg-cap" x="'+X+'" y="8" text-anchor="middle">'+waterEsc(cap)+'</text>'
-      +'<text x="'+X+'" y="21" text-anchor="middle">'+waterEsc(f(top))+'</text>'
+      +'<text class="wg-cap" x="2" y="8">'+waterEsc(cap)+'</text>'
+      +'<text x="2" y="21">'+waterEsc(f(top))+'</text>'
       +'<line x1="'+X+'" y1="'+Y0+'" x2="'+X+'" y2="'+Y1+'" stroke="rgba(255,255,255,.28)" stroke-width="4" stroke-linecap="round"/>'
       +'<line x1="'+(X-6)+'" y1="'+Y0+'" x2="'+(X+6)+'" y2="'+Y0+'" stroke="rgba(255,255,255,.6)" stroke-width="1.5"/>'
       +'<line x1="'+(X-6)+'" y1="'+Y1+'" x2="'+(X+6)+'" y2="'+Y1+'" stroke="rgba(255,255,255,.6)" stroke-width="1.5"/>'
-      +'<text x="'+X+'" y="93" text-anchor="middle">'+waterEsc(f(bot))+'</text>';
-    if(yAvg!=null) svg+='<line x1="'+(X-7)+'" y1="'+yAvg.toFixed(1)+'" x2="'+(X+7)+'" y2="'+yAvg.toFixed(1)+'" stroke="var(--gold,#c9a227)" stroke-width="2.5"/>'
-      +'<text class="wg-avg" x="'+(X+10)+'" y="'+(yAvg+3).toFixed(1)+'">avg</text>';
+      +'<text x="2" y="93">'+waterEsc(f(bot))+'</text>';
+    if(yAvg!=null){
+      var ay=yAvg; if(Math.abs(ay-yNow)<7) ay = (yAvg<=yNow) ? yNow-7 : yNow+7;     /* keep the avg label clear of the now-mark */
+      svg+='<line x1="'+(X-7)+'" y1="'+yAvg.toFixed(1)+'" x2="'+(X+7)+'" y2="'+yAvg.toFixed(1)+'" stroke="var(--gold,#c9a227)" stroke-width="2.5"/>'
+         +'<text class="wg-avg" x="'+(X+10)+'" y="'+(ay+3).toFixed(1)+'">avg '+waterEsc(f(s.mean))+'</text>';
+    }
     if(dir==='flat') svg+='<circle cx="'+X+'" cy="'+yNow.toFixed(1)+'" r="3.6" fill="var(--gold,#c9a227)"/>';
     else if(dir==='up') svg+='<path d="M'+(X-5)+' '+(yNow+3).toFixed(1)+' L'+X+' '+(yNow-3.5).toFixed(1)+' L'+(X+5)+' '+(yNow+3).toFixed(1)+'" fill="none" stroke="var(--gold,#c9a227)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>';
     else svg+='<path d="M'+(X-5)+' '+(yNow-3).toFixed(1)+' L'+X+' '+(yNow+3.5).toFixed(1)+' L'+(X+5)+' '+(yNow-3).toFixed(1)+'" fill="none" stroke="var(--gold,#c9a227)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>';
@@ -766,19 +810,28 @@
     return bars.length?'<div class="wgauge">'+bars.join('')+'</div>':'';
   }
   var eyebrow=function(d){ var base=WATER_CHAIN[d.siteNo] || (d.tidal?'Tidal river':WATER_LABEL[d.kind]); return base+(d.alt>0?' \u00b7 '+Math.round(d.alt).toLocaleString()+' ft':''); };   /* v943; sea-level tidal gauges (alt 0) show no elevation */
-  function waterCardHtml(d){ var main=d.readings[0], extra=d.readings.slice(1), sts=d.readings.map(function(r){ return statLine(d,r); }).filter(Boolean);
-    return '<div class="sg-row wcard" data-site="'+waterEsc(d.siteNo)+'"><div class="sg-ico">'+WATER_ICON[d.kind]+(d.num?'<span class="wnum">'+d.num+'</span>':'')+'</div><div><p class="sg-eye">'+waterEsc(eyebrow(d))+'</p><p class="sg-val">'+waterEsc(main.text)+trendHtml(main)+'</p><p class="sg-det"><b>'+waterEsc(d.displayName)+'</b>'
+  function waterCardHtml(d){
+    if(d.dead) return '<div class="sg-row wcard wdead" data-site="'+waterEsc(d.siteNo)+'"><div class="sg-ico" style="color:'+colorOf(d,'dark')+'">'+WATER_ICON[d.kind]+(d.num?'<span class="wnum" style="background:'+colorOf(d,'dark')+'">'+d.num+'</span>':'')+'</div><div><p class="sg-eye">'+waterEsc(eyebrow(d))+'</p><p class="sg-val">no data</p><p class="sg-det"><b>'+waterEsc(d.displayName)+'</b><br><span class="wread">USGS: '+waterEsc(d.why)+'</span></p></div></div>';
+    var main=d.readings[0], extra=d.readings.slice(1), sts=d.readings.map(function(r){ return statLine(d,r); }).filter(Boolean);
+    return '<div class="sg-row wcard" data-site="'+waterEsc(d.siteNo)+'"><div class="sg-ico" style="color:'+colorOf(d,'dark')+'">'+WATER_ICON[d.kind]+(d.num?'<span class="wnum" style="background:'+colorOf(d,'dark')+'">'+d.num+'</span>':'')+'</div><div><p class="sg-eye">'+waterEsc(eyebrow(d))+'</p><p class="sg-val">'+waterEsc(main.text)+trendHtml(main)+'</p><p class="sg-det"><b>'+waterEsc(d.displayName)+'</b>'
       +(d.when?'<br><span class="wread">Read '+waterEsc(fmtWhen(d.when))+'</span>':'')
       +(extra.length?'<br>'+extra.map(function(e){ return waterEsc(e.label)+': '+waterEsc(e.text)+trendHtml(e); }).join(' · '):'')
-      +sts.map(function(st){ return '<br><span class="wstat">'+waterEsc(st)+'</span>'; }).join('')+'</p></div>'+gaugeSvg(d)+'</div>';
+      +sts.filter(function(st,i){ return !gaugeOne(d, d.readings[i]); }).map(function(st){ return '<br><span class="wstat">'+waterEsc(st)+'</span>'; }).join('')   /* v949: the sentence lives in the bar's tooltip; printed only when there is no bar to hold it */
+      +'</p></div>'+gaugeSvg(d)+'</div>';
   }
   function renderWater(){
     var host=$('water-cards'); if(!_wm || !host) return;
     var card=waterCardHtml;
     orderWater(_wm.byKind);
-    /* v945 (Laurie): number the streams 1..N in transect order (upstream -> downstream); the same number sits on the map pin. */
-    _wm.byKind.stream.forEach(function(d,i){ d.num=i+1; }); _wm.byKind.lake.forEach(function(d){ d.num=null; }); _wm.byKind.well.forEach(function(d){ d.num=null; });
-    var html=['stream','lake','well'].map(function(k){ var rows=_wm.byKind[k]; return rows.length?'<div class="sg-grid wgrid">'+rows.map(card).join('')+'</div>':''; }).join('');
+    /* v949 (Laurie): number within each chain, restarting at 1, in downstream order; lakes and wells unnumbered. */
+    var groups=CHAINS.map(function(c){ return {chain:c, rows:_wm.byKind.stream.filter(function(d){ return CHAIN_OF[d.siteNo]===c; })}; });
+    groups.forEach(function(g){ g.rows.forEach(function(d,i){ d.num=i+1; d.chain=g.chain; }); });
+    _wm.byKind.stream.forEach(function(d){ if(!CHAIN_OF[d.siteNo]){ d.num=null; } });
+    _wm.byKind.lake.forEach(function(d){ d.num=null; }); _wm.byKind.well.forEach(function(d){ d.num=null; });
+    var section=function(title, color, rows){ return rows.length?'<div class="wchain"><h3 class="sg-h3 wchain-h"><span class="wsw" style="background:'+color+'"></span>'+waterEsc(title)+' <span class="wcount">'+rows.length+'</span></h3><div class="sg-grid wgrid">'+rows.map(card).join('')+'</div></div>':''; };
+    var html=groups.map(function(g){ return section(g.chain.name, g.chain.dark, g.rows); }).join('')
+      + section('Lakes & reservoirs', KIND_COLOR.lake.dark, _wm.byKind.lake)
+      + section('Groundwater wells', KIND_COLOR.well.dark, _wm.byKind.well);
     host.innerHTML=html || '<p class="ph-empty">No active USGS gauges within '+WATER_BBOX_KM+' km right now.</p>';
     plotWaterMarkers(_wm.all);
   }
@@ -788,7 +841,7 @@
     /* v940: two requests - the curated stream transect by site number (any distance), and the bounding-box sweep
        for lakes/reservoirs and wells. Tidal codes are only asked of the curated list. */
     var sweepCodes=Object.keys(WATER_PARAMS).filter(function(c){ return CURATED_CODES.indexOf(c)<0 || c==='00060' || c==='00065'; });
-    var urlA='https://waterservices.usgs.gov/nwis/iv/?format=json&sites='+STREAM_SITES.join(',')+'&parameterCd='+CURATED_CODES.join(',')+'&siteStatus=all&period=P1D';
+    var urlA='https://waterservices.usgs.gov/nwis/iv/?format=json&sites='+STREAM_SITES.concat(WELL_SITES).join(',')+'&parameterCd='+CURATED_CODES.join(',')+'&siteStatus=all&period=P1D';
     var urlB='https://waterservices.usgs.gov/nwis/iv/?format=json&bBox='+waterBBox()+'&parameterCd='+sweepCodes.join(',')+'&siteStatus=active&period=P1D';
     var get=function(u){ return fetch(u).then(function(r){ return r.ok?r.json():Promise.reject(new Error('HTTP '+r.status)); }); };
     Promise.all([get(urlA).catch(function(e){ status('Water levels (transect): '+(e&&e.message||'fetch failed')); return null; }), get(urlB).catch(function(e){ status('Water levels (nearby): '+(e&&e.message||'fetch failed')); return null; })]).then(function(js){
@@ -800,13 +853,19 @@
         var meta=WATER_PARAMS[code]; if(!meta) return;
         var raw=(t.values&&t.values[0]&&t.values[0].value)||[];
         var series=raw.map(function(v){ return {t:Date.parse(v.dateTime), v:parseFloat(v.value), s:v.dateTime}; }).filter(function(p){ return isFinite(p.t) && isFinite(p.v) && p.v>-999990; });
-        if(!series.length) return;
-        var last=series[series.length-1];
         var si=t.sourceInfo||{}, sc=(si.siteCode&&si.siteCode[0]&&si.siteCode[0].value)||'';
         var geo=si.geoLocation&&si.geoLocation.geogLocation;
         if(!sc || !geo) return;
         var stc=''; (si.siteProperty||[]).forEach(function(pp){ if(pp.name==='siteTypeCd') stc=pp.value; });
-        var d=bySite[sc] || (bySite[sc]={siteNo:sc, rawName:si.siteName||sc, lat:+geo.latitude, lng:+geo.longitude, readings:[], whenT:0, when:'', tidal:/^(ST-TS|ES)$/.test(stc)});
+        var d=bySite[sc] || (bySite[sc]={siteNo:sc, rawName:si.siteName||sc, lat:+geo.latitude, lng:+geo.longitude, readings:[], whenT:0, when:'', tidal:/^(ST-TS|ES)$/.test(stc), why:''});
+        if(!series.length){
+          /* v946 (Laurie: "I don't see Poughkeepsie"): no usable numbers, but the gauge exists - keep it, with USGS's own reason.
+             Qualifier codes: Eqp equipment malfunction, Ice affected by ice, Dis discontinued, Mnt maintenance, Ssn out of season. */
+          var q={}; raw.forEach(function(v){ (v.qualifiers||[]).forEach(function(x){ q[x]=1; }); });
+          d.why = q.Eqp?'equipment malfunction' : q.Ice?'ice-affected' : q.Mnt?'maintenance' : q.Ssn?'out of season' : q.Dis?'discontinued' : (raw.length?'no usable readings':'no recent data');
+          return;
+        }
+        var last=series[series.length-1];
         if(d.readings.some(function(r){ return r.code===code; })) return;   /* a site can publish the same parameter from two sensors (Prattsville's radar backup) - first one wins */
         d.readings.push({code:code, label:meta.label, value:last.v, text:meta.fmt(last.v), trend:trendOf(code, series)});
         /* v934 (Laurie): timestamp of the newest reading at the site. USGS stamps in the gauge's own local
@@ -815,14 +874,16 @@
       });
       var sites=Object.keys(bySite).map(function(sc){ var d=bySite[sc];
         d.readings.sort(function(a,b){ return WATER_ORDER.indexOf(a.code)-WATER_ORDER.indexOf(b.code); });
-        d.kind=WATER_PARAMS[d.readings[0].code].kind;
+        d.dead=!d.readings.length;
+        d.kind=d.dead ? 'stream' : WATER_PARAMS[d.readings[0].code].kind;
+        if(sc==='01350100') d.kind='lake';   /* the reservoir keeps its drop icon inside the chain */
         d.km=haversineKm(LAT,LNG,d.lat,d.lng); d.displayName=cleanSiteName(d.rawName,d.kind); return d; });
       sites.sort(function(a,b){ return a.km-b.km; });
       /* v934 (Laurie): one section, grouped by kind \u2014 streams, then lakes/reservoirs, then wells. The named
          local waters (Normans Kill, Hudson, Catskill Creek...) are still guaranteed a card when a gauge
          exists; they simply lead their kind's row instead of sitting in a section of their own. */
       var used={}, byKind={stream:[], lake:[], well:[]};
-      sites.forEach(function(d){ if(d.kind==='stream' && STREAM_SITES.indexOf(d.siteNo)>=0){ used[d.siteNo]=true; byKind.stream.push(d); } });   /* v940: streams are the curated transect only */
+      sites.forEach(function(d){ if(STREAM_SITES.indexOf(d.siteNo)>=0){ used[d.siteNo]=true; byKind.stream.push(d); } else if(WELL_SITES.indexOf(d.siteNo)>=0){ used[d.siteNo]=true; if(!d.dead){ d.kind='well'; byKind.well.push(d); } } else if(d.dead){ used[d.siteNo]=true; } });   /* v940: the transect is the curated list, whatever kind (v946: reservoir included); v948: pinned wells; dead sweep sites are dropped, dead transect sites kept */
       NAMED_WATERS.forEach(function(nw){
         var hit=sites.find(function(d){ return !used[d.siteNo] && d.kind!=='stream' && nw.re.test(d.rawName); });
         if(hit){ used[hit.siteNo]=true; byKind[hit.kind].push(hit); }
