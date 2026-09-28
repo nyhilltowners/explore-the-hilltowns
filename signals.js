@@ -507,6 +507,15 @@
      tidal Hudson at the Port of Albany, the Esopus at Mount Marion (the big Catskill drainage, entering at
      Saugerties) and the Hudson below Poughkeepsie. Ordered at render by USGS downstream-order site number.
      Catskill Creek has no active gauge (Oak Hill 01361500 is dead). */
+  /* v943 (2026-09-27, Laurie): eyebrow shows how each gauge connects - the drainage path down to the Hudson - plus
+     the gauge datum elevation from the site file, so the row reads as a descent. */
+  var WATER_CHAIN = {
+    '01350000':'Schoharie \u2192 Mohawk \u2192 Hudson', '01350101':'Schoharie \u2192 Mohawk \u2192 Hudson', '01350355':'Schoharie \u2192 Mohawk \u2192 Hudson',
+    '01350480':'Little Schoharie \u2192 Schoharie', '01350500':'Schoharie \u2192 Mohawk \u2192 Hudson', '01350750':'Schoharie \u2192 Mohawk \u2192 Hudson',
+    '01351200':'Fox Creek \u2192 Schoharie', '01351450':'Schoharie \u2192 Mohawk \u2192 Hudson', '01351500':'Schoharie \u2192 Mohawk \u2192 Hudson',
+    '01357500':'Mohawk \u2192 Hudson', '01358000':'Hudson \u00b7 head of tide', '01359165':'Hudson \u00b7 tidal',
+    '01359525':'Normans Kill \u2192 Hudson', '01364500':'Esopus \u2192 Hudson', '01372058':'Hudson estuary'
+  };
   var STREAM_SITES = ['01350000','01350101','01350355','01350480','01350500','01350750','01351200','01351450','01351500','01357500','01358000','01359165','01359525','01364500','01372058'];
   var WATER_ICON = {
     stream:'<svg viewBox="0 0 24 24"><path d="M2 8c2-2 4-2 6 0s4 2 6 0 4-2 6 0M2 14c2-2 4-2 6 0s4 2 6 0 4-2 6 0M2 20c2-2 4-2 6 0s4 2 6 0 4-2 6 0"/></svg>',
@@ -569,11 +578,17 @@
   /* Daily statistics for "today's" calendar date, via the USGS stat service (RDB text, CORS-open).
      Cached per calendar day in localStorage so it's fetched at most once a day per site+parameter. */
   function fetchWaterStats(sites){
-    var today=waterToday(), ck='hfa.wstat.v2.'+today.key, cache=lsGet(ck)||{};
-    try{ Object.keys(localStorage).forEach(function(k){ if((k.indexOf('hfa.wstat.v1.')===0) || (k.indexOf('hfa.wstat.v2.')===0 && k!==ck)) localStorage.removeItem(k); }); }catch(e){}
+    /* v943 (2026-09-27, Laurie: "still not seeing the historical data"): the v2 cache had been poisoned on her browser
+       - her first v936 load fell inside the USGS outage, the empty answer was recorded as "no statistics" for
+       every pair for the day, and v939's fix only protected FUTURE replies. Key bumped to v3 (old keys purged),
+       and from now on only POSITIVE results are ever written to localStorage; "asked, nothing there" lives in
+       memory for this page load only (_waterStatMiss), so a bad minute can never outlast a reload. */
+    var today=waterToday(), ck='hfa.wstat.v3.'+today.key, cache=lsGet(ck)||{};
+    try{ Object.keys(localStorage).forEach(function(k){ if(/^hfa\.wstat\.v[12]\./.test(k) || (k.indexOf('hfa.wstat.v3.')===0 && k!==ck)) localStorage.removeItem(k); }); }catch(e){}
+    var miss=fetchWaterStats._miss || (fetchWaterStats._miss={});
     var pairs=[]; sites.forEach(function(d){ d.stats={}; d.readings.forEach(function(r){ pairs.push({d:d, code:r.code, key:d.siteNo+'|'+r.code}); }); });
     var apply=function(){ pairs.forEach(function(p){ p.d.stats[p.code]=cache[p.key]||null; }); };
-    var need=pairs.filter(function(p){ return cache[p.key]===undefined; });
+    var need=pairs.filter(function(p){ return cache[p.key]===undefined && !miss[p.key]; });
     if(!need.length){ apply(); return Promise.resolve(); }
     var codes={}, siteNos={}; need.forEach(function(p){ codes[p.code]=1; siteNos[p.d.siteNo]=1; });
     var url='https://waterservices.usgs.gov/nwis/stat/?format=rdb&sites='+Object.keys(siteNos).join(',')+'&statReportType=daily&statTypeCd=mean,max,min&parameterCd='+Object.keys(codes).join(',');
@@ -599,7 +614,7 @@
          statistics" for every pair for the rest of the day, so one USGS wobble (a 404 or blank body during an
          outage) blanked every bar until midnight. Now the per-pair nulls are only remembered when the service
          plainly answered - at least one row came back - and an empty reply is simply retried next cycle. */
-      if(rows>0){ need.forEach(function(p){ if(cache[p.key]===undefined) cache[p.key]=null; }); lsSet(ck, cache); }
+      if(rows>0){ need.forEach(function(p){ if(cache[p.key]===undefined) miss[p.key]=true; }); lsSet(ck, cache); }
       else throw new Error('empty');
       apply();
     }).catch(function(){ apply(); if(!fetchWaterStats._retried){ fetchWaterStats._retried=true; setTimeout(function(){ fetchWaterStats._retried=false; fetchWaterStats(sites).then(renderWater); }, 45000); } });   /* statistics are a bonus - never let them break the live readings; one 45 s retry per failure */
@@ -657,7 +672,7 @@
   var siteUrl=function(d){ return 'https://waterdata.usgs.gov/monitoring-location/USGS-'+encodeURIComponent(d.siteNo)+'/'; };
   function popupHtml(d){
     var sts=d.readings.map(function(r){ return statLine(d,r); }).filter(Boolean);
-    return '<div class="wpop"><b>'+waterEsc(d.displayName)+'</b><div class="wk">'+waterEsc(d.tidal?'Tidal river':WATER_LABEL[d.kind])+(d.when?' · read '+waterEsc(fmtWhen(d.when)):'')+'</div>'
+    return '<div class="wpop"><b>'+waterEsc(d.displayName)+'</b><div class="wk">'+waterEsc(eyebrow(d))+(d.when?' · read '+waterEsc(fmtWhen(d.when)):'')+'</div>'
       +d.readings.map(function(r){ return '<div>'+waterEsc(r.label)+': <b>'+waterEsc(r.text)+'</b>'+trendHtml(r)+'</div>'; }).join('')
       +(sts.length?'<div class="ws">'+sts.map(waterEsc).join('<br>')+'</div>':'')
       +'<div class="wl"><a href="'+siteUrl(d)+'" target="_blank" rel="noopener">USGS data for this site ↗</a></div></div>';
@@ -723,10 +738,11 @@
     var bars=d.readings.map(function(r){ return gaugeOne(d,r); }).filter(Boolean);
     return bars.length?'<div class="wgauge">'+bars.join('')+'</div>':'';
   }
+  var eyebrow=function(d){ var base=WATER_CHAIN[d.siteNo] || (d.tidal?'Tidal river':WATER_LABEL[d.kind]); return base+(d.alt>0?' \u00b7 '+Math.round(d.alt).toLocaleString()+' ft':''); };   /* v943; sea-level tidal gauges (alt 0) show no elevation */
   function renderWater(){
     var host=$('water-cards'); if(!_wm || !host) return;
     var card=function(d){ var main=d.readings[0], extra=d.readings.slice(1), sts=d.readings.map(function(r){ return statLine(d,r); }).filter(Boolean);
-      return '<div class="sg-row wcard"><div class="sg-ico">'+WATER_ICON[d.kind]+'</div><div><p class="sg-eye">'+waterEsc(d.tidal?'Tidal river':WATER_LABEL[d.kind])+'</p><p class="sg-val">'+waterEsc(main.text)+trendHtml(main)+'</p><p class="sg-det"><b>'+waterEsc(d.displayName)+'</b>'
+      return '<div class="sg-row wcard"><div class="sg-ico">'+WATER_ICON[d.kind]+'</div><div><p class="sg-eye">'+waterEsc(eyebrow(d))+'</p><p class="sg-val">'+waterEsc(main.text)+trendHtml(main)+'</p><p class="sg-det"><b>'+waterEsc(d.displayName)+'</b>'
         +(d.when?'<br><span class="wread">Read '+waterEsc(fmtWhen(d.when))+'</span>':'')
         +(extra.length?'<br>'+extra.map(function(e){ return waterEsc(e.label)+': '+waterEsc(e.text)+trendHtml(e); }).join(' \u00b7 '):'')
         +sts.map(function(st){ return '<br><span class="wstat">'+waterEsc(st)+'</span>'; }).join('')+'</p></div>'+gaugeSvg(d)+'</div>';
