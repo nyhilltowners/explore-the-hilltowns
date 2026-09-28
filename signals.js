@@ -499,7 +499,7 @@
   };
   var WATER_COLOR = {stream:'#3f8fd0', lake:'#1f9d91', well:'#b8901c'};
   var WATER_LABEL = {stream:'Stream', lake:'Lake / reservoir', well:'Groundwater well'};
-  var WATER_CAP = {stream:3, lake:3, well:3};
+  var WATER_CAP = {stream:6, lake:3, well:3};   /* v934: named waters count toward the cap; streams get two rows' worth so the Schoharie-side creeks survive */
   var TREND_TXT = {up:'\u2191 rising', down:'\u2193 falling', flat:'\u2192 steady'};
   /* The specific local waters Laurie asked about by name, matched against each site's own USGS name
      rather than hardcoded site numbers. v929: any of them with no live USGS gauge is now simply
@@ -606,36 +606,68 @@
   function plotWaterMarkers(sites){
     var map=ensureWaterMap(); if(!map) return;
     _waterMarkers.forEach(function(m){ m.remove(); }); _waterMarkers=[];
-    var render=function(){
-      var b=new maplibregl.LngLatBounds([LNG,LAT],[LNG,LAT]);
-      sites.forEach(function(d){
-        var el=document.createElement('div');
-        el.className='wpin';
-        el.style.background=WATER_COLOR[d.kind];
-        el.innerHTML=WATER_ICON[d.kind].replace('<svg viewBox="0 0 24 24">','<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">');
-        var mk=new maplibregl.Marker({element:el}).setLngLat([d.lng,d.lat]).setPopup(new maplibregl.Popup({offset:18, maxWidth:'290px'}).setHTML(popupHtml(d))).addTo(map);
-        _waterMarkers.push(mk); b.extend([d.lng,d.lat]);
-      });
-      if(sites.length){ _waterBounds=b; map.fitBounds(b,{padding:44, maxZoom:11, duration:0}); }
-      if(!window._waterResizeBound){ window._waterResizeBound=true; window.addEventListener('resize', function(){ if(_waterMap && _waterBounds){ _waterMap.resize(); _waterMap.fitBounds(_waterBounds,{padding:44, maxZoom:11, duration:0}); } }); }
-    };
-    if(map.loaded()) render(); else map.on('load', render);
+    /* v934 (2026-09-27, Laurie: "the pins and popups are missing"): this used to wait for map.loaded()
+       before drawing, else hang the draw on the 'load' event. But loaded() is false whenever any tile is
+       still downloading — e.g. right after the first draw's fitBounds — so the second draw (when the
+       historical statistics arrived a moment later) removed every marker, found loaded()===false, and
+       queued itself on a 'load' event that had already fired and never fires again. Markers are plain DOM
+       and camera moves don't need the style, so draw immediately, always. */
+    var b=new maplibregl.LngLatBounds([LNG,LAT],[LNG,LAT]);
+    sites.forEach(function(d){
+      var el=document.createElement('div');
+      el.className='wpin';
+      el.style.background=WATER_COLOR[d.kind];
+      el.innerHTML=WATER_ICON[d.kind].replace('<svg viewBox="0 0 24 24">','<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">');
+      var mk=new maplibregl.Marker({element:el}).setLngLat([d.lng,d.lat]).setPopup(new maplibregl.Popup({offset:18, maxWidth:'290px'}).setHTML(popupHtml(d))).addTo(map);
+      _waterMarkers.push(mk); b.extend([d.lng,d.lat]);
+    });
+    if(sites.length){ _waterBounds=b; map.fitBounds(b,{padding:44, maxZoom:11, duration:0}); }
+    if(!window._waterResizeBound){ window._waterResizeBound=true; window.addEventListener('resize', function(){ if(_waterMap && _waterBounds){ _waterMap.resize(); _waterMap.fitBounds(_waterBounds,{padding:44, maxZoom:11, duration:0}); } }); }
+  }
+  /* v934 (2026-09-27, Laurie): a small vertical range bar per card. Bottom = record low for this calendar
+     date, top = record high, gold tick = average, white dot = the live reading. Discharge and storage are
+     drawn on a log scale (the Hudson's 1,960–59,100 ft³/s record range would otherwise pin the average
+     and today into the bottom sliver); stage, elevation and well depth are linear. Wells are inverted so
+     up always means more water. A reading outside the record range is clamped to the end with a caret. */
+  function gaugeSvg(d){
+    var s=d.stat, main=d.readings[0], meta=WATER_PARAMS[main.code]; if(!s || s.max==null || s.min==null || !isFinite(main.value)) return '';
+    var f=meta.fmtS||meta.fmt, lg=(meta.rel!=null && s.min>0 && main.value>0);
+    var tr=function(v){ return lg?Math.log10(v):v; };
+    var top=meta.invert?s.min:s.max, bot=meta.invert?s.max:s.min;      /* wells: shallowest depth is the top */
+    var lo=tr(s.min), hi=tr(s.max); if(!(hi>lo)) return '';
+    var span=hi-lo;
+    var Y0=10, Y1=72, X=16;                                                  /* track from y=10 (high) to y=72 (low) */
+    var yOf=function(v){ var t=(tr(v)-lo)/span; if(meta.invert) t=1-t; return Y1-(Math.max(0,Math.min(1,t)))*(Y1-Y0); };
+    var out=(meta.invert? (main.value<top) : (main.value>top)) ? 'up' : ((meta.invert? (main.value>bot) : (main.value<bot)) ? 'down' : '');
+    var yNow=yOf(main.value), yAvg=(s.mean!=null)?yOf(s.mean):null;
+    var lbl=function(v){ return f(v).replace(/ ft\u00b3\/s$/,'').replace(/ acre-ft$/,'').replace(/ ft$/,''); };
+    var title=(meta.invert?'Water table now vs this date\u2019s record (up = more water)':'Now vs this date\u2019s record range')+(lg?' \u00b7 log scale':'');
+    var svg='<svg viewBox="0 0 70 84" role="img" aria-label="'+waterEsc(title)+'"><title>'+waterEsc(title)+'</title>'
+      +'<line x1="'+X+'" y1="'+Y0+'" x2="'+X+'" y2="'+Y1+'" stroke="rgba(255,255,255,.28)" stroke-width="4" stroke-linecap="round"/>'
+      +'<line x1="'+(X-6)+'" y1="'+Y0+'" x2="'+(X+6)+'" y2="'+Y0+'" stroke="rgba(255,255,255,.6)" stroke-width="1.5"/>'
+      +'<line x1="'+(X-6)+'" y1="'+Y1+'" x2="'+(X+6)+'" y2="'+Y1+'" stroke="rgba(255,255,255,.6)" stroke-width="1.5"/>'
+      +'<text x="'+(X+11)+'" y="'+(Y0+3)+'">'+waterEsc(lbl(top))+'</text>'
+      +'<text x="'+(X+11)+'" y="'+(Y1+3)+'">'+waterEsc(lbl(bot))+'</text>';
+    if(yAvg!=null){ svg+='<line x1="'+(X-7)+'" y1="'+yAvg.toFixed(1)+'" x2="'+(X+7)+'" y2="'+yAvg.toFixed(1)+'" stroke="var(--gold,#c9a227)" stroke-width="2.5"/>';
+      if(Math.abs(yAvg-Y0)>9 && Math.abs(yAvg-Y1)>9 && Math.abs(yAvg-yNow)>9) svg+='<text class="wg-avg" x="'+(X+11)+'" y="'+(yAvg+3).toFixed(1)+'">avg</text>'; }
+    svg+='<circle cx="'+X+'" cy="'+yNow.toFixed(1)+'" r="5.5" fill="#fff" stroke="var(--gold,#c9a227)" stroke-width="2"/>';
+    if(out) svg+='<path d="M'+X+' '+(out==='up'?Y0-8:Y1+8)+' l-4 '+(out==='up'?5:-5)+' h8 z" fill="#fff"/>';
+    return '<div class="wgauge">'+svg+'</svg></div>';
   }
   function renderWater(){
-    var namedGrid=$('water-named-grid'), grid=$('water-live-grid'), nh=$('water-named-h'); if(!_wm || !grid || !namedGrid) return;
-    var card=function(d,eyebrow){ var main=d.readings[0], extra=d.readings.slice(1), st=statLine(d);
-      return '<div class="sg-row"><div class="sg-ico">'+WATER_ICON[d.kind]+'</div><div><p class="sg-eye">'+waterEsc(eyebrow||WATER_LABEL[d.kind])+'</p><p class="sg-val">'+waterEsc(main.text)+trendHtml(main)+'</p><p class="sg-det"><b>'+waterEsc(d.displayName)+'</b>'
+    var host=$('water-cards'); if(!_wm || !host) return;
+    var card=function(d){ var main=d.readings[0], extra=d.readings.slice(1), st=statLine(d);
+      return '<div class="sg-row wcard"><div class="sg-ico">'+WATER_ICON[d.kind]+'</div><div><p class="sg-eye">'+waterEsc(WATER_LABEL[d.kind])+'</p><p class="sg-val">'+waterEsc(main.text)+trendHtml(main)+'</p><p class="sg-det"><b>'+waterEsc(d.displayName)+'</b>'
+        +(d.when?'<br><span class="wread">Read '+waterEsc(fmtWhen(d.when))+'</span>':'')
         +(extra.length?'<br>'+extra.map(function(e){ return waterEsc(e.label)+': '+waterEsc(e.text)+trendHtml(e); }).join(' \u00b7 '):'')
-        +(st?'<br><span class="wstat">'+waterEsc(st)+'</span>':'')+'</p></div></div>';
+        +(st?'<br><span class="wstat">'+waterEsc(st)+'</span>':'')+'</p></div>'+gaugeSvg(d)+'</div>';
     };
-    namedGrid.innerHTML=_wm.named.map(function(n){ return card(n.site, n.label); }).join('');
-    if(nh) nh.style.display=_wm.named.length?'':'none';
-    namedGrid.style.display=_wm.named.length?'':'none';
-    grid.innerHTML=_wm.generic.length ? _wm.generic.map(function(d){ return card(d); }).join('') : '<p class="ph-empty">No other active USGS gauges within '+WATER_BBOX_KM+' km right now.</p>';
-    plotWaterMarkers(_wm.named.map(function(n){ return n.site; }).concat(_wm.generic));
+    var html=['stream','lake','well'].map(function(k){ var rows=_wm.byKind[k]; return rows.length?'<div class="sg-grid wgrid">'+rows.map(card).join('')+'</div>':''; }).join('');
+    host.innerHTML=html || '<p class="ph-empty">No active USGS gauges within '+WATER_BBOX_KM+' km right now.</p>';
+    plotWaterMarkers(_wm.all);
   }
   function fetchWater(){
-    var namedGrid=$('water-named-grid'), grid=$('water-live-grid'); if(!grid || !namedGrid) return;
+    var host=$('water-cards'); if(!host) return;
     /* period=P1D: the last 24 h of readings per gauge instead of just the latest, so each one can carry a trend arrow */
     var url='https://waterservices.usgs.gov/nwis/iv/?format=json&bBox='+waterBBox()+'&parameterCd='+Object.keys(WATER_PARAMS).join(',')+'&siteStatus=active&period=P1D';
     fetch(url).then(function(r){ return r.ok?r.json():Promise.reject(new Error('HTTP '+r.status)); }).then(function(j){
@@ -645,33 +677,37 @@
         var code=(t.variable&&t.variable.variableCode&&t.variable.variableCode[0]&&t.variable.variableCode[0].value)||'';
         var meta=WATER_PARAMS[code]; if(!meta) return;
         var raw=(t.values&&t.values[0]&&t.values[0].value)||[];
-        var series=raw.map(function(v){ return {t:Date.parse(v.dateTime), v:parseFloat(v.value)}; }).filter(function(p){ return isFinite(p.t) && isFinite(p.v) && p.v>-999990; });
+        var series=raw.map(function(v){ return {t:Date.parse(v.dateTime), v:parseFloat(v.value), s:v.dateTime}; }).filter(function(p){ return isFinite(p.t) && isFinite(p.v) && p.v>-999990; });
         if(!series.length) return;
         var last=series[series.length-1];
         var si=t.sourceInfo||{}, sc=(si.siteCode&&si.siteCode[0]&&si.siteCode[0].value)||'';
         var geo=si.geoLocation&&si.geoLocation.geogLocation;
         if(!sc || !geo) return;
-        var d=bySite[sc] || (bySite[sc]={siteNo:sc, rawName:si.siteName||sc, lat:+geo.latitude, lng:+geo.longitude, readings:[]});
-        d.readings.push({code:code, label:meta.label, text:meta.fmt(last.v), trend:trendOf(code, series)});
+        var d=bySite[sc] || (bySite[sc]={siteNo:sc, rawName:si.siteName||sc, lat:+geo.latitude, lng:+geo.longitude, readings:[], whenT:0, when:''});
+        d.readings.push({code:code, label:meta.label, value:last.v, text:meta.fmt(last.v), trend:trendOf(code, series)});
+        /* v934 (Laurie): timestamp of the newest reading at the site. USGS stamps in the gauge's own local
+           time with an offset; fmtWhen reads the digits as printed, so it stays Eastern wherever the reader is. */
+        if(last.t>d.whenT){ d.whenT=last.t; d.when=last.s; }
       });
       var sites=Object.keys(bySite).map(function(sc){ var d=bySite[sc];
         d.readings.sort(function(a,b){ return WATER_ORDER.indexOf(a.code)-WATER_ORDER.indexOf(b.code); });
         d.kind=WATER_PARAMS[d.readings[0].code].kind;
         d.km=haversineKm(LAT,LNG,d.lat,d.lng); d.displayName=cleanSiteName(d.rawName,d.kind); return d; });
       sites.sort(function(a,b){ return a.km-b.km; });
-      var used={}, named=[];
+      /* v934 (Laurie): one section, grouped by kind \u2014 streams, then lakes/reservoirs, then wells. The named
+         local waters (Normans Kill, Hudson, Catskill Creek...) are still guaranteed a card when a gauge
+         exists; they simply lead their kind's row instead of sitting in a section of their own. */
+      var used={}, byKind={stream:[], lake:[], well:[]};
       NAMED_WATERS.forEach(function(nw){
         var hit=sites.find(function(d){ return !used[d.siteNo] && nw.re.test(d.rawName); });
-        if(hit){ used[hit.siteNo]=true; named.push({label:nw.label, site:hit}); }
+        if(hit){ used[hit.siteNo]=true; byKind[hit.kind].push(hit); }
       });
-      var byKind={stream:[], lake:[], well:[]};
-      sites.forEach(function(d){ if(used[d.siteNo]) return; if(byKind[d.kind].length<WATER_CAP[d.kind]) byKind[d.kind].push(d); });
-      var generic=[]; ['stream','lake','well'].forEach(function(k){ generic=generic.concat(byKind[k]); });
-      _wm={named:named, generic:generic};
+      sites.forEach(function(d){ if(used[d.siteNo]) return; if(byKind[d.kind].length<WATER_CAP[d.kind]){ used[d.siteNo]=true; byKind[d.kind].push(d); } });
+      var all=[].concat(byKind.stream, byKind.lake, byKind.well);
+      _wm={byKind:byKind, all:all};
       renderWater();                                  /* live readings first ... */
-      var shown=named.map(function(n){ return n.site; }).concat(generic);
-      fetchWaterStats(shown).then(renderWater);       /* ... then again once the historical statistics arrive */
-    }).catch(function(e){ grid.innerHTML='<p class="ph-empty">USGS water data is unreachable right now.</p>'; namedGrid.innerHTML=''; status('Water levels: '+(e && e.message || 'fetch failed')); });
+      fetchWaterStats(all).then(renderWater);         /* ... then again once the historical statistics arrive */
+    }).catch(function(e){ host.innerHTML='<p class="ph-empty">USGS water data is unreachable right now.</p>'; status('Water levels: '+(e && e.message || 'fetch failed')); });
   }
   
 function fetchINat(){
@@ -724,7 +760,25 @@ function fetchINat(){
          credit line (wikiPics fills that in), and the sighting details (who / when / where) are the
          iNaturalist observation's, exactly as on the regular cards. */
       var byRecency=function(a,b){ return (Date.parse(b.best.when)||0)-(Date.parse(a.best.when)||0); };
-      recent.sort(byRecency);
+      /* v935 (2026-09-27, Laurie): order by kinship, not by clock. The newest sighting leads; after that, each
+         next card is whichever unplaced species shares the deepest ancestry with the one just placed (iNat's
+         taxon.ancestor_ids runs root -> species, so shared prefix length = how close the relatives are), most
+         recent first on ties. A blue jay pulls the other corvids after it, then the rest of the birds, then the
+         other vertebrates, then insects, plants, fungi... and the asters, goldenrods and bees land side by
+         side. Nothing is hard-coded, and no species is ever permanently on top - the seed is whatever was
+         seen last. Deliberately approximate: a greedy chain, not a tree. Falls back to the iconic-taxon name
+         when a record has no ancestor list. */
+      var taxonOrder=function(groups){
+        var rem=groups.slice().sort(byRecency); if(rem.length<3) return rem;
+        var anc=function(g){ var t=g.best.t||{}, a=t.ancestor_ids; return (a&&a.length)?a:['iconic:'+(t.iconic_taxon_name||'?')]; };
+        var shared=function(a,b){ var n=Math.min(a.length,b.length), i=0; while(i<n && a[i]===b[i]) i++; return i; };
+        var out=[rem.shift()];
+        while(rem.length){ var last=anc(out[out.length-1]), bi=0, bs=-1;
+          for(var i=0;i<rem.length;i++){ var sc=shared(last,anc(rem[i])); if(sc>bs){ bs=sc; bi=i; } }   /* rem stays recency-sorted, so the first max is the newest */
+          out.push(rem.splice(bi,1)[0]); }
+        return out;
+      };
+      recent=taxonOrder(recent); older=taxonOrder(older);
       var cardFor=function(g){ var d=g.best;
         var info='<div class="b"><div class="n">'+esc(d.name)+cbadge(g)+'</div>'+(d.sci?'<div class="sci">'+esc(d.sci)+'</div>':'')+'<div class="m"><b>'+esc(fmtWhen(d.when))+'</b>'+(d.where?' \u00b7 <b>'+esc(d.where)+'</b>':'')+(d.who?'<br>by '+esc(d.who):'');
         if(d.img) return '<a class="inat" href="'+d.url+'" target="_blank" rel="noopener"><img src="'+esc(d.img)+'" alt="'+esc(d.name)+'" loading="lazy">'+info+'<br><span style="opacity:.7">photo '+esc(d.lic.toUpperCase())+'</span></div></div></a>';

@@ -208,6 +208,14 @@ a.link:hover{background:rgba(252,163,21,.14);}
 .wtrend{color:var(--gold,#c9a227); font-weight:800; font-size:.8em; margin-left:6px; white-space:nowrap;}
 .wtrend-lbl{font-weight:400; font-size:11px; letter-spacing:.03em;}
 .wstat{opacity:.85; font-size:12px;}
+/* v934 (2026-09-27, Laurie): the range bar beside each water card — record low at the bottom, record high at the top (for THIS calendar date), gold tick = average, white dot = now */
+.wgauge{flex:none; width:70px; height:84px; margin-left:auto;}
+.wgauge svg{width:70px; height:84px; display:block; overflow:visible;}
+.wgauge text{font:600 9px/1 "Montserrat","Lato",sans-serif; fill:#fff; opacity:.9;}
+.wgauge .wg-avg{fill:var(--gold,#c9a227); opacity:1;}
+.sg-row.wcard{padding-right:0;}
+.wgrid+.wgrid{margin-top:4px;}
+.wread{opacity:.8; font-size:12px;}
 </style>
 
 
@@ -371,7 +379,7 @@ a.link:hover{background:rgba(252,163,21,.14);}
   <div class="sg-winds">
     <div class="sg-cap"><svg viewBox="0 0 24 24"><path d="M12 2L7 9h3l-4 6h4l-4 6h12l-4-6h4l-4-6h3z"/></svg></div>
     <div class="sg-row wind"><div class="sg-ico" id="w10-ico"><svg viewBox="0 0 24 24"><g class="arrow"><line x1="12" y1="18" x2="12" y2="5"/><polyline points="7,10 12,5 17,10"/></g></svg></div><div><p class="sg-eye">Surface · 10 m</p><p class="sg-val" id="w10-val">—</p><p class="sg-det" id="w10-sub"></p><p class="sg-alt">the wind on the hill</p></div></div>
-    <div class="sg-row wind"><div class="sg-ico" id="w850-ico"><svg viewBox="0 0 24 24"><g class="arrow"><line x1="12" y1="18" x2="12" y2="5"/><polyline points="7,10 12,5 17,10"/></g></svg></div><div><p class="sg-eye">850 hPa · ~1.5 km</p><p class="sg-val" id="w850-val">—</p><p class="sg-det" id="w850-sub"></p><p class="sg-alt">steers the valley weather, carries most of the moisture</p></div></div>
+    <div class="sg-row wind"><div class="sg-ico" id="w850-ico"><svg viewBox="0 0 24 24"><g class="arrow"><line x1="12" y1="18" x2="12" y2="5"/><polyline points="7,10 12,5 17,10"/></g></svg></div><div><p class="sg-eye">850 hPa · ~1.5 km</p><p class="sg-val" id="w850-val">—</p><p class="sg-det" id="w850-sub"></p><p class="sg-alt">steers the valley weather</p></div></div>
     <div class="sg-row wind"><div class="sg-ico" id="w500-ico"><svg viewBox="0 0 24 24"><g class="arrow"><line x1="12" y1="18" x2="12" y2="5"/><polyline points="7,10 12,5 17,10"/></g></svg></div><div><p class="sg-eye">500 hPa · ~5.5 km</p><p class="sg-val" id="w500-val">—</p><p class="sg-det" id="w500-sub"></p><p class="sg-alt">troughs and ridges</p></div></div>
     <div class="sg-row wind"><div class="sg-ico" id="w100-ico"><svg viewBox="0 0 24 24"><g class="arrow"><line x1="12" y1="18" x2="12" y2="5"/><polyline points="7,10 12,5 17,10"/></g></svg></div><div><p class="sg-eye">100 hPa · ~16 km</p><p class="sg-val" id="w100-val">—</p><p class="sg-det" id="w100-sub"></p><p class="sg-alt">tropopause; where jets fly</p></div></div>
     <div class="sg-row wind"><div class="sg-ico" id="w10hpa-ico"><svg viewBox="0 0 24 24"><g class="arrow"><line x1="12" y1="18" x2="12" y2="5"/><polyline points="7,10 12,5 17,10"/></g></svg></div><div><p class="sg-eye">10 hPa · ~30 km</p><p class="sg-val" id="w10hpa-val">—</p><p class="sg-det" id="w10hpa-sub"></p><p class="sg-alt">polar vortex level</p></div></div>
@@ -424,13 +432,11 @@ a.link:hover{background:rgba(252,163,21,.14);}
   </div>
   <p class="sg-note" id="dd-note">Loading…</p>
 
-  <!-- 2026-09-27 (v923, Laurie): live USGS water levels — streams, lakes/reservoirs, groundwater wells -->
-  <h2 class="sg-sec">Water levels, live</h2>
+  <!-- 2026-09-27 (v923, Laurie): live USGS water levels — streams, lakes/reservoirs, groundwater wells.
+       v934 (Laurie): one section, "Water levels"; streams on the top row, reservoirs in the middle, wells at the bottom (renderWater builds one grid per kind into #water-cards) -->
+  <h2 class="sg-sec">Water levels</h2>
   <div id="water-map" style="height:320px; border-radius:12px; overflow:hidden; margin:0 0 12px; background:rgba(0,0,0,.18); border:1px solid rgba(255,255,255,.18);"></div>
-  <h3 class="sg-h3" id="water-named-h" style="margin-top:0">Named local waters</h3>
-  <div class="sg-grid" id="water-named-grid"><p class="ph-empty">Loading…</p></div>
-  <h3 class="sg-h3">Other nearby gauges</h3>
-  <div class="sg-grid" id="water-live-grid"><p class="ph-empty">Loading…</p></div>
+  <div id="water-cards"><p class="ph-empty">Loading…</p></div>
   <p class="sg-note" id="water-live-src">Data © USGS Water Data for the Nation (waterservices.usgs.gov), provisional and subject to revision. Refreshes every 15 minutes.</p>
 
   <h2 class="sg-sec">Seen lately · iNaturalist</h2>

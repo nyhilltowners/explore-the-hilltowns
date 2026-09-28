@@ -1315,7 +1315,7 @@ def emit_trading_post(items):
 # observed Tmax/Tmin — same formulas the Signals page applies to the reanalysis, so the two
 # are comparable. Missing days (M) are skipped, not zeroed.
 # ---------------------------------------------------------------------------
-DAILY_STATIONS = {"alcove_dam", "albany_ap", "slide_mountain", "cobleskill_2ese", "indian_lake_2sw", "old_forge", "mohonk_lake", "central_park", "blue_hill", "athens_co_op", "west_berne", "freehold_2nw"}   # continuous records: raw daily highs/lows shipped for the year charts
+DAILY_STATIONS = {"alcove_dam", "albany_ap", "slide_mountain", "cobleskill_2ese", "indian_lake_2sw", "old_forge", "mohonk_lake", "central_park", "athens_co_op", "west_berne", "freehold_2nw"}   # continuous records: raw daily highs/lows shipped for the year charts
 STATIONS = [   # (slug, display name, elevation ft, active?)  — see data/stations/README.md
     # 2026-09-21 (Laurie): dropped conklingville_dam, phoenicia, saratoga_springs_4sw — thin/low-value,
     # were bloating station_dd.js for little comparative payoff. CSVs stay in data/stations/ (harmless,
@@ -1334,7 +1334,6 @@ STATIONS = [   # (slug, display name, elevation ft, active?)  — see data/stati
     # for context — out of core (NYC / eastern MA) but useful baselines. CSVs pending from Laurie
     # (xmACIS2 export); build skips a station cleanly if its CSV is not yet in data/stations/.
     ("central_park",    "Central Park (NWS first-order) · Manhattan, NY", 140, True),   # GHCND:USW00094728, continuous since 1869-01-01 — the longest active NY record
-    ("blue_hill",        "Blue Hill Observatory (co-op) · Milton, MA",     635, True),   # GHCND:USC00190736, continuous since 1885 — longest continuously operated site in the US, unchanged instruments/location
     # 2026-09-27 (v908, atlas session) (Laurie): nine local CoCoRaHS/co-op precipitation stations from xmACIS2 PDFs —
     # precip/snow only, no temperature record (all MaxT/MinT are "M" in the source), EXCEPT
     # rensselaerville_2nw which carries ~44 days of real temps at the very end of its short run —
@@ -1440,6 +1439,19 @@ def _station_years(path, keep_daily=False):
     return out
 
 
+# 2026-09-27 (v933, Laurie) (Laurie): approximate locations for the CLOSED stations that have daily temperatures, so the
+# Signals year charts can draw a modeled current-year line for them (ERA5 reanalysis at the place, dashed).
+# Hamlet/village centroids from Google Places — good to a few km, which is finer than ERA5's ~9 km grid anyway;
+# the station's exact site is not in the xmACIS listing. Cobleskill 2 ESE is nudged ~2 mi ESE of the village.
+STATION_COORDS = {
+    "west_berne":      (42.6290, -74.1840),
+    "athens_co_op":    (42.2604, -73.8096),
+    "freehold_2nw":    (42.3593, -74.0499),
+    "old_forge":       (43.7101, -74.9735),
+    "cobleskill_2ese": (42.6670, -74.4500),
+    "slide_mountain":  (42.0145, -74.4124),
+}
+
 def emit_station_dd():
     """data/stations/*.csv → site/station_dd.js: per station, per year, cumulative HDD/CDD (base 65)
     and GDD (base 50, 86 cap), precipitation and snowfall by day-of-year, plus annual extremes —
@@ -1453,6 +1465,7 @@ def emit_station_dd():
         yrs = _station_years(p, keep_daily=(slug in DAILY_STATIONS))
         ys = sorted(yrs)
         out[slug] = {"name": name, "elev": elev, "active": active, "first": ys[0], "last": ys[-1], "daily": slug in DAILY_STATIONS, "years": yrs}
+        if slug in STATION_COORDS: out[slug]["lat"], out[slug]["lng"] = STATION_COORDS[slug]
     if out:
         (SITE / "station_dd.js").write_text("window.STATION_DD = " + json.dumps({"source": "NOAA GHCN-Daily via xmACIS2 (NRCC)", "stations": out}) + ";\n", encoding="utf-8")
         print(f"  Station degree days: {len(out)} stations → station_dd.js")
