@@ -578,46 +578,71 @@
   /* Daily statistics for "today's" calendar date, via the USGS stat service (RDB text, CORS-open).
      Cached per calendar day in localStorage so it's fetched at most once a day per site+parameter. */
   function fetchWaterStats(sites){
-    /* v943 (2026-09-27, Laurie: "still not seeing the historical data"): the v2 cache had been poisoned on her browser
-       - her first v936 load fell inside the USGS outage, the empty answer was recorded as "no statistics" for
-       every pair for the day, and v939's fix only protected FUTURE replies. Key bumped to v3 (old keys purged),
-       and from now on only POSITIVE results are ever written to localStorage; "asked, nothing there" lives in
-       memory for this page load only (_waterStatMiss), so a bad minute can never outlast a reload. */
+    /* v945 (2026-09-28, Laurie: "the old gages still aren't showing"): since v936 this was ONE request for every
+       gauge and every parameter at once - 20-odd sites x 366 daily rows x several parameters, megabytes - and
+       the USGS statistics service has been timing out on requests that size, silently. v935's request was a
+       fraction of it, which is why the bars used to appear. Now: one small request per gauge, four in flight at
+       a time, a 20 s timeout each, the card redrawn as soon as its own numbers land, and a visible note under
+       the cards when statistics are unavailable instead of nothing. Positives persist per day (v3 key);
+       "asked, nothing there" is remembered only for this page load. */
     var today=waterToday(), ck='hfa.wstat.v3.'+today.key, cache=lsGet(ck)||{};
     try{ Object.keys(localStorage).forEach(function(k){ if(/^hfa\.wstat\.v[12]\./.test(k) || (k.indexOf('hfa.wstat.v3.')===0 && k!==ck)) localStorage.removeItem(k); }); }catch(e){}
     var miss=fetchWaterStats._miss || (fetchWaterStats._miss={});
-    var pairs=[]; sites.forEach(function(d){ d.stats={}; d.readings.forEach(function(r){ pairs.push({d:d, code:r.code, key:d.siteNo+'|'+r.code}); }); });
+    var pairs=[]; sites.forEach(function(d){ d.stats=d.stats||{}; d.readings.forEach(function(r){ pairs.push({d:d, code:r.code, key:d.siteNo+'|'+r.code}); }); });
     var apply=function(){ pairs.forEach(function(p){ p.d.stats[p.code]=cache[p.key]||null; }); };
+    apply();
     var need=pairs.filter(function(p){ return cache[p.key]===undefined && !miss[p.key]; });
-    if(!need.length){ apply(); return Promise.resolve(); }
-    var codes={}, siteNos={}; need.forEach(function(p){ codes[p.code]=1; siteNos[p.d.siteNo]=1; });
-    var url='https://waterservices.usgs.gov/nwis/stat/?format=rdb&sites='+Object.keys(siteNos).join(',')+'&statReportType=daily&statTypeCd=mean,max,min&parameterCd='+Object.keys(codes).join(',');
+    if(!need.length){ waterStatNote(sites); return Promise.resolve(); }
+    var bySite={}; need.forEach(function(p){ (bySite[p.d.siteNo]=bySite[p.d.siteNo]||{d:p.d, codes:{}, pairs:[]}); bySite[p.d.siteNo].codes[p.code]=1; bySite[p.d.siteNo].pairs.push(p); });
+    var jobs=Object.keys(bySite).map(function(k){ return bySite[k]; });
     var num=function(v){ var x=parseFloat(v); return isNaN(x)?null:x; };
-    return fetch(url).then(function(r){
-      if(r.status===404) return '';                       /* "no statistics for any of these" - or a wobble; treated as empty below */
-      if(!r.ok) throw new Error('HTTP '+r.status);        /* anything else may be transient - don't cache */
-      return r.text();
-    }).then(function(txt){
-      var header=null, idx={}, skipFmt=false, rows=0;
-      String(txt).split('\n').forEach(function(line){
-        if(!line || line.charAt(0)==='#') return;
-        var c=line.replace(/\r$/,'').split('\t');
-        if(!header){ header=c; c.forEach(function(h,i){ idx[h.trim()]=i; }); skipFmt=true; return; }
-        if(skipFmt){ skipFmt=false; return; }               /* the "5s 15s 12n ..." format row */
-        if(+c[idx.month_nu]!==today.m || +c[idx.day_nu]!==today.d) return;
-        var key=c[idx.site_no]+'|'+c[idx.parameter_cd];
-        if(cache[key]) return;
-        rows++;
-        cache[key]={mean:num(c[idx.mean_va]), max:num(c[idx.max_va]), maxYr:c[idx.max_va_yr]||'', min:num(c[idx.min_va]), minYr:c[idx.min_va_yr]||'', begin:c[idx.begin_yr]||'', end:c[idx.end_yr]||''};
-      });
-      /* v939 (2026-09-27, Laurie: "we lost the visualisations"): an EMPTY answer used to be cached as "no
-         statistics" for every pair for the rest of the day, so one USGS wobble (a 404 or blank body during an
-         outage) blanked every bar until midnight. Now the per-pair nulls are only remembered when the service
-         plainly answered - at least one row came back - and an empty reply is simply retried next cycle. */
-      if(rows>0){ need.forEach(function(p){ if(cache[p.key]===undefined) miss[p.key]=true; }); lsSet(ck, cache); }
-      else throw new Error('empty');
-      apply();
-    }).catch(function(){ apply(); if(!fetchWaterStats._retried){ fetchWaterStats._retried=true; setTimeout(function(){ fetchWaterStats._retried=false; fetchWaterStats(sites).then(renderWater); }, 45000); } });   /* statistics are a bonus - never let them break the live readings; one 45 s retry per failure */
+    var failed=0;
+    var one=function(job){
+      var url='https://waterservices.usgs.gov/nwis/stat/?format=rdb&sites='+job.d.siteNo+'&statReportType=daily&statTypeCd=mean,max,min&parameterCd='+Object.keys(job.codes).join(',');
+      var ctl=(typeof AbortController!=='undefined')?new AbortController():null, tm=ctl?setTimeout(function(){ ctl.abort(); },20000):null;
+      return fetch(url, ctl?{signal:ctl.signal}:{}).then(function(r){
+        if(r.status===404) return '';
+        if(!r.ok) throw new Error('HTTP '+r.status);
+        return r.text();
+      }).then(function(txt){
+        var header=null, idx={}, skipFmt=false, rows=0;
+        String(txt).split('\n').forEach(function(line){
+          if(!line || line.charAt(0)==='#') return;
+          var c=line.replace(/\r$/,'').split('\t');
+          if(!header){ header=c; c.forEach(function(h,i){ idx[h.trim()]=i; }); skipFmt=true; return; }
+          if(skipFmt){ skipFmt=false; return; }
+          if(+c[idx.month_nu]!==today.m || +c[idx.day_nu]!==today.d) return;
+          var key=c[idx.site_no]+'|'+c[idx.parameter_cd];
+          if(cache[key]) return;
+          rows++;
+          cache[key]={mean:num(c[idx.mean_va]), max:num(c[idx.max_va]), maxYr:c[idx.max_va_yr]||'', min:num(c[idx.min_va]), minYr:c[idx.min_va_yr]||'', begin:c[idx.begin_yr]||'', end:c[idx.end_yr]||''};
+        });
+        job.pairs.forEach(function(p){ if(cache[p.key]===undefined) miss[p.key]=true; });   /* a real answer with no row for this pair - remembered for this page load only */
+        if(rows>0) lsSet(ck, cache);
+        job.pairs.forEach(function(p){ p.d.stats[p.code]=cache[p.key]||null; });
+        renderWaterCard(job.d);                       /* redraw just this card as its numbers land */
+      }).catch(function(e){ failed++; }).then(function(){ if(tm) clearTimeout(tm); });
+    };
+    var i=0, workers=[];
+    var next=function(){ if(i>=jobs.length) return Promise.resolve(); var j=jobs[i++]; return one(j).then(next); };
+    for(var w=0; w<4 && w<jobs.length; w++) workers.push(next());
+    return Promise.all(workers).then(function(){ waterStatNote(sites, failed, jobs.length); });
+  }
+  /* v945: a plain sentence under the cards about the statistics - present, partly missing, or unavailable. */
+  function waterStatNote(sites, failed, asked){
+    var el=$('water-stat-note'); if(!el) return;
+    var have=0, total=0; sites.forEach(function(d){ d.readings.forEach(function(r){ total++; if(d.stats && d.stats[r.code]) have++; }); });
+    if(failed && failed>=asked && !have) el.textContent='Historical statistics (this-date average, record high and low) are not answering from USGS right now; the bars will fill in on the next refresh.';
+    else if(failed) el.textContent='Historical statistics for '+failed+' of '+asked+' gauges did not answer from USGS; those bars will fill in on the next refresh.';
+    else if(!have) el.textContent='';
+    else el.textContent='';
+  }
+  /* v945: redraw a single water card in place (keyed by site number) so statistics can arrive gauge by gauge. */
+  function renderWaterCard(d){
+    var host=$('water-cards'); if(!host) return;
+    var old=host.querySelector('.wcard[data-site="'+d.siteNo+'"]'); if(!old) return;
+    var tmp=document.createElement('div'); tmp.innerHTML=waterCardHtml(d); var nw=tmp.firstChild; if(nw) old.parentNode.replaceChild(nw, old);
+    var mk=_waterMarkers.find(function(m){ return m._siteNo===d.siteNo; }); if(mk && mk.getPopup()) mk.getPopup().setHTML(popupHtml(d));
   }
   /* v936 (2026-09-27, Laurie): land-surface altitude per site from the USGS site file (alt_va, feet), so
      wells can be ordered highest ground to lowest. Altitudes don't change, so the cache never expires. */
@@ -672,7 +697,7 @@
   var siteUrl=function(d){ return 'https://waterdata.usgs.gov/monitoring-location/USGS-'+encodeURIComponent(d.siteNo)+'/'; };
   function popupHtml(d){
     var sts=d.readings.map(function(r){ return statLine(d,r); }).filter(Boolean);
-    return '<div class="wpop"><b>'+waterEsc(d.displayName)+'</b><div class="wk">'+waterEsc(eyebrow(d))+(d.when?' · read '+waterEsc(fmtWhen(d.when)):'')+'</div>'
+    return '<div class="wpop"><b>'+(d.num?d.num+' · ':'')+waterEsc(d.displayName)+'</b><div class="wk">'+waterEsc(eyebrow(d))+(d.when?' · read '+waterEsc(fmtWhen(d.when)):'')+'</div>'
       +d.readings.map(function(r){ return '<div>'+waterEsc(r.label)+': <b>'+waterEsc(r.text)+'</b>'+trendHtml(r)+'</div>'; }).join('')
       +(sts.length?'<div class="ws">'+sts.map(waterEsc).join('<br>')+'</div>':'')
       +'<div class="wl"><a href="'+siteUrl(d)+'" target="_blank" rel="noopener">USGS data for this site ↗</a></div></div>';
@@ -691,8 +716,10 @@
       var el=document.createElement('div');
       el.className='wpin';
       el.style.background=WATER_COLOR[d.kind];
-      el.innerHTML=WATER_ICON[d.kind].replace('<svg viewBox="0 0 24 24">','<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">');
+      el.innerHTML=(d.num?'<span class="wpin-num">'+d.num+'</span>':WATER_ICON[d.kind].replace('<svg viewBox="0 0 24 24">','<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">'));
+      el.title=(d.num?d.num+' · ':'')+d.displayName;
       var mk=new maplibregl.Marker({element:el}).setLngLat([d.lng,d.lat]).setPopup(new maplibregl.Popup({offset:18, maxWidth:'290px'}).setHTML(popupHtml(d))).addTo(map);
+      mk._siteNo=d.siteNo;
       _waterMarkers.push(mk); b.extend([d.lng,d.lat]);
     });
     if(sites.length){ _waterBounds=b; map.fitBounds(b,{padding:44, maxZoom:11, duration:0}); }
@@ -739,15 +766,18 @@
     return bars.length?'<div class="wgauge">'+bars.join('')+'</div>':'';
   }
   var eyebrow=function(d){ var base=WATER_CHAIN[d.siteNo] || (d.tidal?'Tidal river':WATER_LABEL[d.kind]); return base+(d.alt>0?' \u00b7 '+Math.round(d.alt).toLocaleString()+' ft':''); };   /* v943; sea-level tidal gauges (alt 0) show no elevation */
+  function waterCardHtml(d){ var main=d.readings[0], extra=d.readings.slice(1), sts=d.readings.map(function(r){ return statLine(d,r); }).filter(Boolean);
+    return '<div class="sg-row wcard" data-site="'+waterEsc(d.siteNo)+'"><div class="sg-ico">'+WATER_ICON[d.kind]+(d.num?'<span class="wnum">'+d.num+'</span>':'')+'</div><div><p class="sg-eye">'+waterEsc(eyebrow(d))+'</p><p class="sg-val">'+waterEsc(main.text)+trendHtml(main)+'</p><p class="sg-det"><b>'+waterEsc(d.displayName)+'</b>'
+      +(d.when?'<br><span class="wread">Read '+waterEsc(fmtWhen(d.when))+'</span>':'')
+      +(extra.length?'<br>'+extra.map(function(e){ return waterEsc(e.label)+': '+waterEsc(e.text)+trendHtml(e); }).join(' · '):'')
+      +sts.map(function(st){ return '<br><span class="wstat">'+waterEsc(st)+'</span>'; }).join('')+'</p></div>'+gaugeSvg(d)+'</div>';
+  }
   function renderWater(){
     var host=$('water-cards'); if(!_wm || !host) return;
-    var card=function(d){ var main=d.readings[0], extra=d.readings.slice(1), sts=d.readings.map(function(r){ return statLine(d,r); }).filter(Boolean);
-      return '<div class="sg-row wcard"><div class="sg-ico">'+WATER_ICON[d.kind]+'</div><div><p class="sg-eye">'+waterEsc(eyebrow(d))+'</p><p class="sg-val">'+waterEsc(main.text)+trendHtml(main)+'</p><p class="sg-det"><b>'+waterEsc(d.displayName)+'</b>'
-        +(d.when?'<br><span class="wread">Read '+waterEsc(fmtWhen(d.when))+'</span>':'')
-        +(extra.length?'<br>'+extra.map(function(e){ return waterEsc(e.label)+': '+waterEsc(e.text)+trendHtml(e); }).join(' \u00b7 '):'')
-        +sts.map(function(st){ return '<br><span class="wstat">'+waterEsc(st)+'</span>'; }).join('')+'</p></div>'+gaugeSvg(d)+'</div>';
-    };
+    var card=waterCardHtml;
     orderWater(_wm.byKind);
+    /* v945 (Laurie): number the streams 1..N in transect order (upstream -> downstream); the same number sits on the map pin. */
+    _wm.byKind.stream.forEach(function(d,i){ d.num=i+1; }); _wm.byKind.lake.forEach(function(d){ d.num=null; }); _wm.byKind.well.forEach(function(d){ d.num=null; });
     var html=['stream','lake','well'].map(function(k){ var rows=_wm.byKind[k]; return rows.length?'<div class="sg-grid wgrid">'+rows.map(card).join('')+'</div>':''; }).join('');
     host.innerHTML=html || '<p class="ph-empty">No active USGS gauges within '+WATER_BBOX_KM+' km right now.</p>';
     plotWaterMarkers(_wm.all);

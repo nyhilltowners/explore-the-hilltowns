@@ -220,6 +220,10 @@ a.link:hover{background:rgba(252,163,21,.14);}
 .sg-wrap .maplibregl-popup-content a{color:#0b5cad !important;}
 .sg-wrap .maplibregl-popup-content .wtrend{color:#8a6a00 !important;}
 .sg-row.wcard{padding-right:0;}
+/* v945 (2026-09-28, Laurie): transect numbers - on the card icon and on the map pin */
+.sg-ico{position:relative;}
+.wnum{position:absolute; right:-6px; bottom:-4px; min-width:18px; height:18px; padding:0 4px; border-radius:9px; background:var(--gold,#c9a227); color:#1a1608 !important; font:800 11px/18px "Montserrat","Lato",sans-serif; text-align:center;}
+.wpin-num{font:800 13px/1 "Montserrat","Lato",sans-serif; color:#fff;}
 .wgrid+.wgrid{margin-top:4px;}
 .wread{opacity:.8; font-size:12px;}
 </style>
@@ -453,6 +457,7 @@ a.link:hover{background:rgba(252,163,21,.14);}
   <h2 class="sg-sec">Water levels</h2>
   <div id="water-map" style="height:320px; border-radius:12px; overflow:hidden; margin:0 0 12px; background:rgba(0,0,0,.18); border:1px solid rgba(255,255,255,.18);"></div>
   <div id="water-cards"><p class="ph-empty">Loading…</p></div>
+  <p class="sg-note" id="water-stat-note"></p>
   <p class="sg-note" id="water-live-src">Data © USGS Water Data for the Nation (waterservices.usgs.gov), provisional and subject to revision. Refreshes every 15 minutes.</p>
 
   <h2 class="sg-sec">Seen lately · iNaturalist</h2>
