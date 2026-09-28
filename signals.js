@@ -111,7 +111,9 @@
     /* v953 (2026-09-28, Laurie): this picker only feeds the year-to-date grid, so only stations still reporting belong in
        it (a closed station has no current year to compare). Closed stations stay in station_dd.js and in the
        year-by-year chart source picker, where their history is the point. Label = name · since YYYY. */
-    Object.keys(ALL.stations).forEach(function(k){ var S=ALL.stations[k]; if(!S.active) return; var o=document.createElement('option'); o.value=k; o.textContent=S.name.replace(/ — elev\. approx\./,'')+' \u00b7 since '+S.first; sel.appendChild(o); }); if(ALL.stations['alcove_dam']) sel.value='alcove_dam'; /* v865 (2026-09-25, Laurie): default Alcove Dam */ sel.onchange=function(){ if(_ddCache) renderDD(_ddCache); }; }
+    /* v954 (Laurie): Berne reanalysis first and default; then the active stations. This one picker drives Rain & snow AND the year-by-year charts. */
+    var ob=document.createElement('option'); ob.value='berne'; ob.textContent='Berne reanalysis \u00b7 ERA5 grid cell, ~1,700 ft \u00b7 since 1940'; sel.appendChild(ob);
+    Object.keys(ALL.stations).forEach(function(k){ var S=ALL.stations[k]; if(!S.active) return; var o=document.createElement('option'); o.value=k; o.textContent=S.name.replace(/ — elev\. approx\./,'')+' \u00b7 since '+S.first; sel.appendChild(o); }); sel.value='berne'; sel.onchange=function(){ if(_ddCache) renderDD(_ddCache); }; }
   /* 2026-09-27 (v906, Laurie): both archive requests are 86 years of daily data — big enough that reloading the
      page repeatedly could run into Open-Meteo's free-tier daily request cap ("Daily API request
      limit exceeded"), which is what blanked every chart. Cache each response in localStorage,
@@ -129,17 +131,17 @@
     var cached = lsGet(cacheKey);
     if(cached && cached.daily){ _ddCache=cached; renderDD(cached); fetchMoisture(end); return; }
     var url = 'https://archive-api.open-meteo.com/v1/archive?'+Q+'&start_date=1940-01-01&end_date='+end+'&daily=temperature_2m_max,temperature_2m_min&temperature_unit=fahrenheit'; /* v887 (2026-09-26): moisture is fetched separately (fetchMoisture) so a failure there cannot blank the temperature charts */
-    $('dd-note').textContent = 'Loading 1940–'+thisYear+' history…';
-    fetch(url).then(function(r){ return r.json(); }).then(function(j){ if(!j||!j.daily){ throw new Error(j&&j.reason?j.reason:'no daily data'); } _ddCache=j; lsSet(cacheKey,j); renderDD(j); fetchMoisture(end); }).catch(function(e){ $('dd-note').textContent='Degree-day history unavailable right now'+(/limit/i.test(e&&e.message||'')?' — Open-Meteo\u2019s free daily request limit was reached; this resets tomorrow.':'.'); status('Degree days: '+(e && e.message || 'fetch failed')); });
+    var stn0=$('st-note'); if(stn0) stn0.textContent = 'Loading 1940–'+thisYear+' history…';   /* v954: status goes beside the picker; #dd-note is now the static sources footnote */
+    fetch(url).then(function(r){ return r.json(); }).then(function(j){ if(!j||!j.daily){ throw new Error(j&&j.reason?j.reason:'no daily data'); } _ddCache=j; lsSet(cacheKey,j); renderDD(j); fetchMoisture(end); }).catch(function(e){ var stn1=$('st-note'); if(stn1) stn1.textContent='History unavailable right now'+(/limit/i.test(e&&e.message||'')?' — Open-Meteo\u2019s free daily request limit was reached; this resets tomorrow.':'.'); status('Degree days: '+(e && e.message || 'fetch failed')); });
   }
   /* v887 (2026-09-26): second request for the moisture charts; merged into the year series when it arrives */
   var _moist=null;
   function fetchMoisture(end){
     if(_moist){ return; }
     var cacheKey='hfa.moist.'+end, cached=lsGet(cacheKey);
-    if(cached && cached.daily){ _moist=cached; if(_ddCache){ mergeMoisture(_ddCache,cached); renderYearChart(_ddCache); } return; }
+    if(cached && cached.daily){ _moist=cached; if(_ddCache){ mergeMoisture(_ddCache,cached); renderDD(_ddCache); } return; }
     var url='https://archive-api.open-meteo.com/v1/archive?'+Q+'&start_date=1940-01-01&end_date='+end+'&daily=precipitation_sum,rain_sum,snowfall_sum&precipitation_unit=inch';
-    fetch(url).then(function(r){ return r.json(); }).then(function(m){ if(!m||!m.daily) throw new Error(m&&m.reason?m.reason:'no daily data'); _moist=m; lsSet(cacheKey,m); if(_ddCache){ mergeMoisture(_ddCache,m); renderYearChart(_ddCache); } })
+    fetch(url).then(function(r){ return r.json(); }).then(function(m){ if(!m||!m.daily) throw new Error(m&&m.reason?m.reason:'no daily data'); _moist=m; lsSet(cacheKey,m); if(_ddCache){ mergeMoisture(_ddCache,m); renderDD(_ddCache); } })
       .catch(function(e){ status('Rain/snow history: '+(e && e.message || 'fetch failed')); var rn=$('ch-rain-note'); if(rn) rn.textContent='Rain and snow history could not be loaded'+(/limit/i.test(e&&e.message||'')?' — Open-Meteo\u2019s free daily request limit was reached; this resets tomorrow.':' right now.'); });
   }
   function mergeMoisture(j,m){ var idx={}; m.daily.time.forEach(function(t,i){ idx[t]=i; }); ['precipitation_sum','rain_sum','snowfall_sum'].forEach(function(k){ j.daily[k]=j.daily.time.map(function(t){ var i=idx[t]; return i==null?null:m.daily[k][i]; }); }); }
@@ -179,9 +181,9 @@
   }
   var _snowMode='year';
   function stationSeries(S){
-    var out={}; Object.keys(S.years).forEach(function(y){ var Y=S.years[y]; if(!Y.dhi) return;
+    var out={}; Object.keys(S.years).forEach(function(y){ var Y=S.years[y]; if(!Y.dhi && !(Y.np>0)) return;   /* v954: precip-only years still draw the moisture charts */
       var o={hi:new Array(366),lo:new Array(366),mean:new Array(366),hdd:new Array(366),cdd:new Array(366),gdd:new Array(366),rain:new Array(366),snow:new Array(366),precip:new Array(366)}, h=0,c=0,g=0;
-      for(var d=0;d<366;d++){ var mx=Y.dhi[d], mn=Y.dlo[d]; if(typeof mx!=='number'||typeof mn!=='number') continue;
+      for(var d=0;d<366 && Y.dhi;d++){ var mx=Y.dhi[d], mn=Y.dlo[d]; if(typeof mx!=='number'||typeof mn!=='number') continue;
         var mean=(mx+mn)/2; o.hi[d]=mx; o.lo[d]=mn; o.mean[d]=mean; h+=Math.max(0,65-mean); c+=Math.max(0,mean-65); g+=Math.max(0,(Math.min(86,mx)+Math.max(50,mn))/2-50); o.hdd[d]=h; o.cdd[d]=c; o.gdd[d]=g; }
       /* v883 (2026-09-26, Laurie): station precipitation (liquid, incl. melted snow) and snowfall are cumulative by day-of-year in station_dd.js; rain alone is not observed at a NOAA co-op station */
       if(Y.np>0 && Y.p){ for(var d2=0; d2<366 && d2<Y.p.length; d2++){ o.precip[d2]=Y.p[d2]; o.snow[d2]=Y.s[d2]; } }
@@ -318,9 +320,7 @@
   function renderYearChart(j){
     if(!j||!j.daily){ status('Year charts: '+(j&&j.reason?j.reason:'no data')); return; }
     _yearsBerne=yearSeries(j); _winterBerne=winterFromDaily(j.daily.time, j.daily.snowfall_sum||[]);
-    var sel=$('ch-src'), ALL=window.STATION_DD;
-    if(sel && ALL && sel.options.length<2){ Object.keys(ALL.stations).forEach(function(k){ var S=ALL.stations[k]; if(!S.daily) return; var o=document.createElement('option'); o.value=k; o.textContent=S.name+' observed ('+S.first+'–'+S.last+')'; sel.appendChild(o); }); sel.onchange=drawAll; }
-    drawAll();
+    drawAll();   /* v954: the single station picker (#st-pick) is the source */
   }
   /* 2026-09-27 (v933, Laurie): a closed station has no current-year line to compare against. When the station has known
      coordinates and no (or almost no) data for the current year, fetch ERA5 reanalysis for THAT location for
@@ -356,17 +356,20 @@
     }).catch(function(){ return null; });
   }
   function drawAll(){
-    var sel=$('ch-src'), ALL=window.STATION_DD, src=sel?sel.value:'berne', years, note='', S=null;
+    var sel=$('st-pick'), ALL=window.STATION_DD, src=sel?sel.value:'berne', years, note='', S=null;
     if(src==='berne'||!ALL||!ALL.stations[src]){ years=_yearsBerne; _curWinter=_winterBerne; note=''; }
-    else { S=ALL.stations[src]; years=stationSeries(S); _curWinter=winterFromStation(S); note='Observed at '+S.name+', ~'+S.elev.toLocaleString()+' ft \u2014 NOAA thermometer readings, gaps where the observer missed a day.'; }
+    else { S=ALL.stations[src]; years=stationSeries(S); _curWinter=winterFromStation(S); note='Observed at '+S.name.replace(/ — elev\. approx\./,'')+', ~'+S.elev.toLocaleString()+' ft \u2014 NOAA readings, gaps where the observer missed a day.'; }
     var n=$('ch-src-note'); if(n) n.textContent=note;
+    /* v954: a precip-only station has no temperature record - hide the six temperature/degree-day charts rather than draw them empty */
+    var noTemp = !!(S && !S.daily); var wrap=document.querySelector('.sg-wrap'); if(wrap) wrap.classList.toggle('no-temp', noTemp);
+    var ntn=$('no-temp-note'); if(ntn){ ntn.style.display=noTemp?'':'none'; ntn.textContent=noTemp?('This station records precipitation and snow only; the temperature and degree-day charts are hidden. Choose Berne reanalysis or a station with a thermometer to see them.'):''; }
     if(!years) return;
     _curSrc=src; _curYears=years; _curNote=(src==='berne'?'ERA5 reanalysis for Berne via Open-Meteo':'NOAA GHCN-Daily via xmACIS2');
     buildPickers(years); /* source change resets the selection to all years */
     drawCharts();
     if(S && needsModeled(S, years)){
       modeledYear(src, S).then(function(m){
-        var sel2=$('ch-src'); if(!m || (sel2?sel2.value:'berne')!==src) return;      /* user moved on, or nothing to draw */
+        var sel2=$('st-pick'); if(!m || (sel2?sel2.value:'berne')!==src) return;      /* user moved on, or nothing to draw */
         years[CUR_YEAR]=m;
         var n2=$('ch-src-note'); if(n2) n2.textContent=note+' The dashed white line is '+CUR_YEAR+' so far, modeled \u2014 ERA5 reanalysis for this location, not an observation and not adjusted to this station.';
         buildPickers(years); drawCharts();
@@ -391,24 +394,41 @@
       /* Albany observed (station_dd.js), same date, same formulas */
       /* Observed station (picker; station_dd.js carries several) */
       var ALL = window.STATION_DD, doy = Math.round((Date.UTC(t.getFullYear(),t.getMonth(),t.getDate())-Date.UTC(t.getFullYear(),0,1))/86400000)+1;
-      var sel = $('st-pick'), key = (sel && sel.value) || (ALL && (ALL.stations['alcove_dam']?'alcove_dam':Object.keys(ALL.stations)[0]));
+      var sel = $('st-pick'), key = (sel && sel.value) || 'berne';
       var SD = ALL && ALL.stations[key], sy = SD && SD.years[thisYear], sn = null;
       if(SD){ var acc={h:0,c:0,g:0}, k=0, y1=null, y2=null; Object.keys(SD.years).forEach(function(yy){ yy=+yy; var Y=SD.years[yy]; if(yy<thisYear && Y && Y.n>=360 && Y.h){ acc.h+=Y.h[doy-1]; acc.c+=Y.c[doy-1]; acc.g+=Y.g[doy-1]; k++; y1=y1==null?yy:Math.min(y1,yy); y2=y2==null?yy:Math.max(y2,yy); } }); if(k>=5){ sn={h:acc.h/k,c:acc.c/k,g:acc.g/k,n:k,y1:y1,y2:y2}; } }
-      /* water + extremes for the chosen station */
-      (function(){ var P=$('w-p'); if(!P) return; if(!SD){ P.textContent='—'; return; }
+      /* water + extremes for the chosen source - v954: Berne reanalysis (default) computed from the same ERA5 series the charts use, or the chosen station */
+      (function(){ var P=$('w-p'); if(!P) return;
+        var sel=$('st-pick'), src=(sel&&sel.value)||'berne';
+        if(src==='berne'){
+          var T=j.daily.time, PP=j.daily.precipitation_sum, SS=j.daily.snowfall_sum, MX=j.daily.temperature_2m_max, MN=j.daily.temperature_2m_min;
+          if(!PP){ $('w-p').textContent='…'; $('w-p-d').textContent='Berne reanalysis · loading moisture'; $('w-s').textContent='…'; $('w-s-d').textContent=''; $('w-x').textContent='—'; $('w-x-d').textContent=''; return; }
+          var by={}; for(var i=0;i<T.length;i++){ var yy=+T[i].slice(0,4), md=T[i].slice(5); if(md>mmdd) continue; var B=by[yy]||(by[yy]={p:0,s:0,wet:0,hi:null,lo:null,d90:0,d0:0,n:0});
+            if(typeof PP[i]==='number'){ B.p+=PP[i]; if(PP[i]>=0.01) B.wet++; } if(typeof SS[i]==='number') B.s+=SS[i];
+            if(typeof MX[i]==='number'){ B.hi=B.hi==null?MX[i]:Math.max(B.hi,MX[i]); if(MX[i]>=90) B.d90++; } if(typeof MN[i]==='number'){ B.lo=B.lo==null?MN[i]:Math.min(B.lo,MN[i]); if(MN[i]<=0) B.d0++; } B.n++; }
+          var C=by[thisYear]; if(!C){ $('w-p').textContent='—'; $('w-p-d').textContent='Berne reanalysis · no '+thisYear+' data yet'; return; }
+          var pa=0, sa=0, k=0; Object.keys(by).forEach(function(yy){ yy=+yy; if(yy<thisYear && by[yy].n>=doy-3){ pa+=by[yy].p; sa+=by[yy].s; k++; } }); if(k){ pa/=k; sa/=k; }
+          var diff=C.p-pa;
+          $('w-p').textContent=C.p.toFixed(2)+' in'; $('w-p-d').textContent='Berne reanalysis · '+C.wet+' days with rain or snow · '+(Math.abs(diff)<0.05?'right on':(Math.abs(diff).toFixed(2)+' in '+(diff>0?'above':'below')))+' the '+k+'-year average for this date ('+pa.toFixed(2)+' in)';
+          $('w-s').textContent=C.s.toFixed(1)+' in'; $('w-s-d').textContent='Berne reanalysis · average by this date '+sa.toFixed(1)+' in';
+          $('w-x').innerHTML=(C.hi!=null?'↑ '+Math.round(C.hi)+'°<span class="c">↓ '+Math.round(C.lo)+'°</span>':'—');
+          $('w-x-d').textContent='Berne reanalysis · '+C.d90+' days of 90°F or hotter · '+C.d0+' nights of 0°F or colder';
+          var stn=$('st-note'); if(stn) stn.textContent='ERA5 reanalysis for the Berne grid cell via Open-Meteo, 1940 to yesterday — a model reconstruction, not a thermometer.';
+          return;
+        }
+        if(!SD){ P.textContent='—'; return; }
         var pn=null, snw=null, k2=0; Object.keys(SD.years).forEach(function(yy){ yy=+yy; var Y=SD.years[yy]; if(yy<thisYear && Y && Y.np>=360 && Y.p){ pn=(pn||0)+Y.p[doy-1]; snw=(snw||0)+Y.s[doy-1]; k2++; } });
         if(k2>=5){ pn/=k2; snw/=k2; } else { pn=snw=null; }
         var lbl=SD.name.split(' ·')[0];
+        var stn2=$('st-note'); if(stn2) stn2.textContent=SD.name.replace(/ — elev\. approx\./,'')+', ~'+SD.elev.toLocaleString()+' ft, record '+SD.first+'–'+SD.last+' — NOAA GHCN-Daily via xmACIS2.';
         if(sy && sy.np){ var pv=sy.p[doy-1], sv=sy.s[doy-1];
-          /* v953 (Laurie): plainer wording */
-          var diff=(pn!=null)?(pv-pn):null;
-          $('w-p').textContent=pv.toFixed(2)+' in'; $('w-p-d').textContent=lbl+' · '+sy.wet+' days with rain or snow'+(pn!=null?' · '+(Math.abs(diff)<0.05?'right on':(Math.abs(diff).toFixed(2)+' in '+(diff>0?'above':'below')))+' the '+k2+'-year average for this date ('+pn.toFixed(2)+' in)':' · not enough years yet for an average');
+          var diff2=(pn!=null)?(pv-pn):null;
+          $('w-p').textContent=pv.toFixed(2)+' in'; $('w-p-d').textContent=lbl+' · '+sy.wet+' days with rain or snow'+(pn!=null?' · '+(Math.abs(diff2)<0.05?'right on':(Math.abs(diff2).toFixed(2)+' in '+(diff2>0?'above':'below')))+' the '+k2+'-year average for this date ('+pn.toFixed(2)+' in)':' · too few complete years for an average');
           $('w-s').textContent=sv.toFixed(1)+' in'; $('w-s-d').textContent=lbl+' · deepest snow on the ground '+sy.depth+' in'+(snw!=null?' · average by this date '+snw.toFixed(1)+' in':'');
           $('w-x').innerHTML=(sy.hi!=null?'↑ '+Math.round(sy.hi)+'°<span class="c">↓ '+Math.round(sy.lo)+'°</span>':'—');
           $('w-x-d').textContent=lbl+' · '+sy.d90+' days of 90°F or hotter · '+sy.d0+' nights of 0°F or colder';
         } else { ['w-p','w-s','w-x'].forEach(function(id){ $(id).textContent='—'; }); $('w-p-d').textContent=lbl+': no '+thisYear+' observations'+(SD.active?'':' (closed '+SD.last+')'); $('w-s-d').textContent=''; $('w-x-d').textContent=''; }
       })();
-      $('dd-note').innerHTML='Jan 1 – '+end+' · Berne, NY at ~1,700 ft: ERA5 reanalysis via Open-Meteo. Observed: '+(SD?SD.name+', ~'+SD.elev.toLocaleString()+' ft, record '+SD.first+'–'+SD.last+(SD.active?' (active)':' (closed)')+', '+ALL.source:'no station loaded')+'. Averages are the full period of record through this same date (complete years only, current year excluded), same formulas for both. Weather, winds and history by <a href="https://open-meteo.com/" target="_blank" rel="noopener">Open-Meteo</a> (CC BY 4.0); winds aloft from the Canadian GEM Global model with GFS as fallback; sun and moon computed locally. Refreshes every 15 minutes.'; /* 2026-09-27 (v899, Laurie): the two footnotes consolidated into one note, now below the button/table */
     })();
   }
 

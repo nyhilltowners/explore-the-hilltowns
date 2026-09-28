@@ -232,6 +232,7 @@ a.link:hover{background:rgba(252,163,21,.14);}
 #water-map .maplibregl-popup{z-index:5; max-width:min(260px, 80vw) !important;}
 @media (max-width:900px){ #water-layout{grid-template-columns:1fr;} #water-map-col{position:static;} #water-map{height:60vh; min-height:360px; margin-bottom:12px;} }
 .wchain+.wchain{margin-top:6px;}
+.sg-pick{margin:22px 0 -14px; display:flex; align-items:center; gap:10px; flex-wrap:wrap;} .no-temp [data-temp="1"]{display:none;} /* v954 */
 .sg-h3.wchain-h{margin:12px 0 0; justify-content:flex-start; gap:10px;} /* beats .sg-h3's space-between */
 .wsw{display:inline-block; width:12px; height:12px; border-radius:50%; flex:none;}
 .wcount{font-weight:400; opacity:.75;}
@@ -399,6 +400,7 @@ a.link:hover{background:rgba(252,163,21,.14);}
   <div class="ph-row" id="ph-row"></div>
 
   <h2 class="sg-sec">Sky</h2>
+  <p class="sg-det" style="margin:0 0 8px">For Berne, NY, ~1,700 ft. Sun and moon are computed here; today's forecast, the air and the winds are Open-Meteo model values for this spot, not a station.</p> <!-- v954 (2026-09-28, Laurie): these blocks are pinned to Berne; the station picker below governs only the station-based sections -->
   <div class="sg-grid">
     <div class="sg-row"><div class="sg-ico" ><svg viewBox="0 0 24 24"><path d="M3 18h18M5 14a7 7 0 0 1 14 0"/><path d="M12 3v4M8 8l1.5 1.5M16 8l-1.5 1.5"/></svg></div><div><p class="sg-eye">Sunrise · sunset</p><p class="sg-val" id="sun-times">—</p><p class="sg-det" id="sun-det"></p></div></div>
     <div class="sg-row"><div class="sg-ico" id="moon-ico"><svg viewBox="0 0 24 24"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg></div><div><p class="sg-eye">Moon</p><p class="sg-val" id="moon-phase">—</p><p class="sg-det" id="moon-det"></p></div></div>
@@ -409,22 +411,6 @@ a.link:hover{background:rgba(252,163,21,.14);}
   <div class="sg-grid" id="air-grid">
     <div class="sg-row"><div class="sg-ico" ><svg viewBox="0 0 24 24"><path d="M14 14.8V5a2 2 0 0 0-4 0v9.8a4 4 0 1 0 4 0z"/></svg></div><div><p class="sg-eye">Temperature</p><p class="sg-val" id="temp-val">—</p><p class="sg-det" id="temp-sub"></p></div></div><div class="sg-row"><div class="sg-ico" ><svg viewBox="0 0 24 24"><path d="M12 3s6 6.5 6 11a6 6 0 0 1-12 0c0-4.5 6-11 6-11z"/></svg></div><div><p class="sg-eye">Humidity</p><p class="sg-val" id="hum-val">—</p><p class="sg-det" id="hum-sub"></p></div></div><div class="sg-row"><div class="sg-ico" ><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 12l4-4M12 7v1M17 12h-1M12 17v-1M7 12h1"/></svg></div><div><p class="sg-eye">Barometer</p><p class="sg-val" id="pres-val">—</p><p class="sg-det" id="pres-sub"></p></div></div><div class="sg-row"><div class="sg-ico" ><svg viewBox="0 0 24 24"><path d="M7 18a4 4 0 0 1-.5-8A6 6 0 0 1 18 9a4 4 0 0 1 0 9H7z"/></svg></div><div><p class="sg-eye">Sky</p><p class="sg-val" id="cloud-val">—</p><p class="sg-det" id="cloud-sub"></p></div></div>
   </div>
-
-  <!-- 2026-09-27 (v915, Laurie): the "Degree days · year to date" module (Heating/Cooling/Growing cards) and the
-       year-by-year table both removed — Laurie: they weren't showing anything the charts above
-       don't already show, and most stations in the picker have no temperature record at all
-       (precip/snow-only CoCoRaHS gauges), which made the cards read as broken ("0 · no average")
-       for the majority of the list. The station picker itself is still needed, for Water below. -->
-  <!-- v953 (2026-09-28, Laurie): moved up beside Air; renamed so it cannot be confused with the river gauges below -->
-  <h2 class="sg-sec">Rain &amp; snow · year to date</h2>
-  <p class="sg-det" style="margin:0 0 10px">Station: <select id="st-pick" class="sg-sel"></select></p>
-  <div class="sg-grid" id="water-grid">
-    <div class="sg-row"><div class="sg-ico"><svg viewBox="0 0 24 24"><path d="M12 3s6 6.5 6 11a6 6 0 0 1-12 0c0-4.5 6-11 6-11z"/></svg></div><div><p class="sg-eye">Precipitation</p><p class="sg-val" id="w-p">—</p><p class="sg-det" id="w-p-d"></p></div></div>
-    <div class="sg-row"><div class="sg-ico"><svg viewBox="0 0 24 24"><path d="M12 2v20M2 12h20M5 5l14 14M19 5L5 19"/></svg></div><div><p class="sg-eye">Snowfall</p><p class="sg-val" id="w-s">—</p><p class="sg-det" id="w-s-d"></p></div></div>
-    <div class="sg-row"><div class="sg-ico"><svg viewBox="0 0 24 24"><path d="M14 14.8V5a2 2 0 0 0-4 0v9.8a4 4 0 1 0 4 0z"/></svg></div><div><p class="sg-eye">Extremes this year</p><p class="sg-val" id="w-x">—</p><p class="sg-det" id="w-x-d"></p></div></div>
-  </div>
-  <p class="sg-note" id="dd-note">Loading…</p>
-
 
   <h2 class="sg-sec">Winds, ground to stratosphere</h2>
   <div class="sg-winds">
@@ -437,27 +423,42 @@ a.link:hover{background:rgba(252,163,21,.14);}
     <div class="sg-cap"><svg viewBox="0 0 24 24"><path d="M12 2l1.8 5.6H20l-4.7 3.4 1.8 5.6L12 13.2 6.9 16.6l1.8-5.6L4 7.6h6.2z"/></svg></div>
   </div>
 
+  <!-- 2026-09-27 (v915, Laurie): the "Degree days · year to date" module (Heating/Cooling/Growing cards) and the
+       year-by-year table both removed — Laurie: they weren't showing anything the charts above
+       don't already show, and most stations in the picker have no temperature record at all
+       (precip/snow-only CoCoRaHS gauges), which made the cards read as broken ("0 · no average")
+       for the majority of the list. The station picker itself is still needed, for Water below. -->
+  <!-- v954 (2026-09-28, Laurie): ONE picker — Berne reanalysis (default) or an active observed station — governs Rain & snow and the year-by-year charts -->
+  <div class="sg-pick"><label for="st-pick" class="sg-det" style="margin:0">Station:</label> <select id="st-pick" class="sg-sel"></select> <span class="sg-det" id="st-note" style="margin:0"></span></div>
+  <h2 class="sg-sec">Rain &amp; snow · year to date</h2>
+  <div class="sg-grid" id="water-grid">
+    <div class="sg-row"><div class="sg-ico"><svg viewBox="0 0 24 24"><path d="M12 3s6 6.5 6 11a6 6 0 0 1-12 0c0-4.5 6-11 6-11z"/></svg></div><div><p class="sg-eye">Precipitation</p><p class="sg-val" id="w-p">—</p><p class="sg-det" id="w-p-d"></p></div></div>
+    <div class="sg-row"><div class="sg-ico"><svg viewBox="0 0 24 24"><path d="M12 2v20M2 12h20M5 5l14 14M19 5L5 19"/></svg></div><div><p class="sg-eye">Snowfall</p><p class="sg-val" id="w-s">—</p><p class="sg-det" id="w-s-d"></p></div></div>
+    <div class="sg-row"><div class="sg-ico"><svg viewBox="0 0 24 24"><path d="M14 14.8V5a2 2 0 0 0-4 0v9.8a4 4 0 1 0 4 0z"/></svg></div><div><p class="sg-eye">Extremes this year</p><p class="sg-val" id="w-x">—</p><p class="sg-det" id="w-x-d"></p></div></div>
+  </div>
+
+
+
   <h2 class="sg-sec">Year-by-year weather history</h2>
-  <p class="sg-det" style="margin:0 0 10px">Raw daily values. This year is white; earlier years run from pale lavender back to deep violet, oldest darkest. Hover to see the year, or use the dropdown in the charts to explore different years and datasets.</p>
-  <p class="sg-det" style="margin:0 0 14px">Source: <select id="ch-src" class="sg-sel"><option value="berne">Berne reanalysis (ERA5 grid cell, 1940–)</option></select> <span id="ch-src-note"></span></p>
-  <h3 class="sg-h3">Daily mean temperature</h3>
-  <p class="sg-det" style="margin:0 0 8px"></p>
-  <div class="sg-chart"><svg id="ch-mean" viewBox="0 0 1000 420" preserveAspectRatio="none" role="img" aria-label="Daily mean temperature"></svg><div class="sg-tip" id="ch-mean-tip"></div></div>
-  <h3 class="sg-h3">Daily high</h3>
-  <p class="sg-det" style="margin:0 0 8px"></p>
-  <div class="sg-chart"><svg id="ch-hi" viewBox="0 0 1000 420" preserveAspectRatio="none" role="img" aria-label="Daily high"></svg><div class="sg-tip" id="ch-hi-tip"></div></div>
-  <h3 class="sg-h3">Daily low</h3>
-  <p class="sg-det" style="margin:0 0 8px"></p>
-  <div class="sg-chart"><svg id="ch-lo" viewBox="0 0 1000 420" preserveAspectRatio="none" role="img" aria-label="Daily low"></svg><div class="sg-tip" id="ch-lo-tip"></div></div>
-  <h3 class="sg-h3">Heating degree days, accumulating</h3>
-  <p class="sg-det" style="margin:0 0 8px">Base 65°F.</p>
-  <div class="sg-chart"><svg id="ch-hdd" viewBox="0 0 1000 420" preserveAspectRatio="none" role="img" aria-label="Heating degree days, accumulating"></svg><div class="sg-tip" id="ch-hdd-tip"></div></div>
-  <h3 class="sg-h3">Cooling degree days, accumulating</h3>
-  <p class="sg-det" style="margin:0 0 8px">Base 65°F.</p>
-  <div class="sg-chart"><svg id="ch-cdd" viewBox="0 0 1000 420" preserveAspectRatio="none" role="img" aria-label="Cooling degree days, accumulating"></svg><div class="sg-tip" id="ch-cdd-tip"></div></div>
-  <h3 class="sg-h3">Growing degree days, accumulating</h3>
-  <p class="sg-det" style="margin:0 0 8px">Base 50°F, capped at 86°F.</p>
-  <div class="sg-chart"><svg id="ch-gdd" viewBox="0 0 1000 420" preserveAspectRatio="none" role="img" aria-label="Growing degree days, accumulating"></svg><div class="sg-tip" id="ch-gdd-tip"></div></div>
+  <p class="sg-det" style="margin:0 0 10px">Raw daily values for the station chosen above. This year is white; earlier years run from pale lavender back to deep violet, oldest darkest. Hover to see the year; the Years picker on each chart chooses which years are drawn. <span id="ch-src-note"></span></p>
+  <h3 class="sg-h3" data-temp="1">Daily mean temperature</h3>
+  <p class="sg-det" data-temp="1" style="margin:0 0 8px"></p>
+  <div class="sg-chart" data-temp="1"><svg id="ch-mean" viewBox="0 0 1000 420" preserveAspectRatio="none" role="img" aria-label="Daily mean temperature"></svg><div class="sg-tip" id="ch-mean-tip"></div></div>
+  <h3 class="sg-h3" data-temp="1">Daily high</h3>
+  <p class="sg-det" data-temp="1" style="margin:0 0 8px"></p>
+  <div class="sg-chart" data-temp="1"><svg id="ch-hi" viewBox="0 0 1000 420" preserveAspectRatio="none" role="img" aria-label="Daily high"></svg><div class="sg-tip" id="ch-hi-tip"></div></div>
+  <h3 class="sg-h3" data-temp="1">Daily low</h3>
+  <p class="sg-det" data-temp="1" style="margin:0 0 8px"></p>
+  <div class="sg-chart" data-temp="1"><svg id="ch-lo" viewBox="0 0 1000 420" preserveAspectRatio="none" role="img" aria-label="Daily low"></svg><div class="sg-tip" id="ch-lo-tip"></div></div>
+  <h3 class="sg-h3" data-temp="1">Heating degree days, accumulating</h3>
+  <p class="sg-det" data-temp="1" style="margin:0 0 8px">Base 65°F.</p>
+  <div class="sg-chart" data-temp="1"><svg id="ch-hdd" viewBox="0 0 1000 420" preserveAspectRatio="none" role="img" aria-label="Heating degree days, accumulating"></svg><div class="sg-tip" id="ch-hdd-tip"></div></div>
+  <h3 class="sg-h3" data-temp="1">Cooling degree days, accumulating</h3>
+  <p class="sg-det" data-temp="1" style="margin:0 0 8px">Base 65°F.</p>
+  <div class="sg-chart" data-temp="1"><svg id="ch-cdd" viewBox="0 0 1000 420" preserveAspectRatio="none" role="img" aria-label="Cooling degree days, accumulating"></svg><div class="sg-tip" id="ch-cdd-tip"></div></div>
+  <h3 class="sg-h3" data-temp="1">Growing degree days, accumulating</h3>
+  <p class="sg-det" data-temp="1" style="margin:0 0 8px">Base 50°F, capped at 86°F.</p>
+  <div class="sg-chart" data-temp="1"><svg id="ch-gdd" viewBox="0 0 1000 420" preserveAspectRatio="none" role="img" aria-label="Growing degree days, accumulating"></svg><div class="sg-tip" id="ch-gdd-tip"></div></div>
   <h3 class="sg-h3">Rain, accumulating</h3>
   <p class="sg-det" style="margin:0 0 8px">Inches of rain since January 1. <span id="ch-rain-note"></span></p>
   <div class="sg-chart"><svg id="ch-rain" viewBox="0 0 1000 420" preserveAspectRatio="none" role="img" aria-label="Rain, accumulating"></svg><div class="sg-tip" id="ch-rain-tip"></div></div>
@@ -468,6 +469,7 @@ a.link:hover{background:rgba(252,163,21,.14);}
   <p class="sg-det" style="margin:0 0 8px">All moisture as water — rain plus the melted equivalent of snow — since January 1.</p>
   <div class="sg-chart"><svg id="ch-precip" viewBox="0 0 1000 420" preserveAspectRatio="none" role="img" aria-label="Total precipitation, accumulating"></svg><div class="sg-tip" id="ch-precip-tip"></div></div>
   <p class="sg-note" id="yr-note"></p>
+  <p class="sg-note" id="no-temp-note" style="display:none"></p>
 
   <!-- 2026-09-27 (v923, Laurie): live USGS water levels — streams, lakes/reservoirs, groundwater wells.
        v934 (Laurie): one section, "Water levels"; streams on the top row, reservoirs in the middle, wells at the bottom (renderWater builds one grid per kind into #water-cards) -->
@@ -493,6 +495,9 @@ a.link:hover{background:rgba(252,163,21,.14);}
   <p class="sg-note" id="ebird-note"></p>
   <a class="sg-btn" href="https://merlin.allaboutbirds.org/" target="_blank" rel="noopener" style="display:inline-block; text-decoration:none; margin-top:8px">Get the Merlin Bird ID App &rarr;</a> <!-- 2026-09-27 (v906, Laurie) -->
 
+
+  <!-- v954 (2026-09-28, Laurie): one sources footnote for the whole page, at the bottom -->
+  <p class="sg-note" id="dd-note"><b>Sources.</b> Sky computed locally for Berne, NY (~1,700 ft). Today, air, winds and the Berne history: ERA5 reanalysis and current models via <a href="https://open-meteo.com/" target="_blank" rel="noopener">Open-Meteo</a> (CC BY 4.0); winds aloft from the Canadian GEM Global model, GFS as fallback. Observed stations: NOAA GHCN-Daily via xmACIS2 (NRCC); station averages are the full period of record through the same calendar date, complete years only, current year excluded. River and groundwater levels: USGS Water Data for the Nation, provisional. Wildlife: iNaturalist and eBird contributors. Refreshes every 15 minutes.</p>
 </main>
 
 <script src="skyline.js"></script>
