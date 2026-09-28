@@ -491,7 +491,8 @@
     '72019':{kind:'well',   label:'Depth to water',          fmt:function(v){ return Number(v).toFixed(2)+' ft below surface'; }, fmtS:function(v){ return Number(v).toFixed(2)+' ft'; }, abs:0.03, invert:true},
     '62611':{kind:'well',   label:'Groundwater level',       fmt:function(v){ return Number(v).toFixed(2)+' ft (NAVD88)'; }, fmtS:function(v){ return Number(v).toFixed(2)+' ft'; }, abs:0.03}
   };
-  var WATER_ORDER = ['00060','00065','62615','00054','72019','62611'];   /* which reading leads a site's card when it reports several */
+  var WATER_ORDER = ['00060','00065','62615','00054','72019','62611'];
+  var WATER_SHORT = {'00060':'flow','00065':'height','62615':'level','00054':'storage','72019':'depth','62611':'level'};   /* v936: caption under each range bar */   /* which reading leads a site's card when it reports several */
   var WATER_ICON = {
     stream:'<svg viewBox="0 0 24 24"><path d="M2 8c2-2 4-2 6 0s4 2 6 0 4-2 6 0M2 14c2-2 4-2 6 0s4 2 6 0 4-2 6 0M2 20c2-2 4-2 6 0s4 2 6 0 4-2 6 0"/></svg>',
     lake:'<svg viewBox="0 0 24 24"><path d="M12 3s6 6.5 6 11a6 6 0 0 1-12 0c0-4.5 6-11 6-11z"/></svg>',
@@ -530,9 +531,11 @@
     return {dir:dir, hours:Math.max(1,Math.round(span/3600000))};
   }
   function waterToday(){ var s=new Intl.DateTimeFormat('en-CA',{timeZone:'America/New_York'}).format(new Date()), p=s.split('-'); return {key:s, m:+p[1], d:+p[2]}; }
-  function statLine(d){
-    var s=d.stat; if(!s) return '';
-    var meta=WATER_PARAMS[d.readings[0].code], f=meta.fmtS||meta.fmt;
+  /* v936 (2026-09-27, Laurie): statistics are now kept per reading (d.stats[code]) so a stream that reports
+     both flow and stage can show a bar for each. statLine(d, rd) prints one reading's line. */
+  function statLine(d, rd){
+    var s=d.stats && d.stats[rd.code]; if(!s) return '';
+    var meta=WATER_PARAMS[rd.code], f=meta.fmtS||meta.fmt;
     var hi=meta.invert?s.min:s.max, hiYr=meta.invert?s.minYr:s.maxYr, lo=meta.invert?s.max:s.min, loYr=meta.invert?s.maxYr:s.minYr;
     var bits=[];
     if(meta.invert){   /* wells: depth to water. The record HIGH water level is the SHALLOWEST depth, so say it in those terms */
@@ -545,19 +548,20 @@
       if(lo!=null) bits.push('low '+f(lo)+(loYr?' ('+loYr+')':''));
     }
     if(!bits.length) return '';
-    return 'This date'+(s.begin?' since '+s.begin:'')+': '+bits.join(' \u00b7 ');
+    var lead = d.readings.length>1 ? (WATER_SHORT[rd.code]||meta.label).replace(/^./,function(c){ return c.toUpperCase(); })+', this date' : 'This date';
+    return lead+(s.begin?' since '+s.begin:'')+': '+bits.join(' · ');
   }
   /* Daily statistics for "today's" calendar date, via the USGS stat service (RDB text, CORS-open).
-     Cached per calendar day in localStorage so it's fetched at most once a day per site. */
+     Cached per calendar day in localStorage so it's fetched at most once a day per site+parameter. */
   function fetchWaterStats(sites){
-    var today=waterToday(), ck='hfa.wstat.v1.'+today.key, cache=lsGet(ck)||{};
-    try{ Object.keys(localStorage).forEach(function(k){ if(k.indexOf('hfa.wstat.v1.')===0 && k!==ck) localStorage.removeItem(k); }); }catch(e){}
-    var keyOf=function(d){ return d.siteNo+'|'+d.readings[0].code; };
-    var apply=function(){ sites.forEach(function(d){ d.stat=cache[keyOf(d)]||null; }); };
-    var need=sites.filter(function(d){ return cache[keyOf(d)]===undefined; });
+    var today=waterToday(), ck='hfa.wstat.v2.'+today.key, cache=lsGet(ck)||{};
+    try{ Object.keys(localStorage).forEach(function(k){ if((k.indexOf('hfa.wstat.v1.')===0) || (k.indexOf('hfa.wstat.v2.')===0 && k!==ck)) localStorage.removeItem(k); }); }catch(e){}
+    var pairs=[]; sites.forEach(function(d){ d.stats={}; d.readings.forEach(function(r){ pairs.push({d:d, code:r.code, key:d.siteNo+'|'+r.code}); }); });
+    var apply=function(){ pairs.forEach(function(p){ p.d.stats[p.code]=cache[p.key]||null; }); };
+    var need=pairs.filter(function(p){ return cache[p.key]===undefined; });
     if(!need.length){ apply(); return Promise.resolve(); }
-    var codes={}; need.forEach(function(d){ codes[d.readings[0].code]=1; });
-    var url='https://waterservices.usgs.gov/nwis/stat/?format=rdb&sites='+need.map(function(d){ return d.siteNo; }).join(',')+'&statReportType=daily&statTypeCd=mean,max,min&parameterCd='+Object.keys(codes).join(',');
+    var codes={}, siteNos={}; need.forEach(function(p){ codes[p.code]=1; siteNos[p.d.siteNo]=1; });
+    var url='https://waterservices.usgs.gov/nwis/stat/?format=rdb&sites='+Object.keys(siteNos).join(',')+'&statReportType=daily&statTypeCd=mean,max,min&parameterCd='+Object.keys(codes).join(',');
     var num=function(v){ var x=parseFloat(v); return isNaN(x)?null:x; };
     return fetch(url).then(function(r){
       if(r.status===404) return '';                       /* USGS says "no statistics for any of these" - a real answer, cache it */
@@ -575,9 +579,43 @@
         if(cache[key]) return;
         cache[key]={mean:num(c[idx.mean_va]), max:num(c[idx.max_va]), maxYr:c[idx.max_va_yr]||'', min:num(c[idx.min_va]), minYr:c[idx.min_va_yr]||'', begin:c[idx.begin_yr]||'', end:c[idx.end_yr]||''};
       });
-      need.forEach(function(d){ if(cache[keyOf(d)]===undefined) cache[keyOf(d)]=null; });
+      need.forEach(function(p){ if(cache[p.key]===undefined) cache[p.key]=null; });
       lsSet(ck, cache); apply();
     }).catch(function(){ apply(); });   /* statistics are a bonus - never let them break the live readings */
+  }
+  /* v936 (2026-09-27, Laurie): land-surface altitude per site from the USGS site file (alt_va, feet), so
+     wells can be ordered highest ground to lowest. Altitudes don't change, so the cache never expires. */
+  function fetchSiteAlts(sites){
+    var ck='hfa.walt.v1', cache=lsGet(ck)||{};
+    var apply=function(){ sites.forEach(function(d){ d.alt=(cache[d.siteNo]!=null)?cache[d.siteNo]:null; }); };
+    var need=sites.filter(function(d){ return cache[d.siteNo]===undefined; });
+    if(!need.length){ apply(); return Promise.resolve(); }
+    var url='https://waterservices.usgs.gov/nwis/site/?format=rdb&sites='+need.map(function(d){ return d.siteNo; }).join(',')+'&siteOutput=expanded&siteStatus=all';
+    return fetch(url).then(function(r){ return r.ok?r.text():Promise.reject(new Error('HTTP '+r.status)); }).then(function(txt){
+      var header=null, idx={}, skipFmt=false;
+      String(txt).split('\n').forEach(function(line){
+        if(!line || line.charAt(0)==='#') return;
+        var c=line.replace(/\r$/,'').split('\t');
+        if(!header){ header=c; c.forEach(function(h,i){ idx[h.trim()]=i; }); skipFmt=true; return; }
+        if(skipFmt){ skipFmt=false; return; }
+        var sn=c[idx.site_no], a=parseFloat(c[idx.alt_va]); if(sn && isFinite(a)) cache[sn]=a;
+      });
+      need.forEach(function(d){ if(cache[d.siteNo]===undefined) cache[d.siteNo]=null; });
+      lsSet(ck, cache); apply();
+    }).catch(function(){ apply(); });
+  }
+  /* v936 (2026-09-27, Laurie): left-to-right is downhill on every row.
+     Streams: USGS numbers stream sites in downstream order within a basin (tributaries as they enter, the
+       main stem increasing toward the mouth), so ascending site number = upstream to downstream. Here that
+       runs Schoharie headwaters -> Schoharie at Schoharie -> Hudson at Green Island -> Normans Kill.
+     Lakes/reservoirs: by their own water-surface elevation, highest first (site altitude if a gauge only
+       reports storage).
+     Wells: by land-surface altitude, highest first; nearest-first if the site file didn't answer. */
+  function orderWater(byKind){
+    byKind.stream.sort(function(a,b){ return (a.siteNo.length-b.siteNo.length) || (Number(a.siteNo)-Number(b.siteNo)); });
+    var elev=function(d){ var r=d.readings.find(function(x){ return x.code==='62615'; }); return r?r.value:(d.alt!=null?d.alt:-Infinity); };
+    byKind.lake.sort(function(a,b){ return elev(b)-elev(a) || a.km-b.km; });
+    byKind.well.sort(function(a,b){ var A=a.alt!=null?a.alt:-Infinity, B=b.alt!=null?b.alt:-Infinity; return (B-A) || (a.km-b.km); });
   }
   var _waterMap=null, _waterMarkers=[], _wm=null, _waterBounds=null;
   function ensureWaterMap(){
@@ -597,11 +635,11 @@
   var trendHtml=function(rd){ return rd.trend ? ' <span class="wtrend" title="'+TREND_TXT[rd.trend.dir].slice(2)+' over the last '+rd.trend.hours+' h">'+TREND_TXT[rd.trend.dir].charAt(0)+'<span class="wtrend-lbl"> '+TREND_TXT[rd.trend.dir].slice(2)+'</span></span>' : ''; };
   var siteUrl=function(d){ return 'https://waterdata.usgs.gov/monitoring-location/USGS-'+encodeURIComponent(d.siteNo)+'/'; };
   function popupHtml(d){
-    var st=statLine(d);
-    return '<div class="wpop"><b>'+waterEsc(d.displayName)+'</b><div class="wk">'+waterEsc(WATER_LABEL[d.kind])+'</div>'
+    var sts=d.readings.map(function(r){ return statLine(d,r); }).filter(Boolean);
+    return '<div class="wpop"><b>'+waterEsc(d.displayName)+'</b><div class="wk">'+waterEsc(WATER_LABEL[d.kind])+(d.when?' · read '+waterEsc(fmtWhen(d.when)):'')+'</div>'
       +d.readings.map(function(r){ return '<div>'+waterEsc(r.label)+': <b>'+waterEsc(r.text)+'</b>'+trendHtml(r)+'</div>'; }).join('')
-      +(st?'<div class="ws">'+waterEsc(st)+'</div>':'')
-      +'<div class="wl"><a href="'+siteUrl(d)+'" target="_blank" rel="noopener">USGS data for this site \u2197</a></div></div>';
+      +(sts.length?'<div class="ws">'+sts.map(waterEsc).join('<br>')+'</div>':'')
+      +'<div class="wl"><a href="'+siteUrl(d)+'" target="_blank" rel="noopener">USGS data for this site ↗</a></div></div>';
   }
   function plotWaterMarkers(sites){
     var map=ensureWaterMap(); if(!map) return;
@@ -624,44 +662,55 @@
     if(sites.length){ _waterBounds=b; map.fitBounds(b,{padding:44, maxZoom:11, duration:0}); }
     if(!window._waterResizeBound){ window._waterResizeBound=true; window.addEventListener('resize', function(){ if(_waterMap && _waterBounds){ _waterMap.resize(); _waterMap.fitBounds(_waterBounds,{padding:44, maxZoom:11, duration:0}); } }); }
   }
-  /* v934 (2026-09-27, Laurie): a small vertical range bar per card. Bottom = record low for this calendar
-     date, top = record high, gold tick = average, white dot = the live reading. Discharge and storage are
-     drawn on a log scale (the Hudson's 1,960–59,100 ft³/s record range would otherwise pin the average
-     and today into the bottom sliver); stage, elevation and well depth are linear. Wells are inverted so
-     up always means more water. A reading outside the record range is clamped to the end with a caret. */
-  function gaugeSvg(d){
-    var s=d.stat, main=d.readings[0], meta=WATER_PARAMS[main.code]; if(!s || s.max==null || s.min==null || !isFinite(main.value)) return '';
-    var f=meta.fmtS||meta.fmt, lg=(meta.rel!=null && s.min>0 && main.value>0);
+  /* v934 (2026-09-27, Laurie): a small vertical range bar per reading that has statistics. Bottom = record low
+     for THIS calendar date, top = record high, gold tick = average, gold mark = now. Discharge and storage are
+     drawn on a log scale (the Hudson's 1,960-59,100 ft³/s record range would otherwise pin the average and
+     today into the bottom sliver); stage, elevation and well depth are linear. Wells are inverted so up always
+     means more water.
+     v936 (Laurie): one bar per reading, so a stream with flow AND height gets two, each captioned ('flow',
+     'height', 'level', 'depth'); end labels carry their units; the 'now' mark is a small solid gold dot when
+     steady (or when there isn't enough history to say) and a gold caret pointing the way when rising or
+     falling; 'avg' always prints, on the right of the tick, since the end labels moved above and below the
+     track where nothing can collide with them; a reading beyond the record range sits just past the end. */
+  function gaugeOne(d, rd){
+    var s=d.stats && d.stats[rd.code], meta=WATER_PARAMS[rd.code]; if(!s || s.max==null || s.min==null || !isFinite(rd.value)) return '';
+    var f=meta.fmtS||meta.fmt, lg=(meta.rel!=null && s.min>0 && rd.value>0);
     var tr=function(v){ return lg?Math.log10(v):v; };
-    var top=meta.invert?s.min:s.max, bot=meta.invert?s.max:s.min;      /* wells: shallowest depth is the top */
     var lo=tr(s.min), hi=tr(s.max); if(!(hi>lo)) return '';
-    var span=hi-lo;
-    var Y0=10, Y1=72, X=16;                                                  /* track from y=10 (high) to y=72 (low) */
-    var yOf=function(v){ var t=(tr(v)-lo)/span; if(meta.invert) t=1-t; return Y1-(Math.max(0,Math.min(1,t)))*(Y1-Y0); };
-    var out=(meta.invert? (main.value<top) : (main.value>top)) ? 'up' : ((meta.invert? (main.value>bot) : (main.value<bot)) ? 'down' : '');
-    var yNow=yOf(main.value), yAvg=(s.mean!=null)?yOf(s.mean):null;
-    var lbl=function(v){ return f(v).replace(/ ft\u00b3\/s$/,'').replace(/ acre-ft$/,'').replace(/ ft$/,''); };
-    var title=(meta.invert?'Water table now vs this date\u2019s record (up = more water)':'Now vs this date\u2019s record range')+(lg?' \u00b7 log scale':'');
-    var svg='<svg viewBox="0 0 70 84" role="img" aria-label="'+waterEsc(title)+'"><title>'+waterEsc(title)+'</title>'
+    var span=hi-lo, top=meta.invert?s.min:s.max, bot=meta.invert?s.max:s.min;      /* wells: shallowest depth is the top */
+    var W=62, X=31, Y0=28, Y1=80;                                                  /* track from y=28 (high) to y=80 (low) */
+    var yOf=function(v){ var t=(tr(v)-lo)/span; if(meta.invert) t=1-t; return Y1-(Math.max(-0.08,Math.min(1.08,t)))*(Y1-Y0); };
+    var yNow=yOf(rd.value), yAvg=(s.mean!=null)?yOf(s.mean):null;
+    var dir=rd.trend?rd.trend.dir:'flat';
+    var cap=WATER_SHORT[rd.code]||meta.label;
+    var title=cap+': now vs this date’s record range'+(meta.invert?' (up = more water)':'')+(lg?' · log scale':'');
+    var svg='<svg viewBox="0 0 '+W+' 96" role="img" aria-label="'+waterEsc(title)+'"><title>'+waterEsc(title)+'</title>'
+      +'<text class="wg-cap" x="'+X+'" y="8" text-anchor="middle">'+waterEsc(cap)+'</text>'
+      +'<text x="'+X+'" y="21" text-anchor="middle">'+waterEsc(f(top))+'</text>'
       +'<line x1="'+X+'" y1="'+Y0+'" x2="'+X+'" y2="'+Y1+'" stroke="rgba(255,255,255,.28)" stroke-width="4" stroke-linecap="round"/>'
       +'<line x1="'+(X-6)+'" y1="'+Y0+'" x2="'+(X+6)+'" y2="'+Y0+'" stroke="rgba(255,255,255,.6)" stroke-width="1.5"/>'
       +'<line x1="'+(X-6)+'" y1="'+Y1+'" x2="'+(X+6)+'" y2="'+Y1+'" stroke="rgba(255,255,255,.6)" stroke-width="1.5"/>'
-      +'<text x="'+(X+11)+'" y="'+(Y0+3)+'">'+waterEsc(lbl(top))+'</text>'
-      +'<text x="'+(X+11)+'" y="'+(Y1+3)+'">'+waterEsc(lbl(bot))+'</text>';
-    if(yAvg!=null){ svg+='<line x1="'+(X-7)+'" y1="'+yAvg.toFixed(1)+'" x2="'+(X+7)+'" y2="'+yAvg.toFixed(1)+'" stroke="var(--gold,#c9a227)" stroke-width="2.5"/>';
-      if(Math.abs(yAvg-Y0)>9 && Math.abs(yAvg-Y1)>9 && Math.abs(yAvg-yNow)>9) svg+='<text class="wg-avg" x="'+(X+11)+'" y="'+(yAvg+3).toFixed(1)+'">avg</text>'; }
-    svg+='<circle cx="'+X+'" cy="'+yNow.toFixed(1)+'" r="5.5" fill="#fff" stroke="var(--gold,#c9a227)" stroke-width="2"/>';
-    if(out) svg+='<path d="M'+X+' '+(out==='up'?Y0-8:Y1+8)+' l-4 '+(out==='up'?5:-5)+' h8 z" fill="#fff"/>';
-    return '<div class="wgauge">'+svg+'</svg></div>';
+      +'<text x="'+X+'" y="93" text-anchor="middle">'+waterEsc(f(bot))+'</text>';
+    if(yAvg!=null) svg+='<line x1="'+(X-7)+'" y1="'+yAvg.toFixed(1)+'" x2="'+(X+7)+'" y2="'+yAvg.toFixed(1)+'" stroke="var(--gold,#c9a227)" stroke-width="2.5"/>'
+      +'<text class="wg-avg" x="'+(X+10)+'" y="'+(yAvg+3).toFixed(1)+'">avg</text>';
+    if(dir==='flat') svg+='<circle cx="'+X+'" cy="'+yNow.toFixed(1)+'" r="3.6" fill="var(--gold,#c9a227)"/>';
+    else if(dir==='up') svg+='<path d="M'+(X-5)+' '+(yNow+3).toFixed(1)+' L'+X+' '+(yNow-3.5).toFixed(1)+' L'+(X+5)+' '+(yNow+3).toFixed(1)+'" fill="none" stroke="var(--gold,#c9a227)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>';
+    else svg+='<path d="M'+(X-5)+' '+(yNow-3).toFixed(1)+' L'+X+' '+(yNow+3.5).toFixed(1)+' L'+(X+5)+' '+(yNow-3).toFixed(1)+'" fill="none" stroke="var(--gold,#c9a227)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>';
+    return svg+'</svg>';
+  }
+  function gaugeSvg(d){
+    var bars=d.readings.map(function(r){ return gaugeOne(d,r); }).filter(Boolean);
+    return bars.length?'<div class="wgauge">'+bars.join('')+'</div>':'';
   }
   function renderWater(){
     var host=$('water-cards'); if(!_wm || !host) return;
-    var card=function(d){ var main=d.readings[0], extra=d.readings.slice(1), st=statLine(d);
+    var card=function(d){ var main=d.readings[0], extra=d.readings.slice(1), sts=d.readings.map(function(r){ return statLine(d,r); }).filter(Boolean);
       return '<div class="sg-row wcard"><div class="sg-ico">'+WATER_ICON[d.kind]+'</div><div><p class="sg-eye">'+waterEsc(WATER_LABEL[d.kind])+'</p><p class="sg-val">'+waterEsc(main.text)+trendHtml(main)+'</p><p class="sg-det"><b>'+waterEsc(d.displayName)+'</b>'
         +(d.when?'<br><span class="wread">Read '+waterEsc(fmtWhen(d.when))+'</span>':'')
         +(extra.length?'<br>'+extra.map(function(e){ return waterEsc(e.label)+': '+waterEsc(e.text)+trendHtml(e); }).join(' \u00b7 '):'')
-        +(st?'<br><span class="wstat">'+waterEsc(st)+'</span>':'')+'</p></div>'+gaugeSvg(d)+'</div>';
+        +sts.map(function(st){ return '<br><span class="wstat">'+waterEsc(st)+'</span>'; }).join('')+'</p></div>'+gaugeSvg(d)+'</div>';
     };
+    orderWater(_wm.byKind);
     var html=['stream','lake','well'].map(function(k){ var rows=_wm.byKind[k]; return rows.length?'<div class="sg-grid wgrid">'+rows.map(card).join('')+'</div>':''; }).join('');
     host.innerHTML=html || '<p class="ph-empty">No active USGS gauges within '+WATER_BBOX_KM+' km right now.</p>';
     plotWaterMarkers(_wm.all);
@@ -706,7 +755,7 @@
       var all=[].concat(byKind.stream, byKind.lake, byKind.well);
       _wm={byKind:byKind, all:all};
       renderWater();                                  /* live readings first ... */
-      fetchWaterStats(all).then(renderWater);         /* ... then again once the historical statistics arrive */
+      Promise.all([fetchWaterStats(all), fetchSiteAlts(all)]).then(renderWater);   /* ... then again once statistics and site altitudes arrive */
     }).catch(function(e){ host.innerHTML='<p class="ph-empty">USGS water data is unreachable right now.</p>'; status('Water levels: '+(e && e.message || 'fetch failed')); });
   }
   
