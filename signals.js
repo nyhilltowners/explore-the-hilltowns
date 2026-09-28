@@ -184,8 +184,16 @@
       out[y]=o; });
     return out;
   }
+  /* 2026-09-27 (v933, Laurie): year colours are now tied to the calendar year itself, not to whichever years a given
+     source happens to contain. 1956 is the same violet on every station and on Berne; only the real
+     current year (New York time) is bold white. Before, the LAST year of each dataset was drawn as "now",
+     so a station that closed in 1932 traced 1932 in bold white. */
+  var CUR_YEAR = +new Intl.DateTimeFormat('en-CA',{timeZone:'America/New_York',year:'numeric'}).format(new Date());
+  var CUR_MONTH = +new Intl.DateTimeFormat('en-CA',{timeZone:'America/New_York',month:'numeric'}).format(new Date());
+  var COLOR_Y0 = 1869;   /* earliest daily record in the whole set (Central Park) = the deepest violet */
   function drawChart(id, years, key, tMin, tMax, smooth, unit, opts){
-    opts=opts||{}; var shift=opts.shift||0, lab=opts.label||function(y){ return String(y); }; /* v886 (2026-09-26, Laurie): shift=6 → July-first winter axis */
+    opts=opts||{}; var shift=opts.shift||0, curY=opts.curYear||CUR_YEAR, lab0=opts.label||function(y){ return String(y); };
+    var lab=function(y){ return lab0(y)+((years[y]&&years[y].modeled)?' (modeled)':''); }; /* v886 (2026-09-26, Laurie): shift=6 → July-first winter axis */
     var svg=$(id), tip=$(id+'-tip'); if(!svg) return;
     var allYs=Object.keys(years).map(Number).sort(function(a,b){ return a-b; }), y0=allYs[0], yN=allYs[allYs.length-1];
     var ys=allYs.filter(function(y){ return !_yearSel || _yearSel[y]!==false; }); /* v882 (2026-09-26, Laurie): year picker — colours keyed to the full range so a year keeps its shade when others are hidden */
@@ -209,14 +217,14 @@
     if(unit==='°' && tMin<32 && tMax>32) h+='<line class="ax" x1="'+L+'" y1="'+Y(32)+'" x2="'+(W-R)+'" y2="'+Y(32)+'" style="stroke:rgba(255,255,255,.45); stroke-dasharray:4 4"/><text class="lbl" x="'+(W-R-4)+'" y="'+(Y(32)-4)+'" text-anchor="end">freezing</text>';
     var vals={};   /* smoothed values per year for hover */
     ys.forEach(function(y){
-      var v=years[y][key], pts=[], sv=new Array(366), f=(y-y0)/Math.max(1,(yN-1-y0)), cur=(y===yN);
+      var v=years[y][key], pts=[], sv=new Array(366), f=Math.max(0,Math.min(1,(y-COLOR_Y0)/Math.max(1,(curY-1-COLOR_Y0)))), cur=(y===curY), mod=!!years[y].modeled;
       var col=cur?'#ffffff':'rgb('+Math.round(150+70*f)+','+Math.round(70+150*f)+','+Math.round(235+20*f)+')', op=cur?1:(0.6+0.35*f), sw=cur?2.4:1.1; /* v884 (2026-09-26, Laurie): oldest = deep violet, newest = pale lavender, all readable; this year white */
       for(var d=0;d<366;d++){ var val=null;
         if(smooth){ var s_=0,n=0; for(var q=-3;q<=3;q++){ var x=v[d+q]; if(typeof x==='number'){ s_+=x; n++; } } if(n>=4) val=s_/n; }
         else if(typeof v[d]==='number') val=v[d];
         if(val!=null){ sv[d]=val; pts.push(X(d).toFixed(1)+','+Y(val).toFixed(1)); } }
       vals[y]=sv;
-      if(pts.length>1) h+='<polyline data-y="'+y+'" fill="none" stroke="'+col+'" stroke-width="'+sw+'" stroke-opacity="'+op+'" stroke-linejoin="round" points="'+pts.join(' ')+'"/>';
+      if(pts.length>1) h+='<polyline data-y="'+y+'" fill="none" stroke="'+col+'" stroke-width="'+sw+'" stroke-opacity="'+op+'" stroke-linejoin="round"'+(mod?' stroke-dasharray="7 4"':'')+' points="'+pts.join(' ')+'"/>';
     });
     svg.innerHTML=h;
     /* v885 (2026-09-26, Laurie): play button — draw the shown years in chronologically, oldest first */
@@ -293,7 +301,7 @@
     drawChart('ch-cdd',  years, 'cdd',   0, 1400, false, 'CDD');
     drawChart('ch-gdd',  years, 'gdd',   0, 4000, false, 'GDD');
     drawChart('ch-rain', years, 'rain',  0,  60, false, ' in');
-    if(_snowMode==='winter' && _curWinter){ var wsel={}; Object.keys(_curWinter).forEach(function(w){ wsel[w]=_curWinter[w]; }); drawChart('ch-snow', wsel, 'snow', 0, 160, false, ' in', {shift:6, label:function(y){ return y+'–'+String(y+1).slice(2); }}); }
+    if(_snowMode==='winter' && _curWinter){ var wsel={}; Object.keys(_curWinter).forEach(function(w){ wsel[w]=_curWinter[w]; }); drawChart('ch-snow', wsel, 'snow', 0, 160, false, ' in', {shift:6, curYear:(CUR_MONTH>=7?CUR_YEAR:CUR_YEAR-1), label:function(y){ return y+'–'+String(y+1).slice(2); }}); }
     else drawChart('ch-snow', years, 'snow',  0, 160, false, ' in');
     var sm=$('snow-mode'); if(sm){ sm.querySelectorAll('a').forEach(function(a){ a.classList.toggle('on', a.getAttribute('data-mode')===_snowMode); }); }
     drawChart('ch-precip', years, 'precip', 0, 70, false, ' in');
@@ -310,15 +318,56 @@
     if(sel && ALL && sel.options.length<2){ Object.keys(ALL.stations).forEach(function(k){ var S=ALL.stations[k]; if(!S.daily) return; var o=document.createElement('option'); o.value=k; o.textContent=S.name+' observed ('+S.first+'–'+S.last+')'; sel.appendChild(o); }); sel.onchange=drawAll; }
     drawAll();
   }
+  /* 2026-09-27 (v933, Laurie): a closed station has no current-year line to compare against. When the station has known
+     coordinates and no (or almost no) data for the current year, fetch ERA5 reanalysis for THAT location for
+     this year so far (one small request, cached per day) and draw it as a dashed bold-white "2026 (modeled)"
+     line. It is the model's estimate for the place, not an observation and not bias-corrected against the
+     station, and the note under the source picker says so. Stations with no coordinates, or that are still
+     reporting, are untouched. */
+  var _modeledYears = {};
+  function needsModeled(S, years){
+    if(typeof S.lat !== 'number' || typeof S.lng !== 'number') return false;
+    var y = years[CUR_YEAR]; if(!y) return true;
+    var n = 0; for(var d=0; d<366; d++) if(typeof y.mean[d] === 'number') n++;
+    return n < 20;
+  }
+  function modeledYear(slug, S){
+    var end = new Intl.DateTimeFormat('en-CA',{timeZone:'America/New_York'}).format(new Date(Date.now()-86400000));
+    if(+end.slice(0,4) !== CUR_YEAR) return Promise.resolve(null);      /* Jan 1: nothing of the new year exists yet */
+    var ck = 'hfa.model.v1.'+slug+'.'+end;
+    try{ Object.keys(localStorage).forEach(function(k){ if(k.indexOf('hfa.model.v1.'+slug+'.')===0 && k!==ck) localStorage.removeItem(k); }); }catch(e){}   /* one day's model per station, not a growing pile */
+    if(_modeledYears[ck]) return Promise.resolve(_modeledYears[ck]);
+    var build = function(daily){
+      var m = yearSeries({daily:daily})[CUR_YEAR]; if(!m) return null;
+      m.rain = new Array(366);      /* stations have no observed rain, so no modeled rain line either */
+      m.modeled = true; _modeledYears[ck] = m; return m;
+    };
+    var cached = lsGet(ck); if(cached && cached.time) return Promise.resolve(build(cached));
+    var url = 'https://archive-api.open-meteo.com/v1/archive?latitude='+S.lat.toFixed(4)+'&longitude='+S.lng.toFixed(4)
+      + '&timezone=America%2FNew_York&start_date='+CUR_YEAR+'-01-01&end_date='+end
+      + '&daily=temperature_2m_max,temperature_2m_min,precipitation_sum,snowfall_sum&temperature_unit=fahrenheit&precipitation_unit=inch';
+    return fetch(url).then(function(r){ return r.json(); }).then(function(j2){
+      if(!j2 || !j2.daily) return null;
+      lsSet(ck, j2.daily); return build(j2.daily);
+    }).catch(function(){ return null; });
+  }
   function drawAll(){
-    var sel=$('ch-src'), ALL=window.STATION_DD, src=sel?sel.value:'berne', years, note='';
+    var sel=$('ch-src'), ALL=window.STATION_DD, src=sel?sel.value:'berne', years, note='', S=null;
     if(src==='berne'||!ALL||!ALL.stations[src]){ years=_yearsBerne; _curWinter=_winterBerne; note=''; }
-    else { var S=ALL.stations[src]; years=stationSeries(S); _curWinter=winterFromStation(S); note='Observed at '+S.name+', ~'+S.elev.toLocaleString()+' ft — NOAA thermometer readings, gaps where the observer missed a day.'; }
+    else { S=ALL.stations[src]; years=stationSeries(S); _curWinter=winterFromStation(S); note='Observed at '+S.name+', ~'+S.elev.toLocaleString()+' ft \u2014 NOAA thermometer readings, gaps where the observer missed a day.'; }
     var n=$('ch-src-note'); if(n) n.textContent=note;
     if(!years) return;
     _curSrc=src; _curYears=years; _curNote=(src==='berne'?'ERA5 reanalysis for Berne via Open-Meteo':'NOAA GHCN-Daily via xmACIS2');
     buildPickers(years); /* source change resets the selection to all years */
     drawCharts();
+    if(S && needsModeled(S, years)){
+      modeledYear(src, S).then(function(m){
+        var sel2=$('ch-src'); if(!m || (sel2?sel2.value:'berne')!==src) return;      /* user moved on, or nothing to draw */
+        years[CUR_YEAR]=m;
+        var n2=$('ch-src-note'); if(n2) n2.textContent=note+' The dashed white line is '+CUR_YEAR+' so far, modeled \u2014 ERA5 reanalysis for this location, not an observation and not adjusted to this station.';
+        buildPickers(years); drawCharts();
+      });
+    }
   }
 
   function renderDD(j){
