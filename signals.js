@@ -908,7 +908,13 @@ function fetchINat(){
           +(d.sciKey?'<div class="sci" style="font-style:italic;opacity:.85;font-size:12px"><a href="https://en.wikipedia.org/wiki/'+esc(d.sciKey.replace(/ /g,'_'))+'" target="_blank" rel="noopener" title="Wikipedia species page">'+esc(d.sciKey)+'</a></div>':'')
           +'<div class="photo-credit" style="opacity:.7;font-size:10px"></div></div></div>';
       });
-      $('inat-list').innerHTML = olderHtml.length ? '<p class="sg-eye" style="margin:14px 0 4px">Species leaderboard \u00b7 last 10 days</p><div class="inat-list inat-older">'+olderHtml.join('')+'</div>' : '';
+      /* v941 (2026-09-27, Laurie): leaderboard shows the top 10; a "+" button reveals the rest. */
+      var LB_SHOW=10, hiddenN=Math.max(0, olderHtml.length-LB_SHOW);
+      var lbRows=olderHtml.map(function(h,i){ return i<LB_SHOW ? h : h.replace('<div class="eb" ','<div class="eb lb-more" '); }).join('');
+      $('inat-list').innerHTML = olderHtml.length ? '<p class="sg-eye" style="margin:14px 0 4px">Species leaderboard \u00b7 last 10 days</p><div class="inat-list inat-older">'+lbRows+'</div>'
+        +(hiddenN?'<button type="button" class="sg-btn lb-toggle" aria-expanded="false">+ '+hiddenN+' more species</button>':'') : '';
+      var tg=$('inat-list').querySelector('.lb-toggle');
+      if(tg){ tg.addEventListener('click', function(){ var open=tg.getAttribute('aria-expanded')==='true'; $('inat-list').querySelector('.inat-older').classList.toggle('lb-open', !open); tg.setAttribute('aria-expanded', String(!open)); tg.textContent = open ? '+ '+hiddenN+' more species' : '\u2212 Show top 10 only'; }); }
       wikiPics();
       var parts=[]; if(recent.length) parts.push(recent.length+' species in the last 5 days'); if(older.length) parts.push(older.length+' species over the last 10 days');
       $('inat-note').textContent=(parts.join(', ')||'Nothing recent')+(capped.length?' \u00b7 10-day counts are a floor for '+capped.join(', ')+' \u2014 iNaturalist returns at most 200 per group':'')+' \u00b7 Data \u00a9 iNaturalist contributors; Creative Commons photos displayed here, click to review others on iNaturalist.';
@@ -943,7 +949,10 @@ function fetchINat(){
                  fetch(base+q,opt).then(function(r){ if(!r.ok) throw new Error('eBird HTTP '+r.status); return r.json(); })])
     .then(function(res){ var notable=res[0]||[], recent=res[1]||[];
       var srt=function(a,b){ return (b.obsDt||'').localeCompare(a.obsDt||''); }; notable.sort(srt); recent.sort(srt);
-      band.innerHTML = notable.length ? '<div class="eb-band"><div class="t">Big Deal Birdos \u00b7 '+notable.length+'</div><div class="sg-grid">'+notable.slice(0,12).map(function(o){ return card(o,false,countMeta(recent,o.speciesCode)); }).join('')+'</div></div>' : ''; /* 2026-09-27 (v902, Laurie): every individual sighting kept separate (no per-species merge); same card size as the main grid; the 'notable' tag is dropped below since the section heading already says so, and eBird gives no reason code for why a sighting is flagged */
+      /* v941 (2026-09-27, Laurie): one card per notable species (most recent report), with the same
+         sightings badge as the main grid, instead of a card per individual report. The heading count is species. */
+      var nseen={}, nuniq=notable.filter(function(o){ var k=o.speciesCode; if(nseen[k]) return false; nseen[k]=1; return true; });
+      band.innerHTML = nuniq.length ? '<div class="eb-band"><div class="t">Big Deal Birdos \u00b7 '+nuniq.length+(nuniq.length===1?' species':' species')+'</div><div class="sg-grid">'+nuniq.slice(0,12).map(function(o){ return card(o,false,countMeta(recent,o.speciesCode)); }).join('')+'</div></div>' : ''; /* 2026-09-27 (v902, Laurie): every individual sighting kept separate (no per-species merge); same card size as the main grid; the 'notable' tag is dropped below since the section heading already says so, and eBird gives no reason code for why a sighting is flagged */
       var seen={}, uniq=recent.filter(function(o){ var k=o.speciesCode; if(seen[k]) return false; seen[k]=1; return true; });   /* one card per species, most recent report */
       grid.innerHTML = uniq.length ? uniq.map(function(o){ return card(o,false,countMeta(recent,o.speciesCode)); }).join('') : '<p class="ph-empty">No reports in the window.</p>';
       wikiPics();
