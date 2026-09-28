@@ -783,23 +783,58 @@ function fetchINat(){
     var groupBySpecies=function(res){
       var bySpecies={};
       res.forEach(function(o){ var d=info(o), key=d.sciKey||d.name;
-        var g=bySpecies[key] || (bySpecies[key]={best:null, count:0, icon:ICON[d.t.iconic_taxon_name]||'\uD83D\uDD0D'});
-        g.count++;
+        var g=bySpecies[key] || (bySpecies[key]={best:null, latest:null, count:0, icon:ICON[d.t.iconic_taxon_name]||'\uD83D\uDD0D'});
+        g.count++; if(!g.latest) g.latest=d;   /* v937: results arrive newest first, so the first one seen is the most recent sighting */
         if(!g.best || (d.img && !g.best.img)) g.best=d;
       });
       return bySpecies;
     };
-    var recentUrl='https://api.inaturalist.org/v1/observations?quality_grade=research&photos=true&order_by=observed_on&order=desc&per_page=200&d1='+iso(5)+box;
-    var olderUrl='https://api.inaturalist.org/v1/observations?quality_grade=research&photos=true&order_by=observed_on&order=desc&per_page=200&d1='+iso(10)+'&d2='+iso(6)+box;
-    Promise.all([
-      fetch(recentUrl).then(function(r){ return r.json(); }).catch(function(){ return {results:[]}; }),
-      fetch(olderUrl).then(function(r){ return r.json(); }).catch(function(){ return {results:[]}; })
-    ]).then(function(res){
+    /* v938 (2026-09-27, Laurie): one pull per taxonomic group over the full 10 days, newest first, 200 each -
+       iNat's per_page cap. Because every pull is newest-first, any truncation falls on the OLD end of the
+       window: the last-5-days grid is complete by construction, and the leaderboard's 10-day counts are a
+       floor only for a group that actually hit its cap - which the response's total_results tells us, so the
+       footnote names it. Groups: iNat's iconic taxa, with the two crowded kingdoms split further by class /
+       order (Magnoliopsida 47124 dicots, Liliopsida 47163 monocots; Lepidoptera 47157, Hymenoptera 47201,
+       Coleoptera 47208, Diptera 47822). Fetched four at a time to stay polite with the API. */
+    var GROUPS=[
+      {label:'birds',            q:'iconic_taxa=Aves'},
+      {label:'mammals',          q:'iconic_taxa=Mammalia'},
+      {label:'amphibians',       q:'iconic_taxa=Amphibia'},
+      {label:'reptiles',         q:'iconic_taxa=Reptilia'},
+      {label:'fish',             q:'iconic_taxa=Actinopterygii'},
+      {label:'molluscs',         q:'iconic_taxa=Mollusca'},
+      {label:'spiders & kin',    q:'iconic_taxa=Arachnida'},
+      {label:'butterflies & moths', q:'taxon_id=47157'},
+      {label:'bees, wasps & ants',  q:'taxon_id=47201'},
+      {label:'beetles',          q:'taxon_id=47208'},
+      {label:'flies',            q:'taxon_id=47822'},
+      {label:'other insects',    q:'iconic_taxa=Insecta&without_taxon_id=47157,47201,47208,47822'},
+      {label:'dicots',           q:'taxon_id=47124'},
+      {label:'monocots',         q:'taxon_id=47163'},
+      {label:'other plants',     q:'iconic_taxa=Plantae&without_taxon_id=47124,47163'},
+      {label:'fungi & lichens',  q:'iconic_taxa=Fungi'},
+      {label:'microbes',         q:'iconic_taxa=Protozoa,Chromista'},
+      {label:'other life',       q:'iconic_taxa=unknown,Animalia&without_taxon_id=3,40151,20978,26036,47178,47115,47119,47158'}
+    ];
+    var base='https://api.inaturalist.org/v1/observations?quality_grade=research&photos=true&order_by=observed_on&order=desc&per_page=200&d1='+iso(10)+box+'&';
+    var results=[], capped=[], seen={};
+    var pull=function(g){ return fetch(base+g.q).then(function(r){ return r.json(); }).then(function(j){
+      var rs=(j&&j.results)||[]; rs.forEach(function(o){ if(!seen[o.id]){ seen[o.id]=1; results.push(o); } });
+      if(j && j.total_results>rs.length && rs.length>=200) capped.push(g.label+' ('+rs.length+' of '+j.total_results+')');
+    }).catch(function(){}); };
+    var chunks=[]; for(var ci=0; ci<GROUPS.length; ci+=4) chunks.push(GROUPS.slice(ci,ci+4));
+    chunks.reduce(function(pr,ch){ return pr.then(function(){ return Promise.all(ch.map(pull)); }); }, Promise.resolve()).then(function(){
+      results.sort(function(a,b){ return (Date.parse(b.time_observed_at||b.observed_on)||0)-(Date.parse(a.time_observed_at||a.observed_on)||0); });   /* newest first across groups, so g.latest stays right */
+      var cut=Date.now()-5*86400000;
+      var recentObs=results.filter(function(o){ return (Date.parse(o.time_observed_at||o.observed_on)||0)>=cut; });
+      var res=[{results:recentObs},{results:results}];
       var recentSpecies=groupBySpecies(res[0].results||[]);
-      var olderSpecies=groupBySpecies(res[1].results||[]);
-      Object.keys(recentSpecies).forEach(function(k){ delete olderSpecies[k]; });   /* a species with any sighting in the last 5 days only shows there */
+      /* v937 (2026-09-27, Laurie): the compact list is now a 10-day species leaderboard - every species seen in
+         the full window (days 1-5 included, counted again), sorted by sightings, most-spotted first. The
+         photo grid above is still last-5-days only, in kinship order. */
+      var allSpecies=groupBySpecies(res[1].results||[]);
       var recent=Object.keys(recentSpecies).map(function(k){ return recentSpecies[k]; });
-      var older=Object.keys(olderSpecies).map(function(k){ return olderSpecies[k]; });
+      var older=Object.keys(allSpecies).map(function(k){ return allSpecies[k]; });
       if(!recent.length && !older.length){ grid.innerHTML='<p class="ph-empty">No research-grade observations with photos came back.</p>'; $('inat-list').innerHTML=''; $('inat-note').textContent=''; return; }
       var cbadge=function(g){ return g.count>1?' <span class="c">'+g.count+'<span class="c-lbl"> sightings</span></span>':''; };
       /* v931 (2026-09-27, Laurie): the "no openly licensed photo" cards were rendering full-width and huge
@@ -827,7 +862,8 @@ function fetchINat(){
           out.push(rem.splice(bi,1)[0]); }
         return out;
       };
-      recent=taxonOrder(recent); older=taxonOrder(older);
+      recent=taxonOrder(recent);
+      older.sort(function(a,b){ return (b.count-a.count) || byRecency(a,b); });
       var cardFor=function(g){ var d=g.best;
         var info='<div class="b"><div class="n">'+esc(d.name)+cbadge(g)+'</div>'+(d.sci?'<div class="sci">'+esc(d.sci)+'</div>':'')+'<div class="m"><b>'+esc(fmtWhen(d.when))+'</b>'+(d.where?' \u00b7 <b>'+esc(d.where)+'</b>':'')+(d.who?'<br>by '+esc(d.who):'');
         if(d.img) return '<a class="inat" href="'+d.url+'" target="_blank" rel="noopener"><img src="'+esc(d.img)+'" alt="'+esc(d.name)+'" loading="lazy">'+info+'<br><span style="opacity:.7">photo '+esc(d.lic.toUpperCase())+'</span></div></div></a>';
@@ -835,14 +871,17 @@ function fetchINat(){
         return '<div class="inat eb-card" data-sci="'+esc(d.sciKey)+'"><div class="img ph">'+g.icon+'</div>'+info+'<br><span class="photo-credit" style="opacity:.7">species photo: Wikipedia</span></div></div></div>';
       };
       grid.innerHTML = recent.length ? recent.map(cardFor).join('') : '<p class="ph-empty">No research-grade observations with photos in the last five days.</p>';
-      /* v925: older-than-5-days group - thumbnail, common name, sci name, count. Nothing else. */
-      var olderHtml = older.map(function(g){ var d=g.best;
-        return '<div class="eb" data-sci="'+esc(d.sciKey)+'"><div class="img ph">'+g.icon+'</div><div><div class="n">'+esc(d.name)+' <span class="c">'+g.count+'<span class="c-lbl"> sightings, last 10 days</span></span></div>'+(d.sci?'<div class="sci" style="font-style:italic;opacity:.85;font-size:12px">'+esc(d.sci)+'</div>':'')+'</div></div>';
+      /* v937: species leaderboard - thumbnail (Wikipedia/Commons, credited), common name linking to the most recent
+         iNaturalist sighting, scientific name linking to the Wikipedia species page, and the 10-day count. */
+      var olderHtml = older.map(function(g){ var d=g.latest||g.best;
+        return '<div class="eb" data-sci="'+esc(d.sciKey)+'"><div class="img ph">'+g.icon+'</div><div><div class="n"><a href="'+esc(d.url)+'" target="_blank" rel="noopener" title="Most recent sighting on iNaturalist">'+esc(d.name)+'</a> <span class="c">'+g.count+'<span class="c-lbl"> '+(g.count===1?'sighting':'sightings')+', last 10 days</span></span></div>'
+          +(d.sciKey?'<div class="sci" style="font-style:italic;opacity:.85;font-size:12px"><a href="https://en.wikipedia.org/wiki/'+esc(d.sciKey.replace(/ /g,'_'))+'" target="_blank" rel="noopener" title="Wikipedia species page">'+esc(d.sciKey)+'</a></div>':'')
+          +'<div class="photo-credit" style="opacity:.7;font-size:10px"></div></div></div>';
       });
-      $('inat-list').innerHTML = olderHtml.length ? '<p class="sg-eye" style="margin:14px 0 4px">Seen 6\u201310 days ago</p><div class="inat-list inat-older">'+olderHtml.join('')+'</div>' : '';
+      $('inat-list').innerHTML = olderHtml.length ? '<p class="sg-eye" style="margin:14px 0 4px">Species leaderboard \u00b7 last 10 days</p><div class="inat-list inat-older">'+olderHtml.join('')+'</div>' : '';
       wikiPics();
-      var parts=[]; if(recent.length) parts.push(recent.length+' species in the last 5 days'); if(older.length) parts.push(older.length+' more from 6\u201310 days ago');
-      $('inat-note').textContent=(parts.join(', ')||'Nothing recent')+' \u00b7 Data \u00a9 iNaturalist contributors; Creative Commons photos displayed here, click to review others on iNaturalist.';
+      var parts=[]; if(recent.length) parts.push(recent.length+' species in the last 5 days'); if(older.length) parts.push(older.length+' species over the last 10 days');
+      $('inat-note').textContent=(parts.join(', ')||'Nothing recent')+(capped.length?' \u00b7 10-day counts are a floor for '+capped.join(', ')+' \u2014 iNaturalist returns at most 200 per group':'')+' \u00b7 Data \u00a9 iNaturalist contributors; Creative Commons photos displayed here, click to review others on iNaturalist.';
     }).catch(function(e){ grid.innerHTML='<p class="ph-empty">iNaturalist is unreachable right now.</p>'; status('iNaturalist: '+(e && e.message || 'fetch failed')); });
   }
   /* ---------- eBird: recent + notable sightings near Berne (key per Laurie, 2026-09-20) ---------- */
