@@ -226,7 +226,10 @@ a.link:hover{background:rgba(252,163,21,.14);}
 .wcard.wdead .sg-val{opacity:.55;} .wcard.wdead .sg-ico{opacity:.6;} /* v946: gauge with no usable data stays on the board, dimmed */
 #water-layout{display:grid; grid-template-columns:minmax(300px,36%) 1fr; gap:22px; align-items:start;}
 #water-map-col{position:sticky; top:86px;} /* clears the fixed site header */
-#water-map{height:min(calc(100vh - 110px), 920px); min-height:520px; border-radius:12px; overflow:hidden; background:rgba(0,0,0,.18); border:1px solid rgba(255,255,255,.18);}
+#water-map{height:min(calc(100vh - 110px), 920px); min-height:520px; border-radius:12px; overflow:visible; background:rgba(0,0,0,.18); border:1px solid rgba(255,255,255,.18);} /* v952 (2026-09-28, Laurie): overflow visible so popups can spill past the map's edge instead of being cropped */
+#water-map .maplibregl-canvas-container, #water-map .maplibregl-canvas{border-radius:12px;} /* rounding moves onto the canvas */
+#water-map .maplibregl-ctrl-bottom-right{right:8px; bottom:8px;}
+#water-map .maplibregl-popup{z-index:5; max-width:min(260px, 80vw) !important;}
 @media (max-width:900px){ #water-layout{grid-template-columns:1fr;} #water-map-col{position:static;} #water-map{height:60vh; min-height:360px; margin-bottom:12px;} }
 .wchain+.wchain{margin-top:6px;}
 .sg-h3.wchain-h{margin:12px 0 0; justify-content:flex-start; gap:10px;} /* beats .sg-h3's space-between */
@@ -249,7 +252,8 @@ a.link:hover{background:rgba(252,163,21,.14);}
 .sg-sec:after{content:""; flex:1; height:1px; background:currentColor; opacity:.35;}
 .sg-grid{display:grid; grid-template-columns:repeat(auto-fill, minmax(250px,1fr)); gap:12px 24px;}
 .wgrid{grid-template-columns:1fr; gap:6px 0;} /* v951 (Laurie): one column of stations */
-.wcard .sg-val{white-space:nowrap;} .wcard .wx{white-space:nowrap;} /* v951: reading + trend stay on one line */
+.wcard .sg-val{white-space:nowrap;}
+.wcard a.wsite{color:inherit !important; text-decoration:none; border-bottom:1px dotted rgba(255,255,255,.45);} .wcard a.wsite:hover{border-bottom-color:var(--gold,#c9a227);} /* v953 (Laurie): station name links to its USGS page */ .wcard .wx{white-space:nowrap;} /* v951: reading + trend stay on one line */
 .sg-row{display:flex; align-items:flex-start; gap:14px; padding:12px 4px;} /* 2026-09-27 (v898, Laurie): row divider removed — the gold section-header rule is now the only line */
 .sg-ico{flex:none; width:34px; height:34px; color:var(--gold,#c9a227);}
 .sg-ico svg{width:34px; height:34px; display:block; stroke:currentColor; fill:none; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round;}
@@ -406,6 +410,22 @@ a.link:hover{background:rgba(252,163,21,.14);}
     <div class="sg-row"><div class="sg-ico" ><svg viewBox="0 0 24 24"><path d="M14 14.8V5a2 2 0 0 0-4 0v9.8a4 4 0 1 0 4 0z"/></svg></div><div><p class="sg-eye">Temperature</p><p class="sg-val" id="temp-val">—</p><p class="sg-det" id="temp-sub"></p></div></div><div class="sg-row"><div class="sg-ico" ><svg viewBox="0 0 24 24"><path d="M12 3s6 6.5 6 11a6 6 0 0 1-12 0c0-4.5 6-11 6-11z"/></svg></div><div><p class="sg-eye">Humidity</p><p class="sg-val" id="hum-val">—</p><p class="sg-det" id="hum-sub"></p></div></div><div class="sg-row"><div class="sg-ico" ><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 12l4-4M12 7v1M17 12h-1M12 17v-1M7 12h1"/></svg></div><div><p class="sg-eye">Barometer</p><p class="sg-val" id="pres-val">—</p><p class="sg-det" id="pres-sub"></p></div></div><div class="sg-row"><div class="sg-ico" ><svg viewBox="0 0 24 24"><path d="M7 18a4 4 0 0 1-.5-8A6 6 0 0 1 18 9a4 4 0 0 1 0 9H7z"/></svg></div><div><p class="sg-eye">Sky</p><p class="sg-val" id="cloud-val">—</p><p class="sg-det" id="cloud-sub"></p></div></div>
   </div>
 
+  <!-- 2026-09-27 (v915, Laurie): the "Degree days · year to date" module (Heating/Cooling/Growing cards) and the
+       year-by-year table both removed — Laurie: they weren't showing anything the charts above
+       don't already show, and most stations in the picker have no temperature record at all
+       (precip/snow-only CoCoRaHS gauges), which made the cards read as broken ("0 · no average")
+       for the majority of the list. The station picker itself is still needed, for Water below. -->
+  <!-- v953 (2026-09-28, Laurie): moved up beside Air; renamed so it cannot be confused with the river gauges below -->
+  <h2 class="sg-sec">Rain &amp; snow · year to date</h2>
+  <p class="sg-det" style="margin:0 0 10px">Station: <select id="st-pick" class="sg-sel"></select></p>
+  <div class="sg-grid" id="water-grid">
+    <div class="sg-row"><div class="sg-ico"><svg viewBox="0 0 24 24"><path d="M12 3s6 6.5 6 11a6 6 0 0 1-12 0c0-4.5 6-11 6-11z"/></svg></div><div><p class="sg-eye">Precipitation</p><p class="sg-val" id="w-p">—</p><p class="sg-det" id="w-p-d"></p></div></div>
+    <div class="sg-row"><div class="sg-ico"><svg viewBox="0 0 24 24"><path d="M12 2v20M2 12h20M5 5l14 14M19 5L5 19"/></svg></div><div><p class="sg-eye">Snowfall</p><p class="sg-val" id="w-s">—</p><p class="sg-det" id="w-s-d"></p></div></div>
+    <div class="sg-row"><div class="sg-ico"><svg viewBox="0 0 24 24"><path d="M14 14.8V5a2 2 0 0 0-4 0v9.8a4 4 0 1 0 4 0z"/></svg></div><div><p class="sg-eye">Extremes this year</p><p class="sg-val" id="w-x">—</p><p class="sg-det" id="w-x-d"></p></div></div>
+  </div>
+  <p class="sg-note" id="dd-note">Loading…</p>
+
+
   <h2 class="sg-sec">Winds, ground to stratosphere</h2>
   <div class="sg-winds">
     <div class="sg-cap"><svg viewBox="0 0 24 24"><path d="M12 2L7 9h3l-4 6h4l-4 6h12l-4-6h4l-4-6h3z"/></svg></div>
@@ -448,20 +468,6 @@ a.link:hover{background:rgba(252,163,21,.14);}
   <p class="sg-det" style="margin:0 0 8px">All moisture as water — rain plus the melted equivalent of snow — since January 1.</p>
   <div class="sg-chart"><svg id="ch-precip" viewBox="0 0 1000 420" preserveAspectRatio="none" role="img" aria-label="Total precipitation, accumulating"></svg><div class="sg-tip" id="ch-precip-tip"></div></div>
   <p class="sg-note" id="yr-note"></p>
-
-  <!-- 2026-09-27 (v915, Laurie): the "Degree days · year to date" module (Heating/Cooling/Growing cards) and the
-       year-by-year table both removed — Laurie: they weren't showing anything the charts above
-       don't already show, and most stations in the picker have no temperature record at all
-       (precip/snow-only CoCoRaHS gauges), which made the cards read as broken ("0 · no average")
-       for the majority of the list. The station picker itself is still needed, for Water below. -->
-  <h2 class="sg-sec">Water · year to date</h2>
-  <p class="sg-det" style="margin:0 0 10px">Compare against an observed station: <select id="st-pick" class="sg-sel"></select></p>
-  <div class="sg-grid" id="water-grid">
-    <div class="sg-row"><div class="sg-ico"><svg viewBox="0 0 24 24"><path d="M12 3s6 6.5 6 11a6 6 0 0 1-12 0c0-4.5 6-11 6-11z"/></svg></div><div><p class="sg-eye">Precipitation</p><p class="sg-val" id="w-p">—</p><p class="sg-det" id="w-p-d"></p></div></div>
-    <div class="sg-row"><div class="sg-ico"><svg viewBox="0 0 24 24"><path d="M12 2v20M2 12h20M5 5l14 14M19 5L5 19"/></svg></div><div><p class="sg-eye">Snowfall</p><p class="sg-val" id="w-s">—</p><p class="sg-det" id="w-s-d"></p></div></div>
-    <div class="sg-row"><div class="sg-ico"><svg viewBox="0 0 24 24"><path d="M14 14.8V5a2 2 0 0 0-4 0v9.8a4 4 0 1 0 4 0z"/></svg></div><div><p class="sg-eye">Extremes this year</p><p class="sg-val" id="w-x">—</p><p class="sg-det" id="w-x-d"></p></div></div>
-  </div>
-  <p class="sg-note" id="dd-note">Loading…</p>
 
   <!-- 2026-09-27 (v923, Laurie): live USGS water levels — streams, lakes/reservoirs, groundwater wells.
        v934 (Laurie): one section, "Water levels"; streams on the top row, reservoirs in the middle, wells at the bottom (renderWater builds one grid per kind into #water-cards) -->

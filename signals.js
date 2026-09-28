@@ -48,9 +48,9 @@
     if(H.moonAge){
       var age = H.moonAge(now), ill = (1-Math.cos(age/SYNODIC*2*Math.PI))/2;
       var mi = $('moon-ico'); if(mi && H.drawMoon) mi.innerHTML = '<svg viewBox="0 0 40 40" style="fill:none">'+H.drawMoon(age)+'</svg>';
-      $('moon-phase').textContent = (H.phaseLabel?H.phaseLabel(age):Math.round(ill*100)+'%')+' lit'; /* 2026-09-27 (v898, Laurie): phaseLabel already carries the percent — no longer repeated */
+      $('moon-phase').textContent = (H.phaseLabel?H.phaseLabel(age):Math.round(ill*100)+'%');   /* v953 (Laurie): 'lit' dropped */ /* 2026-09-27 (v898, Laurie): phaseLabel already carries the percent — no longer repeated */
       var li = H.lunationInfo ? H.lunationInfo(now) : null;
-      $('moon-det').innerHTML = (li ? '<b>'+li.word+'</b> — '+(li.english||'')+'<br>' : '')+age.toFixed(1)+' days into the lunation · next new moon in '+(SYNODIC-age).toFixed(1)+' days';
+      $('moon-det').innerHTML = age.toFixed(1)+' days into the lunation · next new moon in '+(SYNODIC-age).toFixed(1)+' days';   /* v953 (Laurie): the Mohawk moon name stays in the header only */
     }
   }
 
@@ -107,7 +107,11 @@
     var mean=(mx+mn)/2; if(mean<65) out.h=65-mean; else out.c=mean-65;
     var gm=(Math.min(86,mx)+Math.max(50,mn))/2; if(gm>50) out.g=gm-50; return out; }
   var _ddCache = null;
-  function buildPicker(){ var sel=$('st-pick'), ALL=window.STATION_DD; if(!sel||!ALL||sel.options.length) return; Object.keys(ALL.stations).forEach(function(k){ var S=ALL.stations[k], o=document.createElement('option'); o.value=k; o.textContent=S.name+' · '+S.first+'–'+S.last+(S.active?'':' (closed)'); sel.appendChild(o); }); if(ALL.stations['alcove_dam']) sel.value='alcove_dam'; /* v865 (2026-09-25, Laurie): default Alcove Dam */ sel.onchange=function(){ if(_ddCache) renderDD(_ddCache); }; }
+  function buildPicker(){ var sel=$('st-pick'), ALL=window.STATION_DD; if(!sel||!ALL||sel.options.length) return;
+    /* v953 (2026-09-28, Laurie): this picker only feeds the year-to-date grid, so only stations still reporting belong in
+       it (a closed station has no current year to compare). Closed stations stay in station_dd.js and in the
+       year-by-year chart source picker, where their history is the point. Label = name · since YYYY. */
+    Object.keys(ALL.stations).forEach(function(k){ var S=ALL.stations[k]; if(!S.active) return; var o=document.createElement('option'); o.value=k; o.textContent=S.name.replace(/ — elev\. approx\./,'')+' \u00b7 since '+S.first; sel.appendChild(o); }); if(ALL.stations['alcove_dam']) sel.value='alcove_dam'; /* v865 (2026-09-25, Laurie): default Alcove Dam */ sel.onchange=function(){ if(_ddCache) renderDD(_ddCache); }; }
   /* 2026-09-27 (v906, Laurie): both archive requests are 86 years of daily data — big enough that reloading the
      page repeatedly could run into Open-Meteo's free-tier daily request cap ("Daily API request
      limit exceeded"), which is what blanked every chart. Cache each response in localStorage,
@@ -396,10 +400,12 @@
         if(k2>=5){ pn/=k2; snw/=k2; } else { pn=snw=null; }
         var lbl=SD.name.split(' ·')[0];
         if(sy && sy.np){ var pv=sy.p[doy-1], sv=sy.s[doy-1];
-          $('w-p').textContent=pv.toFixed(2)+' in'; $('w-p-d').textContent=lbl+' · '+sy.wet+' wet days'+(pn!=null?' · record average '+pn.toFixed(2)+' in ('+(pv-pn>=0?'+':'−')+Math.abs(pv-pn).toFixed(2)+', '+k2+' yrs)':' · too few complete years for an average');
-          $('w-s').textContent=sv.toFixed(1)+' in'; $('w-s-d').textContent=lbl+' · deepest snowpack '+sy.depth+' in'+(snw!=null?' · record average to date '+snw.toFixed(1)+' in':'');
+          /* v953 (Laurie): plainer wording */
+          var diff=(pn!=null)?(pv-pn):null;
+          $('w-p').textContent=pv.toFixed(2)+' in'; $('w-p-d').textContent=lbl+' · '+sy.wet+' days with rain or snow'+(pn!=null?' · '+(Math.abs(diff)<0.05?'right on':(Math.abs(diff).toFixed(2)+' in '+(diff>0?'above':'below')))+' the '+k2+'-year average for this date ('+pn.toFixed(2)+' in)':' · not enough years yet for an average');
+          $('w-s').textContent=sv.toFixed(1)+' in'; $('w-s-d').textContent=lbl+' · deepest snow on the ground '+sy.depth+' in'+(snw!=null?' · average by this date '+snw.toFixed(1)+' in':'');
           $('w-x').innerHTML=(sy.hi!=null?'↑ '+Math.round(sy.hi)+'°<span class="c">↓ '+Math.round(sy.lo)+'°</span>':'—');
-          $('w-x-d').textContent=lbl+' · '+sy.d90+' days at or above 90°F · '+sy.d0+' nights at or below 0°F';
+          $('w-x-d').textContent=lbl+' · '+sy.d90+' days of 90°F or hotter · '+sy.d0+' nights of 0°F or colder';
         } else { ['w-p','w-s','w-x'].forEach(function(id){ $(id).textContent='—'; }); $('w-p-d').textContent=lbl+': no '+thisYear+' observations'+(SD.active?'':' (closed '+SD.last+')'); $('w-s-d').textContent=''; $('w-x-d').textContent=''; }
       })();
       $('dd-note').innerHTML='Jan 1 – '+end+' · Berne, NY at ~1,700 ft: ERA5 reanalysis via Open-Meteo. Observed: '+(SD?SD.name+', ~'+SD.elev.toLocaleString()+' ft, record '+SD.first+'–'+SD.last+(SD.active?' (active)':' (closed)')+', '+ALL.source:'no station loaded')+'. Averages are the full period of record through this same date (complete years only, current year excluded), same formulas for both. Weather, winds and history by <a href="https://open-meteo.com/" target="_blank" rel="noopener">Open-Meteo</a> (CC BY 4.0); winds aloft from the Canadian GEM Global model with GFS as fallback; sun and moon computed locally. Refreshes every 15 minutes.'; /* 2026-09-27 (v899, Laurie): the two footnotes consolidated into one note, now below the button/table */
@@ -516,7 +522,7 @@
     '01347000':'Mohawk \u00b7 above the Schoharie', '01349705':'Schoharie headwaters \u2192 Mohawk \u2192 Hudson', '01349950':'Batavia Kill \u2192 Schoharie',
     '01350212':'Schoharie \u00b7 below Blenheim-Gilboa pumped storage', '01351298':'Cobleskill Creek \u2192 Schoharie', '01354500':'Mohawk (+ Schoharie) \u2192 Hudson',
     '01359528':'Normans Kill \u2192 Hudson \u00b7 near the mouth', '0136219503':'Esopus headwaters \u00b7 above the tunnel', '0136230002':'Woodland Creek \u2192 Esopus',
-    '01350000':'Schoharie \u2192 Mohawk \u2192 Hudson', '01350100':'Schoharie Reservoir \u00b7 Gilboa Dam \u00b7 NYC supply', '01350101':'Schoharie \u2192 Mohawk \u2192 Hudson', '01350355':'Schoharie \u2192 Mohawk \u2192 Hudson',
+    '01350000':'Schoharie \u2192 Mohawk \u2192 Hudson', '01350100':'Schoharie Reservoir \u00b7 Gilboa Dam', '01350101':'Schoharie \u2192 Mohawk \u2192 Hudson', '01350355':'Schoharie \u2192 Mohawk \u2192 Hudson',
     '01350480':'Little Schoharie \u2192 Schoharie', '01350500':'Schoharie \u2192 Mohawk \u2192 Hudson', '01350750':'Schoharie \u2192 Mohawk \u2192 Hudson',
     '01351200':'Fox Creek \u2192 Schoharie', '01351450':'Schoharie \u2192 Mohawk \u2192 Hudson', '01351500':'Schoharie \u2192 Mohawk \u2192 Hudson',
     '01357500':'Mohawk \u2192 Hudson', '01358000':'Hudson \u00b7 head of tide', '01359165':'Hudson \u00b7 tidal',
@@ -785,7 +791,7 @@
       el.style.background=d.dead?'#9a9ea8':colorOf(d,'light');
       el.innerHTML=(d.num?'<span class="wpin-num">'+d.num+'</span>':WATER_ICON[d.kind].replace('<svg viewBox="0 0 24 24">','<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="#101010" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">'));
       el.title=(d.num?d.num+' · ':'')+d.displayName;
-      var mk=new maplibregl.Marker({element:el}).setLngLat([d.lng,d.lat]).setPopup(new maplibregl.Popup({offset:18, maxWidth:'290px'}).setHTML(popupHtml(d))).addTo(map);
+      var mk=new maplibregl.Marker({element:el}).setLngLat([d.lng,d.lat]).setPopup(new maplibregl.Popup({offset:18, maxWidth:'260px'}).setHTML(popupHtml(d))).addTo(map);
       mk._siteNo=d.siteNo;
       _waterMarkers.push(mk); b.extend([d.lng,d.lat]);
     });
@@ -844,9 +850,9 @@
   }
   var eyebrow=function(d){ var base=WATER_CHAIN[d.siteNo] || (d.tidal?'Tidal river':WATER_LABEL[d.kind]); return base+(d.alt>0?' \u00b7 '+Math.round(d.alt).toLocaleString()+' ft':''); };   /* v943; sea-level tidal gauges (alt 0) show no elevation */
   function waterCardHtml(d){
-    if(d.dead) return '<div class="sg-row wcard wdead" data-site="'+waterEsc(d.siteNo)+'"><div class="sg-ico" style="color:'+colorOf(d,'dark')+'">'+WATER_ICON[d.kind]+(d.num?'<span class="wnum" style="background:'+colorOf(d,'dark')+'">'+d.num+'</span>':'')+'</div><div><p class="sg-eye">'+waterEsc(eyebrow(d))+'</p><p class="sg-val">no data</p><p class="sg-det"><b>'+waterEsc(d.displayName)+'</b><br><span class="wread">USGS: '+waterEsc(d.why)+'</span></p></div></div>';
+    if(d.dead) return '<div class="sg-row wcard wdead" data-site="'+waterEsc(d.siteNo)+'"><div class="sg-ico" style="color:'+colorOf(d,'dark')+'">'+WATER_ICON[d.kind]+(d.num?'<span class="wnum" style="background:'+colorOf(d,'dark')+'">'+d.num+'</span>':'')+'</div><div><p class="sg-eye">'+waterEsc(eyebrow(d))+'</p><p class="sg-val">no data</p><p class="sg-det"><b><a class="wsite" href="'+siteUrl(d)+'" target="_blank" rel="noopener" title="This gauge on USGS Water Data">'+waterEsc(d.displayName)+'</a></b><br><span class="wread">USGS: '+waterEsc(d.why)+'</span></p></div></div>';
     var main=d.readings[0], extra=d.readings.slice(1), sts=d.readings.map(function(r){ return statLine(d,r); }).filter(Boolean);
-    return '<div class="sg-row wcard" data-site="'+waterEsc(d.siteNo)+'"><div class="sg-ico" style="color:'+colorOf(d,'dark')+'">'+WATER_ICON[d.kind]+(d.num?'<span class="wnum" style="background:'+colorOf(d,'dark')+'">'+d.num+'</span>':'')+'</div><div><p class="sg-eye">'+waterEsc(eyebrow(d))+'</p><p class="sg-val">'+waterEsc(main.text)+trendHtml(main)+'</p><p class="sg-det"><b>'+waterEsc(d.displayName)+'</b>'
+    return '<div class="sg-row wcard" data-site="'+waterEsc(d.siteNo)+'"><div class="sg-ico" style="color:'+colorOf(d,'dark')+'">'+WATER_ICON[d.kind]+(d.num?'<span class="wnum" style="background:'+colorOf(d,'dark')+'">'+d.num+'</span>':'')+'</div><div><p class="sg-eye">'+waterEsc(eyebrow(d))+'</p><p class="sg-val">'+waterEsc(main.text)+trendHtml(main)+'</p><p class="sg-det"><b><a class="wsite" href="'+siteUrl(d)+'" target="_blank" rel="noopener" title="This gauge on USGS Water Data">'+waterEsc(d.displayName)+'</a></b>'
       +(d.when?'<br><span class="wread">Read '+waterEsc(fmtWhen(d.when))+'</span>':'')
       +(extra.length?'<br>'+extra.map(function(e){ return '<span class="wx">'+waterEsc(e.label)+': '+waterEsc(e.text)+trendHtml(e)+'</span>'; }).join(' · '):'')
       +sts.filter(function(st,i){ return !gaugeOne(d, d.readings[i]); }).map(function(st){ return '<br><span class="wstat">'+waterEsc(st)+'</span>'; }).join('')   /* v949: the sentence lives in the bar's tooltip; printed only when there is no bar to hold it */
