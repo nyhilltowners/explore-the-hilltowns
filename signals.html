@@ -299,6 +299,7 @@ a.link:hover{background:rgba(252,163,21,.14);}
 .eb-card .n .c .c-lbl{font-weight:400; font-size:10px; letter-spacing:.04em; text-transform:none; opacity:.8;} /* 2026-09-27 (v906, Laurie) */
 .inat .n .c{font-weight:800; color:var(--gold,#c9a227) !important; margin-left:4px;} /* 2026-09-27 (v922, Laurie): same count badge on the iNat cards, with-photo and fallback alike */
 .inat .n .c .c-lbl{font-weight:400; font-size:10px; letter-spacing:.04em; text-transform:none; opacity:.8;}
+.eb .n .c .c-lbl, .eb-card .n .c .c-lbl, .inat .n .c .c-lbl, .eb .n a.c, .eb .n a.c .c-lbl{color:var(--gold,#c9a227) !important; opacity:.95;} /* v957 (2026-09-28, Laurie): the whole sightings badge is gold - number and label - on cards and the leaderboard link alike */
 .sg-eye{font-size:10px; letter-spacing:.16em; text-transform:uppercase; opacity:.95; margin:0 0 2px; font-weight:700;} /* 2026-09-27 (v898, Laurie): bold eyebrows */
 .sg-val{font-size:22px; font-weight:800; margin:0; line-height:1.15;}
 .sg-val .c{font-weight:400; opacity:.95; font-size:16px; margin-left:6px;}
@@ -438,8 +439,15 @@ a.link:hover{background:rgba(252,163,21,.14);}
     <p class="sg-note" id="water-stat-note"></p></div>
   </div>
   <!-- v955 (2026-09-28, Laurie): three 7-day charts, one per kind. Each line = change since its own reading a week ago (ft), wells flipped so up = more water. -->
-  <h3 class="sg-h3">Rivers, last 7 days <span class="wcount">change in stage since a week ago, ft</span></h3>
-  <div class="sg-chart"><svg id="w7-rivers" viewBox="0 0 1000 320" preserveAspectRatio="none" role="img" aria-label="Rivers, last 7 days: change in stage since a week ago"></svg><div class="sg-tip" id="w7-rivers-tip"></div></div>
+  <!-- v958: one 7-day chart per river chain, own axis each -->
+  <h3 class="sg-h3 wchain-h"><span class="wsw" style="background:#3987e5"></span>Schoharie Creek → Mohawk, last 7 days <span class="wcount">change in stage since a week ago, ft</span></h3>
+  <div class="sg-chart"><svg id="w7-schoharie" viewBox="0 0 1000 320" preserveAspectRatio="none" role="img" aria-label="Schoharie chain, last 7 days: change in stage since a week ago"></svg><div class="sg-tip" id="w7-schoharie-tip"></div></div>
+  <h3 class="sg-h3 wchain-h"><span class="wsw" style="background:#d95926"></span>Mohawk River → Hudson, last 7 days <span class="wcount">change in stage since a week ago, ft</span></h3>
+  <div class="sg-chart"><svg id="w7-mohawk" viewBox="0 0 1000 320" preserveAspectRatio="none" role="img" aria-label="Mohawk chain, last 7 days: change in stage since a week ago"></svg><div class="sg-tip" id="w7-mohawk-tip"></div></div>
+  <h3 class="sg-h3 wchain-h"><span class="wsw" style="background:#199e70"></span>Hudson · head of tide, Normans Kill, last 7 days <span class="wcount">change in stage since a week ago, ft</span></h3>
+  <div class="sg-chart"><svg id="w7-hudson" viewBox="0 0 1000 320" preserveAspectRatio="none" role="img" aria-label="Hudson chain (non-tidal gauges), last 7 days: change in stage since a week ago"></svg><div class="sg-tip" id="w7-hudson-tip"></div></div>
+  <h3 class="sg-h3 wchain-h"><span class="wsw" style="background:#c98500"></span>Esopus Creek → Hudson, last 7 days <span class="wcount">change in stage since a week ago, ft</span></h3>
+  <div class="sg-chart"><svg id="w7-esopus" viewBox="0 0 1000 320" preserveAspectRatio="none" role="img" aria-label="Esopus chain, last 7 days: change in stage since a week ago"></svg><div class="sg-tip" id="w7-esopus-tip"></div></div>
   <h3 class="sg-h3">Tidal Hudson, last 7 days <span class="wcount">water surface, ft above NAVD88 · the tide, twice a day</span></h3>
   <div class="sg-chart"><svg id="w7-tidal" viewBox="0 0 1000 320" preserveAspectRatio="none" role="img" aria-label="Tidal Hudson, last 7 days: water surface elevation"></svg><div class="sg-tip" id="w7-tidal-tip"></div></div>
   <h3 class="sg-h3">Wells, last 7 days <span class="wcount">change in the water table since a week ago, ft · up = more water</span></h3>
