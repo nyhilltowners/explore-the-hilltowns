@@ -316,6 +316,7 @@
   }
   var _curYears=null, _curNote='', _curSrc='berne', _curWinter=null;
   var _yearsBerne=null;
+  document.addEventListener('DOMContentLoaded',function(){ var mb=$('yr-more-btn'), mw=$('yr-more'); if(mb&&mw){ mb.addEventListener('click',function(){ var open=mb.getAttribute('aria-expanded')==='true'; mw.style.display=open?'none':''; mb.setAttribute('aria-expanded',String(!open)); mb.textContent=open?'+ 6 more charts: average temp, rain, snow, heating, cooling and growing degree days':'\u2212 Fewer charts'; if(!open) drawCharts(); }); } });   /* v956 */
   document.addEventListener('DOMContentLoaded',function(){ var sm=$('snow-mode'); if(sm) sm.addEventListener('click',function(e){ var a=e.target.closest&&e.target.closest('a[data-mode]'); if(!a) return; e.preventDefault(); _snowMode=a.getAttribute('data-mode'); drawCharts(); }); });
   function renderYearChart(j){
     if(!j||!j.daily){ status('Year charts: '+(j&&j.reason?j.reason:'no data')); return; }
@@ -952,9 +953,90 @@
       _wm={byKind:byKind, all:all};
       renderWater();                                  /* live readings first ... */
       Promise.all([fetchWaterStats(all), fetchSiteAlts(all)]).then(renderWater);   /* ... then again once statistics and site altitudes arrive */
+      fetchWater7d(all);                               /* v955: the three 7-day charts */
+      fetchWater7d(all);                               /* v955: the three 7-day charts */
     }).catch(function(e){ host.innerHTML='<p class="ph-empty">USGS water data is unreachable right now.</p>'; status('Water levels: '+(e && e.message || 'fetch failed')); });
   }
   
+  /* ---------- v955 (2026-09-28, Laurie): three 7-day charts - rivers, wells, lakes/reservoirs ----------
+     One shared axis per chart, so each line is the CHANGE since its own reading seven days ago (ft): the
+     Hudson's 16-ft stage and Fox Creek's 2-ft stage move on the same scale instead of the creek lying flat on
+     the floor. Wells are flipped so up always means more water. The hover gives the actual reading. Series
+     choice per gauge: stage (00065) or estuary elevation (62620) for rivers, surface elevation (62615) for
+     lakes, depth to water (72019, inverted) or level (62611) for wells. One iv request, period=P7D. */
+  var WATER7_CODES={stream:['00065','62620'], lake:['62615'], well:['72019','62611']};
+  var _w7=null;
+  function fetchWater7d(sites){
+    var live=sites.filter(function(d){ return !d.dead; }); if(!live.length) return;
+    var url='https://waterservices.usgs.gov/nwis/iv/?format=json&sites='+live.map(function(d){ return d.siteNo; }).join(',')+'&parameterCd=00065,62620,62615,72019,62611&period=P7D&siteStatus=all';
+    var ctl=(typeof AbortController!=='undefined')?new AbortController():null, tm=ctl?setTimeout(function(){ ctl.abort(); },30000):null;
+    fetch(url, ctl?{signal:ctl.signal}:{}).then(function(r){ return r.ok?r.json():Promise.reject(new Error('HTTP '+r.status)); }).then(function(j){
+      var ts=(j&&j.value&&j.value.timeSeries)||[], by={};
+      ts.forEach(function(t){
+        var code=(t.variable&&t.variable.variableCode&&t.variable.variableCode[0]&&t.variable.variableCode[0].value)||'';
+        var sc=(t.sourceInfo&&t.sourceInfo.siteCode&&t.sourceInfo.siteCode[0]&&t.sourceInfo.siteCode[0].value)||''; if(!sc) return;
+        var pts=((t.values&&t.values[0]&&t.values[0].value)||[]).map(function(v){ return {t:Date.parse(v.dateTime), v:parseFloat(v.value)}; }).filter(function(p){ return isFinite(p.t)&&isFinite(p.v)&&p.v>-999990; });
+        if(pts.length<8) return;
+        if(!by[sc]) by[sc]={}; if(!by[sc][code]) by[sc][code]=pts;
+      });
+      _w7={};
+      live.forEach(function(d){ var codes=WATER7_CODES[d.kind]||[], hit=null; codes.some(function(c){ if(by[d.siteNo]&&by[d.siteNo][c]){ hit={code:c, pts:by[d.siteNo][c]}; return true; } return false; });
+        if(hit) _w7[d.siteNo]={d:d, code:hit.code, pts:hit.pts, invert:(hit.code==='72019')}; });
+      drawWater7();
+    }).catch(function(e){ status('7-day water charts: '+(e&&e.message||'fetch failed')); }).then(function(){ if(tm) clearTimeout(tm); });
+  }
+  function drawWater7(){
+    if(!_w7 || !_wm) return;
+    /* v955: tidal gauges get their own chart in ACTUAL elevation (shared NAVD88 datum) - their twice-daily swing would
+       otherwise own the rivers' shared axis and flatten every creek. */
+    var groups=[
+      {id:'w7-rivers', rows:_wm.byKind.stream.filter(function(d){ return !d.tidal; })},
+      {id:'w7-tidal',  rows:_wm.byKind.stream.filter(function(d){ return d.tidal; }), absolute:true},
+      {id:'w7-wells',  rows:_wm.byKind.well},
+      {id:'w7-lakes',  rows:_wm.byKind.lake}
+    ];
+    groups.forEach(function(g){ var svg=$(g.id); if(!svg) return;
+      var series=g.rows.map(function(d){ return _w7[d.siteNo]; }).filter(Boolean);
+      var host=svg.parentNode, hd=host.previousElementSibling;
+      if(!series.length){ host.style.display='none'; if(hd && /sg-h3/.test(hd.className)) hd.style.display='none'; return; }
+      host.style.display=''; if(hd && /sg-h3/.test(hd.className)) hd.style.display='';
+      var W=1000, H=320, L=54, R=64, T=14, B=34, now=Date.now(), t0=now-7*86400000;
+      var allD=[];
+      series.forEach(function(sr){ var base=null; for(var i=0;i<sr.pts.length;i++){ if(sr.pts[i].t>=t0){ base=sr.pts[i].v; break; } } if(base==null) base=sr.pts[0].v; sr.base=base;
+        sr.delta=sr.pts.filter(function(p){ return p.t>=t0; }).map(function(p){ var dv=g.absolute?p.v:(p.v-base); return {t:p.t, v:p.v, d:(sr.invert&&!g.absolute)?-dv:dv}; }); sr.delta.forEach(function(p){ allD.push(p.d); }); });
+      var zeroIn=g.absolute?[]:[0];
+      var dMin=Math.min.apply(null,allD.concat(zeroIn)), dMax=Math.max.apply(null,allD.concat(zeroIn)); if(dMax-dMin<0.5){ var mid=(dMax+dMin)/2; dMin=mid-0.25; dMax=mid+0.25; }
+      var pad=(dMax-dMin)*0.08; dMin-=pad; dMax+=pad;
+      var x=function(t){ return L+(t-t0)/(now-t0)*(W-L-R); }, y=function(v){ return T+(dMax-v)/(dMax-dMin)*(H-T-B); };
+      var h='';
+      var span=dMax-dMin, step=Math.pow(10,Math.floor(Math.log10(span))); if(span/step>6) step*=2; else if(span/step<3) step/=2;
+      for(var gv=Math.ceil(dMin/step)*step; gv<=dMax; gv+=step){ var yy=y(gv), z=!g.absolute && Math.abs(gv)<1e-9; h+='<line x1="'+L+'" y1="'+yy.toFixed(1)+'" x2="'+(W-R)+'" y2="'+yy.toFixed(1)+'" stroke="rgba(255,255,255,'+(z?'.55':'.14')+'" stroke-width="'+(z?1.5:1)+'"'+(z?' stroke-dasharray="6 5"':'')+'/><text x="'+(L-6)+'" y="'+(yy+4).toFixed(1)+'" text-anchor="end" fill="#fff" font-size="12" opacity=".85">'+(z?'0':((gv>0&&!g.absolute)?'+':'')+gv.toFixed(step<1?(step<0.1?2:1):0))+' ft</text>'; }
+      var fmt=new Intl.DateTimeFormat('en-US',{timeZone:'America/New_York',month:'short',day:'numeric'});
+      var dp=new Intl.DateTimeFormat('en-CA',{timeZone:'America/New_York',hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false});
+      for(var k=0;k<8;k++){ var dd=new Date(now-k*86400000); var parts=dp.formatToParts(dd), hh=+parts.find(function(q){ return q.type==='hour'; }).value%24, mm=+parts.find(function(q){ return q.type==='minute'; }).value, ss=+parts.find(function(q){ return q.type==='second'; }).value;
+        var midnight=dd.getTime()-((hh*3600+mm*60+ss)*1000); if(midnight<t0 || midnight>now) continue; var xx=x(midnight);
+        h+='<line x1="'+xx.toFixed(1)+'" y1="'+T+'" x2="'+xx.toFixed(1)+'" y2="'+(H-B)+'" stroke="rgba(255,255,255,.12)"/><text x="'+xx.toFixed(1)+'" y="'+(H-B+18)+'" text-anchor="middle" fill="#fff" font-size="12" opacity=".85">'+fmt.format(new Date(midnight+3600000))+'</text>'; }
+      series.forEach(function(sr){ var col=colorOf(sr.d,'dark'); var pts=sr.delta.map(function(p){ return x(p.t).toFixed(1)+','+y(p.d).toFixed(1); });
+        h+='<polyline data-site="'+sr.d.siteNo+'" fill="none" stroke="'+col+'" stroke-width="2" stroke-opacity=".9" stroke-linejoin="round" points="'+pts.join(' ')+'"/>';
+        var last=sr.delta[sr.delta.length-1]; if(last){ var lx=x(last.t), ly=y(last.d), numbered=!!sr.d.num, lab=numbered?String(sr.d.num):(sr.d.displayName||'').replace(/ NY$/i,'').slice(0,14);
+          if(numbered) h+='<circle cx="'+(lx+13).toFixed(1)+'" cy="'+ly.toFixed(1)+'" r="9" fill="'+col+'"/>';
+          h+='<text x="'+(lx+(numbered?13:6)).toFixed(1)+'" y="'+(ly+4).toFixed(1)+'" text-anchor="'+(numbered?'middle':'start')+'" fill="'+(numbered?'#101010':'#fff')+'" font-size="'+(numbered?11:10)+'" font-weight="800">'+waterEsc(lab)+'</text>'; } });
+      svg.innerHTML=h;
+      var tip=$(g.id+'-tip'); svg._w7series=series; svg._w7x=x; svg._w7y=y; svg._w7t0=t0; svg._w7now=now;
+      if(tip && !svg._w7bound){ svg._w7bound=true;
+        svg.addEventListener('mousemove', function(e){ var S=svg._w7series||[], X=svg._w7x, Y=svg._w7y, T0=svg._w7t0, NOW=svg._w7now; var r=svg.getBoundingClientRect(), mx=(e.clientX-r.left)/r.width*W, my=(e.clientY-r.top)/r.height*H; var t=T0+(mx-L)/(W-L-R)*(NOW-T0), best=null;
+          S.forEach(function(sr){ var p=null; for(var i=0;i<sr.delta.length;i++){ if(sr.delta[i].t>=t){ p=sr.delta[i]; break; } } if(!p) p=sr.delta[sr.delta.length-1]; if(!p) return; var dy=Math.abs(Y(p.d)-my); if(!best||dy<best.dy) best={sr:sr,p:p,dy:dy}; });
+          if(!best){ tip.style.display='none'; return; }
+          var meta=WATER_PARAMS[best.sr.code], f=meta.fmtS||meta.fmt;
+          var when=new Intl.DateTimeFormat('en-US',{timeZone:'America/New_York',month:'short',day:'numeric',hour:'numeric',minute:'2-digit'}).format(new Date(best.p.t));
+          tip.style.display=''; tip.textContent=(best.sr.d.num?best.sr.d.num+' · ':'')+best.sr.d.displayName+' · '+when+' · '+f(best.p.v)+(g.absolute?'':' ('+(best.p.d>=0?'+':'−')+Math.abs(best.p.d).toFixed(2)+' ft vs a week ago)');
+          svg.querySelectorAll('polyline').forEach(function(pl){ var on=pl.getAttribute('data-site')===best.sr.d.siteNo; pl.setAttribute('stroke-opacity', on?'1':'.3'); pl.setAttribute('stroke-width', on?'3':'1.5'); });
+        });
+        svg.addEventListener('mouseleave', function(){ tip.style.display='none'; svg.querySelectorAll('polyline').forEach(function(pl){ pl.setAttribute('stroke-opacity','.9'); pl.setAttribute('stroke-width','2'); }); });
+      }
+    });
+  }
+
 function fetchINat(){
     var grid=$('inat-grid'); if(!grid) return;
     var esc=function(v){ return String(v||'').replace(/[&<>"]/g,function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); };

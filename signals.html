@@ -428,6 +428,27 @@ a.link:hover{background:rgba(252,163,21,.14);}
        don't already show, and most stations in the picker have no temperature record at all
        (precip/snow-only CoCoRaHS gauges), which made the cards read as broken ("0 · no average")
        for the majority of the list. The station picker itself is still needed, for Water below. -->
+  <!-- 2026-09-27 (v923, Laurie): live USGS water levels — streams, lakes/reservoirs, groundwater wells.
+       v934 (Laurie): one section, "Water levels"; streams on the top row, reservoirs in the middle, wells at the bottom (renderWater builds one grid per kind into #water-cards) -->
+  <h2 class="sg-sec">Water levels</h2>
+  <!-- v949 (2026-09-28, Laurie): map is a tall sticky column on the left; chains on the right -->
+  <div id="water-layout">
+    <div id="water-map-col"><div id="water-map"></div></div>
+    <div id="water-cards-col"><div id="water-cards"><p class="ph-empty">Loading…</p></div>
+    <p class="sg-note" id="water-stat-note"></p></div>
+  </div>
+  <!-- v955 (2026-09-28, Laurie): three 7-day charts, one per kind. Each line = change since its own reading a week ago (ft), wells flipped so up = more water. -->
+  <h3 class="sg-h3">Rivers, last 7 days <span class="wcount">change in stage since a week ago, ft</span></h3>
+  <div class="sg-chart"><svg id="w7-rivers" viewBox="0 0 1000 320" preserveAspectRatio="none" role="img" aria-label="Rivers, last 7 days: change in stage since a week ago"></svg><div class="sg-tip" id="w7-rivers-tip"></div></div>
+  <h3 class="sg-h3">Tidal Hudson, last 7 days <span class="wcount">water surface, ft above NAVD88 · the tide, twice a day</span></h3>
+  <div class="sg-chart"><svg id="w7-tidal" viewBox="0 0 1000 320" preserveAspectRatio="none" role="img" aria-label="Tidal Hudson, last 7 days: water surface elevation"></svg><div class="sg-tip" id="w7-tidal-tip"></div></div>
+  <h3 class="sg-h3">Wells, last 7 days <span class="wcount">change in the water table since a week ago, ft · up = more water</span></h3>
+  <div class="sg-chart"><svg id="w7-wells" viewBox="0 0 1000 320" preserveAspectRatio="none" role="img" aria-label="Wells, last 7 days: change in water table since a week ago"></svg><div class="sg-tip" id="w7-wells-tip"></div></div>
+  <h3 class="sg-h3">Lakes &amp; reservoirs, last 7 days <span class="wcount">change in surface elevation since a week ago, ft</span></h3>
+  <div class="sg-chart"><svg id="w7-lakes" viewBox="0 0 1000 320" preserveAspectRatio="none" role="img" aria-label="Lakes and reservoirs, last 7 days: change in surface elevation since a week ago"></svg><div class="sg-tip" id="w7-lakes-tip"></div></div>
+  <p class="sg-note" id="water-live-src">Data © USGS Water Data for the Nation (waterservices.usgs.gov), provisional and subject to revision. Refreshes every 15 minutes.</p>
+
+
   <!-- v954 (2026-09-28, Laurie): ONE picker — Berne reanalysis (default) or an active observed station — governs Rain & snow and the year-by-year charts -->
   <div class="sg-pick"><label for="st-pick" class="sg-det" style="margin:0">Station:</label> <select id="st-pick" class="sg-sel"></select> <span class="sg-det" id="st-note" style="margin:0"></span></div>
   <h2 class="sg-sec">Rain &amp; snow · year to date</h2>
@@ -441,15 +462,27 @@ a.link:hover{background:rgba(252,163,21,.14);}
 
   <h2 class="sg-sec">Year-by-year weather history</h2>
   <p class="sg-det" style="margin:0 0 10px">Raw daily values for the station chosen above. This year is white; earlier years run from pale lavender back to deep violet, oldest darkest. Hover to see the year; the Years picker on each chart chooses which years are drawn. <span id="ch-src-note"></span></p>
-  <h3 class="sg-h3" data-temp="1">Daily mean temperature</h3>
-  <p class="sg-det" data-temp="1" style="margin:0 0 8px"></p>
-  <div class="sg-chart" data-temp="1"><svg id="ch-mean" viewBox="0 0 1000 420" preserveAspectRatio="none" role="img" aria-label="Daily mean temperature"></svg><div class="sg-tip" id="ch-mean-tip"></div></div>
   <h3 class="sg-h3" data-temp="1">Daily high</h3>
   <p class="sg-det" data-temp="1" style="margin:0 0 8px"></p>
   <div class="sg-chart" data-temp="1"><svg id="ch-hi" viewBox="0 0 1000 420" preserveAspectRatio="none" role="img" aria-label="Daily high"></svg><div class="sg-tip" id="ch-hi-tip"></div></div>
   <h3 class="sg-h3" data-temp="1">Daily low</h3>
   <p class="sg-det" data-temp="1" style="margin:0 0 8px"></p>
   <div class="sg-chart" data-temp="1"><svg id="ch-lo" viewBox="0 0 1000 420" preserveAspectRatio="none" role="img" aria-label="Daily low"></svg><div class="sg-tip" id="ch-lo-tip"></div></div>
+  <h3 class="sg-h3">Total precipitation, accumulating</h3>
+  <p class="sg-det" style="margin:0 0 8px">All moisture as water — rain plus the melted equivalent of snow — since January 1.</p>
+  <div class="sg-chart"><svg id="ch-precip" viewBox="0 0 1000 420" preserveAspectRatio="none" role="img" aria-label="Total precipitation, accumulating"></svg><div class="sg-tip" id="ch-precip-tip"></div></div>
+  <!-- v956 (2026-09-28, Laurie): high, low and total precipitation up front; the other six behind a toggle -->
+  <button type="button" class="sg-btn" id="yr-more-btn" aria-expanded="false" style="margin:8px 0 4px">+ 6 more charts: average temp, rain, snow, heating, cooling and growing degree days</button>
+  <div id="yr-more" style="display:none">
+  <h3 class="sg-h3" data-temp="1">Daily mean temperature</h3>
+  <p class="sg-det" data-temp="1" style="margin:0 0 8px"></p>
+  <div class="sg-chart" data-temp="1"><svg id="ch-mean" viewBox="0 0 1000 420" preserveAspectRatio="none" role="img" aria-label="Daily mean temperature"></svg><div class="sg-tip" id="ch-mean-tip"></div></div>
+  <h3 class="sg-h3">Rain, accumulating</h3>
+  <p class="sg-det" style="margin:0 0 8px">Inches of rain since January 1. <span id="ch-rain-note"></span></p>
+  <div class="sg-chart"><svg id="ch-rain" viewBox="0 0 1000 420" preserveAspectRatio="none" role="img" aria-label="Rain, accumulating"></svg><div class="sg-tip" id="ch-rain-tip"></div></div>
+  <h3 class="sg-h3">Snowfall, accumulating</h3>
+  <p class="sg-det" style="margin:0 0 8px">Depth as it fell, not water content. <span id="snow-mode" class="sg-seg"><a href="#" data-mode="year" class="on">By calendar year</a> <a href="#" data-mode="winter">By winter (July–June)</a></span> — winter mode keys each line to the year it began (1994–95 counts with 1994 in the picker), so one snow season is one line.</p>
+  <div class="sg-chart"><svg id="ch-snow" viewBox="0 0 1000 420" preserveAspectRatio="none" role="img" aria-label="Snowfall, accumulating"></svg><div class="sg-tip" id="ch-snow-tip"></div></div>
   <h3 class="sg-h3" data-temp="1">Heating degree days, accumulating</h3>
   <p class="sg-det" data-temp="1" style="margin:0 0 8px">Base 65°F.</p>
   <div class="sg-chart" data-temp="1"><svg id="ch-hdd" viewBox="0 0 1000 420" preserveAspectRatio="none" role="img" aria-label="Heating degree days, accumulating"></svg><div class="sg-tip" id="ch-hdd-tip"></div></div>
@@ -459,28 +492,9 @@ a.link:hover{background:rgba(252,163,21,.14);}
   <h3 class="sg-h3" data-temp="1">Growing degree days, accumulating</h3>
   <p class="sg-det" data-temp="1" style="margin:0 0 8px">Base 50°F, capped at 86°F.</p>
   <div class="sg-chart" data-temp="1"><svg id="ch-gdd" viewBox="0 0 1000 420" preserveAspectRatio="none" role="img" aria-label="Growing degree days, accumulating"></svg><div class="sg-tip" id="ch-gdd-tip"></div></div>
-  <h3 class="sg-h3">Rain, accumulating</h3>
-  <p class="sg-det" style="margin:0 0 8px">Inches of rain since January 1. <span id="ch-rain-note"></span></p>
-  <div class="sg-chart"><svg id="ch-rain" viewBox="0 0 1000 420" preserveAspectRatio="none" role="img" aria-label="Rain, accumulating"></svg><div class="sg-tip" id="ch-rain-tip"></div></div>
-  <h3 class="sg-h3">Snowfall, accumulating</h3>
-  <p class="sg-det" style="margin:0 0 8px">Depth as it fell, not water content. <span id="snow-mode" class="sg-seg"><a href="#" data-mode="year" class="on">By calendar year</a> <a href="#" data-mode="winter">By winter (July–June)</a></span> — winter mode keys each line to the year it began (1994–95 counts with 1994 in the picker), so one snow season is one line.</p>
-  <div class="sg-chart"><svg id="ch-snow" viewBox="0 0 1000 420" preserveAspectRatio="none" role="img" aria-label="Snowfall, accumulating"></svg><div class="sg-tip" id="ch-snow-tip"></div></div>
-  <h3 class="sg-h3">Total precipitation, accumulating</h3>
-  <p class="sg-det" style="margin:0 0 8px">All moisture as water — rain plus the melted equivalent of snow — since January 1.</p>
-  <div class="sg-chart"><svg id="ch-precip" viewBox="0 0 1000 420" preserveAspectRatio="none" role="img" aria-label="Total precipitation, accumulating"></svg><div class="sg-tip" id="ch-precip-tip"></div></div>
+  </div>
   <p class="sg-note" id="yr-note"></p>
   <p class="sg-note" id="no-temp-note" style="display:none"></p>
-
-  <!-- 2026-09-27 (v923, Laurie): live USGS water levels — streams, lakes/reservoirs, groundwater wells.
-       v934 (Laurie): one section, "Water levels"; streams on the top row, reservoirs in the middle, wells at the bottom (renderWater builds one grid per kind into #water-cards) -->
-  <h2 class="sg-sec">Water levels</h2>
-  <!-- v949 (2026-09-28, Laurie): map is a tall sticky column on the left; chains on the right -->
-  <div id="water-layout">
-    <div id="water-map-col"><div id="water-map"></div></div>
-    <div id="water-cards-col"><div id="water-cards"><p class="ph-empty">Loading…</p></div>
-    <p class="sg-note" id="water-stat-note"></p></div>
-  </div>
-  <p class="sg-note" id="water-live-src">Data © USGS Water Data for the Nation (waterservices.usgs.gov), provisional and subject to revision. Refreshes every 15 minutes.</p>
 
   <h2 class="sg-sec">Seen lately · iNaturalist</h2>
   <p class="sg-det" style="margin:0 0 10px">Research-grade observations within about 40 km of Berne — Helderbergs to the northern Catskills, Schoharie to the Hudson.</p>
