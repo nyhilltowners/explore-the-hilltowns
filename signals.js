@@ -531,7 +531,7 @@
   var CURATED_CODES = ['00060','00065','62615','00054','62620','72137','72254','00010','72019','62611'];   /* v946: + reservoir codes; v948: + groundwater codes for the pinned wells */
   /* v948 (2026-09-28, Laurie): wells asked for by link - always shown, ahead of the nearest-N sweep.
      421821074012701 = G-390 near Cairo (Greene Co., 408 ft deep, land surface 491 ft NAVD88); 421746074180201 = near Windham/Ashland. */
-  var WELL_SITES = ['421821074012701','421746074180201'];
+  var WELL_SITES = ['421821074012701','421746074180201','422241073274601','424560074274101'];   /* v959 (Laurie): + Cb-1071 Canaan (360 ft deep bedrock, 903 ft - like-for-like with Cairo) and So-528 Carlisle (74 ft, 1,246 ft - the network's upland well) */
   /* v940 (2026-09-27, Laurie): the stream row is a curated transect, not a nearest-N sweep - Schoharie Creek from
      Prattsville down to the Mohawk, the Mohawk at Cohoes, the Hudson at Green Island, the Normans Kill, the
      tidal Hudson at the Port of Albany, the Esopus at Mount Marion (the big Catskill drainage, entering at
@@ -584,7 +584,7 @@
   var colorOf=function(d, mode){ var c=CHAIN_OF[d.siteNo]; if(c) return c[mode]; var k=KIND_COLOR[d.kind]; return k?k[mode]:'#6b6f7a'; };
   var WATER_COLOR = {stream:'#3f8fd0', lake:'#1f9d91', well:'#b8901c'};   /* legacy; colorOf() is what renders now */
   var WATER_LABEL = {stream:'Stream', lake:'Lake / reservoir', well:'Groundwater well'};
-  var WATER_CAP = {stream:99, lake:3, well:5};   /* v948: pinned wells count toward the cap; 5 so the three nearest still appear alongside Laurie's two */   /* v934: named waters count toward the cap; streams get two rows' worth so the Schoharie-side creeks survive */
+  var WATER_CAP = {stream:99, lake:3, well:7};   /* v948/v959: pinned wells count toward the cap; 7 so the three nearest still appear alongside Laurie's four */   /* v934: named waters count toward the cap; streams get two rows' worth so the Schoharie-side creeks survive */
   var TREND_TXT = {up:'\u2191 rising', down:'\u2193 falling', flat:'\u2192 steady'};
   /* The specific local waters Laurie asked about by name, matched against each site's own USGS name
      rather than hardcoded site numbers. v929: any of them with no live USGS gauge is now simply
@@ -989,12 +989,13 @@
     if(!_w7 || !_wm) return;
     /* v955: tidal gauges get their own chart in ACTUAL elevation (shared NAVD88 datum) - their twice-daily swing would
        otherwise own the rivers' shared axis and flatten every creek. */
-    var groups=[
-      {id:'w7-rivers', rows:_wm.byKind.stream.filter(function(d){ return !d.tidal; })},
+    /* v958 (2026-09-28, Laurie): one chart per river chain, each with its own axis - the Schoharie's storm rise was
+       squashing the Mohawk, Hudson and Esopus flat on a shared scale. Tidal gauges still get their own absolute chart. */
+    var groups=CHAINS.map(function(c){ return {id:'w7-'+c.key, rows:_wm.byKind.stream.filter(function(d){ return !d.tidal && CHAIN_OF[d.siteNo]===c; })}; }).concat([
       {id:'w7-tidal',  rows:_wm.byKind.stream.filter(function(d){ return d.tidal; }), absolute:true},
       {id:'w7-wells',  rows:_wm.byKind.well},
       {id:'w7-lakes',  rows:_wm.byKind.lake}
-    ];
+    ]);
     groups.forEach(function(g){ var svg=$(g.id); if(!svg) return;
       var series=g.rows.map(function(d){ return _w7[d.siteNo]; }).filter(Boolean);
       var host=svg.parentNode, hd=host.previousElementSibling;
@@ -1198,14 +1199,15 @@ function fetchINat(){
     var reportsNote = function(m){ return m.reports>1 ? m.reports+' reports' : '1 report'; };
     /* 2026-09-27 (v902, Laurie): row() (compact eBird strip) retired — the notable band now uses the same card as the main grid */
     var card=function(o,rare,m){ return '<div class="inat eb-card'+(rare?' rare':'')+'" data-sci="'+esc(o.sciName)+'" data-subid="'+esc(o.subId||'')+'"><div class="img ph">🐦</div><div class="b"><div class="n">'+wikiLink(o.sciName, esc(o.comName), 'Wikipedia: '+o.comName)+(countBadge(m)?' <span class="c">'+countBadge(m)+'<span class="c-lbl"> sightings</span></span>':'')+'</div><div class="sci">'+wikiLink(o.sciName, esc(o.sciName))+'</div><div class="m"><b>'+esc(fmtWhen(o.obsDt))+'</b>'+(o.locName?' \u00b7 <b>'+esc(stripCoords(o.locName))+'</b>':'')+' \u00b7 '+reportsNote(m)+'<span class="obs-by"></span><br><span class="photo-credit" style="opacity:.7">species photo: Wikipedia</span></div></div></div>'; }; /* 2026-09-27 (v906, Laurie): date/time and location bold, coordinates stripped from locName; count badge relabelled "sightings" — see countBadge() for what the number means */
-    Promise.all([fetch(base+'/notable'+q,opt).then(function(r){ return r.ok?r.json():[]; }).catch(function(){ return []; }),
+    /* v960 (2026-09-28, Laurie): includeProvisional=true on the notable call - unreviewed sightings are disproportionately the rare and out-of-season ones, which is what this band is for. The main grid stays reviewed-only. */
+    Promise.all([fetch(base+'/notable'+q+'&includeProvisional=true',opt).then(function(r){ return r.ok?r.json():[]; }).catch(function(){ return []; }),
                  fetch(base+q,opt).then(function(r){ if(!r.ok) throw new Error('eBird HTTP '+r.status); return r.json(); })])
     .then(function(res){ var notable=res[0]||[], recent=res[1]||[];
       var srt=function(a,b){ return (b.obsDt||'').localeCompare(a.obsDt||''); }; notable.sort(srt); recent.sort(srt);
       /* v941 (2026-09-27, Laurie): one card per notable species (most recent report), with the same
          sightings badge as the main grid, instead of a card per individual report. The heading count is species. */
       var nseen={}, nuniq=notable.filter(function(o){ var k=o.speciesCode; if(nseen[k]) return false; nseen[k]=1; return true; });
-      band.innerHTML = nuniq.length ? '<div class="eb-band"><div class="t">Big Deal Birdos \u00b7 '+nuniq.length+(nuniq.length===1?' species':' species')+'</div><div class="sg-grid">'+nuniq.slice(0,12).map(function(o){ return card(o,false,countMeta(recent,o.speciesCode)); }).join('')+'</div></div>' : ''; /* 2026-09-27 (v902, Laurie): every individual sighting kept separate (no per-species merge); same card size as the main grid; the 'notable' tag is dropped below since the section heading already says so, and eBird gives no reason code for why a sighting is flagged */
+      band.innerHTML = nuniq.length ? '<div class="eb-band"><div class="t">Big Deal Birdos \u00b7 '+nuniq.length+' species <span style="font-weight:400;text-transform:none;letter-spacing:0;opacity:.75">\u00b7 includes reports still awaiting eBird review</span></div><div class="sg-grid">'+nuniq.slice(0,12).map(function(o){ return card(o,false,countMeta(recent,o.speciesCode)); }).join('')+'</div></div>' : ''; /* 2026-09-27 (v902, Laurie): every individual sighting kept separate (no per-species merge); same card size as the main grid; the 'notable' tag is dropped below since the section heading already says so, and eBird gives no reason code for why a sighting is flagged */
       var seen={}, uniq=recent.filter(function(o){ var k=o.speciesCode; if(seen[k]) return false; seen[k]=1; return true; });   /* one card per species, most recent report */
       grid.innerHTML = uniq.length ? uniq.map(function(o){ return card(o,false,countMeta(recent,o.speciesCode)); }).join('') : '<p class="ph-empty">No reports in the window.</p>';
       wikiPics();
