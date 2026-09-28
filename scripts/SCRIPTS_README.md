@@ -32,3 +32,17 @@ rm -rf site && python3 build/build.py
 - `tag_audit` currently flags one leftover cluster: **Zine / Zines** — the v653
   "Zine Fair→Zine" rename left a separate "Zines" (x4). Merge Zines→Zine (or
   Zine→Zines, whichever Laurie prefers) next tag pass.
+
+
+## events_carryover.py + events_carryover.json (v950, 2026-09-28)
+
+The events master is ingestor-owned and replaced wholesale on every drop-in; the ingestor never reads the atlas
+master back, so atlas-side corrections vanish unless re-applied. Before v950 that was done by hand from prose notes.
+Now the fixes live as data in `events_carryover.json` (keyed by Event Name [+ Venue]; fields to set; a dated `why`).
+
+    python3 scripts/events_carryover.py "events (79).xlsx"            # diff only: curated columns, master vs drop-in
+    python3 scripts/events_carryover.py "events (79).xlsx" --apply    # replace data/events.xlsx, apply fixes, provenance in Notes
+
+Read the diff first: anything the master has that the drop-in lacks is either (a) an atlas fix to carry — add it to the
+JSON if it isn't there — or (b) a deliberate upstream edit — leave it. Remove a JSON entry once the ingestor carries
+the fix itself (drop-in 78 already carried every Display/Agenda correction, so none of those are listed).

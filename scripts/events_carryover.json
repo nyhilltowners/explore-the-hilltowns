@@ -1,0 +1,13 @@
+{
+  "_doc": "Atlas-side fixes to re-apply after every events drop-in (the ingestor does not read the atlas master). Keyed by (Event Name, Venue) case-insensitive; every matching row gets the fields. Add a dated line in 'why'. Remove an entry once the ingestor carries the fix itself.",
+  "fixes": [
+    {"name": "Native Plant Celebration and Seed Swap", "venue": "*", "set": {"Glyph": "🪴"}, "why": "v917 2026-09-27 Laurie: native-plant events are 🪴 (🌿 is the dispensary glyph; drop-in 78 sends 🌱)"},
+    {"name": "Native Plant Sale Kick-off social", "venue": "*", "set": {"Glyph": "🪴"}, "why": "v917"},
+    {"name": "Welcoming Native Plants Into Your Garden", "venue": "*", "set": {"Glyph": "🪴"}, "why": "v917"},
+    {"name": "Free National Webinar- Bringing Nature Home: Native Plants for Patios, Balconies, and Small Spaces with Homegrown National Park", "venue": "*", "set": {"Glyph": "🪴"}, "why": "v917"},
+    {"name": "Indigenous Inspired Bark Basket Making Workshop", "venue": "*", "set": {"Latitude": 42.499772, "Longitude": -72.407619, "Address": "65 Mt Mineral Rd, Shutesbury, MA 01072"}, "why": "v919 2026-09-27: Temenos Retreat Center is in Shutesbury MA; ingestor coordinate (39.946,-75.700) is in Pennsylvania"},
+    {"name": "2026 Seminar Series “Dangerous Spaces” - Greene County", "venue": "*", "set": {"Address": "77 Gill Rd, New Baltimore, NY 12124"}, "why": "v918 geocode/address"},
+    {"name": "Coeymans Fire Company #1 Annual “Rough and Ready” Golf Scramble", "venue": "*", "set": {"Address": "3822 County Rte 26, Greenville, NY 12083"}, "why": "v918 geocode/address"},
+    {"name": "Shamrock House Oktoberfest with dSb", "venue": "*", "set": {"Address": "2388 NY-145, East Durham, NY 12423"}, "why": "v918 geocode/address"}
+  ]
+}
