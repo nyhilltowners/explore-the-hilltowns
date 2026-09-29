@@ -1,7 +1,33 @@
-# NY Hilltowners Folk Atlas — Session Handoff (2026-09-29, v983)
+# NY Hilltowners Folk Atlas — Session Handoff (2026-09-29, v987)
 
-> **Where things stand (for the next chat).** Baseline is **v983**; next version continues from **v984**. Laurie has
-> deployed through v980; v981–v983 ship together — the v983 CHANGED-ONLY zip carries everything since v980.
+> **Where things stand (for the next chat).** Baseline is **v987**; next version continues from **v988**. Laurie has
+> deployed through v980; v981–v987 ship together — the v987 CHANGED-ONLY zip carries everything since v980.
+> **v987 = all 23 contaminant profiles written + the three-shelf carousel.** `data/water/contaminant_profiles.md` now
+> holds every key (20 new entries written from per-key fact sheets generated off the workbook, every non-workbook claim
+> linked to a fetched agency page; 15 claims marked "(general literature; no fetched source)" for Laurie to accept or cut).
+> The section is a **carousel**: three shelves (Metals & minerals 10 · Man-made chemicals 8 · Biological & nutrients 5,
+> `SHELVES` in water.js), one full-width card per contaminant with a 4:3 **image slot** (`images/contaminants/<key>.jpg`,
+> lower-case key; dashed placeholder until the file exists — folder README says so), ‹ › arrows that wrap shelf to shelf,
+> ← → keys when the card has focus, touch swipe, per-shelf chips underneath, `#c=KEY` deep links. DO's discharge table
+> treats the permit number as a floor (red = below). Reviewed sample doc: "Contaminant Profiles — Sample" (Claude Docs).
+> **v986 = CONTAMINANT PROFILES at the top of the water page.** The water chat's `_core_2` package (62 sheets) added
+> `contaminants` (23 substances: standards, natural occurrence, persistence, summary), `contaminant_results` (6,696-row
+> long-format join, non-detects carry `detection_limit`), `contaminant_key` on the release tables, and `dec_hab_reports` /
+> `dec_hab_by_year` (bloom status S/C/HT per report 2012–2025). Page section "What's in the water": chips grouped by
+> class → one profile: workbook summary, **What it is / How it gets here / What it does / What is not known** from
+> `data/water/contaminant_profiles.md` (hand-written; `## KEY` + `### Section`; python-markdown → HTML in water.py),
+> and two GENERATED tables — *Where it has been found* (every keyed result, newest first, medium toggles, over-standard
+> in red, non-detects as "not detected (< limit)", zero-with-no-limit flagged) and *Who releases it* (TRI air/land in
+> kg by facility, latest + peak; DMR water by permit·outfall with kg/yr from lb/d medians, red when over its own limit).
+> Deep link `#c=KEY`. Three profiles written (HG, PFOS, MICROCYSTIN — reviewed by Laurie in the "Contaminant Profiles —
+> Sample" doc); the other 20 show summary + tables + "to be written". Bloom-history chart now uses `dec_hab_by_year`
+> (status every year 2012–2025; 2019–24 gap closed). `data_water.js` ≈ 6 MB (results join dictionary-encoded).
+> **Workbook issues to send back to the water chat:** (a) 120 `ny_mercury_raw` rows in `contaminant_results` have date
+> "nan" though the sheet has Year/BDate — water.py refills from `source_row`; (b) some `detected` rows carry value 0
+> with no detection limit (NY Hg synthesis raw water) — page prints "reported as zero"; (c) `statistic` strings contain
+> "depth nan m" — stripped on the page; (d) dates arrive as MM/DD/YYYY in some sheets — water.py normalises to ISO.
+> **v984–v985:** all three Wild Hudson Valley POI rows (Lodging 5, Adventures 19, Flowers & Garden 36) are `Display=No`
+> until spring — reopens Memorial Day 2027; flip back then (notes in the rows). Their events keep arriving via the ingestor.
 > **v983 = water package refresh + two panels.** The water-research chat re-issued its package (`helderberg_hudson_package_2026-09-29_core_1.zip`):
 > workbook now 58 sheets (was 52), replaced wholesale in `data/water/`. Upstream fixed the FY2009–2016 DMR unit gap (units
 > inherited from the permit limit; water.py now trusts the sheet and keeps `ui:true` on FY≤2016 rows so the tooltip still says
@@ -176,6 +202,10 @@ Fixed-hinge wingbeat, 4 white wing-spots. Day-only, reduced-motion safe. The
 
 ## UX state (recent)
 
+- **v987 (2026-09-29, Laurie): contaminant profiles complete + carousel.** 20 entries appended to `contaminant_profiles.md` (writers: PB AS RADON RADIUM BA · FE MN NA CL NO3 · PFOA PFHXS DIOXANE TOLUENE XYLENE · TTHM HAA5 TP FECAL DO; ~590 words each; 68 distinct sources). Carousel chrome in waterwip.html (`.cp-tabs`, `.cp-car`, `.cp-arrow`, `.cp-top`, `.cp-img`), `SHELVES`/`step()`/swipe in water.js; `images/contaminants/` created (README only). Verified headless: deep link → next → keyboard → tab switch. `data_water.js` ≈ 6.1 MB.
+- **v986 (2026-09-29, Laurie): contaminant profiles.** New page section 0 (`drawContaminants()` in water.js — NB the DO-depth chart already owned the name `drawProfiles`), `data/water/contaminant_profiles.md` (3 entries), `read_profiles()` + `cres`/`cres_dict`/`tri_keyed`/`hab_by_year`/`contaminants` in `build/water.py`; `dmr` rows carry `ck`. Bloom history rewritten on `hab_by_year`. Harness screenshots `cp` and `bloom`. Headless: 23 chips, zero page errors.
+- **v985 (2026-09-29, Laurie):** the other two Wild Hudson Valley rows — `Adventures` 19 and `Flowers & Garden` 36 — also `Display=No` until spring (whole operation closed until Memorial Day 2027; events come through the ingestor, not POI). Dated notes; Lodging note amended. Read-back verified.
+- **v984 (2026-09-29, Laurie):** `points_of_interest.xlsx › Lodging` row 5 Wild Hudson Valley → `Display=No` (seasonal; glamping/camping closed until Memorial Day 2027), dated note in Notes. Adventures row 19 and Flowers & Garden row 36 (same business: workshops, foraging) left on pending Laurie's call. Read-back verified.
 - **v983 (2026-09-29, Laurie): water package refresh.** `data/water/helderberg_hudson_water_quality.xlsx` (58 sheets), `geo/echo_cwa_permits.geojson`, `PACKAGE_README.md` replaced from the water chat's `_core_1` package (brief unchanged). `build/water.py`: honours upstream `unit` (fingerprint kept as a fallback, filled 0), carries `min_reported`, includes every `watchlist_note` permit, and emits `tri_trend`, `tri_mercury`, `tri_facilities` (≤50 mi; per-year series only ≤30 mi), `tri_chemicals` (≤30 mi facility × chemical peaks with carcinogen/PBT/PFAS flags) and `regional_top10`. `water.js`: watchlist chips/notes on outfall cards and the far-outfalls fold now includes the watchlist beyond 24 km; `drawLoads()` and `drawTRI()`; map gains `tri` and `permits-w` layers. Harness screenshots the four new panels. Headless check: 21 cards, 10 creeks, 11 lakes, 31 outfall cards, zero page errors.
 - **v982 (2026-09-29, Laurie): Water page.** New `waterwip.html` + `water.js` (unlinked; reach it by URL), `build/water.py`, `data/water/` (the water-quality master workbook, GeoJSON layers, package README, brief, two TMDL PDFs); `build.py` gained `emit_water_layer()` (a missing workbook is a WARNING, never a failed build), `waterwip.html` in the page list, and a `water.js` copy. Scope decided with fresh eyes after profiling every sheet, not from the brief alone: agreed with the brief on the monitoring-shadow lead, the symbol grammar, the four-clocks rule, log axes for P/PFAS and sparkline-not-dot outfalls; **disagreed** on "refuse any downslope trend" — that is right for chemistry and wrong for biology, so DEC's BAP stream scores got a first-class panel; the transect is a drawn SVG instrument rather than a map (the wipmap already does DEC-layer geography); reference studies deferred. Palette validated with the dataviz skill's `validate_palette.js` on the ink surface (`#3987e5` north · `#d95926` south · `#199e70` Potic · `#c98500` off-transect; wells `#199e70/#c98500/#d55181`); gold stays reserved for the live pill; status colours always carry an icon + label. Headline rule per card: a violation wins, else the newest year's value closest to its standard; "finished water (tap)" is only ever a public-water-system node. Outfall y-scale follows the data and pins an off-scale limit to the top edge with a label (Haleon's 6.8 mg/L phosphorus limit would otherwise flatten the tenfold rise). Verified headless: 21 cards, 10 creek panels, 11 lake multiples, 16 outfall cards, zero page errors; CDN fonts/MapLibre/tiles blocked in the sandbox so the map is unverified here.
 - **v981 (2026-09-29, Laurie):** Handoff refresh — the "Where things stand" note above rewritten for the 2026-09-28/29 session; no code or data change.
@@ -502,7 +532,7 @@ Big ongoing effort to tame tag sprawl. Started at 2,332 unique tags; now ~2,178.
 7. Clean-room verify: unzip the package fresh, rebuild, confirm BUILD OK.
 8. `present_files` the zip + both xlsx.
 
-Version at handoff: **v983**. Next chat continues from v984. Harness in `scripts/signals_harness/` (Signals).
+Version at handoff: **v987**. Next chat continues from v988. Harness in `scripts/signals_harness/` (Signals).
 
 ---
 

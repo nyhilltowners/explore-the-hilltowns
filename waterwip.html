@@ -226,6 +226,43 @@ a.link:hover{background:rgba(252,163,21,.14);}
 .chip.stale{color:#f0b67f !important;} .chip.watch{color:#c9a6ff !important;}
 .tri-tab td.l small{display:block; opacity:.75; font-size:10.5px;}
 .tri-scroll{max-height:520px; overflow:auto; border:1px solid rgba(255,255,255,.18); border-radius:12px; padding:0 10px 6px; background:rgba(0,0,0,.18);} .tri-scroll thead th{position:sticky; top:0; background:#0b1040; z-index:1;}
+
+/* contaminant profiles (v986) */
+.cp-chips{display:flex; flex-wrap:wrap; gap:6px 8px; margin:6px 0 12px; align-items:center;}
+.cp-chips .grp{font-size:10px; letter-spacing:.14em; text-transform:uppercase; opacity:.7; margin:0 4px 0 10px;} .cp-chips .grp:first-child{margin-left:0;}
+.cp-chips button{font:700 12px "Montserrat",sans-serif; padding:5px 10px; border-radius:14px; border:1px solid rgba(255,255,255,.35); background:rgba(0,0,0,.25); color:#fff !important; cursor:pointer;}
+.cp-chips button:hover{border-color:var(--gold,#c9a227);} .cp-chips button.on{background:var(--gold,#c9a227); border-color:var(--gold,#c9a227); color:var(--gold-ink,#2b2410) !important;}
+.cp-chips button .n{font-weight:400; opacity:.75; font-size:10px; margin-left:4px;}
+.cp{background:rgba(0,0,0,.22); border:1px solid rgba(255,255,255,.22); border-radius:14px; padding:16px 18px 12px;}
+.cp .cp-head{display:flex; gap:14px; align-items:baseline; flex-wrap:wrap;} .cp .cp-head h3{margin:0; font-size:22px; font-weight:800; color:var(--gold,#c9a227) !important;} .cp .cp-head .kind{font-size:11px; letter-spacing:.12em; text-transform:uppercase; opacity:.8;}
+.cp .cp-sum{font-size:14px; line-height:1.5; margin:6px 0 4px; max-width:860px;}
+.cp .cp-std{margin:8px 0 0; padding:0 0 0 18px; font-size:12.5px; line-height:1.5;} .cp .cp-std li{margin:2px 0;}
+.cp h4{margin:18px 0 6px; font-size:12px; letter-spacing:.14em; text-transform:uppercase; color:var(--gold,#c9a227) !important; display:flex; align-items:center; gap:10px;} .cp h4:after{content:""; flex:1; height:1px; background:currentColor; opacity:.3;} .cp h4 .sub{font-weight:400; letter-spacing:.02em; text-transform:none; color:#fff !important; opacity:.8; font-size:11.5px;}
+.cp .prose{font-size:13.5px; line-height:1.55; max-width:860px;} .cp .prose p{margin:0 0 9px;} .cp .prose a{color:var(--gold,#c9a227) !important;} .cp .prose i, .cp .prose em{font-style:italic;} .cp .prose ul{padding-left:18px; margin:0 0 9px;}
+.cp .todo{font-style:italic; opacity:.7; font-size:13px;}
+.cp .ddtab{font-size:12px;} .cp .ddtab td.l{max-width:320px;} .cp .ddtab a, .cp a{color:var(--gold,#c9a227) !important;} .cp .ddtab td:first-child{white-space:nowrap;}
+.cp .med-tog{display:flex; flex-wrap:wrap; gap:4px 12px; font-size:11.5px; margin:0 0 6px;} .cp .med-tog label{cursor:pointer;} .cp .med-tog input{accent-color:var(--gold,#c9a227); margin-right:4px;}
+.cp .nd{opacity:.65; font-style:italic;} .cp .over{color:#ff8a8a !important; font-weight:800;}
+.cp .fin{display:inline-block; font-size:9px; letter-spacing:.1em; text-transform:uppercase; border:1px solid currentColor; border-radius:8px; padding:0 5px; margin-left:4px; opacity:.85;}
+
+/* carousel chrome (v987) */
+.cp-tabs{display:flex; gap:6px; margin:6px 0 10px; flex-wrap:wrap;}
+.cp-tabs button{font:800 12px "Montserrat",sans-serif; letter-spacing:.1em; text-transform:uppercase; padding:9px 16px; border-radius:10px 10px 0 0; border:1px solid rgba(255,255,255,.28); border-bottom:none; background:rgba(0,0,0,.22); color:#fff !important; cursor:pointer;}
+.cp-tabs button .n{font-weight:400; opacity:.7; margin-left:6px; letter-spacing:0; text-transform:none;}
+.cp-tabs button.on{background:var(--gold,#c9a227); border-color:var(--gold,#c9a227); color:var(--gold-ink,#2b2410) !important;}
+.cp-car{display:grid; grid-template-columns:36px 1fr 36px; gap:8px; align-items:stretch;}
+.cp-arrow{background:rgba(0,0,0,.25); border:1px solid rgba(255,255,255,.28); border-radius:10px; color:var(--gold,#c9a227) !important; font:800 30px/1 "Montserrat",sans-serif; cursor:pointer; padding:0;}
+.cp-arrow:hover{background:rgba(201,162,39,.18); border-color:var(--gold,#c9a227);}
+.cp-stage{min-width:0; overflow:hidden;}
+.cp{outline:none; animation:cp-in .28s ease;} .cp.slide-l{animation:cp-in-l .28s ease;} .cp.slide-r{animation:cp-in-r .28s ease;}
+@keyframes cp-in{from{opacity:0} to{opacity:1}} @keyframes cp-in-l{from{opacity:0; transform:translateX(24px)} to{opacity:1; transform:none}} @keyframes cp-in-r{from{opacity:0; transform:translateX(-24px)} to{opacity:1; transform:none}}
+.cp .cp-top{display:grid; grid-template-columns:300px 1fr; gap:18px; align-items:start; margin-bottom:6px;}
+.cp .cp-img{aspect-ratio:4/3; border:1.5px dashed rgba(255,255,255,.35); border-radius:12px; background:rgba(255,255,255,.04); display:flex; align-items:center; justify-content:center; text-align:center; padding:12px; font-size:11px; letter-spacing:.12em; text-transform:uppercase; opacity:.7; overflow:hidden; position:relative;}
+.cp .cp-img img{position:absolute; inset:0; width:100%; height:100%; object-fit:cover; display:block;}
+.cp .cp-img .ph{position:relative; z-index:1;} .cp .cp-img.has-img{border-style:solid; opacity:1;} .cp .cp-img.has-img .ph{display:none;}
+.cp .cp-pos{font-size:10px; letter-spacing:.14em; text-transform:uppercase; opacity:.7; margin-bottom:4px;}
+.cp-chips{margin-top:10px;} .cp-chips button{font-size:11px; padding:4px 9px;}
+@media (max-width:760px){ .cp .cp-top{grid-template-columns:1fr;} .cp .cp-img{max-width:360px;} .cp-car{grid-template-columns:28px 1fr 28px; gap:4px;} .cp-arrow{font-size:24px;} }
 /* provenance marks */
 .pv{font-size:9px; vertical-align:super; margin-left:2px; letter-spacing:.04em; opacity:.75;}
 .pv.a{color:#f5c04a !important;} .pv.d{color:#b9bde6 !important;}
@@ -332,6 +369,16 @@ details.sg-more summary{cursor:pointer; color:var(--gold,#c9a227); font-weight:7
   <p class="sg-sub">How water moves off the Helderberg escarpment toward the Hudson, and what the public record says about its quality at each stop — and where that record goes quiet. Two transects from the Westerlo–Rensselaerville divide: north through Basic Creek and Alcove to Coeymans (Albany's drinking water), south through Ten Mile and Catskill Creek to Catskill. Empty nodes are a finding, not a gap to hide.</p>
   <p id="wq-status"></p>
 
+  <h2 class="sg-sec">What’s in the water <span class="n">— every substance the record names, in plain English. Three shelves; flip through the cards with the arrows, the keys, or a swipe.</span></h2>
+  <div class="cp-tabs" id="cp-tabs" role="tablist"></div>
+  <div class="cp-car">
+    <button type="button" class="cp-arrow prev" id="cp-prev" aria-label="Previous">&#8249;</button>
+    <div class="cp-stage"><div class="cp" id="cp" tabindex="0"></div></div>
+    <button type="button" class="cp-arrow next" id="cp-next" aria-label="Next">&#8250;</button>
+  </div>
+  <div class="cp-chips" id="cp-chips"></div>
+  <div class="sg-tip" id="cp-tip"></div>
+
   <h2 class="sg-sec">1 · The two transects <span class="n">— elevation on the vertical, ordered downstream; hollow means no data</span></h2>
   <div class="sg-chart tx-wrap"><div id="tx"></div><div class="sg-tip" id="tx-tip"></div></div>
   <div class="lg" id="tx-legend"></div>
@@ -363,9 +410,9 @@ details.sg-more summary{cursor:pointer; color:var(--gold,#c9a227); font-weight:7
       <p class="sg-note" id="tmdl-note"></p>
     </div>
   </div>
-  <h3 class="sg-h3">Bloom history <span class="sub">DEC notification listings 2012–2018 and 2025 reports, June–November</span> <select class="sg-sel" id="bloom-sel"></select></h3>
+  <h3 class="sg-h3">Bloom history <span class="sub">DEC reports 2012–2025, worst status each year, June–November</span> <select class="sg-sel" id="bloom-sel"></select></h3>
   <div class="sg-chart" id="bloom"></div>
-  <div class="lg"><span><i class="sq" style="color:#ff8a8a"></i>confirmed, high toxin</span><span><i class="sq" style="color:#f5c04a"></i>confirmed (lab)</span><span><i class="sq" style="color:#b9bde6"></i>suspicious / 2025 report window</span></div>
+  <div class="lg"><span><i class="sq" style="color:#ff8a8a"></i>confirmed, high toxin</span><span><i class="sq" style="color:#f5c04a"></i>confirmed (lab)</span><span><i class="sq" style="color:#b9bde6"></i>suspicious (visual only)</span></div>
   <h3 class="sg-h3">Shoreline microcystin <span class="sub">µg/L, log scale, against the 4 µg/L recreational guidance in force at the time</span></h3>
   <div class="sg-chart" id="toxin"></div>
 

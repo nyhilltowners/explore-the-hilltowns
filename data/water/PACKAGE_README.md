@@ -122,6 +122,13 @@ Clipping box for the *_clip layers: lon −74.75 to −73.55, lat 42.05 to 42.85
 - `pfas_map_cannon_sites.csv` — 40 rows × 25 cols
 - `sources.csv` — 73 rows × 6 cols
 
+## Contaminant profiles (key: contaminants.key)
+
+- `contaminants.csv` — 23 substances: name, group, CAS, every applicable standard with type and what it protects, natural-occurrence note, persistence, two-line summary, and result/release counts.
+- `contaminant_results.csv` — long-format join, one row per ambient measurement (finished water, raw lake, creek, groundwater, bloom sample, fish muscle, bird blood) keyed to `contaminants.key`; non-detects carry `qualifier = "not detected"` and the limit in `detection_limit` with `value` blank.
+- `contaminant_key` column on dmr_annual, dmr_summary, dmr_limits, tri_releases, loading_tool_pollutant, regional_loads_fy2025, dec_results, usgs_wells_raw and measurements, so "who releases it" ranks itself from the release tables.
+- `dec_hab_reports.csv` / `dec_hab_by_year.csv` — per-report bloom status (S / C / HT) 2012–2025 from the DEC portal export, and the worst status per lake per year.
+
 ## Cadence warning
 
 Four clocks in one workbook: finished water (annual, at the tap: `measurements`), raw ambient (DEC, years apart: `dec_results`, `dec_lake_summer_summary`), monthly discharge reports (`dmr_results`), and EPA annual loads (`loading_tool_*`, and the `source = "EPA Loading Tool annual"` rows in `dmr_annual`). Never share an axis across clocks without labelling it. Concentration (mg/L) and load (kg/yr) are different quantities.

@@ -1,0 +1,1 @@
+Drop contaminant images here as <key>.jpg (lower-case workbook key: hg.jpg, pfos.jpg, microcystin.jpg …). 4:3 works best; the card shows a dashed placeholder until a file exists. Copied to site/images/ by the build.

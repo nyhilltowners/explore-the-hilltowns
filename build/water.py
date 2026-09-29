@@ -284,6 +284,8 @@ def aggregate_dmr(rows, permits_keep):
             "max": r.get("max_reported"), "lim": r.get("limit_max"), "e90": r.get("n_E90"),
             "src": "LT" if (r.get("source") or "").startswith("EPA Loading") else "DMR",
         }
+        if r.get("contaminant_key"):
+            rec["ck"] = r.get("contaminant_key")     # v986: the workbook's contaminant key (profiles join)
         if r.get("min_reported") is not None:
             rec["min"] = r.get("min_reported")
         if r.get("loading_tool_kg_yr") is not None:
@@ -348,6 +350,55 @@ def slim_props(gj, keep):
 
 
 # ---------------------------------------------------------------------------
+PROFILE_SECTIONS = ["What it is", "How it gets here", "What it does", "What is not known"]
+
+
+def read_profiles():
+    """data/water/contaminant_profiles.md → {KEY: {section: html}}. `## KEY` opens an entry, `### Section` a
+    template section. Markdown → HTML with python-markdown when present, else a minimal converter."""
+    p = WDIR / "contaminant_profiles.md"
+    if not p.exists():
+        WARNS.append("water: data/water/contaminant_profiles.md missing — profiles ship without prose")
+        return {}
+    text = re.sub(r"<!--.*?-->", "", p.read_text(encoding="utf-8"), flags=re.S)
+    try:
+        import markdown as _md
+        conv = lambda t: _md.markdown(t, extensions=[])  # noqa: E731
+    except Exception:  # noqa: BLE001
+        def conv(t):
+            t = html_escape(t)
+            t = re.sub(r"\[([^\]]+)\]\((https?://[^)]+)\)", r'<a href="\2" target="_blank" rel="noopener">\1</a>', t)
+            t = re.sub(r"\*\*(.+?)\*\*", r"<b>\1</b>", t)
+            t = re.sub(r"\*(.+?)\*", r"<i>\1</i>", t)
+            return "".join("<p>" + para.strip().replace("\n", " ") + "</p>" for para in t.split("\n\n") if para.strip())
+    out = {}
+    cur_key, cur_sec, buf = None, None, []
+    def flush():
+        if cur_key and cur_sec and buf:
+            body = "\n".join(buf).strip()
+            if body:
+                out.setdefault(cur_key, {})[cur_sec] = conv(body).replace('<a href', '<a target="_blank" rel="noopener" href')
+    for line in text.splitlines():
+        m2 = re.match(r"^##\s+([A-Z0-9_]+)\s*$", line)
+        m3 = re.match(r"^###\s+(.+?)\s*$", line)
+        if m2:
+            flush(); cur_key, cur_sec, buf = m2.group(1), None, []
+        elif m3:
+            flush(); cur_sec, buf = m3.group(1), []
+        else:
+            buf.append(line)
+    flush()
+    for k, secs in out.items():
+        for sname in secs:
+            if sname not in PROFILE_SECTIONS:
+                WARNS.append(f"water: contaminant_profiles.md › {k} has a non-template section '{sname}' (shown anyway)")
+    return out
+
+
+def html_escape(t):
+    return t.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
+
+
 def emit_water(site_dir: Path, warns: list | None = None) -> int:
     """Build site/data_water.js. Returns the number of nodes emitted (0 = nothing written)."""
     if not WB.exists():
@@ -397,7 +448,7 @@ def emit_water(site_dir: Path, warns: list | None = None) -> int:
     dmr_rows = read_sheet(wb, "dmr_annual", with_prov=False,
                           keep={"permit", "facility", "outfall", "monitoring_location", "parameter", "unit", "fy",
                                 "n_values", "min_reported", "median_reported", "max_reported", "limit_max", "n_E90", "source",
-                                "loading_tool_kg_yr"})
+                                "loading_tool_kg_yr", "contaminant_key"})
     dmr = aggregate_dmr(dmr_rows, keep_ids)
 
     # v983 (2026-09-29): EPA TRI (air/land/water releases 1987–2024) and FY2025 regional discharge loads.
@@ -405,8 +456,8 @@ def emit_water(site_dir: Path, warns: list | None = None) -> int:
     tri_mercury = read_sheet(wb, "tri_mercury", with_prov=False)
     tri_fac_rows = read_sheet(wb, "tri_facilities", with_prov=False)
     tri_rel = read_sheet(wb, "tri_releases", with_prov=False,
-                         keep={"tri_id", "lat", "lon", "miles", "industry_sector", "parent_company", "year", "chemical",
-                               "stack_air", "fugitive_air", "water", "onsite_release_total", "carcinogen", "pbt", "pfas", "unit"})
+                         keep={"tri_id", "facility", "city", "lat", "lon", "miles", "industry_sector", "parent_company", "year", "chemical",
+                               "stack_air", "fugitive_air", "water", "onsite_release_total", "carcinogen", "pbt", "pfas", "unit", "contaminant_key"})
     coords = {}
     for r in tri_rel:
         if r.get("tri_id") and r.get("lat") is not None and r["tri_id"] not in coords:
@@ -443,13 +494,78 @@ def emit_water(site_dir: Path, warns: list | None = None) -> int:
         if _fnum(r.get("miles")) is None or _fnum(r.get("miles")) > 30:
             continue
         k = (r["tri_id"], r.get("chemical"))
-        d = tri_chem.setdefault(k, {"id": r["tri_id"], "chem": r.get("chemical"), "unit": r.get("unit"), "carc": r.get("carcinogen"), "pbt": r.get("pbt"), "pfas": r.get("pfas"), "peak": 0, "peak_y": None, "y1": None, "last": None})
+        d = tri_chem.setdefault(k, {"id": r["tri_id"], "chem": r.get("chemical"), "unit": r.get("unit"), "carc": r.get("carcinogen"), "pbt": r.get("pbt"), "pfas": r.get("pfas"), "ck": r.get("contaminant_key"), "peak": 0, "peak_y": None, "y1": None, "last": None})
         on = _fnum(r.get("onsite_release_total")) or 0
         if on >= d["peak"]:
             d["peak"], d["peak_y"] = on, r.get("year")
         if d["y1"] is None or r.get("year") > d["y1"]:
             d["y1"], d["last"] = r.get("year"), on
     tri_chemicals = sorted(tri_chem.values(), key=lambda d: (d["id"], -d["peak"]))
+    # v986: keyed TRI releases — per facility × contaminant × year (air / water / on-site), ≤ 50 mi, for "who releases it"
+    tri_keyed = {}
+    for r in tri_rel:
+        ck = r.get("contaminant_key")
+        if not ck or _fnum(r.get("miles")) is None or _fnum(r.get("miles")) > 50:
+            continue
+        k = (ck, r["tri_id"], r.get("year"))
+        d = tri_keyed.setdefault(k, {"ck": ck, "id": r["tri_id"], "fac": r.get("facility"), "city": r.get("city"), "miles": r.get("miles"),
+                                     "y": r.get("year"), "air": 0.0, "water": 0.0, "on": 0.0, "unit": r.get("unit")})
+        d["air"] += (_fnum(r.get("stack_air")) or 0) + (_fnum(r.get("fugitive_air")) or 0)
+        d["water"] += _fnum(r.get("water")) or 0
+        d["on"] += _fnum(r.get("onsite_release_total")) or 0
+    tri_keyed = sorted(tri_keyed.values(), key=lambda d: (d["ck"], d["id"], d["y"]))
+
+    # v986: contaminant profiles — the workbook's contaminants sheet + long-format results join + hand-written prose
+    contaminants = read_sheet(wb, "contaminants")
+    cres_rows = read_sheet(wb, "contaminant_results", with_prov=False,
+                           keep={"key", "source_sheet", "source_row", "date", "place", "site_id", "medium", "statistic", "value", "unit",
+                                 "qualifier", "detection_limit", "standard_applied", "source_url", "note", "lat", "lon"})
+    # dictionary-encode the repetitive strings (place, source url, standard, medium) → indices into `cres_dict`
+    # dates: normalise to ISO so the page can sort them as strings; 120 ny_mercury_raw rows arrive with no date
+    # although that sheet carries a Year — fill from the source row (source_row = Excel row number).
+    hg_years = {}
+    try:
+        for i, r in enumerate(read_sheet(wb, "ny_mercury_raw", with_prov=False, keep={"Year", "BDate"})):
+            hg_years[i + 2] = r.get("BDate") or r.get("Year")
+    except Exception:  # noqa: BLE001
+        pass
+    def iso(d, sheet=None, srow=None):
+        if d is None or str(d).strip().lower() in ("", "nan", "none", "nat"):
+            d = hg_years.get(srow) if sheet == "ny_mercury_raw" else None
+            if d is None:
+                return None
+        d = str(d).strip()
+        m = re.match(r"^(\d{1,2})/(\d{1,2})/(\d{4})", d)
+        if m:
+            return f"{m.group(3)}-{int(m.group(1)):02d}-{int(m.group(2)):02d}"
+        m = re.match(r"^(\d{4})-(\d{2})-(\d{2})", d)
+        if m:
+            return m.group(0)
+        m = re.match(r"^(\d{4})(?:\.0)?$", d)
+        if m:
+            return m.group(1)
+        return d
+    cres, cdict = [], {"pl": [], "url": [], "std": [], "m": [], "sh": [], "st": []}
+    cidx = {k: {} for k in cdict}
+    def enc(field, val):
+        if val is None or val == "":
+            return None
+        if val not in cidx[field]:
+            cidx[field][val] = len(cdict[field]); cdict[field].append(val)
+        return cidx[field][val]
+    for r in cres_rows:
+        v = r.get("value")
+        if isinstance(v, float):
+            v = round(v, 5)
+        rec = {"k": r.get("key"), "sh": enc("sh", r.get("source_sheet")), "d": iso(r.get("date"), r.get("source_sheet"), r.get("source_row")), "pl": enc("pl", r.get("place")),
+               "s": r.get("site_id"), "m": enc("m", r.get("medium")), "st": enc("st", r.get("statistic")), "v": v, "u": r.get("unit"),
+               "q": r.get("qualifier"), "dl": r.get("detection_limit"), "std": enc("std", r.get("standard_applied")),
+               "url": enc("url", r.get("source_url")), "n": r.get("note")}
+        if r.get("lat") is not None:
+            rec["lat"], rec["lon"] = round(float(r["lat"]), 4), round(float(r["lon"]), 4)
+        cres.append({k: v for k, v in rec.items() if v is not None})
+    hab_by_year = read_sheet(wb, "dec_hab_by_year", with_prov=False)
+    profiles = read_profiles()
     regional_top10 = read_sheet(wb, "regional_top10_fy2025", with_prov=False)
 
     comments = {n: a1_comment(wb, n) for n in wb.sheetnames}
@@ -483,6 +599,7 @@ def emit_water(site_dir: Path, warns: list | None = None) -> int:
         "karst": karst, "estuary": estuary, "lake_reports": lake_reports,
         "sources": sources, "references": references,
         "tri_trend": tri_trend, "tri_mercury": tri_mercury, "tri_facilities": tri_facilities, "tri_chemicals": tri_chemicals,
+        "tri_keyed": tri_keyed, "contaminants": contaminants, "cres": cres, "cres_dict": cdict, "hab_by_year": hab_by_year, "profiles": profiles,
         "regional_top10": regional_top10,
         "geo": geo,
     }
@@ -491,7 +608,8 @@ def emit_water(site_dir: Path, warns: list | None = None) -> int:
     (site_dir / "data_water.js").write_text("window.WATER = " + js + ";\n", encoding="utf-8")
     print(f"  Water: {len(sites)} nodes, {len(measurements)} measurements, {len(dec_series)} DEC series rows, "
           f"{len(biology)} biology station-years, {len(dmr)} DMR rows, {len(permits)} permits, {len(dams)} dams, "
-          f"{len(wells)} wells, {len(tri_facilities)} TRI facilities, {len(regional_top10)} regional-load rows → data_water.js ({len(js)//1024} KB)")
+          f"{len(wells)} wells, {len(tri_facilities)} TRI facilities, {len(regional_top10)} regional-load rows, "
+          f"{len(contaminants)} contaminants / {len(cres)} keyed results / {len(profiles)} written profiles → data_water.js ({len(js)//1024} KB)")
     if warns is not None:
         warns.extend(WARNS)
     return len(sites)
