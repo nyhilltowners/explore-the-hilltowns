@@ -451,6 +451,9 @@ POI_SPEC = [
     ("rd", r"^recur\s*days?$", False),
     ("rx", r"^recur\s*except", False),
     ("rt", r"^recur\s*time", False),
+    # v975 (2026-09-29, Laurie): "Source" — where a row's data came from, shown in the popup and linkified.
+    # Required for anything ingested from a dataset (fires, mines, waste, birding, bike hubs…); blank for curated rows.
+    ("src", r"^source$", False),
 ]
 
 
@@ -525,7 +528,7 @@ def parse_poi(path: Path, label: str, sheet=None):
         rec = {
             "ty": "poi", "cat": label, "id": rid, "t": title or "(unnamed)",
             "tags": tags, "addr": s(cell(row, idx, "addr")),
-            "lat": lat, "lng": lng, "s": s(cell(row, idx, "stry")),
+            "lat": lat, "lng": lng, "s": s(cell(row, idx, "stry")).replace("\u200b", ""),  # v976: strip the synthesised-description marker
             "hrs": hrs, "web": web, "ph": s(cell(row, idx, "ph")),
             "g": s(cell(row, idx, "g")),
             "tier": "exact" if (lat is not None and lng is not None) else "none",
@@ -533,6 +536,7 @@ def parse_poi(path: Path, label: str, sheet=None):
             "cred": s(cell(row, idx, "cred")),
             "ss": norm_mmdd(cell(row, idx, "ss"), rw, "Season Start"),
             "se": norm_mmdd(cell(row, idx, "se"), rw, "Season End"),
+            "src": s(cell(row, idx, "src")),
         }
         if hours_gated:
             rec["hgate"] = 1

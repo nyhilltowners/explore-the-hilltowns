@@ -60,3 +60,5 @@ Both append to `Waste & Contamination` from CSVs in `data/layers/dec_waste_extra
 `bulk_storage_ingest.py` (DEC Bulk Storage from the gzipped export + BCP COC enrichment), `dec_permits_ingest.py` (Mined Land Permits → Mines & Quarries merge; Industrial WWTPs; Issued Title V permits enrichment), `wwtp_wells_ingest.py` (municipal WWTPs, Orphaned Wells). All take the version tag as argv[1] and are idempotent on (name, rounded coords). Lazy layers: set `"lazy": true` in manifest.json; build emits `site/data_<key>.js`.
 
 - `sediment_caps_ingest.py <ver>` (v974) — joins the DEC Sediment Caps export (no coordinates) to remediation pins by program number; enriches tags/Notes, flips Display=Yes; unmatched → hidden `Coordinates Needed` row. Area/length are ground metres (see docstring).
+- `source_backfill.py` (v975) — adds/fills the `Source` column on every POI sheet from Notes provenance phrases; idempotent. New ingest scripts should write Source directly (name — URL).
+- `description_synth.py` (v976) — fills blank Description cells for dataset pins from their Notes (per-ingest templates); idempotent; never overwrites hand-written text.

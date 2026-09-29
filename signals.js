@@ -887,10 +887,42 @@
     var bars=d.readings.map(function(r){ return gaugeOne(d,r); }).filter(Boolean);
     return bars.length?'<div class="wgauge">'+bars.join('')+'</div>':'';
   }
-  var eyebrow=function(d){ var base=WATER_CHAIN[d.siteNo] || (WELL_NOTE[d.siteNo]?'Well \u00b7 '+WELL_NOTE[d.siteNo]:(d.tidal?'Tidal river':WATER_LABEL[d.kind])); return base+(d.alt>0?' \u00b7 '+Math.round(d.alt).toLocaleString()+' ft':''); };   /* v943; sea-level tidal gauges (alt 0) show no elevation */
+  var eyebrow=function(d){ var base=WATER_CHAIN[d.siteNo] || (WELL_NOTE[d.siteNo]?'Well \u00b7 '+WELL_NOTE[d.siteNo]:(d.tidal?'Tidal river':WATER_LABEL[d.kind])); return base+(d.alt>0?' \u00b7 '+Math.round(d.alt).toLocaleString()+' ft elevation':''); };   /* v943; sea-level tidal gauges (alt 0) show no elevation; v976 (Laurie): say 'elevation' */
   /* v963 (2026-09-28, Laurie): per-reading table for the hover panel - now, this-date average, record high (year), record low
      (year) from the USGS daily statistics; or the 30-day low / median / high where no long record exists; wells phrased
      as water-table height (shallowest depth = highest water). */
+  /* v976 (2026-09-29, Laurie): NWS flood categories (National Water Prediction Service, api.water.noaa.gov/nwps/v1/gauges/<LID>,
+     fetched 2026-09-29). Stages in ft of USGS gauge height. Freeman's Bridge (SCHN6) publishes its stages as NAVD88 elevations
+     (216/220/222/224 ft) — converted here with the NWS gauge-zero datum 199.46 ft. Gauges NWS lists with no categories
+     (Gilboa Dam, N. Blenheim, Little Schoharie, Cobleskill, Esperance…) are simply absent. Not live: re-check yearly. */
+  var FLOOD_STAGES={
+    '01347000':{lid:'LTLN6', action:13,  minor:15,   moderate:17, major:18},
+    '01350000':{lid:'PTVN6', action:9,   minor:12,   moderate:14, major:16},
+    '01350101':{lid:'GBRN6', action:17,  minor:19,   moderate:22, major:25},
+    '01350355':{lid:'BKBN6', action:8,   minor:11,   moderate:16, major:18},
+    '01351500':{lid:'BRTN6', action:4.5, minor:6,    moderate:8,  major:10},
+    '01354500':{lid:'SCHN6', action:16.54, minor:20.54, moderate:22.54, major:24.54, note:'NWS stages are NAVD88 elevations 216/220/222/224 ft; gauge zero 199.46 ft'},
+    '01357500':{lid:'COHN6', action:17,  minor:20,   moderate:21, major:22},
+    '01358000':{lid:'TRYN6', action:21,  minor:21.5, moderate:24, major:27},
+    '01359528':{lid:'NMKN6', action:8},
+    '01364500':{lid:'MRNN6', action:18,  minor:20,   moderate:22, major:24}
+  };
+  function floodHtml(d,lo,hi,pos){
+    var F=FLOOD_STAGES[d.siteNo]; if(!F) return {ticks:'',line:''};
+    var order=['action','minor','moderate','major'], present=order.filter(function(k){ return F[k]!=null; });
+    var f1=function(v){ return (Math.round(v*10)/10).toLocaleString()+' ft'; };
+    var ticks='';
+    var fs=F.minor!=null?F.minor:F.action;   /* the tick = flood stage (NWS "minor"), or action stage when that is all NWS publishes */
+    var p=pos(fs);
+    if(p!=null && fs>=Math.min(lo,hi) && fs<=Math.max(lo,hi)) ticks='<span class="wg-flood'+(p>0.7?' right':'')+'" style="left:'+(p*100).toFixed(1)+'%"><i>'+(F.minor!=null?'flood stage':'action stage')+'</i></span>';
+    var now=d.readings.find(function(r){ return r.code==='00065'; }), nv=now&&now.value!=null?+now.value:null, hit=null;
+    if(nv!=null) present.forEach(function(k){ if(nv>=F[k]) hit=k; });
+    var line='<div class="wflood">'+(F.minor!=null?'<b>flood stage '+f1(F.minor)+'</b>':'<b>action stage '+f1(F.action)+'</b>')
+      +' \u00b7 NWS '+present.map(function(k){ return k+' '+f1(F[k]); }).join(' \u00b7 ')
+      +(hit?' \u00b7 <b>now at '+hit+' stage</b>':'')
+      +' <a class="wsite" href="https://water.noaa.gov/gauges/'+F.lid+'" target="_blank" rel="noopener" title="This gauge on the National Water Prediction Service">'+F.lid+'</a></div>';
+    return {ticks:ticks, line:line};
+  }
   function waterTableHtml(d){
     /* v972 (2026-09-28, Laurie): per reading - Record low | Avg (or median) | Record high left-to-right, with a track
        between low and high, the average as a tick, and the NOW value riding the track in gold at its proportional
@@ -906,18 +938,19 @@
       else if(r30){ hi=meta.invert?r30.min:r30.max; lo=meta.invert?r30.max:r30.min; mid=r30.med;
         foot=(mid!=null?'median, last 30 days: '+f(mid):'last 30 days');
         loLbl=meta.invert?'30-day lowest water':'30-day low'; hiLbl=meta.invert?'30-day highest water':'30-day high'; }
-      else return '<div class="wg"><div class="wg-cap">'+waterEsc(cap)+'</div><div class="wg-now-only">'+waterEsc(nowTxt)+' <span class="wsince">no statistics published</span></div></div>';
+      else return '';   /* v976 (Laurie): no statistics → no block; the reading already shows in the card header */
       var pos=function(v){ if(v==null||lo==null||hi==null||hi===lo) return null; var t=meta.invert?(lo-v)/(lo-hi):(v-lo)/(hi-lo); return Math.max(0,Math.min(1,t)); };
       var pn=pos(nowV);
       /* v973 (Laurie): scale shows only low | high with NOW riding it; the average/median moves into a lowercase
          italic footnote merged with the "since" note ("avg this date since 1979: 76 ft³/s"); 30-day ranges are
          labelled 30-day low/high, never "record". */
-      return '<div class="wg"><div class="wg-cap">'+waterEsc(cap)+'</div>'
+      var fl=(rd.code==='00065')?floodHtml(d,lo,hi,pos):{ticks:'',line:''};   /* v976: NWS flood categories on the HEIGHT scale */
+      return '<div class="wg"><div class="wg-cap">'+waterEsc(cap)+(foot?' <i class="wsince">'+waterEsc(foot)+'</i>':'')+'</div>'
         +'<div class="wg-head"><span>'+loLbl+'</span><span>'+hiLbl+'</span></div>'
         +'<div class="wg-vals"><span>'+(lo!=null?waterEsc(f(lo))+yr(loY):'\u2014')+'</span><span>'+(hi!=null?waterEsc(f(hi))+yr(hiY):'\u2014')+'</span></div>'
-        +'<div class="wg-track">'
+        +'<div class="wg-track">'+fl.ticks
         +(pn!=null?'<span class="wg-now" style="left:'+(pn*100).toFixed(1)+'%">'+waterEsc(nowTxt)+'</span>':'<span class="wg-now wg-now-nopos">'+waterEsc(nowTxt)+'</span>')+'</div>'
-        +(foot?'<div class="wsince">'+waterEsc(foot)+'</div>':'')+'</div>';
+        +fl.line+'</div>';
     }).filter(Boolean);
     return blocks.length?'<div class="wtab">'+blocks.join('')+'</div>':'';
   }
