@@ -529,6 +529,7 @@ html[data-theme="night"] .maplibregl-ctrl-scale{background:rgba(0,0,60,.6); colo
 html:not([data-theme="night"]) #modeToggle .moon{display:block;}
 html[data-theme="night"] #modeToggle .sun{display:block;}
 html[data-theme="night"] #modeToggle{color:#fca315;}
+.catbox.loading{opacity:.55} .catbox.loading .catname:after{content:' …loading'}
 </style>
 </head>
 <body>
@@ -758,7 +759,7 @@ function resortByCenter(){
 }
 var CAT_COLOR = {};
 CATEGORIES.forEach(function(c){ if(c.color) CAT_COLOR[c.label]=c.color; });
-var records = (ATLAS.records || []).map(function(d,i){
+function prepRecord(d,i){
   d._k='r'+i;
   d.dist = (d.lat!=null && d.lng!=null) ? kmFromHome(d.lat, d.lng) : Infinity;
   d.col = CAT_COLOR[d.cat] || (d.ty==='events' ? '#ff6f5e' : '#fca315');
@@ -766,7 +767,31 @@ var records = (ATLAS.records || []).map(function(d,i){
   if(typeof d.tags==='string') d.tags = d.tags.split(/[;,]/).map(function(x){return x.trim();}).filter(Boolean);
   if(!Array.isArray(d.tags)) d.tags = [];
   return d;
-});
+}
+var records = (ATLAS.records || []).map(prepRecord);
+/* v969 (2026-09-28): heavy layers (Mines & Quarries, Waste & Contamination) ship as
+   data_<key>.js and are fetched the first time their checkbox is ticked. */
+var LAZY_STATE = {};   /* key -> 'loading' | 'done' */
+function loadLazyCategory(c, done){
+  if(!c || !c.lazy || LAZY_STATE[c.key]==='done'){ if(done) done(); return; }
+  if(LAZY_STATE[c.key]==='loading') return;
+  LAZY_STATE[c.key]='loading';
+  var s=document.createElement('script'); s.src='data_'+c.key+'.js';
+  s.onload=function(){
+    var recs=(window.ATLAS_LAZY && window.ATLAS_LAZY[c.key]) || [];
+    var base=records.length, used={};
+    recs.forEach(function(d,i){
+      prepRecord(d, base+i); records.push(d); if(ATLAS.records) ATLAS.records.push(d);
+      var sl=d.sl || slugify(d.t); while(KEY_OF[sl]||used[sl]){ sl=sl+'-x'; } used[sl]=1;
+      SLUG_OF[d._k]=sl; KEY_OF[sl]=d._k;
+    });
+    LAZY_STATE[c.key]='done';
+    try{ var src=map && map.getSource('folk'); if(src) src.setData(toFC(currentFilter(true))); }catch(e){}
+    if(done) done();
+  };
+  s.onerror=function(){ LAZY_STATE[c.key]=null; console.warn('lazy layer failed', c.key); };
+  document.head.appendChild(s);
+}
 
 /* ============ HELPERS ============ */
 function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g, function(c){
@@ -2280,6 +2305,8 @@ function catDefault(c){
   if(isNight()) return c.label === 'Folklore';
   return c.default_on !== false;
 }
+/* v969: a lazy layer that is on by default (or restored on) must be fetched at start */
+function loadLazyDefaults(){ CATEGORIES.forEach(function(c){ if(c.lazy && catsOn[c.label]) loadLazyCategory(c, renderList); }); }
 function resetCatsToDefaults(){
   catsOn = {}; catsTouched = false;
   buildCats(); renderList();
@@ -2293,13 +2320,18 @@ function buildCats(){
   records.forEach(function(r){ if(!isExpired(r) && evVisible(r) && !(r.rgate && !recurActiveNow(r)) && !(r.hgate && isClosedNow(r))) liveCounts[r.cat]=(liveCounts[r.cat]||0)+1; });
   CATEGORIES.forEach(function(c){
     if(c.atlas===false){ catsOn[c.label]=false; return; } /* 2026-09-25 (v867, atlas session) (Laurie): directory-only category — no checkbox, no pins (Independent Media) */
-    if(!liveCounts[c.label]) return; /* nothing to show yet — hide until it has data */
+    if(!liveCounts[c.label] && !c.lazy) return; /* nothing to show yet — hide until it has data (lazy layers always get a box) */
     if(!(c.label in catsOn)) catsOn[c.label] = catDefault(c);
     var lb = document.createElement('label'); lb.className='catbox';
     lb.innerHTML = '<input type="checkbox"'+(catsOn[c.label]?' checked':'')+'>'
       + catMark(c) + '<span class="catname">'+esc(c.label)+'</span>';
     var cb = lb.querySelector('input');
-    if(cb) cb.addEventListener('change', function(ev){ catsOn[c.label]=ev.target.checked; catsTouched=true; renderList(); });
+    if(cb) cb.addEventListener('change', function(ev){
+      catsOn[c.label]=ev.target.checked; catsTouched=true;
+      if(ev.target.checked && c.lazy && LAZY_STATE[c.key]!=='done'){ lb.classList.add('loading'); loadLazyCategory(c, function(){ lb.classList.remove('loading'); renderList(); }); return; }
+      renderList();
+    });
+    if(c.lazy && c.count) lb.title = c.count.toLocaleString()+' records — loads when switched on';
     (STORY_LABELS[c.label] ? story : main).appendChild(lb);
   });
 }
@@ -2804,7 +2836,7 @@ document.addEventListener('visibilitychange', function(){ if(document.hidden){ s
    silently fell behind (no stratospheric wind). Removed 2026-09-17 per Laurie. */
 
 /* ============ INIT ============ */
-buildCats();
+buildCats(); loadLazyDefaults();
 if(map) map.on('load', function(){ applyMapMode(); renderList(); applyHash(); });
 /* Keep List View sorted by proximity to the live map centre as you pan/zoom. */
 if(map) map.on('moveend', resortByCenter);

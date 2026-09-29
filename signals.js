@@ -531,7 +531,7 @@
   var CURATED_CODES = ['00060','00065','62615','00054','62620','72137','72254','00010','72019','62611'];   /* v946: + reservoir codes; v948: + groundwater codes for the pinned wells */
   /* v948 (2026-09-28, Laurie): wells asked for by link - always shown, ahead of the nearest-N sweep.
      421821074012701 = G-390 near Cairo (Greene Co., 408 ft deep, land surface 491 ft NAVD88); 421746074180201 = near Windham/Ashland. */
-  var WELL_SITES = ['421821074012701','421746074180201','422241073274601','424560074274101'];   /* v959 (Laurie): + Cb-1071 Canaan (360 ft deep bedrock, 903 ft - like-for-like with Cairo) and So-528 Carlisle (74 ft, 1,246 ft - the network's upland well) */
+  var WELL_SITES = ['421821074012701','421746074180201','422241073274601','424560074274101','424115073495301','424311073423901','423534073423401'];   /* v963: + Glacial Lake Albany plain - A-654 SUNY Albany (28.8 ft, Pine Bush sand), A-666 Watervliet (46 ft, lake clays), Re-703 East Greenbush (79 ft, east-bank lake deposits) */   /* v959 (Laurie): + Cb-1071 Canaan (360 ft deep bedrock, 903 ft - like-for-like with Cairo) and So-528 Carlisle (74 ft, 1,246 ft - the network's upland well) */
   /* v940 (2026-09-27, Laurie): the stream row is a curated transect, not a nearest-N sweep - Schoharie Creek from
      Prattsville down to the Mohawk, the Mohawk at Cohoes, the Hudson at Green Island, the Normans Kill, the
      tidal Hudson at the Port of Albany, the Esopus at Mount Marion (the big Catskill drainage, entering at
@@ -539,6 +539,7 @@
      Catskill Creek has no active gauge (Oak Hill 01361500 is dead). */
   /* v943 (2026-09-27, Laurie): eyebrow shows how each gauge connects - the drainage path down to the Hudson - plus
      the gauge datum elevation from the site file, so the row reads as a descent. */
+  var WELL_NOTE = {'424115073495301':'Glacial Lake Albany \u00b7 Pine Bush sand', '424311073423901':'Glacial Lake Albany \u00b7 lake clays', '423534073423401':'Glacial Lake Albany \u00b7 east bank', '421821074012701':'bedrock well, 408 ft', '422241073274601':'bedrock well, 360 ft', '424560074274101':'upland, Schoharie Co.', '421746074180201':'Catskill front, 25 ft'};   /* v963: eyebrow context for the pinned wells */
   var WATER_CHAIN = {
     '01347000':'Mohawk \u00b7 above the Schoharie', '01349705':'Schoharie headwaters \u2192 Mohawk \u2192 Hudson', '01349950':'Batavia Kill \u2192 Schoharie',
     '01350212':'Schoharie \u00b7 below Blenheim-Gilboa pumped storage', '01351298':'Cobleskill Creek \u2192 Schoharie', '01354500':'Mohawk (+ Schoharie) \u2192 Hudson',
@@ -584,7 +585,7 @@
   var colorOf=function(d, mode){ var c=CHAIN_OF[d.siteNo]; if(c) return c[mode]; var k=KIND_COLOR[d.kind]; return k?k[mode]:'#6b6f7a'; };
   var WATER_COLOR = {stream:'#3f8fd0', lake:'#1f9d91', well:'#b8901c'};   /* legacy; colorOf() is what renders now */
   var WATER_LABEL = {stream:'Stream', lake:'Lake / reservoir', well:'Groundwater well'};
-  var WATER_CAP = {stream:99, lake:3, well:7};   /* v948/v959: pinned wells count toward the cap; 7 so the three nearest still appear alongside Laurie's four */   /* v934: named waters count toward the cap; streams get two rows' worth so the Schoharie-side creeks survive */
+  var WATER_CAP = {stream:99, lake:3, well:9};   /* v948/v959: pinned wells count toward the cap; 7 so the three nearest still appear alongside Laurie's four */   /* v934: named waters count toward the cap; streams get two rows' worth so the Schoharie-side creeks survive */
   var TREND_TXT = {up:'\u2191 rising', down:'\u2193 falling', flat:'\u2192 steady'};
   /* The specific local waters Laurie asked about by name, matched against each site's own USGS name
      rather than hardcoded site numbers. v929: any of them with no live USGS gauge is now simply
@@ -772,10 +773,28 @@
   var _waterMap=null, _waterMarkers=[], _wm=null, _waterBounds=null;
   function ensureWaterMap(){
     if(_waterMap || typeof maplibregl==='undefined' || !$('water-map')) return _waterMap;
+    /* v963 (2026-09-28, Laurie): grey land, blue water, full-colour pins. A raster tile can't be recoloured selectively, so
+       this map uses OpenFreeMap's Positron vector style (free, no key; OpenMapTiles + OpenStreetMap) and, once the style
+       loads, paints every water fill/line layer blue and leaves the rest of the style's greys alone. If the vector style
+       fails to load (network, outage), it falls back to the Esri World Topo raster used before. */
+    var RASTER_STYLE={version:8, sources:{'topo':{type:'raster', tiles:['https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}'], tileSize:256, attribution:'Esri'}}, layers:[{id:'topo', type:'raster', source:'topo'}]};
     _waterMap = new maplibregl.Map({
       container:'water-map',
-      style:{version:8, sources:{'topo':{type:'raster', tiles:['https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}'], tileSize:256, attribution:'Esri'}}, layers:[{id:'topo', type:'raster', source:'topo'}]},
+      style:'https://tiles.openfreemap.org/styles/positron',
       center:[LNG,LAT], zoom:8.3, attributionControl:true
+    });
+    var fellBack=false;
+    _waterMap.on('error', function(e){ var msg=(e&&e.error&&e.error.message)||''; if(!fellBack && /style|Failed to fetch|NetworkError|404|403|5\d\d/i.test(msg) && !_waterMap.isStyleLoaded()){ fellBack=true; _waterMap.setStyle(RASTER_STYLE); } });
+    _waterMap.on('style.load', function(){
+      if(fellBack) return;
+      var st=_waterMap.getStyle(); if(!st||!st.layers) return;
+      st.layers.forEach(function(ly){ var id=ly.id.toLowerCase();
+        if(/water|river|lake|ocean|waterway/.test(id)){
+          try{ if(ly.type==='fill'){ _waterMap.setPaintProperty(ly.id,'fill-color','#5aa9e6'); _waterMap.setPaintProperty(ly.id,'fill-opacity',0.85); }
+               else if(ly.type==='line'){ _waterMap.setPaintProperty(ly.id,'line-color','#3f8fd0'); }
+               else if(ly.type==='symbol'){ _waterMap.setPaintProperty(ly.id,'text-color','#2a78d6'); } }catch(err){}
+        }
+      });
     });
     /* 2026-09-27 (v930, Laurie): locked \u2014 everything is already in frame (the map fits itself to the gauges shown), so zoom
        buttons and drag/scroll/pinch handling were only confusing. Handlers are switched off one by one
@@ -867,15 +886,33 @@
     var bars=d.readings.map(function(r){ return gaugeOne(d,r); }).filter(Boolean);
     return bars.length?'<div class="wgauge">'+bars.join('')+'</div>':'';
   }
-  var eyebrow=function(d){ var base=WATER_CHAIN[d.siteNo] || (d.tidal?'Tidal river':WATER_LABEL[d.kind]); return base+(d.alt>0?' \u00b7 '+Math.round(d.alt).toLocaleString()+' ft':''); };   /* v943; sea-level tidal gauges (alt 0) show no elevation */
+  var eyebrow=function(d){ var base=WATER_CHAIN[d.siteNo] || (WELL_NOTE[d.siteNo]?'Well \u00b7 '+WELL_NOTE[d.siteNo]:(d.tidal?'Tidal river':WATER_LABEL[d.kind])); return base+(d.alt>0?' \u00b7 '+Math.round(d.alt).toLocaleString()+' ft':''); };   /* v943; sea-level tidal gauges (alt 0) show no elevation */
+  /* v963 (2026-09-28, Laurie): per-reading table for the hover panel - now, this-date average, record high (year), record low
+     (year) from the USGS daily statistics; or the 30-day low / median / high where no long record exists; wells phrased
+     as water-table height (shallowest depth = highest water). */
+  function waterTableHtml(d){
+    var rows=d.readings.map(function(rd){ var meta=WATER_PARAMS[rd.code]; if(meta.nobar) return ''; var f=meta.fmtS||meta.fmt, s=d.stats&&d.stats[rd.code], r30=d.range30&&d.range30[rd.code];
+      var cap=(WATER_SHORT[rd.code]||meta.label); cap=cap.charAt(0).toUpperCase()+cap.slice(1);
+      var yr=function(y){ return y?' <span class="wyr">'+waterEsc(y)+'</span>':''; };
+      if(s && s.max!=null && s.min!=null){
+        var hi=meta.invert?s.min:s.max, hiY=meta.invert?s.minYr:s.maxYr, lo=meta.invert?s.max:s.min, loY=meta.invert?s.maxYr:s.minYr;
+        return '<tr><th>'+waterEsc(cap)+'</th><td><b>'+waterEsc(rd.text.replace(/ below surface$/,''))+'</b></td><td>'+(s.mean!=null?waterEsc(f(s.mean)):'\u2014')+'</td><td>'+(hi!=null?waterEsc(f(hi))+yr(hiY):'\u2014')+'</td><td>'+(lo!=null?waterEsc(f(lo))+yr(loY):'\u2014')+'</td><td class="wsince">'+(s.begin?'since '+waterEsc(s.begin):'')+'</td></tr>';
+      }
+      if(r30){ var top=meta.invert?r30.min:r30.max, bot=meta.invert?r30.max:r30.min;
+        return '<tr><th>'+waterEsc(cap)+'</th><td><b>'+waterEsc(rd.text.replace(/ below surface$/,''))+'</b></td><td>'+waterEsc(f(r30.med))+'</td><td>'+waterEsc(f(top))+'</td><td>'+waterEsc(f(bot))+'</td><td class="wsince">last 30 days</td></tr>'; }
+      return '<tr><th>'+waterEsc(cap)+'</th><td><b>'+waterEsc(rd.text.replace(/ below surface$/,''))+'</b></td><td colspan="4" class="wsince">no statistics published</td></tr>';
+    }).filter(Boolean);
+    if(!rows.length) return '';
+    var inv=d.readings.some(function(rd){ return WATER_PARAMS[rd.code].invert; });
+    return '<table class="wtab"><thead><tr><th></th><th>Now</th><th>'+(d.readings.some(function(rd){ return d.range30&&d.range30[rd.code]&&!(d.stats&&d.stats[rd.code]); })?'Avg / median':'Avg, this date')+'</th><th>'+(inv?'Highest water':'Record high')+'</th><th>'+(inv?'Lowest water':'Record low')+'</th><th></th></tr></thead><tbody>'+rows.join('')+'</tbody></table>';
+  }
   function waterCardHtml(d){
     if(d.dead) return '<div class="sg-row wcard wdead" data-site="'+waterEsc(d.siteNo)+'"><div class="sg-ico" style="color:'+colorOf(d,'dark')+'">'+WATER_ICON[d.kind]+(d.num?'<span class="wnum" style="background:'+colorOf(d,'dark')+'">'+d.num+'</span>':'')+'</div><div><p class="sg-eye">'+waterEsc(eyebrow(d))+'</p><p class="sg-val">no data</p><p class="sg-det"><b><a class="wsite" href="'+siteUrl(d)+'" target="_blank" rel="noopener" title="This gauge on USGS Water Data">'+waterEsc(d.displayName)+'</a></b><br><span class="wread">USGS: '+waterEsc(d.why)+'</span></p></div></div>';
     var main=d.readings[0], extra=d.readings.slice(1), sts=d.readings.map(function(r){ return statLine(d,r); }).filter(Boolean);
     return '<div class="sg-row wcard" data-site="'+waterEsc(d.siteNo)+'"><div class="sg-ico" style="color:'+colorOf(d,'dark')+'">'+WATER_ICON[d.kind]+(d.num?'<span class="wnum" style="background:'+colorOf(d,'dark')+'">'+d.num+'</span>':'')+'</div><div><p class="sg-eye">'+waterEsc(eyebrow(d))+'</p><p class="sg-val">'+waterEsc(main.text)+trendHtml(main)+'</p><p class="sg-det"><b><a class="wsite" href="'+siteUrl(d)+'" target="_blank" rel="noopener" title="This gauge on USGS Water Data">'+waterEsc(d.displayName)+'</a></b>'
       +(d.when?'<br><span class="wread">Read '+waterEsc(fmtWhen(d.when))+'</span>':'')
       +(extra.length?'<br>'+extra.map(function(e){ return '<span class="wx">'+waterEsc(e.label)+': '+waterEsc(e.text)+trendHtml(e)+'</span>'; }).join(' · '):'')
-      +sts.filter(function(st,i){ return !gaugeOne(d, d.readings[i]); }).map(function(st){ return '<br><span class="wstat">'+waterEsc(st)+'</span>'; }).join('')   /* v949: the sentence lives in the bar's tooltip; printed only when there is no bar to hold it */
-      +'</p></div>'+gaugeSvg(d)+'</div>';
+      +'</p>'+waterTableHtml(d)+'</div></div>';   /* v963 (Laurie): a small table of now / average / record high / record low per reading replaces the bars */
   }
   /* v962 (2026-09-28, Laurie): the seven 7-day charts ARE the water section now. Each chart sits above a detail panel;
      hovering a line fills the panel with that gauge's full card (name -> USGS, chain/elevation, live readings with
@@ -883,11 +920,13 @@
      matching map pin lights up. waterCardHtml() is reused unchanged for the panel. */
   function waterChartScaffold(){
     var host=$('water-charts'); if(!host || host.querySelector('.w7-block')) return;
-    var defs=CHAINS.map(function(c){ return {id:'w7-'+c.key, title:c.name+', last 7 days', color:c.dark, sub:''}; }).concat([
-      {id:'w7-tidal', title:'Tidal Hudson, last 7 days', color:KIND_COLOR.lake.dark, sub:'ft above NAVD88'},
+    var byKey={}; CHAINS.forEach(function(c){ byKey[c.key]={id:'w7-'+c.key, title:c.name+', last 7 days', color:c.dark, sub:''}; });
+    /* v963 (Laurie): Schoharie, Mohawk, Esopus, then wells, lakes, the tidal Hudson, and the Hudson head-of-tide chart last */
+    var defs=[byKey.schoharie, byKey.mohawk, byKey.esopus,
       {id:'w7-wells', title:'Wells, last 7 days', color:KIND_COLOR.well.dark, sub:''},
-      {id:'w7-lakes', title:'Lakes & reservoirs, last 7 days', color:KIND_COLOR.lake.dark, sub:''}
-    ]);
+      {id:'w7-lakes', title:'Lakes & reservoirs, last 7 days', color:KIND_COLOR.lake.dark, sub:''},
+      {id:'w7-tidal', title:'Tidal Hudson, last 7 days', color:KIND_COLOR.lake.dark, sub:'ft above NAVD88'},
+      byKey.hudson].filter(Boolean);
     host.innerHTML=defs.map(function(g){ return '<div class="w7-block" id="'+g.id+'-block"><h3 class="sg-h3 wchain-h"><span class="wsw" style="background:'+g.color+'"></span>'+waterEsc(g.title)+(g.sub?' <span class="wcount">'+waterEsc(g.sub)+'</span>':'')+'</h3>'
       +'<div class="sg-chart"><svg id="'+g.id+'" viewBox="0 0 1000 320" preserveAspectRatio="none" role="img" aria-label="'+waterEsc(g.title)+'"></svg><div class="sg-tip" id="'+g.id+'-tip"></div></div>'
       +'<div class="w7-panel" id="'+g.id+'-panel"><span class="w7-hint">Hover a line for that gauge’s readings and records; click to pin.</span></div></div>'; }).join('');

@@ -55,3 +55,6 @@ Ingests a NYSDEC Solid Waste Management Facilities CSV into `Waste & Contaminati
 
 ## waste_extras_ingest.py / remediation_cso_ingest.py (v968)
 Both append to `Waste & Contamination` from CSVs in `data/layers/dec_waste_extras/` and are idempotent on (name, rounded coords): `python3 scripts/waste_extras_ingest.py v968` (tire abatement, Title V, MSGP, PWL estuary) and `python3 scripts/remediation_cso_ingest.py v968` (remediation sites from the gzipped CSV, CSOs). Footprint bbox + major/legacy rules are at the top of each script.
+
+## v969 ingest scripts
+`bulk_storage_ingest.py` (DEC Bulk Storage from the gzipped export + BCP COC enrichment), `dec_permits_ingest.py` (Mined Land Permits → Mines & Quarries merge; Industrial WWTPs; Issued Title V permits enrichment), `wwtp_wells_ingest.py` (municipal WWTPs, Orphaned Wells). All take the version tag as argv[1] and are idempotent on (name, rounded coords). Lazy layers: set `"lazy": true` in manifest.json; build emits `site/data_<key>.js`.

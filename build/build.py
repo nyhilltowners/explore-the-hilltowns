@@ -1581,6 +1581,7 @@ def main() -> int:
                            "color": cat.get("color", ""),
                            "default_on": cat.get("default_on", True),
                            "atlas": cat.get("atlas", True),  # v867: false = directory-only category, no atlas checkbox or pins
+                           "lazy": bool(cat.get("lazy", False)),  # v969: heavy layer shipped as site/data_<key>.js, fetched when its checkbox is ticked
                            "glyph": cat.get("glyph", "")})
         if schema not in PARSERS:
             fail(f"manifest: unknown schema '{schema}' for '{label}'")
@@ -1619,11 +1620,25 @@ def main() -> int:
     # Remove stale generated HTML so renamed/removed pages don't linger locally.
     for old in SITE.glob("*.html"):
         old.unlink()
+    # v969 (2026-09-28): lazy categories leave data.js and ship as data_<key>.js each,
+    # loaded by atlas.html only when the layer is switched on. Calendar/Directory never load them.
+    lazy_by_label = {c["label"]: c["key"] for c in categories if c.get("lazy")}
+    core_records = [r for r in all_records if r.get("cat") not in lazy_by_label]
+    for c in categories:
+        if not c.get("lazy"):
+            continue
+        recs = [r for r in all_records if r.get("cat") == c["label"]]
+        c["count"] = len(recs)
+        ljs = json.dumps(recs, ensure_ascii=False, separators=(",", ":")).replace("</", "<\\/")
+        (SITE / f"data_{c['key']}.js").write_text(
+            "window.ATLAS_LAZY = window.ATLAS_LAZY || {};\nwindow.ATLAS_LAZY[" + json.dumps(c["key"]) + "] = " + ljs + ";\n",
+            encoding="utf-8")
+        print(f"  lazy layer {c['label']}: {len(recs)} records -> data_{c['key']}.js ({len(ljs)//1024} KB)")
     payload = {
         "generated": datetime.datetime.now(datetime.timezone.utc)
                      .strftime("%Y-%m-%d %H:%M UTC"),
         "categories": categories,
-        "records": all_records,
+        "records": core_records,
     }
     js = json.dumps(payload, ensure_ascii=False, separators=(",", ":"))
     js = js.replace("</", "<\\/")
