@@ -284,8 +284,14 @@ def aggregate_dmr(rows, permits_keep):
             "max": r.get("max_reported"), "lim": r.get("limit_max"), "e90": r.get("n_E90"),
             "src": "LT" if (r.get("source") or "").startswith("EPA Loading") else "DMR",
         }
+        if r.get("min_reported") is not None:
+            rec["min"] = r.get("min_reported")
         if r.get("loading_tool_kg_yr") is not None:
             rec["kg"] = r.get("loading_tool_kg_yr")
+        # v983: the workbook now fills FY2009–2016 units from the permit-limit unit (A1 note: DMR unit == limit unit in
+        # 99.98% of rows where both exist). Those rows keep `ui: true` so the page can still say "unit inherited".
+        if unit and rec["src"] == "DMR" and fy <= 2016:
+            rec["ui"] = True
         out.append(rec)
     # unit fingerprinting for the unit-less FY2009–2016 monthly rows
     known = {}
@@ -301,7 +307,8 @@ def aggregate_dmr(rows, permits_keep):
             d["u"] = next(iter(units))
             d["ui"] = True
             filled += 1
-    print(f"  Water: DMR unit fingerprinting filled {filled} of {sum(1 for d in out if d['src']=='DMR' and (d['u']=='' or d.get('ui')))} unit-less rows")
+    blank = sum(1 for d in out if d['src'] == 'DMR' and not d['u'])
+    print(f"  Water: DMR units — {sum(1 for d in out if d.get('ui'))} rows carry a limit-inherited unit (FY≤2016), fingerprint fallback filled {filled}, {blank} still blank")
     return out
 
 
@@ -367,7 +374,8 @@ def emit_water(site_dir: Path, warns: list | None = None) -> int:
             d.pop(k, None)
     permits_all = read_sheet(wb, "echo_cwa_permits")
     permits = [p for p in permits_all
-               if (p.get("tier") or "").startswith("individual") and _fnum(p.get("km_from_ref")) is not None and _fnum(p.get("km_from_ref")) <= 30]
+               if ((p.get("tier") or "").startswith("individual") and _fnum(p.get("km_from_ref")) is not None and _fnum(p.get("km_from_ref")) <= 30)
+               or p.get("watchlist_note")]   # v983: the brief's 24 watchlist facilities ride along whatever their tier or distance
     keep_ids = {p["npdes_id"] for p in permits if p.get("npdes_id")}
     cslap = read_sheet(wb, "ny_cslap_lakes")
     withdrawals = [r for r in read_sheet(wb, "ny_withdrawals")
@@ -388,9 +396,61 @@ def emit_water(site_dir: Path, warns: list | None = None) -> int:
     dec_series, biology, stations = aggregate_dec(dec_rows)
     dmr_rows = read_sheet(wb, "dmr_annual", with_prov=False,
                           keep={"permit", "facility", "outfall", "monitoring_location", "parameter", "unit", "fy",
-                                "n_values", "median_reported", "max_reported", "limit_max", "n_E90", "source",
+                                "n_values", "min_reported", "median_reported", "max_reported", "limit_max", "n_E90", "source",
                                 "loading_tool_kg_yr"})
     dmr = aggregate_dmr(dmr_rows, keep_ids)
+
+    # v983 (2026-09-29): EPA TRI (air/land/water releases 1987–2024) and FY2025 regional discharge loads.
+    tri_trend = read_sheet(wb, "tri_trend_50mi", with_prov=False)
+    tri_mercury = read_sheet(wb, "tri_mercury", with_prov=False)
+    tri_fac_rows = read_sheet(wb, "tri_facilities", with_prov=False)
+    tri_rel = read_sheet(wb, "tri_releases", with_prov=False,
+                         keep={"tri_id", "lat", "lon", "miles", "industry_sector", "parent_company", "year", "chemical",
+                               "stack_air", "fugitive_air", "water", "onsite_release_total", "carcinogen", "pbt", "pfas", "unit"})
+    coords = {}
+    for r in tri_rel:
+        if r.get("tri_id") and r.get("lat") is not None and r["tri_id"] not in coords:
+            coords[r["tri_id"]] = {"lat": r["lat"], "lon": r["lon"], "sector": r.get("industry_sector"), "parent": r.get("parent_company")}
+    tri_fac = {}
+    for r in tri_fac_rows:
+        if _fnum(r.get("miles")) is None or _fnum(r.get("miles")) > 50:
+            continue
+        tid = r.get("tri_id")
+        f = tri_fac.setdefault(tid, {"id": tid, "name": r.get("facility"), "city": r.get("city"), "county": r.get("county"),
+                                     "km": r.get("km_from_ref"), "miles": r.get("miles"), "sector": r.get("industry_sector"),
+                                     "years": [], "series": []})
+        yr = r.get("year")
+        f["years"].append(yr)
+        f["series"].append({"y": yr, "air": r.get("air_lb"), "water": r.get("water_lb"), "on": r.get("onsite_total_lb"),
+                            "potw": r.get("potw_lb"), "off": r.get("offsite_lb"), "n": r.get("n_chemicals"), "top": r.get("top_chemicals")})
+    tri_facilities = []
+    for f in tri_fac.values():
+        f["series"].sort(key=lambda d: d["y"])
+        f["y0"], f["y1"] = min(f["years"]), max(f["years"])
+        f["latest"] = f["series"][-1]
+        f["peak_air"] = max((d["air"] or 0) for d in f["series"])
+        c = coords.get(f["id"], {})
+        f["lat"], f["lon"] = c.get("lat"), c.get("lon")
+        f["parent"] = c.get("parent")
+        if _fnum(f["miles"]) > 30:
+            f["series"] = []     # beyond 30 miles: latest + peak only, no per-year series
+        del f["years"]
+        tri_facilities.append(f)
+    tri_facilities.sort(key=lambda f: (_fnum(f["miles"]) or 999, f["name"] or ""))
+    # chemical detail for the nearest reporters (≤ 30 mi): per facility × chemical, latest year and peak on-site
+    tri_chem = {}
+    for r in tri_rel:
+        if _fnum(r.get("miles")) is None or _fnum(r.get("miles")) > 30:
+            continue
+        k = (r["tri_id"], r.get("chemical"))
+        d = tri_chem.setdefault(k, {"id": r["tri_id"], "chem": r.get("chemical"), "unit": r.get("unit"), "carc": r.get("carcinogen"), "pbt": r.get("pbt"), "pfas": r.get("pfas"), "peak": 0, "peak_y": None, "y1": None, "last": None})
+        on = _fnum(r.get("onsite_release_total")) or 0
+        if on >= d["peak"]:
+            d["peak"], d["peak_y"] = on, r.get("year")
+        if d["y1"] is None or r.get("year") > d["y1"]:
+            d["y1"], d["last"] = r.get("year"), on
+    tri_chemicals = sorted(tri_chem.values(), key=lambda d: (d["id"], -d["peak"]))
+    regional_top10 = read_sheet(wb, "regional_top10_fy2025", with_prov=False)
 
     comments = {n: a1_comment(wb, n) for n in wb.sheetnames}
     comments = {k: v for k, v in comments.items() if v}
@@ -422,6 +482,8 @@ def emit_water(site_dir: Path, warns: list | None = None) -> int:
         "land_application": land_app, "orphan_wells": orphan, "mercury": mercury,
         "karst": karst, "estuary": estuary, "lake_reports": lake_reports,
         "sources": sources, "references": references,
+        "tri_trend": tri_trend, "tri_mercury": tri_mercury, "tri_facilities": tri_facilities, "tri_chemicals": tri_chemicals,
+        "regional_top10": regional_top10,
         "geo": geo,
     }
     js = json.dumps(payload, ensure_ascii=False, separators=(",", ":")).replace("</", "<\\/")
@@ -429,7 +491,7 @@ def emit_water(site_dir: Path, warns: list | None = None) -> int:
     (site_dir / "data_water.js").write_text("window.WATER = " + js + ";\n", encoding="utf-8")
     print(f"  Water: {len(sites)} nodes, {len(measurements)} measurements, {len(dec_series)} DEC series rows, "
           f"{len(biology)} biology station-years, {len(dmr)} DMR rows, {len(permits)} permits, {len(dams)} dams, "
-          f"{len(wells)} wells → data_water.js ({len(js)//1024} KB)")
+          f"{len(wells)} wells, {len(tri_facilities)} TRI facilities, {len(regional_top10)} regional-load rows → data_water.js ({len(js)//1024} KB)")
     if warns is not None:
         warns.extend(WARNS)
     return len(sites)

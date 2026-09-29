@@ -1,7 +1,17 @@
-# NY Hilltowners Folk Atlas — Session Handoff (2026-09-29, v982)
+# NY Hilltowners Folk Atlas — Session Handoff (2026-09-29, v983)
 
-> **Where things stand (for the next chat).** Baseline is **v982**; next version continues from **v983**. Laurie has
-> deployed through v980; v981 (README-only) and v982 ship together — the v982 CHANGED-ONLY zip carries everything since v980.
+> **Where things stand (for the next chat).** Baseline is **v983**; next version continues from **v984**. Laurie has
+> deployed through v980; v981–v983 ship together — the v983 CHANGED-ONLY zip carries everything since v980.
+> **v983 = water package refresh + two panels.** The water-research chat re-issued its package (`helderberg_hudson_package_2026-09-29_core_1.zip`):
+> workbook now 58 sheets (was 52), replaced wholesale in `data/water/`. Upstream fixed the FY2009–2016 DMR unit gap (units
+> inherited from the permit limit; water.py now trusts the sheet and keeps `ui:true` on FY≤2016 rows so the tooltip still says
+> "unit inherited"); `echo_cwa_permits.watchlist_note` names the brief's 24 facilities (they ride into `permits` whatever their
+> tier/distance; ★ chip + note on the outfall card, purple ring on the map); six new sheets → two new page pieces:
+> **"Who puts the most in the water, FY2025"** (regional_top10 — pollutant picker, top-ten bars, flagged rows hollow with the
+> flag in the tooltip; Holcim Ravena's TSS row is a flag, not a bar) and **panel 7 "What goes into the air"** (EPA TRI 1987–2024:
+> 50-mile regional trend small multiples for the top 8 chemicals, log; mercury stack-air lines — Ravena cement 400 → 14 lb/yr —
+> ≤4 named series + hollow "others"; scrolling nearest-reporters table ≤30 mi with ⚠ carcinogen / ◆ PBT / PFAS marks; violet
+> TRI circles on the map sized by peak air release). Map is now panel 8, provenance 9. `data_water.js` ≈ 4.6 MB.
 > **v982 = the new WATER page** — `waterwip.html` (+ `water.js`), the Helderberg–Hudson water-quality dashboard, **unlinked**
 > (no nav or footer link; type `/waterwip.html`). Signals instrument-panel register. Eight panels: (1) two-transect elevation
 > profile with the brief's symbol grammar (shape = what the node is, nesting = what it draws from, fill = how much we know,
@@ -166,6 +176,7 @@ Fixed-hinge wingbeat, 4 white wing-spots. Day-only, reduced-motion safe. The
 
 ## UX state (recent)
 
+- **v983 (2026-09-29, Laurie): water package refresh.** `data/water/helderberg_hudson_water_quality.xlsx` (58 sheets), `geo/echo_cwa_permits.geojson`, `PACKAGE_README.md` replaced from the water chat's `_core_1` package (brief unchanged). `build/water.py`: honours upstream `unit` (fingerprint kept as a fallback, filled 0), carries `min_reported`, includes every `watchlist_note` permit, and emits `tri_trend`, `tri_mercury`, `tri_facilities` (≤50 mi; per-year series only ≤30 mi), `tri_chemicals` (≤30 mi facility × chemical peaks with carcinogen/PBT/PFAS flags) and `regional_top10`. `water.js`: watchlist chips/notes on outfall cards and the far-outfalls fold now includes the watchlist beyond 24 km; `drawLoads()` and `drawTRI()`; map gains `tri` and `permits-w` layers. Harness screenshots the four new panels. Headless check: 21 cards, 10 creeks, 11 lakes, 31 outfall cards, zero page errors.
 - **v982 (2026-09-29, Laurie): Water page.** New `waterwip.html` + `water.js` (unlinked; reach it by URL), `build/water.py`, `data/water/` (the water-quality master workbook, GeoJSON layers, package README, brief, two TMDL PDFs); `build.py` gained `emit_water_layer()` (a missing workbook is a WARNING, never a failed build), `waterwip.html` in the page list, and a `water.js` copy. Scope decided with fresh eyes after profiling every sheet, not from the brief alone: agreed with the brief on the monitoring-shadow lead, the symbol grammar, the four-clocks rule, log axes for P/PFAS and sparkline-not-dot outfalls; **disagreed** on "refuse any downslope trend" — that is right for chemistry and wrong for biology, so DEC's BAP stream scores got a first-class panel; the transect is a drawn SVG instrument rather than a map (the wipmap already does DEC-layer geography); reference studies deferred. Palette validated with the dataviz skill's `validate_palette.js` on the ink surface (`#3987e5` north · `#d95926` south · `#199e70` Potic · `#c98500` off-transect; wells `#199e70/#c98500/#d55181`); gold stays reserved for the live pill; status colours always carry an icon + label. Headline rule per card: a violation wins, else the newest year's value closest to its standard; "finished water (tap)" is only ever a public-water-system node. Outfall y-scale follows the data and pins an off-scale limit to the top edge with a label (Haleon's 6.8 mg/L phosphorus limit would otherwise flatten the tenfold rise). Verified headless: 21 cards, 10 creek panels, 11 lake multiples, 16 outfall cards, zero page errors; CDN fonts/MapLibre/tiles blocked in the sandbox so the map is unverified here.
 - **v981 (2026-09-29, Laurie):** Handoff refresh — the "Where things stand" note above rewritten for the 2026-09-28/29 session; no code or data change.
 - **v980 (2026-09-29, Laurie):** Gauge tracks are always full panel width: the card's text column is now `flex:1 1 auto; min-width:0` and `.wtab` lost its 560 px cap, so the low→high track no longer stretches or shrinks with the longest text line as you step through a chain.
@@ -491,7 +502,7 @@ Big ongoing effort to tame tag sprawl. Started at 2,332 unique tags; now ~2,178.
 7. Clean-room verify: unzip the package fresh, rebuild, confirm BUILD OK.
 8. `present_files` the zip + both xlsx.
 
-Version at handoff: **v982**. Next chat continues from v983. Harness in `scripts/signals_harness/` (Signals).
+Version at handoff: **v983**. Next chat continues from v984. Harness in `scripts/signals_harness/` (Signals).
 
 ---
 

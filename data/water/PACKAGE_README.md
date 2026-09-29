@@ -35,7 +35,7 @@ Blue = verbatim from the named source. Black = derived by Claude (distances, tag
 | nys_major_water_basins_clip.geojson | 14 | DEC permit basins (13-09 "Catskill Creek" lumps Hannacroix); `PERMIT_BAS` = the PWL ID prefix | faint boundaries |
 | albsch_/schomont_karst_sinkholes_*.geojson | 40 + 14 | lidar-verified sinkholes and covered-karst candidates (USGS SIR 2021-5094) | stipple along the escarpment front |
 | dams.geojson | 274 | DEC Inventory of Dams, Albany/Greene/Schoharie; `hazard_class`, `LastConditionRating` | impoundment glyphs with condition ring |
-| echo_cwa_permits.geojson | 603 | every Clean Water Act permittee in the three counties; `tier` says individual permit vs general | outfall glyphs; join to dmr_annual for sparklines |
+| echo_cwa_permits.geojson | 603 | every Clean Water Act permittee in the three counties; `tier` says individual permit vs general; `watchlist_note` names the 24 facilities the brief discusses | outfall glyphs; filter on watchlist_note for the curated industrial layer; join to dmr_annual for sparklines |
 | usgs_wells.geojson | 213 | USGS groundwater sites with summarised chemistry | small triangles; plateau vs valley by `aquifer_setting` |
 | dec_lake_monitoring_reports_clip.geojson | 110 | DEC lake report pages (LINK) | click-through on lake glyphs |
 | reference_studies.geojson | 8 | far-afield exemplar studies (centroids; Cape Cod/NAWC/Darby are ±0.5–1 km estimates) | inset or labelled markers, never as local data |
@@ -67,7 +67,7 @@ Clipping box for the *_clip layers: lon −74.75 to −73.55, lat 42.05 to 42.85
 - `usgs_wells.csv` — 213 rows × 45 cols
 - `usgs_wells_raw.csv` — 6,010 rows × 11 cols
 
-**Discharges (key: permit)**
+**Discharges (key: permit)** — plus `regional_top10_fy2025.csv` / `regional_loads_fy2025.csv`: FY2025 annual loads for every NY permittee within 100 miles (2,056 permit × pollutant rows; top ten per pollutant), with method and outlier flags — see the sheet A1 note before quoting.
 
 - `echo_search_list.csv` — 115 rows × 12 cols
 - `echo_local_facilities.csv` — 433 rows × 12 cols
@@ -108,6 +108,13 @@ Clipping box for the *_clip layers: lon −74.75 to −73.55, lat 42.05 to 42.85
 - `ny_biomonitoring_sites.csv` — 280 rows × 11 cols
 - `ny_cslap_lakes.csv` — 7 rows × 26 cols
 
+**Air, land and water releases (key: tri_id)**
+
+- `tri_releases.csv` — EPA TRI, every facility × chemical × year within 100 miles, 1987–2024
+- `tri_facilities.csv` — per facility-year totals (air / water / on-site / POTW / off-site) with top chemicals
+- `tri_mercury.csv` — mercury stack-air series by facility
+- `tri_trend_50mi.csv` — regional totals by chemical and year within 50 miles
+
 **Reference studies**
 
 - `references.csv` — 22 rows × 13 cols
@@ -118,6 +125,10 @@ Clipping box for the *_clip layers: lon −74.75 to −73.55, lat 42.05 to 42.85
 ## Cadence warning
 
 Four clocks in one workbook: finished water (annual, at the tap: `measurements`), raw ambient (DEC, years apart: `dec_results`, `dec_lake_summer_summary`), monthly discharge reports (`dmr_results`), and EPA annual loads (`loading_tool_*`, and the `source = "EPA Loading Tool annual"` rows in `dmr_annual`). Never share an axis across clocks without labelling it. Concentration (mg/L) and load (kg/yr) are different quantities.
+
+## Units in the discharge tables
+
+EPA's FY2009–2016 bulk extracts carry no DMR unit field. Because the DMR unit equals the permit-limit unit in 99.98% of rows where both exist, every row now has a `unit` inherited from its limit and a `unit_source` column saying whether it came from the DMR field or the limit. Use `unit`, not `limit_unit`, and honour `unit_source` in tooltips. `reported_in_standard_units` / `standard_unit` are EPA's own normalisation where present.
 
 ## Known holes (as of 2026-09-29)
 

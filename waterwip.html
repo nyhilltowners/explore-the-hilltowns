@@ -223,7 +223,9 @@ a.link:hover{background:rgba(252,163,21,.14);}
 .lg i.line{width:14px; height:0; border:none; border-top:2px solid currentColor; border-radius:0; background:none; vertical-align:2px;}
 .chip{display:inline-block; font:700 10px "Montserrat",sans-serif; letter-spacing:.1em; text-transform:uppercase; padding:3px 8px; border-radius:10px; border:1px solid currentColor; white-space:nowrap;}
 .chip.bad{color:#ff8a8a !important;} .chip.warn{color:#f5c04a !important;} .chip.ok{color:#5fd39a !important;} .chip.none{color:#b9bde6 !important; border-style:dashed;} .chip.na{color:#fff !important; opacity:.7;}
-.chip.stale{color:#f0b67f !important;}
+.chip.stale{color:#f0b67f !important;} .chip.watch{color:#c9a6ff !important;}
+.tri-tab td.l small{display:block; opacity:.75; font-size:10.5px;}
+.tri-scroll{max-height:520px; overflow:auto; border:1px solid rgba(255,255,255,.18); border-radius:12px; padding:0 10px 6px; background:rgba(0,0,0,.18);} .tri-scroll thead th{position:sticky; top:0; background:#0b1040; z-index:1;}
 /* provenance marks */
 .pv{font-size:9px; vertical-align:super; margin-left:2px; letter-spacing:.04em; opacity:.75;}
 .pv.a{color:#f5c04a !important;} .pv.d{color:#b9bde6 !important;}
@@ -381,13 +383,26 @@ details.sg-more summary{cursor:pointer; color:var(--gold,#c9a227); font-weight:7
   <p class="sg-det" style="margin:0 0 8px">A limit is a threshold, and a threshold is blind to direction. Annual medians of the monthly discharge reports, with the year's maximum as a faint dot and the permit limit as the red line. EPA's FY2017–18 monthly extracts are empty (their defect); Loading Tool annual means bridge those years and are drawn hollow because they are a different clock. Pre-2019 EPA extracts carry no unit column, so a unit was assigned only where the limit fingerprint matches a later year; those rows are marked.</p>
   <div id="outfalls"></div>
   <div class="sg-tip" id="of-tip"></div>
+  <h3 class="sg-h3">Who puts the most in the water, FY2025 <span class="sub">annual load, kg/yr, every New York permittee within 100 miles of the divide — top ten per pollutant</span> <select class="sg-sel" id="load-sel"></select></h3>
+  <div class="sg-chart" id="loads"></div>
+  <p class="sg-note">Derived from EPA's statewide FY2025 bulk discharge reports: the mean of monthly effluent values × 365, summed over outfalls. "Reported lb/d" uses the permittee's own mass figures; "flow × concentration" multiplies reported flow by reported concentration where no mass was filed. Rows built from monthly maxima, or from fewer than six months, are flagged and drawn hollow — a flagged bar is a flag, not a load. New York files only; the 100-mile circle also covers parts of VT, MA, CT, NJ and PA that are not here.</p>
 
-  <h2 class="sg-sec">7 · Where it sits <span class="n">— catchment, valley-fill aquifers, karst, dams and outfalls</span></h2>
+  <h2 class="sg-sec">7 · What goes into the air <span class="n">— EPA Toxics Release Inventory, self-reported releases 1987–2024</span></h2>
+  <p class="sg-det" style="margin:0 0 8px">Facilities above a reporting threshold (25,000 lb manufactured or 10,000 lb used; 100 lb for persistent bioaccumulative toxics such as mercury; PFAS since 2020) in covered sectors with ten or more employees file a Form R each year. Small shops, farms and most fuel terminals are absent by design, and the chemical list has changed over time, so a drop can be a closure, a real cut, or a reporting change. Regional totals are on-site releases to all media (air, water, land) within 50 miles.</p>
+  <h3 class="sg-h3">Regional trend, top chemicals within 50 miles <span class="sub">lb/yr on-site releases, log scale; number of reporters in 2024 in each caption</span></h3>
+  <div class="sm" id="tri-trend"></div>
+  <div class="two" style="margin-top:12px">
+    <div><h3 class="sg-h3">Mercury to the air <span class="sub">stack releases, lb/yr, facilities within 50 miles</span></h3><div class="sg-chart" id="tri-hg"></div><p class="sg-note" id="tri-hg-note"></p></div>
+    <div><h3 class="sg-h3">Nearest reporters <span class="sub">within 30 miles; latest year filed, on-site total, top chemicals</span></h3><div id="tri-near"></div></div>
+  </div>
+  <div class="sg-tip" id="tri-tip"></div>
+
+  <h2 class="sg-sec">8 · Where it sits <span class="n">— catchment, valley-fill aquifers, karst, dams, outfalls and TRI reporters</span></h2>
   <div class="mp-tog" id="mp-tog"></div>
   <div id="wq-map"></div>
-  <p class="sg-note">The Basic Creek Reservoir catchment (USGS StreamStats, 11,318 ac) runs north into Berne; both sewage plants sit outside it, below the dam, upstream of Alcove. Valley-fill sand-and-gravel aquifers (DEC 250K) hug the creek floors — every public intake sits on bedrock beside them. Karst sinkholes (USGS lidar) form a belt along the escarpment front 15–20 km north and east; the Westerlo divide is on shale above it. Dam rings: red = DEC "Unsound," amber = deficiently maintained, white = no deficiencies, dashed = not rated.</p>
+  <p class="sg-note">The Basic Creek Reservoir catchment (USGS StreamStats, 11,318 ac) runs north into Berne; both sewage plants sit outside it, below the dam, upstream of Alcove. Valley-fill sand-and-gravel aquifers (DEC 250K) hug the creek floors — every public intake sits on bedrock beside them. Karst sinkholes (USGS lidar) form a belt along the escarpment front 15–20 km north and east; the Westerlo divide is on shale above it. Dam rings: red = DEC "Unsound," amber = deficiently maintained, white = no deficiencies, grey = not rated. Purple ✕ are Clean Water Act outfalls sized by exceedances, ringed when on the brief's watchlist; violet squares are TRI reporters sized by their largest year of air releases.</p>
 
-  <h2 class="sg-sec">8 · Provenance <span class="n">— every number traces to a document</span></h2>
+  <h2 class="sg-sec">9 · Provenance <span class="n">— every number traces to a document</span></h2>
   <p class="sg-det" id="prov-summary"></p>
   <details class="sg-more"><summary>Sources pulled</summary><div class="src-list" id="sources"></div></details>
   <details class="sg-more"><summary>Known holes</summary><div class="wd">
