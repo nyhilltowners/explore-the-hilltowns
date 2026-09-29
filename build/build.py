@@ -1470,6 +1470,18 @@ STATION_COORDS = {
     "slide_mountain":  (42.0145, -74.4124),
 }
 
+def emit_water_layer():
+    """v982 (2026-09-29, Laurie): the Helderberg–Hudson water-quality master (data/water/) → site/data_water.js.
+    All the reading, provenance tagging and pre-aggregation lives in build/water.py; this is the hook.
+    A missing workbook is a WARNING, never a failed build — the rest of the site does not depend on it."""
+    try:
+        sys.path.insert(0, str(Path(__file__).resolve().parent))
+        from water import emit_water
+        emit_water(SITE, WARNS)
+    except Exception as e:  # noqa: BLE001
+        WARNS.append(f"water layer skipped: {e}")
+
+
 def emit_station_dd():
     """data/stations/*.csv → site/station_dd.js: per station, per year, cumulative HDD/CDD (base 65)
     and GDD (base 50, 86 cap), precipitation and snowfall by day-of-year, plus annual extremes —
@@ -1674,7 +1686,8 @@ def main() -> int:
     # Standalone pages (hand-authored). Each carries <!-- @@header --> / <!-- @@footer -->
     # markers that emit_page() fills from partials/, so the nav + skyline + footer are
     # written once and stamped everywhere (2026-09-16, per Laurie).
-    for name in ("about.html", "calendar.html", "directory.html", "instagram.html", "bulletin.html", "tradingpost.html", "signals.html"):
+    for name in ("about.html", "calendar.html", "directory.html", "instagram.html", "bulletin.html", "tradingpost.html", "signals.html",
+                 "waterwip.html"):   # v982 (2026-09-29, Laurie): water-quality dashboard, unlinked (no nav) — reach it by typing /waterwip.html
         if (ROOT / name).exists():
             emit_page(ROOT / name, "index.html" if name == "calendar.html" else name)   # calendar (list view) is the landing page
     # keep calendar.html answering too, for old links
@@ -1684,9 +1697,12 @@ def main() -> int:
         shutil.copyfile(ROOT / "skyline.js", SITE / "skyline.js")
     if (ROOT / "signals.js").exists():
         shutil.copyfile(ROOT / "signals.js", SITE / "signals.js")
+    if (ROOT / "water.js").exists():
+        shutil.copyfile(ROOT / "water.js", SITE / "water.js")   # v982: waterwip.html's script
     emit_station_dd()
     emit_phenology_history()
     emit_phenology_expected()
+    emit_water_layer()                     # v982 (Laurie): data/water/*.xlsx + geo → site/data_water.js (waterwip.html only)
     if (ROOT / "images").exists():
         shutil.copytree(ROOT / "images", SITE / "images", dirs_exist_ok=True)
     if (ROOT / "fonts").exists():

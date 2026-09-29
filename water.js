@@ -1,0 +1,440 @@
+/* water.js — v982 (2026-09-29, Laurie): the Helderberg–Hudson water-quality dashboard (waterwip.html).
+   Reads window.WATER (site/data_water.js, built by build/water.py from data/water/helderberg_hudson_water_quality.xlsx).
+   Idiom: Signs + Signals — white on ink, gold for headings and the live pill, one validated chain colour per transect.
+   Every panel is plain SVG built from strings; hover tooltips everywhere; a table view where a chart carries numbers.
+   Provenance: rows carry _p = {column: 'd'|'a'} for cells that are not verbatim; pv() renders the superscript. */
+(function () {
+  'use strict';
+  var W = window.WATER;
+  var $ = function (id) { return document.getElementById(id); };
+  var status = function (m) { var s = $('wq-status'); if (s) s.textContent = m || ''; };
+  if (!W) { status('data_water.js did not load — run the build (python3 build/build.py) so site/data_water.js exists.'); return; }
+
+  var esc = function (s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); };
+  var fmt = function (v, d) { if (v == null || v === '' || isNaN(v)) return '—'; var n = +v; if (d == null) d = Math.abs(n) >= 100 ? 0 : Math.abs(n) >= 10 ? 1 : Math.abs(n) >= 1 ? 2 : 3; return n.toLocaleString('en-US', { maximumFractionDigits: d, minimumFractionDigits: 0 }); };
+  var pv = function (row, col) { var p = row && row._p && row._p[col]; if (!p) return ''; return '<span class="pv ' + p + '" title="' + (p === 'a' ? 'assumption in the workbook, meant to be edited' : 'derived in the workbook, not copied from a source') + '">' + (p === 'a' ? '~' : 'd') + '</span>'; };
+  var by = function (arr, k) { var o = {}; (arr || []).forEach(function (r) { (o[r[k]] = o[r[k]] || []).push(r); }); return o; };
+  var uniq = function (arr) { return arr.filter(function (v, i, a) { return a.indexOf(v) === i; }); };
+  var mix = function (hex, t) { /* t: 0 = colour, 1 = white */ var r = parseInt(hex.slice(1, 3), 16), g = parseInt(hex.slice(3, 5), 16), b = parseInt(hex.slice(5, 7), 16); var f = function (c) { return Math.round(c + (255 - c) * t); }; return 'rgb(' + f(r) + ',' + f(g) + ',' + f(b) + ')'; };
+
+  /* ---------- palette (validated: scripts/validate_palette.js, dark surface #00004d) ---------- */
+  var COL = { north: '#3987e5', south: '#d95926', potic: '#199e70', other: '#c98500', divide: '#ffffff' };
+  var TXNAME = { north: 'North · Basic Creek → Alcove → Hannacroix → Hudson at Coeymans', south: 'South · Myosotis → Ten Mile → Catskill Creek → Hudson at Catskill', potic: 'Potic → Hudson at Coxsackie', divide: 'The divide (shared headwater)', other: 'Off-transect lakes (control series)' };
+  var ZONECOL = { 'plateau (Hilltowns)': '#199e70', 'Catskill Creek valley / Greene': '#c98500', 'Albany lowland / Hudson': '#d55181' };
+  var GOLD = '#fca315', RED = '#ff8a8a', AMBER = '#f5c04a', GREEN = '#5fd39a', GREY = '#b9bde6';
+
+  /* ---------- tooltips ---------- */
+  function tipper(id) {
+    var el = $(id);
+    return {
+      show: function (evt, html) { if (!el) return; el.innerHTML = html; el.style.display = 'block'; this.move(evt); },
+      move: function (evt) { if (!el) return; var host = el.parentNode; var r = host.getBoundingClientRect(); var x = evt.clientX - r.left + 14, y = evt.clientY - r.top + 14; if (x + el.offsetWidth > r.width - 4) x = evt.clientX - r.left - el.offsetWidth - 14; if (y + el.offsetHeight > r.height + 40) y = evt.clientY - r.top - el.offsetHeight - 10; el.style.left = Math.max(0, x) + 'px'; el.style.top = Math.max(0, y) + 'px'; },
+      hide: function () { if (el) el.style.display = 'none'; }
+    };
+  }
+  function bindTips(container, tip, dataAttr) {
+    if (!container) return;
+    container.addEventListener('mousemove', function (e) { var t = e.target.closest ? e.target.closest('[' + dataAttr + ']') : null; if (t) tip.show(e, t.getAttribute(dataAttr)); else tip.hide(); });
+    container.addEventListener('mouseleave', function () { tip.hide(); });
+  }
+
+  /* ---------- node model ---------- */
+  var SITES = W.sites.slice();
+  var S = {}; SITES.forEach(function (s) { S[s.site_id] = s; });
+  function txOf(s) { var w = s.watershed || ''; if (/^Divide/.test(w)) return 'divide'; if (/Hannacroix\/Coxsackie/.test(w)) return 'potic'; if (/Hannacroix Creek/.test(w)) return 'north'; if (/Catskill Creek/.test(w)) return 'south'; return 'other'; }
+  function elevApprox(s) { var src = s.elev_source || ''; return !/3DEP[^|]*exact coords/i.test(src); } /* the sites sheet's yellow fill was not cleared when 3DEP values replaced estimates — the elev_source text is the honest flag */
+  function statusOf(s) { var d = (s.data_status || '').toLowerCase(); if (/rich/.test(d)) return 'rich'; if (/moderate/.test(d)) return 'mod'; if (/thin|via awqr/.test(d)) return 'thin'; return 'none'; }
+  function shapeOf(s) { var t = s.node_type || '', src = s.source_type || ''; if (t === 'public_water_system') return { shape: 'diamond', nest: /reservoir|lake|stream/.test(src) ? 'circle' : 'tri', hatch: /GWUDI/.test(src) }; if (t === 'point_source') return { shape: 'cross' }; if (/well/.test(t)) return { shape: 'tri' }; if (t === 'stream') return { shape: 'line' }; return { shape: 'circle' }; }
+  var MEAS = by(W.measurements, 'site_id'), ASSESS = by(W.assessments, 'site_id'), HABS25 = by(W.habs_2025, 'site_id'), LAKESUM = by(W.lake_summary, 'site_id'), SERIES = by(W.dec_series, 'site'), PARAMS = {};
+  W.parameters.forEach(function (p) { PARAMS[p.parameter] = p; });
+  var PERMIT = {}; W.permits.forEach(function (p) { PERMIT[p.npdes_id] = p; });
+  var SITE_PERMIT = { GREENVILLE_WWTP: 'NY0094854', CAMP_MALKA_WWTP: 'NY0269093' };
+  var SITE_DAM = { BASIC_CREEK_RES: 'Basic Creek Dam', ALCOVE_RES: 'Alcove Dam', MYOSOTIS_LAKE: 'Myosotis Lake Dam', ONDERDONK_LAKE: 'Onderdonk Lake Dam', POTIC_RES: 'Potic Reservoir Dam', WARNERS_LAKE: 'Warners Lake Dam', THOMPSONS_LAKE: 'Thompsons Lake Dam', LAWSON_LAKE: 'Nancy Lawson Dam' };
+  var DAM = {}; W.dams.forEach(function (d) { DAM[d.dam_name] = d; });
+  var HABHIST = {}; W.habs_hist.forEach(function (h) { (HABHIST[h['Waterbody Name']] = HABHIST[h['Waterbody Name']] || []).push(h); });
+  var LAKEREP = {}; W.lake_reports.forEach(function (r) { LAKEREP[r.site_name] = r; });
+  function lakeName(s) { return (s.name || '').replace(/\s*\(.*$/, ''); }
+
+  function headline(s) {
+    /* One number, its standard, and whether it is verbatim. Candidates: every measurement row with a value, plus the
+       DEC summer-lake rows (TP against the 20 µg/L guidance). A violation wins; otherwise the newest year's value that
+       sits closest to its standard. HAB-report counts and permit facts are fallbacks, never the headline when a real
+       measurement exists. "Finished water" is only ever a public-water-system node; everything else is raw ambient. */
+    var finished = s.node_type === 'public_water_system';
+    var rows = (MEAS[s.site_id] || []).filter(function (m) { return m.value != null && !isNaN(m.value) && !/HAB reports/i.test(m.parameter); }).map(function (m) {
+      return { kind: finished ? 'finished' : 'ambient', label: m.parameter, value: m.value, unit: m.unit, pct: m.standard_value ? m.value / m.standard_value : null, std: m.standard_value, stdType: m.standard_type, year: +m.sample_year || 0, date: m.sample_date, row: m, stat: m.statistic, viol: /^YES/i.test(m.violation || '') };
+    });
+    (LAKESUM[s.site_id] || []).forEach(function (l) { if (l.tp_summer_mean_ugL != null) rows.push({ kind: 'ambient', label: 'Summer total phosphorus (DEC)', value: l.tp_summer_mean_ugL, unit: 'µg/L', pct: l.tp_summer_mean_ugL / 20, std: 20, stdType: 'guidance', year: +l.yr, row: l, stat: 'summer mean, n=' + (l.tp_n || '?'), viol: false, pcol: 'tp_summer_mean_ugL' }); });
+    var viol = rows.filter(function (r) { return r.viol; });
+    if (viol.length) return viol.sort(function (a, b) { return b.year - a.year; })[0];
+    if (rows.length) {
+      var yr = Math.max.apply(null, rows.map(function (r) { return r.year; }));
+      var recent = rows.filter(function (r) { return r.year >= yr - 1 && r.pct != null; });
+      if (!recent.length) recent = rows.filter(function (r) { return r.pct != null; });
+      if (!recent.length) recent = rows.filter(function (r) { return r.year >= yr - 1; });
+      return recent.sort(function (a, b) { return (b.pct || 0) - (a.pct || 0) || b.year - a.year; })[0];
+    }
+    var p = PERMIT[SITE_PERMIT[s.site_id]];
+    if (p) return { kind: 'permit', label: 'Effluent exceedances, last 3 yr (EPA ECHO)', value: p.effluent_violations_3yr, unit: '', pct: null, year: null, row: p, stat: p.design_flow_mgd != null ? 'design flow ' + p.design_flow_mgd + ' MGD' : '' };
+    var h = (HABS25[s.site_id] || [])[0];
+    if (h) return { kind: 'hab', label: 'HAB reports, 2025 (DEC)', value: h.n_reports, unit: '', pct: null, year: 2025, row: h, stat: h.first_report + ' → ' + h.last_report };
+    var hm = (MEAS[s.site_id] || []).filter(function (m) { return /HAB reports/i.test(m.parameter); })[0];
+    if (hm) return { kind: 'hab', label: 'HAB reports (DEC)', value: hm.value, unit: 'per year', pct: null, year: +hm.sample_year, row: hm, stat: hm.sample_date || '' };
+    return null;
+  }
+  function badge(s, hl) {
+    var a = (ASSESS[s.site_id] || []).filter(function (r) { return /impaired/i.test(r.use_assessment || ''); });
+    if (a.length) return { cls: 'bad', txt: '⚠ Impaired (DEC)' };
+    var rows = MEAS[s.site_id] || [];
+    if (rows.some(function (m) { return /^YES/i.test(m.violation || ''); })) return { cls: 'bad', txt: '⚠ MCL violation' };
+    if (rows.some(function (m) { return /AL exceeded|exceeds EPA/i.test(m.violation || ''); })) return { cls: 'warn', txt: '◐ Action level / EPA limit exceeded' };
+    if (hl && hl.pct != null && hl.pct >= 1) return { cls: 'bad', txt: '⚠ Above guidance' };
+    if (hl && hl.pct != null && hl.pct >= 0.8) return { cls: 'warn', txt: '◐ Near standard' };
+    if (hl && hl.kind === 'permit') return hl.value > 0 ? { cls: 'warn', txt: '◐ ' + hl.value + ' effluent exceedances' } : { cls: 'ok', txt: '✓ No exceedances' };
+    if (hl && hl.kind === 'hab') return { cls: 'warn', txt: '◐ Blooms reported' };
+    if (rows.length || hl) return { cls: 'ok', txt: '✓ Within standards' };
+    return { cls: 'none', txt: '○ No public data' };
+  }
+  function latestYear(s) { var ys = []; (MEAS[s.site_id] || []).forEach(function (m) { if (m.sample_year) ys.push(+m.sample_year); }); (LAKESUM[s.site_id] || []).forEach(function (l) { ys.push(+l.yr); }); (SERIES[s.site_id] || []).forEach(function (r) { ys.push(+r.yr); }); if (s.latest_data_year) ys.push(+s.latest_data_year); return ys.length ? Math.max.apply(null, ys) : null; }
+
+  /* ---------- glyphs ---------- */
+  function glyph(s, x, y, r, col, forCard) {
+    var sh = shapeOf(s), st = statusOf(s);
+    var fill = st === 'rich' ? col : st === 'mod' ? col : 'none', fo = st === 'mod' ? .45 : 1, sw = st === 'none' ? 1.4 : st === 'thin' ? 2.6 : 2, dash = st === 'none' ? ' stroke-dasharray="3 2"' : '';
+    var g = '';
+    var base = 'stroke="' + col + '" stroke-width="' + sw + '" fill="' + fill + '" fill-opacity="' + fo + '"' + dash;
+    if (sh.shape === 'circle') g += '<circle cx="' + x + '" cy="' + y + '" r="' + r + '" ' + base + '/>';
+    else if (sh.shape === 'tri') g += '<path d="M' + x + ' ' + (y - r * 1.1) + ' L' + (x + r * 1.1) + ' ' + (y + r * .8) + ' L' + (x - r * 1.1) + ' ' + (y + r * .8) + ' Z" ' + base + '/>';
+    else if (sh.shape === 'line') g += '<path d="M' + (x - r * 1.4) + ' ' + y + ' q ' + (r * .7) + ' -' + (r * .6) + ' ' + (r * 1.4) + ' 0 t ' + (r * 1.4) + ' 0" stroke="' + col + '" stroke-width="' + (sw + 1) + '" fill="none" stroke-linecap="round"' + dash + '/>';
+    else if (sh.shape === 'cross') g += '<path d="M' + (x - r * .8) + ' ' + (y - r * .8) + ' L' + (x + r * .8) + ' ' + (y + r * .8) + ' M' + (x + r * .8) + ' ' + (y - r * .8) + ' L' + (x - r * .8) + ' ' + (y + r * .8) + '" stroke="' + col + '" stroke-width="3" stroke-linecap="round"/>';
+    else if (sh.shape === 'diamond') {
+      if (sh.nest === 'circle') g += '<circle cx="' + x + '" cy="' + y + '" r="' + (r * 1.35) + '" stroke="' + col + '" stroke-width="1.4" fill="none" stroke-opacity=".8"/>';
+      if (sh.nest === 'tri') { if (sh.hatch) g += '<defs><pattern id="hatch' + (forCard ? 'c' : '') + s.site_id + '" width="4" height="4" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="4" stroke="' + col + '" stroke-width="1.2"/></pattern></defs>'; g += '<path d="M' + x + ' ' + (y - r * 1.6) + ' L' + (x + r * 1.6) + ' ' + (y + r * 1.1) + ' L' + (x - r * 1.6) + ' ' + (y + r * 1.1) + ' Z" stroke="' + col + '" stroke-width="1.4" fill="' + (sh.hatch ? 'url(#hatch' + (forCard ? 'c' : '') + s.site_id + ')' : 'none') + '" stroke-opacity=".8"/>'; }
+      g += '<path d="M' + x + ' ' + (y - r * .85) + ' L' + (x + r * .85) + ' ' + y + ' L' + x + ' ' + (y + r * .85) + ' L' + (x - r * .85) + ' ' + y + ' Z" ' + base + '/>';
+    }
+    return g;
+  }
+
+  /* ---------- 1 · transects ---------- */
+  var CHAINS = {
+    north: ['PLATEAU_WELLS', 'BASIC_CREEK_STREAM', 'BASIC_CREEK_RES', 'ALCOVE_RES', 'ALBANY_CITY_PWS'],
+    south: ['PLATEAU_WELLS', 'MYOSOTIS_LAKE', 'RENSSELAERVILLE_WD', 'GREENVILLE_WD', 'CAIRO_WD', 'CATSKILL_CREEK', 'CATSKILL_VILLAGE_PWS'],
+    potic: ['POTIC_RES', 'CATSKILL_VILLAGE_PWS']
+  };
+  var SIDE = { GREENVILLE_WWTP: 'ALCOVE_RES', CAMP_MALKA_WWTP: 'ALCOVE_RES', LAWSON_LAKE: 'ALCOVE_RES', USGS_A2183: null, BKW_SCHOOL_PWS: null };
+  function drawTransects() {
+    var Wd = 1000, H = 700, top = 46, bot = 590, ELMAX = 1800;
+    var y = function (e) { return top + (1 - Math.min(e, ELMAX) / ELMAX) * (bot - top); };
+    var colX = { north: 330, south: 640, potic: 870, divide: 480, other: 110 };
+    var pos = {}, out = [];
+    SITES.forEach(function (s) { var t = txOf(s); var e = s.elev_ft_approx; var unk = (e == null || e === 0) && t !== 'other'; pos[s.site_id] = { s: s, tx: t, x: colX[t], y: unk ? bot + 36 : y(+e || 0), unk: unk, side: SIDE[s.site_id] !== undefined }; });
+    /* side nodes nudge off the chain column */
+    pos.GREENVILLE_WWTP.x = colX.north + 68; pos.CAMP_MALKA_WWTP.x = colX.north + 68; pos.LAWSON_LAKE.x = colX.north - 66; pos.USGS_A2183.x = colX.divide + 112; pos.BKW_SCHOOL_PWS.x = colX.divide - 112;
+    pos.BKW_SCHOOL_PWS.y = pos.PLATEAU_WELLS.y; pos.PLATEAU_WELLS.y = y(1500);
+    /* collision avoidance per column (34 px) */
+    var cols = {}; Object.keys(pos).forEach(function (k) { var p = pos[k]; (cols[p.x] = cols[p.x] || []).push(p); });
+    Object.keys(cols).forEach(function (x) { var arr = cols[x].sort(function (a, b) { return a.y - b.y; }); for (var i = 1; i < arr.length; i++) { if (arr[i].y - arr[i - 1].y < 34) arr[i].y = arr[i - 1].y + 34; } });
+    /* elevation grid */
+    for (var e = 0; e <= ELMAX; e += 300) out.push('<line class="grid" x1="40" x2="' + (Wd - 10) + '" y1="' + y(e) + '" y2="' + y(e) + '"/><text class="elev" x="36" y="' + (y(e) + 3) + '" text-anchor="end">' + e.toLocaleString() + ' ft</text>');
+    /* Hudson baseline */
+    out.push('<path class="flow" d="M60 ' + (bot + 36) + ' q 20 -8 40 0 t 40 0 t 40 0 t 40 0 t 40 0 t 40 0 t 40 0 t 40 0 t 40 0 t 40 0 t 40 0 t 40 0 t 40 0 t 40 0 t 40 0 t 40 0 t 40 0 t 40 0 t 40 0 t 40 0 t 40 0 t 40 0" stroke="' + GREY + '" stroke-opacity=".7"/>');
+    out.push('<text class="hud" x="' + (Wd - 12) + '" y="' + (bot + 58) + '" text-anchor="end">Hudson River · tidal, sea level</text>');
+    /* column heads */
+    [['north', 'North transect'], ['divide', 'Divide'], ['south', 'South transect'], ['potic', 'Potic'], ['other', 'Off-transect lakes']].forEach(function (c) { out.push('<text class="col" fill="' + COL[c[0]] + '" x="' + colX[c[0]] + '" y="' + (top - 22) + '" text-anchor="middle">' + c[1] + '</text>'); });
+    /* flow lines */
+    Object.keys(CHAINS).forEach(function (t) { var ch = CHAINS[t]; for (var i = 1; i < ch.length; i++) { var a = pos[ch[i - 1]], b = pos[ch[i]]; if (!a || !b) continue; out.push('<path class="flow" stroke="' + COL[t] + '" d="M' + a.x + ' ' + (a.y + 12) + ' C ' + a.x + ' ' + ((a.y + b.y) / 2) + ', ' + b.x + ' ' + ((a.y + b.y) / 2) + ', ' + b.x + ' ' + (b.y - 12) + '"/>'); } });
+    Object.keys(SIDE).forEach(function (k) { var to = SIDE[k]; if (!to) return; var a = pos[k], b = pos[to]; out.push('<path class="flow" stroke="' + COL[a.tx] + '" stroke-dasharray="4 4" d="M' + a.x + ' ' + (a.y + 12) + ' C ' + a.x + ' ' + ((a.y + b.y) / 2) + ', ' + b.x + ' ' + ((a.y + b.y) / 2) + ', ' + b.x + ' ' + (b.y - 12) + '" marker-end="url(#arw)"/>'); });
+    out.push('<defs><marker id="arw" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 0 L10 5 L0 10 z" fill="' + GREY + '"/></marker></defs>');
+    /* nodes */
+    Object.keys(pos).forEach(function (k) { var p = pos[k], s = p.s, col = COL[p.tx], hl = headline(s), yr = latestYear(s); var labelLeft = (p.tx === 'north' && !/WWTP/.test(k)) || k === 'BKW_SCHOOL_PWS'; var lx = labelLeft ? p.x - 20 : p.x + 20, anc = labelLeft ? 'end' : 'start'; var name = lakeName(s).replace('Helderberg plateau private wells', 'Plateau private wells').replace('City of Albany water system', 'City of Albany tap').replace('Village of Catskill water system', 'Village of Catskill tap').replace('Greenville (T) WWTP — SPDES NY0094854', 'Greenville WWTP').replace('Camp Malka wastewater plant — SPDES NY0269093', 'Camp Malka plant').replace('Greenville Water District No. 1', 'Greenville WD').replace('Basic Creek (stream, 6 DEC sites)', 'Basic Creek'); var elevTxt = p.unk ? 'elevation not in record' : (elevApprox(s) ? '~' : '') + (+s.elev_ft_approx).toLocaleString() + ' ft'; var tip = '<b>' + esc(s.name) + '</b><br>' + esc(s.node_type.replace(/_/g, ' ')) + ' · ' + esc((s.source_type || '').replace(/_/g, ' ')) + '<br>' + elevTxt + ' · data: ' + esc(s.data_status || '—') + (hl ? '<br>' + esc(hl.label) + ': ' + fmt(hl.value) + ' ' + esc(hl.unit) + (hl.year ? ' (' + hl.year + ')' : '') : '') + '<br><i>click for the card</i>'; out.push('<g class="nd" data-site="' + k + '" data-tip="' + esc(tip) + '"><g class="g">' + glyph(s, p.x, p.y, 9, col) + '</g><text class="nm" x="' + lx + '" y="' + (p.y + 1) + '" text-anchor="' + anc + '">' + esc(name) + '</text><text class="yr" x="' + lx + '" y="' + (p.y + 12) + '" text-anchor="' + anc + '">' + (yr ? 'newest ' + yr : 'no data') + (p.unk ? '' : ' · ' + elevTxt) + '</text></g>'); });
+    $('tx').innerHTML = '<svg class="tx-svg" viewBox="0 0 ' + Wd + ' ' + H + '" role="img" aria-label="Two transects from the Westerlo divide to the Hudson, nodes placed by elevation">' + out.join('') + '</svg>';
+    var tip = tipper('tx-tip'); bindTips($('tx'), tip, 'data-tip');
+    $('tx').addEventListener('click', function (e) { var g = e.target.closest ? e.target.closest('[data-site]') : null; if (!g) return; openCard(g.getAttribute('data-site')); });
+    $('tx-legend').innerHTML = ['north', 'south', 'potic', 'divide', 'other'].map(function (t) { return '<span><i style="color:' + COL[t] + '"></i>' + esc(TXNAME[t]) + '</span>'; }).join('') + '<span><i class="hollow" style="color:#fff"></i>no data</span><span><i class="hollow" style="color:#fff;border-width:3px"></i>thin</span><span><i style="color:#fff"></i>rich</span>';
+  }
+
+  /* ---------- 2 · cards ---------- */
+  var PGROUP = { nutrient: 'Nutrients', disinfection_byproduct: 'Disinfection byproducts', metal_geogenic: 'Geogenic metals', PFAS: 'PFAS', metal_plumbing: 'Plumbing metals', ion: 'Ions', radionuclide: 'Radionuclides', physical: 'Physical', VOC: 'Volatile organics', biological: 'Biological', metal: 'Metals', other: 'Other' };
+  function groupOf(name) { var p = PARAMS[name]; if (p && p.parameter_group) return p.parameter_group; if (/PF|dioxane/i.test(name)) return 'PFAS'; if (/TTHM|HAA|trihalo|haloacetic/i.test(name)) return 'disinfection_byproduct'; if (/lead|copper/i.test(name)) return 'metal_plumbing'; if (/phosph|nitr/i.test(name)) return 'nutrient'; if (/radium|alpha|radon|uranium/i.test(name)) return 'radionuclide'; if (/iron|mangan|arsenic|barium|nickel|chrom|antim|selen/i.test(name)) return 'metal_geogenic'; if (/turbid|TOC|organic carbon|colour|color/i.test(name)) return 'physical'; if (/sodium|chloride|fluoride|sulfate/i.test(name)) return 'ion'; if (/xylene|methane|benz|chloro/i.test(name)) return 'VOC'; if (/HAB|microcystin/i.test(name)) return 'biological'; return 'other'; }
+  function bloomStrip(s) {
+    var h = (HABS25[s.site_id] || [])[0]; var hist = HABHIST[lakeName(s)] || [];
+    if (!h && !hist.length) return '';
+    var Wd = 300, x0 = 26, x1 = Wd - 4, doy = function (d) { var t = new Date(d); return (Date.UTC(t.getUTCFullYear(), t.getUTCMonth(), t.getUTCDate()) - Date.UTC(t.getUTCFullYear(), 0, 1)) / 864e5; };
+    var xs = function (d) { return x0 + (Math.min(Math.max(doy(d), 152), 334) - 152) / (334 - 152) * (x1 - x0); };
+    var o = '<svg viewBox="0 0 ' + Wd + ' 34"><text class="m" x="0" y="11">2025</text>';
+    ['Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov'].forEach(function (m, i) { o += '<text class="m" x="' + (x0 + i / 6 * (x1 - x0)) + '" y="32">' + m + '</text><line x1="' + (x0 + i / 6 * (x1 - x0)) + '" x2="' + (x0 + i / 6 * (x1 - x0)) + '" y1="2" y2="22" stroke="rgba(255,255,255,.15)"/>'; });
+    o += '<line x1="' + x0 + '" x2="' + x1 + '" y1="8" y2="8" stroke="rgba(255,255,255,.25)"/>';
+    if (h) o += '<rect x="' + xs(h.first_report) + '" y="4" width="' + Math.max(3, xs(h.last_report) - xs(h.first_report)) + '" height="8" rx="2" fill="' + GREY + '"/><text class="m" x="' + Math.min(x1 - 60, xs(h.last_report) + 4) + '" y="11">' + h.n_reports + ' report' + (h.n_reports == 1 ? '' : 's') + '</text>';
+    var yrs = uniq(hist.map(function (r) { return +r.Year; })).sort();
+    if (yrs.length) o += '<text class="m" x="0" y="22">2012–18</text>' + yrs.map(function (yr) { var r = hist.filter(function (q) { return +q.Year === yr; })[0]; var c = r['Bloom Type'] === 'HT' ? RED : r['Bloom Type'] === 'C' ? AMBER : GREY; var a = xs(new Date(r['Date of First Listing'])), b = xs(new Date(r['Date of Last Listing'])); return '<rect x="' + a + '" y="15" width="' + Math.max(3, b - a) + '" height="5" rx="1.5" fill="' + c + '" fill-opacity=".85"><title>' + yr + ' · ' + esc(r.bloom_type_meaning) + '</title></rect>'; }).join('');
+    return '<div class="bloom">' + o + '</svg></div>';
+  }
+  function cardHTML(s) {
+    var t = txOf(s), col = COL[t], hl = headline(s), b = badge(s, hl), yr = latestYear(s), stale = (hl && hl.year && hl.year < 2021) || (!hl && yr && yr < 2021);
+    var front = '<div class="top"><div class="gl"><svg viewBox="0 0 40 40">' + glyph(s, 20, 20, 10, col, true) + '</svg></div><div><div class="ttl">' + esc(s.name) + '</div><div class="kind">' + esc(s.node_type.replace(/_/g, ' ')) + ' · ' + esc((s.source_type || '').replace(/_/g, ' ')) + (s.town ? ' · ' + esc(s.town) : '') + '</div></div></div>';
+    front += '<div class="row"><span class="chip ' + b.cls + '">' + b.txt + '</span>' + (stale ? '<span class="chip stale">⏱ headline from ' + (hl && hl.year ? hl.year : yr) + '</span>' : '') + (yr ? '<span class="chip na">newest data ' + yr + '</span>' : '') + '</div>';
+    if (hl) {
+      var pct = hl.pct != null ? Math.round(hl.pct * 100) + '% of ' + esc(hl.stdType || 'standard') : '';
+      front += '<div class="hl"><div class="sg-eye">' + esc(hl.label) + (hl.kind === 'finished' ? ' · finished water (tap)' : hl.kind === 'ambient' ? ' · raw ambient' : '') + '</div><div class="sg-val">' + fmt(hl.value) + pv(hl.row, 'value') + '<span class="c">' + esc(hl.unit) + (pct ? ' · ' + pct + pv(hl.row, 'pct_of_standard') : '') + '</span></div><div class="sg-det">' + esc(hl.stat || '') + (hl.date ? ' · ' + esc(hl.date) : hl.year ? ' · ' + hl.year : '') + (hl.row && hl.row.source_doc ? ' · ' + (hl.row.source_url ? '<a href="' + esc(hl.row.source_url) + '" target="_blank" rel="noopener">' + esc(hl.row.source_doc) + '</a>' : esc(hl.row.source_doc)) : '') + '</div></div>';
+    } else front += '<div class="hl"><div class="sg-eye">Headline</div><div class="sg-det">' + esc(s.topline_summary || 'Nothing in the public record for this node.') + '</div></div>';
+    front += bloomStrip(s);
+    /* back */
+    var back = '';
+    var rows = MEAS[s.site_id] || [];
+    if (rows.length) {
+      var groups = by(rows.map(function (m) { m._g = groupOf(m.parameter); return m; }), '_g');
+      back += '<div class="grp">Finished water — measurements (' + rows.length + ')</div><table class="ddtab"><thead><tr><th>Parameter</th><th>Value</th><th>Standard</th><th>% of std</th><th>Date</th><th>Source</th></tr></thead><tbody>';
+      Object.keys(groups).sort(function (a, c) { return (PGROUP[a] || a).localeCompare(PGROUP[c] || c); }).forEach(function (g) { back += '<tr><td class="l" colspan="6" style="color:' + GOLD + ' !important;font-size:10px;letter-spacing:.12em;text-transform:uppercase">' + esc(PGROUP[g] || g) + '</td></tr>'; groups[g].sort(function (a, c) { return (c.sample_year || 0) - (a.sample_year || 0); }).forEach(function (m) { var pct = m.pct_of_standard != null ? Math.round(m.pct_of_standard * 100) + '%' : '—'; var vio = /^YES/i.test(m.violation || '') ? ' <span class="chip bad">viol.</span>' : /exceed/i.test(m.violation || '') ? ' <span class="chip warn">AL</span>' : ''; back += '<tr><td class="l">' + esc(m.parameter) + (m.statistic ? '<br><span style="font-size:10.5px;opacity:.75">' + esc(m.statistic) + '</span>' : '') + (m.note ? '<br><span style="font-size:10.5px;opacity:.75">' + esc(m.note) + '</span>' : '') + '</td><td>' + (m.range_min != null ? fmt(m.range_min) + '–' : '') + fmt(m.value) + pv(m, 'value') + ' ' + esc(m.unit || '') + vio + '</td><td>' + (m.standard_value != null ? fmt(m.standard_value) + ' <span style="font-size:10px;opacity:.75">' + esc(m.standard_type || '') + '</span>' : '—') + '</td><td>' + pct + pv(m, 'pct_of_standard') + '</td><td>' + esc(m.sample_date || m.sample_year || '') + '</td><td class="l">' + (m.source_url ? '<a href="' + esc(m.source_url) + '" target="_blank" rel="noopener">' + esc(m.source_doc || 'source') + '</a>' : esc(m.source_doc || '')) + '</td></tr>'; }); });
+      back += '</tbody></table>';
+    }
+    var ls = LAKESUM[s.site_id] || [];
+    if (ls.length) { back += '<div class="grp">Raw ambient — DEC summer lake summary</div><table class="ddtab"><thead><tr><th>Year</th><th>TP µg/L</th><th>n</th><th>TP max</th><th>Chl-a µg/L</th><th>Secchi m</th><th>DO min mg/L</th><th>% of 20</th></tr></thead><tbody>' + ls.sort(function (a, c) { return a.yr - c.yr; }).map(function (l) { return '<tr><td class="l">' + l.yr + '</td><td>' + fmt(l.tp_summer_mean_ugL, 1) + '</td><td>' + fmt(l.tp_n, 0) + '</td><td>' + fmt(l.tp_max_ugL, 1) + '</td><td>' + fmt(l.chla_summer_mean_ugL, 1) + '</td><td>' + fmt(l.secchi_summer_mean_m, 2) + '</td><td>' + fmt(l.do_min_mgL, 2) + '</td><td>' + (l.tp_pct_of_20_guidance != null ? Math.round(l.tp_pct_of_20_guidance * 100) + '%' + pv(l, 'tp_pct_of_20_guidance') : '—') + '</td></tr>'; }).join('') + '</tbody></table>'; }
+    var ser = SERIES[s.site_id] || [];
+    if (ser.length) { var yrs = uniq(ser.map(function (r) { return r.yr; })).sort(); var ps = uniq(ser.map(function (r) { return r.p; })); back += '<div class="grp">Raw ambient — DEC portal samples on file</div><div class="wd">' + ser.reduce(function (n, r) { return n + r.n; }, 0).toLocaleString() + ' values · ' + yrs.length + ' year' + (yrs.length == 1 ? '' : 's') + ' (' + yrs[0] + (yrs.length > 1 ? '–' + yrs[yrs.length - 1] : '') + ') · ' + ps.map(function (p) { return p.replace(/_/g, ' '); }).join(', ') + '</div>'; }
+    var as = ASSESS[s.site_id] || [];
+    if (as.length && as.some(function (r) { return r.pollutant && r.pollutant !== '—'; })) { back += '<div class="grp">DEC assessment (WI/PWL)</div><table class="ddtab"><thead><tr><th>Use</th><th>Assessment</th><th>Pollutant</th><th>Listed</th><th>Category</th></tr></thead><tbody>' + as.map(function (r) { return '<tr><td class="l">' + esc(r.best_use || '') + '</td><td>' + esc(r.use_assessment || '') + '</td><td>' + esc(r.pollutant || '') + '</td><td>' + esc(r.listing_303d_year || '') + '</td><td class="l">' + esc(r.ir_category || '') + ' ' + esc(r.ir_meaning || '') + '</td></tr>'; }).join('') + '</tbody></table>' + (as[0].source_url ? '<div class="wd"><a href="' + esc(as[0].source_url) + '" target="_blank" rel="noopener">DEC factsheet ' + esc(as[0].dec_segment_id || '') + '</a>' + (as[0].factsheet_update ? ' · updated ' + esc(as[0].factsheet_update) : '') + '</div>' : ''); }
+    var dm = DAM[SITE_DAM[s.site_id]];
+    if (dm) back += '<div class="grp">Impoundment — DEC Inventory of Dams</div><div class="wd">' + esc(dm.dam_name) + ' · ' + esc(dm.hazard_class || '') + ' · <b>' + esc(dm.LastConditionRating || 'not rated') + '</b>' + (dm.LastInspection ? ' (inspected ' + esc(dm.LastInspection) + ')' : '') + (dm.YEARBUILT ? ' · built ' + esc(dm.YEARBUILT) : '') + (dm.normal_storage_acft ? ' · ' + fmt(dm.normal_storage_acft, 0) + ' ac-ft normal storage' : '') + (dm.drainage_area_sqmi ? ' · drains ' + fmt(dm.drainage_area_sqmi, 1) + ' sq mi' : '') + '</div>';
+    var pm = PERMIT[SITE_PERMIT[s.site_id]];
+    if (pm) back += '<div class="grp">EPA ECHO — Clean Water Act permit ' + esc(pm.npdes_id) + '</div><div class="wd">' + esc(pm.facility) + ' · receiving water ' + esc(pm.receiving_water || '—') + ' · design flow ' + (pm.design_flow_mgd != null ? pm.design_flow_mgd + ' MGD' : '—') + ' · compliance ' + esc(pm.compliance_status || '—') + ' · ' + esc(pm.effluent_violations_3yr) + ' effluent exceedances (3 yr) · ' + esc(pm.qtrs_noncompliance_12) + ' of 12 quarters non-compliant' + (pm.dfr_url ? ' · <a href="' + esc(pm.dfr_url) + '" target="_blank" rel="noopener">detailed facility report</a>' : '') + '<br>See the outfall panel below for the discharge series.</div>';
+    var rep = LAKEREP[lakeName(s)] || LAKEREP[s.name];
+    if (rep && rep.report_link) back += '<div class="wd" style="margin-top:8px"><a href="' + esc(rep.report_link) + '" target="_blank" rel="noopener">DEC lake monitoring report</a></div>';
+    if (s.notes) back += '<div class="grp">Notes</div><div class="wd">' + esc(s.notes) + '</div>';
+    back += '<div class="wd" style="margin-top:8px;opacity:.8">' + esc(s.watershed || '') + (s.receiving_water ? ' → ' + esc(s.receiving_water) : '') + ' · ' + esc(s.aquifer_setting || '') + pv(s, 'aquifer_setting') + (s.pws_id ? ' · PWS ' + esc(s.pws_id) : '') + (s.pop_served ? ' · serves ' + fmt(s.pop_served, 0) : '') + ' · ' + (s.lat_approx != null ? (+s.lat_approx).toFixed(4) + ', ' + (+s.lon_approx).toFixed(4) + pv(s, 'lat_approx') : '') + (s.coord_source ? ' (' + esc(s.coord_source) + ')' : '') + '</div>';
+    return '<div class="nc" id="nc-' + s.site_id + '" style="--tx:' + col + '"><button class="sg-btn ghost flip" type="button" aria-expanded="false">details</button>' + front + '<div class="back">' + back + '</div></div>';
+  }
+  var ORDER = ['divide', 'north', 'south', 'potic', 'other'];
+  function drawCards() {
+    var sorted = SITES.slice().sort(function (a, b) { var ta = ORDER.indexOf(txOf(a)), tb = ORDER.indexOf(txOf(b)); if (ta !== tb) return ta - tb; if ((a.downstream_rank || 0) !== (b.downstream_rank || 0)) return (a.downstream_rank || 0) - (b.downstream_rank || 0); return (b.elev_ft_approx || 0) - (a.elev_ft_approx || 0); });
+    $('ncards').innerHTML = sorted.map(cardHTML).join('');
+    $('ncards').addEventListener('click', function (e) { var b = e.target.closest ? e.target.closest('.flip') : null; if (!b) return; var c = b.parentNode; var open = c.classList.toggle('open'); b.textContent = open ? 'close' : 'details'; b.setAttribute('aria-expanded', open ? 'true' : 'false'); });
+  }
+  function openCard(id) { var c = $('nc-' + id); if (!c) return; if (!c.classList.contains('open')) { c.classList.add('open'); var b = c.querySelector('.flip'); b.textContent = 'close'; b.setAttribute('aria-expanded', 'true'); } c.scrollIntoView({ behavior: 'smooth', block: 'start' }); }
+
+  /* ---------- 3 · bugs ---------- */
+  var STREAM_TX = { BASIC_CREEK_STREAM: 'north', BASIC_CREEK_TRIB: 'north', HANNACROIX_CREEK: 'north', TEN_MILE_CREEK: 'south', CATSKILL_CREEK: 'south', POTIC_CREEK: 'potic', COEYMANS_CREEK: 'other', ONESQUETHAW_CREEK: 'other', FOX_CREEK: 'other', SWITZ_KILL: 'other' };
+  var STREAM_ORDER = ['BASIC_CREEK_STREAM', 'HANNACROIX_CREEK', 'TEN_MILE_CREEK', 'CATSKILL_CREEK', 'POTIC_CREEK', 'COEYMANS_CREEK', 'ONESQUETHAW_CREEK', 'FOX_CREEK', 'SWITZ_KILL', 'BASIC_CREEK_TRIB'];
+  var STREAM_NOTE = { BASIC_CREEK_STREAM: 'Basic Creek — north transect; mile 4.7 is below the reservoir, mile 12–16 above it', HANNACROIX_CREEK: 'Hannacroix Creek — below Alcove, to the Hudson at Coeymans', TEN_MILE_CREEK: 'Ten Mile Creek — south transect, Rensselaerville to Catskill Creek', CATSKILL_CREEK: 'Catskill Creek — south transect, Durham to the Hudson at Catskill', POTIC_CREEK: 'Potic Creek — Coxsackie drainage', COEYMANS_CREEK: 'Coeymans Creek — Albany side, on the karst belt', ONESQUETHAW_CREEK: 'Onesquethaw Creek — Albany side, on the karst belt', FOX_CREEK: 'Fox Creek — Berne/Knox, drains to the Schoharie', SWITZ_KILL: 'Switz Kill — Berne, drains to the Schoharie', BASIC_CREEK_TRIB: 'Unnamed tributary to Basic Creek' };
+  var BANDS = [[7.5, 10, 'non-impacted', GREEN], [5, 7.5, 'slightly impacted', AMBER], [2.5, 5, 'moderately impacted', '#f08a4b'], [0, 2.5, 'severely impacted', RED]];
+  function drawBugs() {
+    var st = by(W.stations, 'site'), bio = by(W.biology, 'site');
+    var tip = tipper('bug-tip');
+    var html = STREAM_ORDER.filter(function (k) { return st[k] && bio[k] && bio[k].some(function (b) { return b.bap != null; }); }).map(function (k) {
+      var stations = st[k].filter(function (s) { return s.mile != null; }).sort(function (a, b) { return b.mile - a.mile; });
+      var rows = bio[k].filter(function (b) { return b.bap != null; });
+      var yrs = uniq(rows.map(function (r) { return r.yr; })).sort(); var y0 = yrs[0], y1 = yrs[yrs.length - 1];
+      var col = COL[STREAM_TX[k] || 'other'];
+      var Wd = 1000, H = 170, L = 44, R = 16, T = 12, B = 40, maxMile = Math.max.apply(null, stations.map(function (s) { return s.mile; })), minMile = Math.min.apply(null, stations.map(function (s) { return s.mile; }));
+      var span = Math.max(1, maxMile - minMile); var pad = span * .04; var xs = function (m) { return L + (maxMile + pad - m) / (span + 2 * pad) * (Wd - L - R); }; var ys = function (v) { return T + (10 - v) / 10 * (H - T - B); };
+      var o = '';
+      BANDS.forEach(function (b) { o += '<rect x="' + L + '" y="' + ys(b[1]) + '" width="' + (Wd - L - R) + '" height="' + (ys(b[0]) - ys(b[1])) + '" fill="' + b[3] + '" fill-opacity=".07"/><text class="band" x="' + (L + 6) + '" y="' + (ys(b[1]) + 11) + '">' + b[2] + '</text>'; });
+      [0, 2.5, 5, 7.5, 10].forEach(function (v) { o += '<line class="grid" x1="' + L + '" x2="' + (Wd - R) + '" y1="' + ys(v) + '" y2="' + ys(v) + '"/><text class="lbl dim" x="' + (L - 6) + '" y="' + (ys(v) + 4) + '" text-anchor="end">' + v + '</text>'; });
+      o += '<line class="ax" x1="' + L + '" x2="' + (Wd - R) + '" y1="' + ys(0) + '" y2="' + ys(0) + '"/>';
+      stations.forEach(function (s) { o += '<line x1="' + xs(s.mile) + '" x2="' + xs(s.mile) + '" y1="' + ys(0) + '" y2="' + (ys(0) + 6) + '" class="ax"/><text class="lbl dim" x="' + xs(s.mile) + '" y="' + (ys(0) + 19) + '" text-anchor="middle">mi ' + s.mile + '</text>'; });
+      o += '<text class="lbl dim" x="' + L + '" y="' + (H - 4) + '">← upstream</text><text class="lbl dim" x="' + (Wd - R) + '" y="' + (H - 4) + '" text-anchor="end">mouth →</text>';
+      var latest = {}; rows.forEach(function (r) { if (!latest[r.code] || r.yr > latest[r.code].yr) latest[r.code] = r; });
+      rows.sort(function (a, b) { return a.yr - b.yr; }).forEach(function (r) { var s = st[k].filter(function (q) { return q.code === r.code; })[0]; if (!s || s.mile == null) return; var t = y1 > y0 ? (r.yr - y0) / (y1 - y0) : 1; var c = mix(col, .65 * (1 - t)); var isL = latest[r.code] === r; var band = BANDS.filter(function (b) { return r.bap >= b[0] && r.bap <= b[1]; })[0]; var tp = '<b>' + esc(r.code) + '</b> · ' + r.yr + '<br>BAP <b>' + fmt(r.bap, 2) + '</b> — ' + (band ? band[2] : '') + '<br>' + (r.hbi != null ? 'HBI ' + fmt(r.hbi, 2) + ' · ' : '') + (r.ept != null ? 'EPT ' + fmt(r.ept, 0) + ' · ' : '') + (r.rich != null ? 'richness ' + fmt(r.rich, 0) + ' · ' : '') + (r.nbip != null ? 'NBI-P ' + fmt(r.nbip, 2) : '') + (r.pma != null ? ' · PMA ' + fmt(r.pma, 0) + '%' : '') + (r.habitat != null ? '<br>habitat ' + fmt(r.habitat, 0) + '/200' : '') + '<br>' + (s.lat != null ? s.lat.toFixed(4) + ', ' + s.lon.toFixed(4) : ''); o += '<circle cx="' + xs(s.mile) + '" cy="' + ys(r.bap) + '" r="' + (isL ? 6 : 4.5) + '" fill="' + c + '" stroke="' + (isL ? '#fff' : '#00004d') + '" stroke-width="' + (isL ? 2 : 1.5) + '" data-tip="' + esc(tp) + '"/>' + (isL ? '<text class="lbl" x="' + (xs(s.mile) + (xs(s.mile) > Wd - 70 ? -9 : 9)) + '" y="' + (ys(r.bap) + 4) + '"' + (xs(s.mile) > Wd - 70 ? ' text-anchor="end"' : '') + '>' + r.yr + '</text>' : ''); });
+      var tableRows = stations.map(function (s) { return '<tr><td class="l">' + esc(s.code) + ' <span style="opacity:.7">mi ' + s.mile + '</span></td>' + yrs.map(function (y) { var r = rows.filter(function (q) { return q.code === s.code && q.yr === y; })[0]; return '<td>' + (r ? fmt(r.bap, 2) : '') + '</td>'; }).join('') + '</tr>'; }).join('');
+      return '<div class="bug" style="--tx:' + col + '"><div class="t"><b>' + esc(STREAM_NOTE[k] || k) + '</b><span>' + stations.length + ' stations · ' + rows.length + ' visits · ' + y0 + '–' + y1 + '</span></div><div class="sg-chart" style="border:none;background:none;padding:0"><svg viewBox="0 0 ' + Wd + ' ' + H + '" role="img" aria-label="BAP score by river mile">' + o + '</svg></div><details class="sg-more"><summary>as a table</summary><table class="ddtab"><thead><tr><th>Station</th>' + yrs.map(function (y) { return '<th>' + y + '</th>'; }).join('') + '</tr></thead><tbody>' + tableRows + '</tbody></table></details></div>';
+    }).join('');
+    $('bugs').innerHTML = html; bindTips($('bugs'), tip, 'data-tip');
+    $('bug-legend').innerHTML = BANDS.map(function (b) { return '<span><i class="sq" style="color:' + b[3] + '"></i>' + b[2] + ' (' + b[0] + '–' + b[1] + ')</span>'; }).join('') + '<span><i style="color:#fff;border-color:#fff;background:none"></i>ringed = latest visit</span>';
+  }
+
+  /* ---------- 4 · reservoir ---------- */
+  var LAKE_ORDER = ['BASIC_CREEK_RES', 'ALCOVE_RES', 'LAWSON_LAKE', 'MYOSOTIS_LAKE', 'ONDERDONK_LAKE', 'POTIC_RES', 'THOMPSONS_LAKE', 'WARNERS_LAKE', 'SLEEPY_HOLLOW_LAKE', 'VLY_CREEK_RES', 'HELDERBERG_LAKE'];
+  var LAKE_NAME = { VLY_CREEK_RES: 'Vly Creek Reservoir', HELDERBERG_LAKE: 'Helderberg Lake' };
+  function drawLakes() {
+    var Y0 = 1989, Y1 = 2025, Wd = 300, H = 120, L = 30, R = 8, T = 8, B = 20, lo = 3, hi = 100;
+    var xs = function (y) { return L + (y - Y0) / (Y1 - Y0) * (Wd - L - R); }, ys = function (v) { return T + (1 - (Math.log10(v) - Math.log10(lo)) / (Math.log10(hi) - Math.log10(lo))) * (H - T - B); };
+    var tip = tipper('gw-tip');
+    $('lakes').innerHTML = LAKE_ORDER.filter(function (k) { return LAKESUM[k]; }).map(function (k) {
+      var rows = LAKESUM[k].filter(function (l) { return l.tp_summer_mean_ugL != null; }).sort(function (a, b) { return a.yr - b.yr; }); if (!rows.length) return '';
+      var s = S[k], col = s ? COL[txOf(s)] : COL.other, name = s ? lakeName(s) : LAKE_NAME[k] || k;
+      var o = '';
+      [5, 10, 20, 50, 100].forEach(function (v) { o += '<line class="grid" x1="' + L + '" x2="' + (Wd - R) + '" y1="' + ys(v) + '" y2="' + ys(v) + '"/><text class="lbl dim" x="' + (L - 4) + '" y="' + (ys(v) + 3) + '" text-anchor="end" font-size="9">' + v + '</text>'; });
+      o += '<line class="lim" x1="' + L + '" x2="' + (Wd - R) + '" y1="' + ys(20) + '" y2="' + ys(20) + '"/><text class="lim-lbl" x="' + (L + 3) + '" y="' + (ys(20) - 3) + '">20 guidance</text>';
+      [1990, 2000, 2010, 2020].forEach(function (y) { o += '<text class="lbl dim" x="' + xs(y) + '" y="' + (H - 6) + '" text-anchor="middle" font-size="9">' + y + '</text>'; });
+      if (rows.length > 1) o += '<polyline fill="none" stroke="' + col + '" stroke-width="1.5" stroke-opacity=".45" points="' + rows.map(function (l) { return xs(l.yr) + ',' + ys(l.tp_summer_mean_ugL); }).join(' ') + '"/>';
+      rows.forEach(function (l) { o += '<circle cx="' + xs(l.yr) + '" cy="' + ys(l.tp_summer_mean_ugL) + '" r="4.5" fill="' + col + '" stroke="#00004d" stroke-width="1.5" data-tip="' + esc('<b>' + name + '</b> ' + l.yr + '<br>summer TP ' + fmt(l.tp_summer_mean_ugL, 1) + ' µg/L (n=' + (l.tp_n || '?') + ', max ' + fmt(l.tp_max_ugL, 1) + ')' + (l.chla_summer_mean_ugL != null ? '<br>chl-a ' + fmt(l.chla_summer_mean_ugL, 1) + ' µg/L' : '') + (l.secchi_summer_mean_m != null ? ' · Secchi ' + fmt(l.secchi_summer_mean_m, 2) + ' m' : '') + (l.do_min_mgL != null ? '<br>DO min ' + fmt(l.do_min_mgL, 2) + ' mg/L' : '')) + '"/>'; });
+      var last = rows[rows.length - 1];
+      return '<div class="sg-chart" style="border-left:4px solid ' + col + '"><div class="cap">' + esc(name) + '<span>' + rows.length + ' yr · newest ' + last.yr + ': ' + fmt(last.tp_summer_mean_ugL, 0) + ' µg/L</span></div><svg viewBox="0 0 ' + Wd + ' ' + H + '">' + o + '</svg></div>';
+    }).join('');
+    bindTips($('lakes'), tip, 'data-tip');
+  }
+  function drawProfiles() {
+    var Wd = 480, H = 240, L = 40, R = 14, T = 14, B = 34, dmax = 4.2, xmax = 14;
+    var xs = function (v) { return L + v / xmax * (Wd - L - R); }, ys = function (d) { return T + d / dmax * (H - T - B); };
+    var dates = uniq(W.bc_profiles.map(function (p) { return p.date; })).sort();
+    var o = '';
+    [0, 2, 4, 6, 8, 10, 12, 14].forEach(function (v) { o += '<line class="grid" x1="' + xs(v) + '" x2="' + xs(v) + '" y1="' + T + '" y2="' + ys(dmax) + '"/><text class="lbl dim" x="' + xs(v) + '" y="' + (H - 18) + '" text-anchor="middle">' + v + '</text>'; });
+    [0, 1, 2, 3, 4].forEach(function (d) { o += '<text class="lbl dim" x="' + (L - 6) + '" y="' + (ys(d) + 4) + '" text-anchor="end">' + d + ' m</text>'; });
+    o += '<line class="lim" x1="' + xs(4) + '" x2="' + xs(4) + '" y1="' + T + '" y2="' + ys(dmax) + '"/><text class="lim-lbl" x="' + (xs(4) - 4) + '" y="' + (ys(dmax) - 4) + '" text-anchor="end">4 mg/L minimum</text>';
+    o += '<text class="lbl" x="' + (Wd / 2) + '" y="' + (H - 4) + '" text-anchor="middle">dissolved oxygen, mg/L</text>';
+    var tip = tipper('gw-tip'), lg = '';
+    dates.forEach(function (d, i) { var rows = W.bc_profiles.filter(function (p) { return p.date === d && p.dissolved_oxygen != null; }).sort(function (a, b) { return a.depth_m - b.depth_m; }); if (!rows.length) return; var yr = d.slice(0, 4); var base = yr === '2013' ? COL.north : COL.other; var k = dates.filter(function (q) { return q.slice(0, 4) === yr; }); var t = k.indexOf(d) / Math.max(1, k.length - 1); var c = mix(base, .5 * (1 - t)); o += '<polyline fill="none" stroke="' + c + '" stroke-width="2" points="' + rows.map(function (p) { return xs(p.dissolved_oxygen) + ',' + ys(p.depth_m); }).join(' ') + '"/>'; rows.forEach(function (p) { o += '<circle cx="' + xs(p.dissolved_oxygen) + '" cy="' + ys(p.depth_m) + '" r="3.5" fill="' + c + '" stroke="#00004d" stroke-width="1" data-tip="' + esc('<b>' + d + '</b> · ' + p.depth_m + ' m<br>DO ' + fmt(p.dissolved_oxygen, 2) + ' mg/L · ' + fmt(p.temperature, 1) + ' °C · pH ' + fmt(p.ph, 2) + ' · ' + fmt(p.specific_conductance, 0) + ' µS/cm' + (p.oxidation_reduction_potential != null ? ' · ORP ' + fmt(p.oxidation_reduction_potential, 0) : '')) + '"/>'; }); var mn = rows.reduce(function (a, p) { return p.dissolved_oxygen < a.dissolved_oxygen ? p : a; }, rows[0]); if (mn.dissolved_oxygen < 1) o += '<text class="lbl" x="' + (xs(mn.dissolved_oxygen) + 7) + '" y="' + (ys(mn.depth_m) + (yr === '2013' ? -6 : 12)) + '">' + fmt(mn.dissolved_oxygen, 2) + ' mg/L · ' + d + '</text>'; lg += '<span><i class="line" style="color:' + c + '"></i>' + d + '</span>'; });
+    $('prof').innerHTML = '<svg viewBox="0 0 ' + Wd + ' ' + H + '">' + o + '</svg><div class="lg">' + lg + '</div>';
+    bindTips($('prof'), tip, 'data-tip');
+  }
+  function drawTMDL() {
+    var rows = W.tmdl.filter(function (r) { return typeof r.value === 'number' && typeof r.unit === 'number' && r.item !== 'TOTAL'; }); /* LOAD ALLOCATION block: value = current lbs/yr, unit column = allocated */
+    var total = W.tmdl.filter(function (r) { return r.item === 'TOTAL'; })[0];
+    var Wd = 480, H = 36 + rows.length * 34, L = 130, R = 60, mx = Math.max.apply(null, rows.map(function (r) { return Math.max(r.value, r.unit); }));
+    var xs = function (v) { return L + v / mx * (Wd - L - R); };
+    var o = '<text class="lbl dim" x="' + L + '" y="12">current (modelled) vs allocated, lbs/yr</text>';
+    rows.forEach(function (r, i) { var y = 22 + i * 34; o += '<text class="lbl" x="' + (L - 8) + '" y="' + (y + 12) + '" text-anchor="end">' + esc(r.item) + '</text><rect x="' + L + '" y="' + y + '" width="' + Math.max(0, xs(r.value) - L) + '" height="9" rx="2" fill="' + COL.north + '"/><text class="lbl dim" x="' + (xs(r.value) + 5) + '" y="' + (y + 8) + '">' + fmt(r.value, 0) + pv(r, 'value') + '</text><rect x="' + L + '" y="' + (y + 12) + '" width="' + Math.max(0, xs(r.unit) - L) + '" height="9" rx="2" fill="' + GREY + '"/><text class="lbl dim" x="' + (xs(r.unit) + 5) + '" y="' + (y + 20) + '">' + fmt(r.unit, 0) + '</text>'; });
+    $('tmdl').innerHTML = '<svg viewBox="0 0 ' + Wd + ' ' + H + '">' + o + '</svg><div class="lg"><span><i class="sq" style="color:' + COL.north + '"></i>current, as modelled</span><span><i class="sq" style="color:' + GREY + '"></i>allocated</span></div>';
+    var gw = W.tmdl.filter(function (r) { return /Groundwater/.test(r.item); })[0], rt = W.tmdl.filter(function (r) { return /residence/i.test(r.item); })[0];
+    $('tmdl-note').innerHTML = (total ? 'Total ' + fmt(total.value, 0) + ' → ' + fmt(total.unit, 0) + ' lbs/yr, a 42% cut. ' : '') + (gw ? fmt(gw.value, 0) + ' lbs/yr (' + Math.round(gw.value / total.value * 100) + '%) is attributed to groundwater transport, two-thirds of it from agriculture. ' : '') + (rt ? 'Hydraulic residence time ' + rt.value + ' yr — the reservoir is a five-week mirror of its watershed. ' : '') + 'Built with no observed phosphorus data; validated afterward on five samples each in 2004 and 2005 (42 and 55 µg/L against a simulated 31). Internal loading from anoxic sediment was set to zero. <a href="https://extapps.dec.ny.gov/docs/water_pdf/tmdlbasicck.pdf" target="_blank" rel="noopener">TMDL, March 2013</a>.';
+  }
+  function bloomLakes() { var names = uniq(Object.keys(HABHIST).concat(W.habs_2025.map(function (h) { return h.waterbody; }))); return names.filter(function (n) { return SITES.some(function (s) { return lakeName(s) === n; }) || /Coxsackie|Hollister/.test(n); }).sort(function (a, b) { return a === 'Basic Creek Reservoir' ? -1 : b === 'Basic Creek Reservoir' ? 1 : a.localeCompare(b); }); }
+  function drawBloom(name) {
+    var Wd = 900, L = 60, R = 16, T = 10, rowH = 18, years = []; for (var y = 2012; y <= 2025; y++) years.push(y);
+    var H = T + years.length * rowH + 30;
+    var xs = function (doy) { return L + (Math.min(Math.max(doy, 152), 334) - 152) / (334 - 152) * (Wd - L - R); };
+    var doy = function (d) { var t = new Date(d); return (Date.UTC(t.getUTCFullYear(), t.getUTCMonth(), t.getUTCDate()) - Date.UTC(t.getUTCFullYear(), 0, 1)) / 864e5; };
+    var hist = HABHIST[name] || [], h25 = W.habs_2025.filter(function (h) { return h.waterbody === name; })[0];
+    var o = '';
+    [['Jun', 152], ['Jul', 182], ['Aug', 213], ['Sep', 244], ['Oct', 274], ['Nov', 305]].forEach(function (m) { o += '<line class="grid" x1="' + xs(m[1]) + '" x2="' + xs(m[1]) + '" y1="' + T + '" y2="' + (H - 26) + '"/><text class="lbl dim" x="' + xs(m[1]) + '" y="' + (H - 10) + '">' + m[0] + '</text>'; });
+    years.forEach(function (y, i) { var yy = T + i * rowH; o += '<text class="lbl dim" x="' + (L - 8) + '" y="' + (yy + 12) + '" text-anchor="end">' + y + '</text>'; var rows = hist.filter(function (r) { return +r.Year === y; }); if (y === 2025 && h25) { o += '<rect x="' + xs(doy(h25.first_report)) + '" y="' + (yy + 3) + '" width="' + Math.max(3, xs(doy(h25.last_report)) - xs(doy(h25.first_report))) + '" height="10" rx="3" fill="' + GREY + '" fill-opacity=".8"><title>2025: ' + h25.n_reports + ' reports, ' + h25.first_report + ' → ' + h25.last_report + '</title></rect><text class="lbl dim" x="' + (xs(doy(h25.last_report)) > Wd - 300 ? xs(doy(h25.first_report)) - 6 : xs(doy(h25.last_report)) + 6) + '" y="' + (yy + 12) + '"' + (xs(doy(h25.last_report)) > Wd - 300 ? ' text-anchor="end"' : '') + '>' + h25.n_reports + ' report' + (h25.n_reports == 1 ? '' : 's') + ' · season window, weekly detail not in record</text>'; } else if (rows.length) rows.forEach(function (r) { var c = r['Bloom Type'] === 'HT' ? RED : r['Bloom Type'] === 'C' ? AMBER : GREY; var a = xs(doy(new Date(r['Date of First Listing']))), b = xs(doy(new Date(r['Date of Last Listing']))); o += '<rect x="' + a + '" y="' + (yy + 3) + '" width="' + Math.max(3, b - a) + '" height="10" rx="3" fill="' + c + '" fill-opacity=".85"><title>' + y + ': ' + esc(r.bloom_type_meaning) + ', ' + r['Number of Weeks on DEC Notification List'] + ' weeks listed</title></rect><text class="lbl dim" x="' + (b > Wd - 230 ? a - 6 : b + 6) + '" y="' + (yy + 12) + '"' + (b > Wd - 230 ? ' text-anchor="end"' : '') + '>' + esc(r.bloom_type_meaning) + ' · ' + r['Number of Weeks on DEC Notification List'] + ' wk</text>'; }); else o += '<text class="lbl dim" x="' + (L + 4) + '" y="' + (yy + 12) + '" font-style="italic" opacity=".45">' + (y >= 2019 && y <= 2024 ? 'not in record (DEC 2019–24 archive not pulled)' : 'no listing') + '</text>'; });
+    $('bloom').innerHTML = '<svg viewBox="0 0 ' + Wd + ' ' + H + '">' + o + '</svg>';
+  }
+  function drawToxin(name) {
+    var site = SITES.filter(function (s) { return lakeName(s) === name; })[0]; var rows = site ? W.hab_toxins.filter(function (t) { return t.site_id === site.site_id && t.PARAMETER_NAME === 'microcystin'; }) : [];
+    if (!rows.length) { $('toxin').innerHTML = '<p class="sg-det" style="padding:6px">No shoreline microcystin results on file for ' + esc(name) + '.</p>'; return; }
+    var dates = rows.map(function (r) { return r.dt; }).sort(); var d0 = new Date(dates[0]).getTime(), d1 = new Date(dates[dates.length - 1]).getTime(); if (d1 - d0 < 365 * 864e5) { d0 -= 180 * 864e5; d1 += 180 * 864e5; }
+    var Wd = 900, H = 200, L = 50, R = 16, T = 12, B = 30, lo = 0.1, hi = 10000;
+    var xs = function (d) { return L + (new Date(d).getTime() - d0) / (d1 - d0) * (Wd - L - R); }, ys = function (v) { return T + (1 - (Math.log10(v) - Math.log10(lo)) / (Math.log10(hi) - Math.log10(lo))) * (H - T - B); };
+    var o = '';
+    [0.1, 1, 10, 100, 1000, 10000].forEach(function (v) { o += '<line class="grid" x1="' + L + '" x2="' + (Wd - R) + '" y1="' + ys(v) + '" y2="' + ys(v) + '"/><text class="lbl dim" x="' + (L - 6) + '" y="' + (ys(v) + 4) + '" text-anchor="end">' + v.toLocaleString() + '</text>'; });
+    o += '<line class="lim" x1="' + L + '" x2="' + (Wd - R) + '" y1="' + ys(4) + '" y2="' + ys(4) + '"/><text class="lim-lbl" x="' + (Wd - R) + '" y="' + (ys(4) - 3) + '" text-anchor="end">4 µg/L guidance</text>';
+    var yr0 = new Date(d0).getUTCFullYear(), yr1 = new Date(d1).getUTCFullYear(); for (var y = yr0; y <= yr1; y++) { var t = Date.UTC(y, 0, 1); if (t >= d0 && t <= d1) o += '<text class="lbl dim" x="' + xs(t) + '" y="' + (H - 8) + '" text-anchor="middle">' + y + '</text>'; }
+    var tip = tipper('gw-tip');
+    rows.forEach(function (r) { var nd = r.RESULT_QUALIFIER === 'U' || r.val == null; var v = nd ? lo : Math.max(lo, r.val); o += '<circle cx="' + xs(r.dt) + '" cy="' + ys(v) + '" r="5" fill="' + (nd ? 'none' : (r.val >= 4 ? RED : GREEN)) + '" stroke="' + (nd ? GREY : '#00004d') + '" stroke-width="1.5" data-tip="' + esc('<b>' + r.dt + '</b> · ' + esc(r.SAMPLE_LOCATION || '') + '<br>microcystin ' + (nd ? 'not detected' : fmt(r.val, 1) + ' µg/L')) + '"/>'; if (!nd && r.val >= 50) o += '<text class="lbl" x="' + (xs(r.dt) + 8) + '" y="' + (ys(v) + 4) + '">' + fmt(r.val, 0) + '</text>'; });
+    $('toxin').innerHTML = '<svg viewBox="0 0 ' + Wd + ' ' + H + '">' + o + '</svg><div class="lg"><span><i style="color:' + RED + '"></i>above guidance</span><span><i style="color:' + GREEN + '"></i>below</span><span><i class="hollow" style="color:' + GREY + '"></i>not detected</span></div>';
+    bindTips($('toxin'), tip, 'data-tip');
+  }
+
+  /* ---------- 5 · groundwater ---------- */
+  function drawGroundwater() {
+    var wells = W.wells.filter(function (w) { return w.lat != null; });
+    var tip = tipper('gw-tip');
+    var wtip = function (w) { return '<b>USGS ' + esc(w.sid) + '</b> · ' + esc(w.zone) + '<br>' + (w.yr || '') + ' · ' + fmt(w.km_from_ref, 1) + ' km from the divide' + (w.aquifer ? ' · ' + esc(w.aquifer) : '') + '<br>' + ['sodium_mgL|Na|mg/L', 'chloride_mgL|Cl|mg/L', 'hardness_mgL|hardness|mg/L', 'ph|pH|', 'iron_ugL|Fe|µg/L', 'manganese_ugL|Mn|µg/L', 'arsenic_ugL|As|µg/L', 'lithium_ugL|Li|µg/L', 'boron_ugL|B|µg/L', 'radon_pCiL|radon|pCi/L', 'nitrate_mgL_N|NO₃-N|mg/L', 'methane_mgL|CH₄|mg/L'].map(function (k) { var a = k.split('|'); return w[a[0]] != null ? a[1] + ' ' + fmt(w[a[0]]) + (a[2] ? ' ' + a[2] : '') : null; }).filter(Boolean).join(' · '); };
+    /* Na vs Cl */
+    var Wd = 480, H = 300, L = 44, R = 12, T = 12, B = 34, lo = 1, hi = 20000;
+    var lg = function (v) { return Math.log10(Math.max(lo, v)); };
+    var xs = function (v) { return L + (lg(v) - lg(lo)) / (lg(hi) - lg(lo)) * (Wd - L - R); }, ys = function (v) { return T + (1 - (lg(v) - lg(lo)) / (lg(hi) - lg(lo))) * (H - T - B); };
+    var o = '';
+    [1, 10, 100, 1000, 10000].forEach(function (v) { o += '<line class="grid" x1="' + xs(v) + '" x2="' + xs(v) + '" y1="' + T + '" y2="' + ys(lo) + '"/><line class="grid" x1="' + L + '" x2="' + (Wd - R) + '" y1="' + ys(v) + '" y2="' + ys(v) + '"/><text class="lbl dim" x="' + xs(v) + '" y="' + (H - 18) + '" text-anchor="middle">' + v.toLocaleString() + '</text><text class="lbl dim" x="' + (L - 5) + '" y="' + (ys(v) + 4) + '" text-anchor="end">' + v.toLocaleString() + '</text>'; });
+    o += '<line stroke="rgba(255,255,255,.35)" stroke-dasharray="3 3" x1="' + xs(1) + '" y1="' + ys(1) + '" x2="' + xs(10000) + '" y2="' + ys(10000) + '"/><text class="lbl dim" x="' + (xs(3000) + 4) + '" y="' + (ys(3000) - 6) + '">Na = Cl (salt line)</text>';
+    o += '<text class="lbl" x="' + (Wd / 2) + '" y="' + (H - 4) + '" text-anchor="middle">sodium, mg/L</text><text class="lbl" transform="rotate(-90 12 ' + (H / 2) + ')" x="12" y="' + (H / 2) + '" text-anchor="middle">chloride, mg/L</text>';
+    o += '<line stroke="' + RED + '" stroke-dasharray="5 4" x1="' + L + '" x2="' + (Wd - R) + '" y1="' + ys(250) + '" y2="' + ys(250) + '"/><text class="lim-lbl" x="' + (Wd - R) + '" y="' + (ys(250) - 3) + '" text-anchor="end">Cl 250 secondary MCL</text>';
+    wells.filter(function (w) { return w.sodium_mgL != null && w.chloride_mgL != null; }).forEach(function (w) { var c = ZONECOL[w.zone] || GREY; var pl = /plateau/.test(w.zone); o += '<circle cx="' + xs(w.sodium_mgL) + '" cy="' + ys(w.chloride_mgL) + '" r="' + (pl ? 6 : 4.5) + '" fill="' + c + '" fill-opacity="' + (pl ? 1 : .8) + '" stroke="' + (pl ? '#fff' : '#00004d') + '" stroke-width="1.5" data-tip="' + esc(wtip(w)) + '"/>'; });
+    $('gw1').innerHTML = '<svg viewBox="0 0 ' + Wd + ' ' + H + '">' + o + '</svg>';
+    /* radon strip */
+    var zones = Object.keys(ZONECOL); var H2 = 40 + zones.length * 46, L2 = 150, lo2 = 50, hi2 = 5000;
+    var xr = function (v) { return L2 + (lg(v) - lg(lo2)) / (lg(hi2) - lg(lo2)) * (Wd - L2 - R); };
+    var o2 = '';
+    [100, 300, 1000, 3000].forEach(function (v) { o2 += '<line class="grid" x1="' + xr(v) + '" x2="' + xr(v) + '" y1="10" y2="' + (H2 - 26) + '"/><text class="lbl dim" x="' + xr(v) + '" y="' + (H2 - 10) + '" text-anchor="middle">' + v.toLocaleString() + '</text>'; });
+    o2 += '<line class="lim" x1="' + xr(300) + '" x2="' + xr(300) + '" y1="6" y2="' + (H2 - 26) + '"/><text class="lim-lbl" x="' + (xr(300) + 4) + '" y="14">300 proposed MCL</text>';
+    zones.forEach(function (z, i) { var y = 34 + i * 46; var rows = wells.filter(function (w) { return w.zone === z && w.radon_pCiL != null; }); o2 += '<text class="lbl" x="' + (L2 - 8) + '" y="' + (y + 4) + '" text-anchor="end">' + esc(z.replace(' / ', ' · ')) + '</text><text class="lbl dim" x="' + (L2 - 8) + '" y="' + (y + 16) + '" text-anchor="end">' + rows.length + ' well' + (rows.length == 1 ? '' : 's') + '</text>'; rows.forEach(function (w, j) { o2 += '<circle cx="' + xr(Math.max(lo2, Math.min(hi2, w.radon_pCiL))) + '" cy="' + (y + ((j % 3) - 1) * 7) + '" r="5" fill="' + ZONECOL[z] + '" fill-opacity=".9" stroke="#00004d" stroke-width="1.2" data-tip="' + esc(wtip(w)) + '"/>'; }); });
+    $('gw2').innerHTML = '<svg viewBox="0 0 ' + Wd + ' ' + H2 + '">' + o2 + '</svg>';
+    bindTips($('gw1'), tip, 'data-tip'); bindTips($('gw2'), tip, 'data-tip');
+    $('gw-legend').innerHTML = zones.map(function (z) { return '<span><i style="color:' + ZONECOL[z] + '"></i>' + esc(z) + '</span>'; }).join('') + '<span>ringed white = plateau well</span>';
+    var pl = wells.filter(function (w) { return /plateau/.test(w.zone); }).sort(function (a, b) { return a.km_from_ref - b.km_from_ref; });
+    $('gw-table').innerHTML = '<table class="ddtab"><thead><tr><th>USGS site</th><th>km</th><th>year</th><th>pH</th><th>Na mg/L</th><th>Cl mg/L</th><th>hardness</th><th>Li µg/L</th><th>B µg/L</th><th>As µg/L</th><th>Fe µg/L</th><th>Mn µg/L</th><th>radon pCi/L</th><th>NO₃-N</th></tr></thead><tbody>' + pl.map(function (w) { return '<tr><td class="l"><a href="https://waterdata.usgs.gov/monitoring-location/USGS-' + esc(w.sid) + '/" target="_blank" rel="noopener">' + esc(w.sid) + '</a></td><td>' + fmt(w.km_from_ref, 1) + '</td><td>' + (w.yr || '') + '</td><td>' + fmt(w.ph, 1) + '</td><td>' + fmt(w.sodium_mgL, 0) + '</td><td>' + fmt(w.chloride_mgL, 1) + '</td><td>' + fmt(w.hardness_mgL, 0) + '</td><td>' + fmt(w.lithium_ugL, 0) + '</td><td>' + fmt(w.boron_ugL, 0) + '</td><td>' + fmt(w.arsenic_ugL, 1) + '</td><td>' + fmt(w.iron_ugL, 0) + '</td><td>' + fmt(w.manganese_ugL, 0) + '</td><td>' + fmt(w.radon_pCiL, 0) + '</td><td>' + fmt(w.nitrate_mgL_N, 2) + '</td></tr>'; }).join('') + '</tbody></table><p class="sg-note">One sample per well, most from a single year; the 1992 cluster near Oak Hill with chloride in the thousands is a salt-storage study, not ambient water.</p>';
+  }
+
+  /* ---------- 6 · outfalls ---------- */
+  function drawOutfalls() {
+    var dmr = by(W.dmr, 'permit');
+    var perms = W.permits.filter(function (p) { return dmr[p.npdes_id] && +p.km_from_ref <= 24; }).sort(function (a, b) { return a.km_from_ref - b.km_from_ref; });
+    var tip = tipper('of-tip');
+    var UNIT_PREF = ['mg/L', 'ug/L', 'ng/L', 'MGD', 'gal/d', '#/100mL', 'CFU/100mL', 'SU', 'deg C', 'deg F', 'mL/L', '%', 'lb/d'];
+    function famOptions(rows) { var fams = uniq(rows.filter(function (r) { return r.src === 'DMR' && r.u; }).map(function (r) { return r.fam; })); var pref = ['phosphorus', 'ammonia', 'BOD', 'TSS', 'fecal coliform', 'flow', 'DO', 'pH', 'chlorine', 'nitrate/nitrite', 'nitrogen (TKN)']; return fams.sort(function (a, b) { var ia = pref.indexOf(a), ib = pref.indexOf(b); if (ia < 0) ia = 99; if (ib < 0) ib = 99; return ia - ib || a.localeCompare(b); }); }
+    function chart(p, fam) {
+      var rows = dmr[p.npdes_id].filter(function (r) { return r.fam === fam; });
+      var units = uniq(rows.filter(function (r) { return r.src === 'DMR' && r.u; }).map(function (r) { return r.u; })).sort(function (a, b) { var ia = UNIT_PREF.indexOf(a), ib = UNIT_PREF.indexOf(b); return (ia < 0 ? 99 : ia) - (ib < 0 ? 99 : ib); });
+      var unit = units[0]; if (!unit) return '<p class="sg-det">No unit-resolved rows for this parameter.</p>';
+      var outs = uniq(rows.map(function (r) { return r.out; })).sort(); var out = outs[0];
+      var ser = rows.filter(function (r) { return r.src === 'DMR' && r.u === unit && r.out === out; }).sort(function (a, b) { return a.fy - b.fy; });
+      var lt = rows.filter(function (r) { return r.src === 'LT' && r.out === out && /mg\/L/.test(r.u) && /mg\/L/.test(unit); }).sort(function (a, b) { return a.fy - b.fy; });
+      var unitless = rows.filter(function (r) { return r.src === 'DMR' && !r.u && r.out === out; }).length;
+      var Y0 = 2007, Y1 = 2026, Wd = 900, H = 190, L = 56, R = 16, T = 14, B = 30;
+      /* y-scale follows the DATA (medians, maxima, Loading Tool means); the limit is drawn where it falls and, when it is
+         far above the data (Haleon's 6.8 mg/L phosphorus limit over a 0.02–0.24 median), it is pinned to the top edge and
+         labelled as off scale — otherwise the generous limit flattens the very movement the panel exists to show. */
+      var vals = ser.map(function (r) { return r.max; }).concat(ser.map(function (r) { return r.med; }), lt.map(function (r) { return r.med; })).filter(function (v) { return v != null && !isNaN(v); });
+      var dmx = Math.max.apply(null, vals.concat([0.001]));
+      var limv = ser.filter(function (r) { return r.lim != null; }).map(function (r) { return r.lim; });
+      var lmx = limv.length ? Math.max.apply(null, limv) : null;
+      var mx = (lmx != null && lmx <= dmx * 2.5 ? Math.max(dmx, lmx) : dmx) * 1.12; var limOff = lmx != null && lmx > mx;
+      var xs = function (y) { return L + (y - Y0) / (Y1 - Y0) * (Wd - L - R); }, ys = function (v) { return T + (1 - v / mx) * (H - T - B); };
+      var o = '';
+      for (var y = Y0; y <= Y1; y++) { if (y % 2) continue; o += '<text class="lbl dim" x="' + xs(y) + '" y="' + (H - 8) + '" text-anchor="middle">' + y + '</text>'; }
+      o += '<rect x="' + xs(2017) + '" y="' + T + '" width="' + (xs(2019) - xs(2017)) + '" height="' + (ys(0) - T) + '" fill="rgba(255,255,255,.05)"/><text class="lbl dim" x="' + xs(2018) + '" y="' + (T + 10) + '" text-anchor="middle" font-size="9">EPA FY17–18 gap</text>';
+      [0, .25, .5, .75, 1].forEach(function (f) { var v = mx / 1.12 * f; if (limOff && f === 1) return; o += '<line class="grid" x1="' + L + '" x2="' + (Wd - R) + '" y1="' + ys(v) + '" y2="' + ys(v) + '"/><text class="lbl dim" x="' + (L - 6) + '" y="' + (ys(v) + 4) + '" text-anchor="end">' + fmt(v) + '</text>'; });
+      o += '<text class="lbl" transform="rotate(-90 12 ' + (H / 2) + ')" x="12" y="' + (H / 2) + '" text-anchor="middle">' + esc(unit) + '</text>';
+      /* limit as a step line */
+      var lims = ser.filter(function (r) { return r.lim != null; }); if (lims.length) { var d = ''; lims.forEach(function (r, i) { var x0 = xs(r.fy) - (xs(1) - xs(0)) / 2, x1 = xs(r.fy) + (xs(1) - xs(0)) / 2; var yl = Math.max(T, ys(r.lim)); d += (i ? ' L' : 'M') + x0 + ' ' + yl + ' L' + x1 + ' ' + yl; }); o += '<path class="lim" fill="none" d="' + d + '"/><text class="lim-lbl" x="' + (Wd - R) + '" y="' + (Math.max(T, ys(lims[lims.length - 1].lim)) - 4) + '" text-anchor="end">limit ' + fmt(lims[lims.length - 1].lim) + (limOff ? ' — off scale, above this chart' : '') + '</text>'; }
+      var col = COL[txOf(S[Object.keys(SITE_PERMIT).filter(function (k) { return SITE_PERMIT[k] === p.npdes_id; })[0]] || {}) ] || (/Catskill|Durham/i.test(p.transect || '') ? COL.south : /Hannacroix|Basic/i.test(p.transect || '') ? COL.north : COL.other);
+      ser.forEach(function (r) { if (r.max != null) o += '<circle cx="' + xs(r.fy) + '" cy="' + ys(r.max) + '" r="3.5" fill="' + col + '" fill-opacity=".35" data-tip="' + esc('<b>FY' + r.fy + '</b> maximum ' + fmt(r.max) + ' ' + unit + (r.e90 ? ' · ' + r.e90 + ' exceedance' + (r.e90 == 1 ? '' : 's') : '')) + '"/>'; });
+      var pts = ser.filter(function (r) { return r.med != null; }); if (pts.length > 1) o += '<polyline fill="none" stroke="' + col + '" stroke-width="2" points="' + pts.map(function (r) { return xs(r.fy) + ',' + ys(r.med); }).join(' ') + '"/>';
+      pts.forEach(function (r) { o += '<circle cx="' + xs(r.fy) + '" cy="' + ys(r.med) + '" r="5" fill="' + col + '" stroke="#00004d" stroke-width="1.5"' + (r.ui ? ' stroke-dasharray="2 1.5" stroke="#fff"' : '') + ' data-tip="' + esc('<b>FY' + r.fy + '</b> · ' + esc(r.p) + ' · outfall ' + r.out + '<br>median ' + fmt(r.med) + ' ' + unit + ' · max ' + fmt(r.max) + ' · limit ' + (r.lim != null ? fmt(r.lim) : 'none') + '<br>' + r.n + ' values' + (r.e90 ? ' · ' + r.e90 + ' exceedance' + (r.e90 == 1 ? '' : 's') : '') + (r.ui ? '<br><i>unit inferred from the limit fingerprint (pre-2019 EPA extract has none)</i>' : '')) + '"/>'; });
+      lt.forEach(function (r) { o += '<path d="M' + xs(r.fy) + ' ' + (ys(r.med) - 6) + ' l6 6 l-6 6 l-6 -6 z" fill="none" stroke="' + col + '" stroke-width="2" data-tip="' + esc('<b>FY' + r.fy + '</b> EPA Loading Tool annual mean ' + fmt(r.med) + ' mg/L' + (r.kg != null ? ' · ' + fmt(r.kg, 1) + ' kg/yr' : '') + '<br><i>a different clock: annual estimate, not monthly reports</i>') + '"/>'; });
+      var last = pts[pts.length - 1], first = pts[0];
+      var head = last ? '<span class="sg-val" style="font-size:18px">' + fmt(last.med) + '<span class="c">' + esc(unit) + ' median, FY' + last.fy + (last.lim != null ? ' · ' + Math.round(last.med / last.lim * 100) + '% of limit' : lims.length ? ' · limit not carried in this year\'s extract' : ' · no limit in the permit') + '</span></span>' : '';
+      return head + '<svg viewBox="0 0 ' + Wd + ' ' + H + '">' + o + '</svg><div class="lg"><span><i style="color:' + col + '"></i>annual median of monthly reports</span><span><i style="color:' + col + ';opacity:.4"></i>year maximum</span><span><i class="dia hollow" style="color:' + col + '"></i>EPA Loading Tool annual mean</span><span><i class="line" style="color:' + RED + '"></i>permit limit</span>' + (outs.length > 1 ? '<span>outfall ' + out + ' of ' + outs.join(', ') + '</span>' : '') + (unitless ? '<span style="opacity:.7">' + unitless + ' pre-2019 row' + (unitless == 1 ? '' : 's') + ' without a resolvable unit not drawn</span>' : '') + '</div>';
+    }
+    var near = perms.filter(function (p) { return +p.km_from_ref <= 16; }), far = perms.filter(function (p) { return +p.km_from_ref > 16; });
+    var render = function (list) { return list.map(function (p) { var fams = famOptions(dmr[p.npdes_id]); if (!fams.length) return ''; var def = fams.indexOf('phosphorus') >= 0 ? 'phosphorus' : fams[0]; return '<div class="of" data-permit="' + esc(p.npdes_id) + '"><div class="h"><div><b>' + esc(p.facility) + '</b> <span class="m">' + esc(p.npdes_id) + ' · ' + esc(p.receiving_water || '') + ' · ' + fmt(p.km_from_ref, 1) + ' km · ' + (p.design_flow_mgd != null ? p.design_flow_mgd + ' MGD design · ' : '') + esc(p.effluent_violations_3yr) + ' exceedances (3 yr)' + (p.dfr_url ? ' · <a href="' + esc(p.dfr_url) + '" target="_blank" rel="noopener">ECHO</a>' : '') + '</span></div><select class="sg-sel of-sel">' + fams.map(function (f) { return '<option' + (f === def ? ' selected' : '') + '>' + esc(f) + '</option>'; }).join('') + '</select></div><div class="of-body">' + chart(p, def) + '</div></div>'; }).join(''); };
+    $('outfalls').innerHTML = render(near) + (far.length ? '<details class="sg-more"><summary>' + far.length + ' more permitted outfalls, 16–24 km from the divide</summary>' + render(far) + '</details>' : '');
+    $('outfalls').addEventListener('change', function (e) { var sel = e.target; if (!sel.classList.contains('of-sel')) return; var box = sel.closest('.of'); var p = PERMIT[box.getAttribute('data-permit')]; box.querySelector('.of-body').innerHTML = chart(p, sel.value); });
+    bindTips($('outfalls'), tip, 'data-tip');
+  }
+
+  /* ---------- 7 · map ---------- */
+  function drawMap() {
+    if (!window.maplibregl) { $('wq-map').innerHTML = '<p class="sg-det" style="padding:12px">Map library did not load.</p>'; return; }
+    var map = new maplibregl.Map({ container: 'wq-map', style: 'https://tiles.openfreemap.org/styles/positron', center: [-73.98, 42.42], zoom: 9.2, attributionControl: true, cooperativeGestures: true });
+    map.addControl(new maplibregl.NavigationControl({ showCompass: false }), 'top-right');
+    var pts = function (rows, f) { return { type: 'FeatureCollection', features: rows.filter(function (r) { return r.lat != null && r.lon != null; }).map(function (r) { return { type: 'Feature', geometry: { type: 'Point', coordinates: [+r.lon, +r.lat] }, properties: f(r) }; }) }; };
+    var nodes = { type: 'FeatureCollection', features: SITES.filter(function (s) { return s.lat_approx != null; }).map(function (s) { return { type: 'Feature', geometry: { type: 'Point', coordinates: [+s.lon_approx, +s.lat_approx] }, properties: { id: s.site_id, name: s.name, col: COL[txOf(s)], st: statusOf(s), html: '<b>' + esc(s.name) + '</b><div>' + esc(s.node_type.replace(/_/g, ' ')) + ' · ' + esc(s.data_status || '') + '</div>' + (s.topline_summary ? '<div style="margin-top:4px">' + esc(s.topline_summary) + '</div>' : '') } }; }) };
+    var condCol = function (c) { return /Unsound/.test(c || '') ? RED : /Deficient/.test(c || '') ? AMBER : /No deficiencies/.test(c || '') ? '#ffffff' : '#9aa0c8'; };
+    var dams = pts(W.dams, function (d) { return { name: d.dam_name, col: condCol(d.LastConditionRating), r: /High/.test(d.hazard_class || '') ? 8 : /Intermediate/.test(d.hazard_class || '') ? 6 : 4, dash: /Not Rated/.test(d.LastConditionRating || '') ? 1 : 0, html: '<b>' + esc(d.dam_name) + '</b><div>' + esc(d.hazard_class || '') + ' · <b>' + esc(d.LastConditionRating || 'not rated') + '</b>' + (d.LastInspection ? ' (' + esc(d.LastInspection) + ')' : '') + '</div><div>' + (d.stream ? esc(d.stream) + ' · ' : '') + (d.YEARBUILT ? 'built ' + esc(d.YEARBUILT) + ' · ' : '') + (d.normal_storage_acft ? fmt(d.normal_storage_acft, 0) + ' ac-ft' : '') + (d.in_basic_creek_res_catchment === 'yes' ? ' · <i>inside the Basic Creek catchment</i>' : '') + '</div>' }; });
+    var permits = pts(W.permits, function (p) { return { name: p.facility, v: +p.effluent_violations_3yr || 0, html: '<b>' + esc(p.facility) + '</b><div>' + esc(p.npdes_id) + ' · ' + esc(p.receiving_water || '') + '</div><div>' + (p.design_flow_mgd != null ? p.design_flow_mgd + ' MGD · ' : '') + esc(p.effluent_violations_3yr) + ' effluent exceedances (3 yr) · ' + esc(p.compliance_status || '') + '</div>' + (p.dfr_url ? '<div><a href="' + esc(p.dfr_url) + '" target="_blank" rel="noopener">ECHO report</a></div>' : '') }; });
+    var stations = pts(W.stations, function (s) { var rows = W.biology.filter(function (b) { return b.code === s.code && b.bap != null; }).sort(function (a, b) { return b.yr - a.yr; }); var l = rows[0]; return { name: s.code, bap: l ? l.bap : null, html: '<b>' + esc(s.code) + '</b><div>' + esc(s.name || '') + ' · mile ' + s.mile + '</div>' + (l ? '<div>BAP ' + fmt(l.bap, 2) + ' (' + l.yr + ')' + (rows.length > 1 ? ' · ' + rows.length + ' visits' : '') + '</div>' : '') }; });
+    var wells = pts(W.wells, function (w) { return { col: ZONECOL[w.zone] || GREY, html: '<b>USGS ' + esc(w.sid) + '</b><div>' + esc(w.zone) + ' · ' + (w.yr || '') + '</div><div>' + ['sodium_mgL|Na', 'chloride_mgL|Cl', 'iron_ugL|Fe µg/L', 'manganese_ugL|Mn µg/L', 'radon_pCiL|radon'].map(function (k) { var a = k.split('|'); return w[a[0]] != null ? a[1] + ' ' + fmt(w[a[0]]) : null; }).filter(Boolean).join(' · ') + '</div>' }; });
+    var karst = { type: 'FeatureCollection', features: [] }; ['karst_albsch', 'karst_schomont'].forEach(function (k) { (W.geo[k] && W.geo[k].features || []).forEach(function (f) { f.properties = { cov: 0, html: '<b>Karst sinkhole</b><div>' + esc(f.properties.feature || '') + ' · ' + esc(f.properties.host_unit || '') + '</div>' }; karst.features.push(f); }); }); ['karst_albsch_cov', 'karst_schomont_cov'].forEach(function (k) { (W.geo[k] && W.geo[k].features || []).forEach(function (f) { f.properties = { cov: 1, html: '<b>Covered-karst candidate</b><div>' + esc(f.properties.feature || '') + '</div>' }; karst.features.push(f); }); });
+    map.on('load', function () {
+      if (W.geo.aquifers) { map.addSource('aq', { type: 'geojson', data: W.geo.aquifers }); map.addLayer({ id: 'aq', type: 'fill', source: 'aq', paint: { 'fill-color': '#3987e5', 'fill-opacity': .18 } }); map.addLayer({ id: 'aq-l', type: 'line', source: 'aq', paint: { 'line-color': '#3987e5', 'line-width': .6, 'line-opacity': .5 } }); }
+      if (W.geo.basin) { map.addSource('basin', { type: 'geojson', data: W.geo.basin }); map.addLayer({ id: 'basin', type: 'line', source: 'basin', paint: { 'line-color': '#1a1d5c', 'line-width': 2.2, 'line-dasharray': [3, 2] } }); }
+      map.addSource('karst', { type: 'geojson', data: karst }); map.addLayer({ id: 'karst', type: 'circle', source: 'karst', paint: { 'circle-radius': 3.5, 'circle-color': ['case', ['==', ['get', 'cov'], 1], 'rgba(0,0,0,0)', '#5b4636'], 'circle-stroke-color': '#5b4636', 'circle-stroke-width': 1.2 } });
+      map.addSource('dams', { type: 'geojson', data: dams }); map.addLayer({ id: 'dams', type: 'circle', source: 'dams', paint: { 'circle-radius': ['get', 'r'], 'circle-color': 'rgba(26,29,92,.15)', 'circle-stroke-color': ['get', 'col'], 'circle-stroke-width': 2.2 } });
+      map.addSource('permits', { type: 'geojson', data: permits }); map.addLayer({ id: 'permits', type: 'symbol', source: 'permits', layout: { 'text-field': '✕', 'text-size': ['interpolate', ['linear'], ['get', 'v'], 0, 13, 20, 22], 'text-allow-overlap': true, 'text-font': ['Noto Sans Bold'] }, paint: { 'text-color': '#8a2be2', 'text-halo-color': '#fff', 'text-halo-width': 1.2 } });
+      map.addSource('wells', { type: 'geojson', data: wells }); map.addLayer({ id: 'wells', type: 'circle', source: 'wells', paint: { 'circle-radius': 3.5, 'circle-color': ['get', 'col'], 'circle-stroke-color': '#fff', 'circle-stroke-width': .8 }, layout: { visibility: 'none' } });
+      map.addSource('stations', { type: 'geojson', data: stations }); map.addLayer({ id: 'stations', type: 'circle', source: 'stations', paint: { 'circle-radius': 4.5, 'circle-color': ['case', ['==', ['get', 'bap'], null], '#9aa0c8', ['>=', ['get', 'bap'], 7.5], GREEN, ['>=', ['get', 'bap'], 5], AMBER, ['>=', ['get', 'bap'], 2.5], '#f08a4b', RED], 'circle-stroke-color': '#1a1d5c', 'circle-stroke-width': 1 }, layout: { visibility: 'none' } });
+      map.addSource('nodes', { type: 'geojson', data: nodes }); map.addLayer({ id: 'nodes', type: 'circle', source: 'nodes', paint: { 'circle-radius': 8, 'circle-color': ['case', ['==', ['get', 'st'], 'rich'], ['get', 'col'], 'rgba(255,255,255,.15)'], 'circle-stroke-color': ['get', 'col'], 'circle-stroke-width': ['case', ['==', ['get', 'st'], 'none'], 1.2, 2.5] } }); map.addLayer({ id: 'nodes-l', type: 'symbol', source: 'nodes', layout: { 'text-field': ['get', 'name'], 'text-size': 10, 'text-offset': [0, 1.3], 'text-anchor': 'top', 'text-font': ['Noto Sans Regular'], 'text-max-width': 12 }, paint: { 'text-color': '#1a1d5c', 'text-halo-color': '#fff', 'text-halo-width': 1.2 } });
+      ['nodes', 'dams', 'permits', 'wells', 'stations', 'karst'].forEach(function (id) { map.on('click', id, function (e) { new maplibregl.Popup({ maxWidth: '300px' }).setLngLat(e.features[0].geometry.coordinates.slice()).setHTML(e.features[0].properties.html).addTo(map); }); map.on('mouseenter', id, function () { map.getCanvas().style.cursor = 'pointer'; }); map.on('mouseleave', id, function () { map.getCanvas().style.cursor = ''; }); });
+      var togs = [['nodes', 'Nodes', ['nodes', 'nodes-l'], true], ['basin', 'Basic Creek catchment', ['basin'], true], ['aq', 'Valley-fill aquifers', ['aq', 'aq-l'], true], ['karst', 'Karst sinkholes', ['karst'], true], ['dams', 'Dams (ring = condition)', ['dams'], true], ['permits', 'Outfalls (✕ sized by exceedances)', ['permits'], true], ['stations', 'Biomonitoring stations (colour = latest BAP)', ['stations'], false], ['wells', 'USGS wells', ['wells'], false]];
+      $('mp-tog').innerHTML = togs.map(function (t) { return '<label><input type="checkbox" data-layers="' + t[2].join(',') + '"' + (t[3] ? ' checked' : '') + '>' + t[1] + '</label>'; }).join('');
+      $('mp-tog').addEventListener('change', function (e) { var cb = e.target; if (cb.tagName !== 'INPUT') return; cb.getAttribute('data-layers').split(',').forEach(function (l) { if (map.getLayer(l)) map.setLayoutProperty(l, 'visibility', cb.checked ? 'visible' : 'none'); }); });
+    });
+    map.on('error', function (e) { if (e && e.error && /style|tiles/i.test(String(e.error.message || ''))) status('Basemap tiles did not load (OpenFreeMap); the overlays still draw.'); });
+  }
+
+  /* ---------- 8 · provenance ---------- */
+  function drawProvenance() {
+    var tot = 0, ver = 0; W.measurements.forEach(function (m) { tot++; if (!(m._p && m._p.value)) ver++; });
+    var lakeV = W.lake_summary.filter(function (l) { return !(l._p && l._p.tp_summer_mean_ugL); }).length;
+    $('prov-summary').innerHTML = 'Workbook <code>helderberg_hudson_water_quality.xlsx</code>, built ' + esc(W.generated) + '. ' + ver + ' of ' + tot + ' finished-water values are verbatim from the named report; ' + lakeV + ' of ' + W.lake_summary.length + ' DEC lake-summary rows are verbatim portal values (the % of guidance is a formula). Discharge medians are derived from ' + W.dmr.length.toLocaleString() + ' annualised EPA rows (' + W.dmr.filter(function (d) { return d.ui; }).length + ' with an inferred unit). Distances measure from ' + esc(W.ref.name) + ' (' + W.ref.lat + ', ' + W.ref.lon + '), the Hannacroix–Catskill Creek divide. ' + W.sources.length + ' documents pulled; ' + W.references.length + ' studies logged.';
+    $('sources').innerHTML = W.sources.map(function (s) { return '<div>' + (s.url ? '<a href="' + esc(s.url) + '" target="_blank" rel="noopener">' + esc(s.doc) + '</a>' : esc(s.doc)) + (s.publisher ? ' <span style="opacity:.75">— ' + esc(s.publisher) + (s.doc_date ? ', ' + esc(s.doc_date) : '') + '</span>' : '') + (s.pulled === 'no' ? ' <span class="chip na">not pulled</span>' : '') + '</div>'; }).join('');
+    $('wq-foot').innerHTML = '<b>Sources.</b> NYSDEC Waterbody Inventory / Priority Waterbodies List factsheets; NYSDEC Division of Water monitoring data portal (lake and stream chemistry, biomonitoring, HAB toxins; export 2026-09-28); NYSDEC HABs archive and 2025 summary; NYSDEC Basic Creek Reservoir phosphorus TMDL (2013); NYSDEC Inventory of Dams; NYS GIS Clearinghouse (Unconsolidated Aquifers 250K); USGS SIR 2021-5094 lidar karst; USGS ambient groundwater quality (Water Quality Portal export 2026-09-28); municipal Annual Water Quality Reports (Rensselaerville, Greenville, Cairo, Catskill, City of Albany); EPA ECHO Clean Water Act exports, bulk DMR files and Water Pollutant Loading Tool. Basemap © OpenFreeMap / OpenMapTiles / OpenStreetMap contributors. Working theories are labelled as theories in the brief; nothing here is a claim about private-well safety on the divide — there is no data, and the map says so.';
+  }
+
+  try {
+    drawTransects(); drawCards(); drawBugs(); drawLakes(); drawProfiles(); drawTMDL();
+    var sel = $('bloom-sel'); var names = bloomLakes(); sel.innerHTML = names.map(function (n) { return '<option>' + esc(n) + '</option>'; }).join(''); var cur = names[0] || 'Basic Creek Reservoir'; drawBloom(cur); drawToxin(cur); sel.addEventListener('change', function () { drawBloom(sel.value); drawToxin(sel.value); });
+    drawGroundwater(); drawOutfalls(); drawProvenance(); drawMap();
+  } catch (e) { status('Something in the dashboard failed to draw: ' + e.message); if (window.console) console.error(e); }
+})();

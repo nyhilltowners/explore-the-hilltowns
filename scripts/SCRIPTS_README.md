@@ -62,3 +62,6 @@ Both append to `Waste & Contamination` from CSVs in `data/layers/dec_waste_extra
 - `sediment_caps_ingest.py <ver>` (v974) — joins the DEC Sediment Caps export (no coordinates) to remediation pins by program number; enriches tags/Notes, flips Display=Yes; unmatched → hidden `Coordinates Needed` row. Area/length are ground metres (see docstring).
 - `source_backfill.py` (v975) — adds/fills the `Source` column on every POI sheet from Notes provenance phrases; idempotent. New ingest scripts should write Source directly (name — URL).
 - `description_synth.py` (v976) — fills blank Description cells for dataset pins from their Notes (per-ingest templates); idempotent; never overwrites hand-written text.
+
+## water_harness/ (v982)
+Headless Playwright screenshot check for waterwip.html — see scripts/water_harness/README.md.

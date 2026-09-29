@@ -1,33 +1,46 @@
-# NY Hilltowners Folk Atlas — Session Handoff (2026-09-29, v981)
+# NY Hilltowners Folk Atlas — Session Handoff (2026-09-29, v982)
 
-> **Where things stand (for the next chat).** Baseline is **v981**; next version continues from **v982**. Laurie has
-> deployed through v980 (this v981 is README-only — ship it with the next real change). The 2026-09-28/29 session
-> (v964–v981) added two heavy **lazy layers** — *Mines & Quarries* (7,184 pins: USGS MRDS + DEC Mined Land Permits) and
-> *Waste & Contamination* (29,974 rows / 16,216 visible: 17 DEC datasets — remediation, bulk storage, orphaned wells,
-> SWMF, MSGP, CSOs, WWTPs, Title V, PWL estuary, tires, e-waste, sediment caps, 512 Places-resolved hazmat spill sites)
-> — both flagged `"wip": true` so they appear **only on the unlinked `wipmap.html`**, never on `atlas.html`; plus
-> 408 DEC wildfires on Natural History (and in the climate register), 54 Birding Trail sites on Adventures (🦅),
-> 182 CDPHP Cycle hubs on Transportation (🚲), Bloom Room + Good Cheap Food (Delhi). **Two new standing rules:**
-> (a) every dataset-derived row carries a `Source` column — "<dataset> — <URL it was pulled from>" — shown in the
-> popup and Directory (`scripts/source_backfill.py`); (b) dataset pins get a synthesised plain-English `Description`
-> from their Notes (`scripts/description_synth.py`) since Notes never ship. Signals water panel was reworked over
-> v972–v980: low|high gauge track with the live value as a gold pill, directional pulsing triangles (→ rising,
-> ← falling, ↑ steady), avg/median beside the FLOW/HEIGHT caption, NWS flood stages (static `FLOOD_STAGES`), ‹ ›
-> stepper through each chain in transect order, chain-coloured bar + glowing chart line, name+time above the headline
-> number, tracks always full width. Prescribed burns were deleted at Laurie's request (not retained).
-> **Open:** (1) Park South CDPHP hub name (v965) — Laurie to confirm; (2) 🫟 for orphaned wells — undecided (Emoji 16.0,
-> boxes on older devices; currently ⚫); (3) Transportation still `default_on: false`; (4) hazmat spills only for the
-> five counties Laurie named — 373 records had no resolvable premise (residences, manholes, road segments; list in
-> `data/spill_incidents_regional.xlsx › Hazmat unresolved`); (5) flood stages are baked in — recheck yearly;
-> (6) unchanged from v963: microseasons workbook merge, OpenFreeMap basemap check on Laurie's machine, three event
-> glyph edits. **Laurie's next ask: a NEW PAGE (not yet specified) — start there.**
-> **Sandbox gotchas learned this session:** data.ny.gov, mrdata.usgs.gov, api.us.socrata.com, api.water.noaa.gov and
-> data.gis.ny.gov are all off the shell allowlist but reachable via **WebFetch** (Socrata catalog API gives `/d/<4x4>`
-> permalinks); never put bulk URLs in the `Website` column (build fetches OG previews → 3,500 blocked requests, hang);
-> `openpyxl.delete_rows` on 30k-row sheets times out — rebuild by append; `delete_rows` never shifts formulas — re-point
-> them; the harness needs `node_modules` → symlink `/home/claude/node_modules`; never `pkill -f` with text that matches
-> your own shell. **Delivery rule:** the CHANGED-ONLY zip must contain every file changed since the last one Laurie
-> deployed, not since the last version. **Test harness:** `scripts/signals_harness/` (now also exercises the stepper).
+> **Where things stand (for the next chat).** Baseline is **v982**; next version continues from **v983**. Laurie has
+> deployed through v980; v981 (README-only) and v982 ship together — the v982 CHANGED-ONLY zip carries everything since v980.
+> **v982 = the new WATER page** — `waterwip.html` (+ `water.js`), the Helderberg–Hudson water-quality dashboard, **unlinked**
+> (no nav or footer link; type `/waterwip.html`). Signals instrument-panel register. Eight panels: (1) two-transect elevation
+> profile with the brief's symbol grammar (shape = what the node is, nesting = what it draws from, fill = how much we know,
+> hollow = no data); (2) 21 node cards (badge · headline number vs its standard · June–Nov bloom strip; "details" opens the
+> grouped measurement rows with source links, DEC lake summary, assessment, dam and permit facts); (3) **"What the bugs say"** —
+> DEC Biological Assessment Profile by river mile for 10 creeks, 1984–2022 (the one method built to compare sites across
+> decades — a fresh-eyes addition the brief undersold); (4) Basic Creek Reservoir: summer-TP small multiples for 11 lakes (log,
+> vs the 20 µg/L guidance), DO depth profiles 2013/2018, TMDL allocation bars, bloom-history strip 2012–2025, shoreline
+> microcystin (log, vs 4 µg/L); (5) groundwater: USGS wells Na-vs-Cl (log-log, the plateau's sodium-bicarbonate signature sits
+> far under the salt line) and a radon strip vs the proposed 300 pCi/L; (6) outfalls: every individual SPDES permit ≤ 24 km as
+> annual-median lines against the permit limit (sparkline-not-dot, theory 10), maxima faint, Loading-Tool years hollow, the
+> FY2017–18 EPA gap shaded; (7) MapLibre context map — catchment, valley-fill aquifers, karst stipple (solid outcrop / hollow
+> covered), dams with condition rings, ✕ outfalls sized by exceedances, optional wells + biomonitoring stations; (8) provenance.
+> **Data path:** `data/water/helderberg_hudson_water_quality.xlsx` (52-sheet master from the water-research chat, **a fourth
+> master we own**) + `data/water/geo/*.geojson` → `build/water.py` (hooked from build.py's `emit_water_layer()`) →
+> `site/data_water.js` (~3.2 MB, loaded only by waterwip.html). Cell provenance travels: blue font = verbatim → no mark; black =
+> derived → `_p:{col:'d'}`; yellow fill = assumption → `_p:{col:'a'}`; the page prints superscript d / ~ and the rule is
+> "no headline from a non-verbatim cell". Heavy sheets are pre-aggregated in water.py (dec_results 17k → 953 site×param×year
+> rows + 93 biology station-years; dmr_annual 45k → 10,461 effluent-gross rows for 74 permits). The two raw DMR history
+> workbooks (29 MB) are **not in the repo** — nothing reads them; they live with the water package. **Water-side findings to
+> take back to the water chat:** (a) the sites sheet's yellow fill on `elev_ft_approx` was not cleared when 3DEP values replaced
+> estimates — the page trusts `elev_source` text instead; (b) `ny_habs_2012_2018.Year` is text, not a number; (c) EPA's
+> FY2009–2016 monthly rows carry no unit — water.py fills a unit only when the limit fingerprint matches a later year (2,454
+> of 3,814 filled; the rest are drawn nowhere and counted in the card). **Open (v982):** OpenFreeMap basemap and Google Fonts
+> could not be exercised in the sandbox (allowlist) — Laurie to eyeball the map on her machine; reference-study layer (Cannon
+> etc.) deliberately deferred; DEC HABs 2019–24 archive not in the workbook (bloom strip says so).
+> **Carried open items:** (1) Park South CDPHP hub name (v965); (2) 🫟 for orphaned wells — undecided (currently ⚫);
+> (3) Transportation still `default_on: false`; (4) hazmat spills only for the five counties Laurie named (373 unresolved in
+> `data/spill_incidents_regional.xlsx › Hazmat unresolved`); (5) flood stages are baked in — recheck yearly; (6) unchanged from
+> v963: microseasons workbook merge, three event glyph edits. Mines & Quarries / Waste & Contamination remain `"wip": true`
+> (wipmap.html only); prescribed burns deleted at Laurie's request.
+> **Sandbox gotchas (standing):** data.ny.gov, mrdata.usgs.gov, api.us.socrata.com, api.water.noaa.gov and data.gis.ny.gov are
+> off the shell allowlist but reachable via **WebFetch**; never put bulk URLs in the `Website` column (build fetches OG
+> previews → hang); `openpyxl.delete_rows` on 30k-row sheets times out — rebuild by append, and it never shifts formulas;
+> the harness needs `node_modules` → symlink `/home/claude/node_modules`; never `pkill -f` with text that matches your own
+> shell; CDN scripts/fonts/tiles are blocked in headless Chromium here — verify layout with a local static server and accept
+> that MapLibre won't load. **Delivery rule:** the CHANGED-ONLY zip must contain every file changed since the last one Laurie
+> deployed, not since the last version. **Test harness:** `scripts/signals_harness/` (Signals); waterwip was checked with a
+> one-off Playwright screenshot script (see v982 log entry).
 
 This ZIP is a **complete, self-contained source tree**. A new chat can unzip it,
 run the build, and continue exactly where this session left off. Everything here
@@ -64,6 +77,9 @@ node -e 'let fs=require("fs");let s=fs.readFileSync("site/data.js","utf8").repla
 | `calendar.html` | Calendar + agenda + Explore-nearby module. Source root (never edit `site/calendar.html`). |
 | `directory.html` | A–Z directory page. |
 | `about.html`, `bulletin.html`, `instagram.html` | Static pages. |
+| `waterwip.html`, `water.js` | **Water dashboard (v982)** — unlinked; builds to `site/waterwip.html`. Reads `site/data_water.js`. |
+| `build/water.py` | Water emitter: `data/water/*.xlsx` + `geo/` → `site/data_water.js` with cell provenance and pre-aggregation. Hooked from build.py. |
+| `data/water/helderberg_hudson_water_quality.xlsx` | **Water master** — 52 sheets, the fourth master WE OWN (edited in the water-research chat; this repo is its home). `data/water/geo/` GeoJSON layers; `PACKAGE_README.md` + `Cartographers_Brief.txt` document it; `source_docs/` holds the two TMDL PDFs. |
 | `manifest.json` | **Category → sheet map.** Drives which POI sheets build reads + category labels/glyphs/colors. |
 | `build/build.py` | The deterministic builder. Reads the 3 xlsx, writes `site/`. |
 | `build/bulletin_backend.gs` | Google Apps Script backend for the bulletin (deploy separately; `SHARE_API` placeholder in index.template.html). |
@@ -83,6 +99,7 @@ for the build itself).
 ## OWNERSHIP — critical
 
 - **We own and edit directly:** `points_of_interest.xlsx`, `folklore_legends.xlsx`,
+  `data/water/helderberg_hudson_water_quality.xlsx` (v982; the water-research chat edits it and hands it back — replace wholesale, never hand-patch here),
   and ALL the HTML/JS/build source. Edit these freely.
 - **The INGESTOR owns `events.xlsx`.** Laurie drops in a new `events__NN.xlsx`
   periodically; we replace `data/events.xlsx` with it wholesale. Never hand-edit
@@ -149,6 +166,7 @@ Fixed-hinge wingbeat, 4 white wing-spots. Day-only, reduced-motion safe. The
 
 ## UX state (recent)
 
+- **v982 (2026-09-29, Laurie): Water page.** New `waterwip.html` + `water.js` (unlinked; reach it by URL), `build/water.py`, `data/water/` (the water-quality master workbook, GeoJSON layers, package README, brief, two TMDL PDFs); `build.py` gained `emit_water_layer()` (a missing workbook is a WARNING, never a failed build), `waterwip.html` in the page list, and a `water.js` copy. Scope decided with fresh eyes after profiling every sheet, not from the brief alone: agreed with the brief on the monitoring-shadow lead, the symbol grammar, the four-clocks rule, log axes for P/PFAS and sparkline-not-dot outfalls; **disagreed** on "refuse any downslope trend" — that is right for chemistry and wrong for biology, so DEC's BAP stream scores got a first-class panel; the transect is a drawn SVG instrument rather than a map (the wipmap already does DEC-layer geography); reference studies deferred. Palette validated with the dataviz skill's `validate_palette.js` on the ink surface (`#3987e5` north · `#d95926` south · `#199e70` Potic · `#c98500` off-transect; wells `#199e70/#c98500/#d55181`); gold stays reserved for the live pill; status colours always carry an icon + label. Headline rule per card: a violation wins, else the newest year's value closest to its standard; "finished water (tap)" is only ever a public-water-system node. Outfall y-scale follows the data and pins an off-scale limit to the top edge with a label (Haleon's 6.8 mg/L phosphorus limit would otherwise flatten the tenfold rise). Verified headless: 21 cards, 10 creek panels, 11 lake multiples, 16 outfall cards, zero page errors; CDN fonts/MapLibre/tiles blocked in the sandbox so the map is unverified here.
 - **v981 (2026-09-29, Laurie):** Handoff refresh — the "Where things stand" note above rewritten for the 2026-09-28/29 session; no code or data change.
 - **v980 (2026-09-29, Laurie):** Gauge tracks are always full panel width: the card's text column is now `flex:1 1 auto; min-width:0` and `.wtab` lost its 560 px cap, so the low→high track no longer stretches or shrinks with the longest text line as you step through a chain.
 - **v979 (2026-09-29, Laurie):** Water panel cohesion: (1) the pinned/hovered bar is now the **chain colour** (was gold) and runs as one 3 px bar from the top of the chart box down through the panel (`.w7-block:before`, `--bar`/`--bar-top` set by the new `hiLine(gid, siteNo, on)` helper, which also thickens the lit chart line to 3.5 px and gives it a two-layer drop-shadow glow in its own stroke colour; hover, click, stepper and mouseleave all route through it; a pinned gauge keeps its glow while you hover others). (2) Live-value **triangles** now sit on the track line and encode the trend: up + soft pulse when steady, **pointing right and nudging right when rising, left when falling** (`.wg-now.t-up/.t-down .wg-tri`, 1.6–1.8 s CSS keyframes, disabled under `prefers-reduced-motion`). (3) Header order is now eyebrow → **gauge name + read time** → headline number with trend; secondary readings that get their own gauge block below (height, flow) are no longer repeated in the header — only readings without a block (temperature, tidal speed, anything with no stats) still print there.
@@ -473,7 +491,7 @@ Big ongoing effort to tame tag sprawl. Started at 2,332 unique tags; now ~2,178.
 7. Clean-room verify: unzip the package fresh, rebuild, confirm BUILD OK.
 8. `present_files` the zip + both xlsx.
 
-Version at handoff: **v963**. Next chat continues from v964. Harness added to `scripts/signals_harness/` in this package.
+Version at handoff: **v982**. Next chat continues from v983. Harness in `scripts/signals_harness/` (Signals).
 
 ---
 
