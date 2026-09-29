@@ -58,3 +58,5 @@ Both append to `Waste & Contamination` from CSVs in `data/layers/dec_waste_extra
 
 ## v969 ingest scripts
 `bulk_storage_ingest.py` (DEC Bulk Storage from the gzipped export + BCP COC enrichment), `dec_permits_ingest.py` (Mined Land Permits → Mines & Quarries merge; Industrial WWTPs; Issued Title V permits enrichment), `wwtp_wells_ingest.py` (municipal WWTPs, Orphaned Wells). All take the version tag as argv[1] and are idempotent on (name, rounded coords). Lazy layers: set `"lazy": true` in manifest.json; build emits `site/data_<key>.js`.
+
+- `sediment_caps_ingest.py <ver>` (v974) — joins the DEC Sediment Caps export (no coordinates) to remediation pins by program number; enriches tags/Notes, flips Display=Yes; unmatched → hidden `Coordinates Needed` row. Area/length are ground metres (see docstring).
