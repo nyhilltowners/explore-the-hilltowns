@@ -803,12 +803,13 @@
     return _waterMap;
   }
   var waterEsc=function(v){ return String(v==null?'':v).replace(/[&<>"]/g,function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); };
-  var trendHtml=function(rd){ var tidal=WATER_PARAMS[rd.code]&&WATER_PARAMS[rd.code].tidal; return rd.trend ? ' <span class="wtrend" title="'+TREND_TXT[rd.trend.dir].slice(2)+' over the last '+rd.trend.hours+' h'+(tidal?' (tide-driven)':'')+'">'+TREND_TXT[rd.trend.dir].charAt(0)+'<span class="wtrend-lbl"> '+TREND_TXT[rd.trend.dir].slice(2)+(tidal?' (tide)':'')+'</span></span>' : ''; };
+  var trendWhat=function(code){ var m=WATER_PARAMS[code]||{}; if(m.invert || m.kind==='well') return 'water table'; return WATER_SHORT[code]||'reading'; };   /* v972 (Laurie): say what is moving */
+  var trendHtml=function(rd){ var tidal=WATER_PARAMS[rd.code]&&WATER_PARAMS[rd.code].tidal, w=trendWhat(rd.code), word=TREND_TXT[rd.trend?rd.trend.dir:'flat'].slice(2); return rd.trend ? ' <span class="wtrend" title="'+w+' '+word+' over the last '+rd.trend.hours+' h'+(tidal?' (tide-driven)':'')+'">'+TREND_TXT[rd.trend.dir].charAt(0)+'<span class="wtrend-lbl"> '+w+' '+word+(tidal?' (tide)':'')+'</span></span>' : ''; };
   var siteUrl=function(d){ return 'https://waterdata.usgs.gov/monitoring-location/USGS-'+encodeURIComponent(d.siteNo)+'/'; };
   function popupHtml(d){
     var sts=d.readings.map(function(r){ return statLine(d,r); }).filter(Boolean);
     if(d.dead) return '<div class="wpop"><b>'+(d.num?d.num+' · ':'')+waterEsc(d.displayName)+'</b><div class="wk">'+waterEsc(eyebrow(d))+'</div><div>No data \u2014 USGS: '+waterEsc(d.why)+'</div><div class="wl"><a href="'+siteUrl(d)+'" target="_blank" rel="noopener">USGS data for this site \u2197</a></div></div>';
-    return '<div class="wpop"><b>'+(d.num?d.num+' · ':'')+waterEsc(d.displayName)+'</b><div class="wk">'+waterEsc(eyebrow(d))+(d.when?' · read '+waterEsc(fmtWhen(d.when)):'')+'</div>'
+    return '<div class="wpop"><b>'+(d.num?d.num+' · ':'')+waterEsc(d.displayName)+'</b><div class="wk">'+waterEsc(eyebrow(d))+(d.when?' · <i>'+waterEsc(fmtWhen(d.when))+'</i>':'')+'</div>'   /* v972: no "read" */
       +d.readings.map(function(r){ return '<div>'+waterEsc(r.label)+': <b>'+waterEsc(r.text)+'</b>'+trendHtml(r)+'</div>'; }).join('')
       +(sts.length?'<div class="ws">'+sts.map(waterEsc).join('<br>')+'</div>':'')
       +'<div class="wl"><a href="'+siteUrl(d)+'" target="_blank" rel="noopener">USGS data for this site ↗</a></div></div>';
@@ -891,26 +892,34 @@
      (year) from the USGS daily statistics; or the 30-day low / median / high where no long record exists; wells phrased
      as water-table height (shallowest depth = highest water). */
   function waterTableHtml(d){
-    var rows=d.readings.map(function(rd){ var meta=WATER_PARAMS[rd.code]; if(meta.nobar) return ''; var f=meta.fmtS||meta.fmt, s=d.stats&&d.stats[rd.code], r30=d.range30&&d.range30[rd.code];
+    /* v972 (2026-09-28, Laurie): per reading - Record low | Avg (or median) | Record high left-to-right, with a track
+       between low and high, the average as a tick, and the NOW value riding the track in gold at its proportional
+       spot (clamped to the ends when outside the record). Wells are phrased as water: low water = deepest. */
+    var blocks=d.readings.map(function(rd){ var meta=WATER_PARAMS[rd.code]; if(meta.nobar) return ''; var f=meta.fmtS||meta.fmt, s=d.stats&&d.stats[rd.code], r30=d.range30&&d.range30[rd.code];
       var cap=(WATER_SHORT[rd.code]||meta.label); cap=cap.charAt(0).toUpperCase()+cap.slice(1);
+      var nowV=rd.value!=null?+rd.value:null, nowTxt=rd.text.replace(/ below surface$/,'');
       var yr=function(y){ return y?' <span class="wyr">'+waterEsc(y)+'</span>':''; };
-      if(s && s.max!=null && s.min!=null){
-        var hi=meta.invert?s.min:s.max, hiY=meta.invert?s.minYr:s.maxYr, lo=meta.invert?s.max:s.min, loY=meta.invert?s.maxYr:s.minYr;
-        return '<tr><th>'+waterEsc(cap)+'</th><td><b>'+waterEsc(rd.text.replace(/ below surface$/,''))+'</b></td><td>'+(s.mean!=null?waterEsc(f(s.mean)):'\u2014')+'</td><td>'+(hi!=null?waterEsc(f(hi))+yr(hiY):'\u2014')+'</td><td>'+(lo!=null?waterEsc(f(lo))+yr(loY):'\u2014')+'</td><td class="wsince">'+(s.begin?'since '+waterEsc(s.begin):'')+'</td></tr>';
-      }
-      if(r30){ var top=meta.invert?r30.min:r30.max, bot=meta.invert?r30.max:r30.min;
-        return '<tr><th>'+waterEsc(cap)+'</th><td><b>'+waterEsc(rd.text.replace(/ below surface$/,''))+'</b></td><td>'+waterEsc(f(r30.med))+'</td><td>'+waterEsc(f(top))+'</td><td>'+waterEsc(f(bot))+'</td><td class="wsince">last 30 days</td></tr>'; }
-      return '<tr><th>'+waterEsc(cap)+'</th><td><b>'+waterEsc(rd.text.replace(/ below surface$/,''))+'</b></td><td colspan="4" class="wsince">no statistics published</td></tr>';
+      var lo,hi,mid,loY,hiY,midLbl,since;
+      if(s && s.max!=null && s.min!=null){ hi=meta.invert?s.min:s.max; hiY=meta.invert?s.minYr:s.maxYr; lo=meta.invert?s.max:s.min; loY=meta.invert?s.maxYr:s.minYr; mid=s.mean; midLbl='Avg, this date'; since=s.begin?'since '+s.begin:''; }
+      else if(r30){ hi=meta.invert?r30.min:r30.max; lo=meta.invert?r30.max:r30.min; mid=r30.med; midLbl='Median'; since='last 30 days'; }
+      else return '<div class="wg"><div class="wg-cap">'+waterEsc(cap)+'</div><div class="wg-now-only">'+waterEsc(nowTxt)+' <span class="wsince">no statistics published</span></div></div>';
+      var pos=function(v){ if(v==null||lo==null||hi==null||hi===lo) return null; var t=meta.invert?(lo-v)/(lo-hi):(v-lo)/(hi-lo); return Math.max(0,Math.min(1,t)); };
+      var pm=pos(mid), pn=pos(nowV);
+      var loLbl=meta.invert?'Lowest water':'Record low', hiLbl=meta.invert?'Highest water':'Record high';
+      return '<div class="wg"><div class="wg-cap">'+waterEsc(cap)+'</div>'
+        +'<div class="wg-head"><span>'+loLbl+'</span><span>'+midLbl+'</span><span>'+hiLbl+'</span></div>'
+        +'<div class="wg-vals"><span>'+(lo!=null?waterEsc(f(lo))+yr(loY):'\u2014')+'</span><span>'+(mid!=null?waterEsc(f(mid)):'\u2014')+'</span><span>'+(hi!=null?waterEsc(f(hi))+yr(hiY):'\u2014')+'</span></div>'
+        +'<div class="wg-track">'+(pm!=null?'<span class="wg-avg" style="left:'+(pm*100).toFixed(1)+'%" title="'+midLbl+'"></span>':'')
+        +(pn!=null?'<span class="wg-now" style="left:'+(pn*100).toFixed(1)+'%">'+waterEsc(nowTxt)+'</span>':'<span class="wg-now wg-now-nopos">'+waterEsc(nowTxt)+'</span>')+'</div>'
+        +(since?'<div class="wsince">'+waterEsc(since)+'</div>':'')+'</div>';
     }).filter(Boolean);
-    if(!rows.length) return '';
-    var inv=d.readings.some(function(rd){ return WATER_PARAMS[rd.code].invert; });
-    return '<table class="wtab"><thead><tr><th></th><th>Now</th><th>'+(d.readings.some(function(rd){ return d.range30&&d.range30[rd.code]&&!(d.stats&&d.stats[rd.code]); })?'Avg / median':'Avg, this date')+'</th><th>'+(inv?'Highest water':'Record high')+'</th><th>'+(inv?'Lowest water':'Record low')+'</th><th></th></tr></thead><tbody>'+rows.join('')+'</tbody></table>';
+    return blocks.length?'<div class="wtab">'+blocks.join('')+'</div>':'';
   }
   function waterCardHtml(d){
     if(d.dead) return '<div class="sg-row wcard wdead" data-site="'+waterEsc(d.siteNo)+'"><div class="sg-ico" style="color:'+colorOf(d,'dark')+'">'+WATER_ICON[d.kind]+(d.num?'<span class="wnum" style="background:'+colorOf(d,'dark')+'">'+d.num+'</span>':'')+'</div><div><p class="sg-eye">'+waterEsc(eyebrow(d))+'</p><p class="sg-val">no data</p><p class="sg-det"><b><a class="wsite" href="'+siteUrl(d)+'" target="_blank" rel="noopener" title="This gauge on USGS Water Data">'+waterEsc(d.displayName)+'</a></b><br><span class="wread">USGS: '+waterEsc(d.why)+'</span></p></div></div>';
     var main=d.readings[0], extra=d.readings.slice(1), sts=d.readings.map(function(r){ return statLine(d,r); }).filter(Boolean);
     return '<div class="sg-row wcard" data-site="'+waterEsc(d.siteNo)+'"><div class="sg-ico" style="color:'+colorOf(d,'dark')+'">'+WATER_ICON[d.kind]+(d.num?'<span class="wnum" style="background:'+colorOf(d,'dark')+'">'+d.num+'</span>':'')+'</div><div><p class="sg-eye">'+waterEsc(eyebrow(d))+'</p><p class="sg-val">'+waterEsc(main.text)+trendHtml(main)+'</p><p class="sg-det"><b><a class="wsite" href="'+siteUrl(d)+'" target="_blank" rel="noopener" title="This gauge on USGS Water Data">'+waterEsc(d.displayName)+'</a></b>'
-      +(d.when?'<br><span class="wread">Read '+waterEsc(fmtWhen(d.when))+'</span>':'')
+      +(d.when?' <i class="wread">'+waterEsc(fmtWhen(d.when))+'</i>':'')   /* v972 (Laurie): time/date to the right of the name, italic, no "Read" */
       +(extra.length?'<br>'+extra.map(function(e){ return '<span class="wx">'+waterEsc(e.label)+': '+waterEsc(e.text)+trendHtml(e)+'</span>'; }).join(' · '):'')
       +'</p>'+waterTableHtml(d)+'</div></div>';   /* v963 (Laurie): a small table of now / average / record high / record low per reading replaces the bars */
   }
@@ -925,11 +934,11 @@
     var defs=[byKey.schoharie, byKey.mohawk, byKey.esopus,
       {id:'w7-wells', title:'Wells, last 7 days', color:KIND_COLOR.well.dark, sub:''},
       {id:'w7-lakes', title:'Lakes & reservoirs, last 7 days', color:KIND_COLOR.lake.dark, sub:''},
-      {id:'w7-tidal', title:'Tidal Hudson, last 7 days', color:KIND_COLOR.lake.dark, sub:'ft above NAVD88'},
+      {id:'w7-tidal', title:'Tidal Hudson, last 7 days', color:(byKey.hudson?byKey.hudson.color:KIND_COLOR.lake.dark), sub:'ft above NAVD88'}   /* v972 (Laurie): swatch was the lakes pink by mistake - tidal gauges are the Hudson chain */,
       byKey.hudson].filter(Boolean);
     host.innerHTML=defs.map(function(g){ return '<div class="w7-block" id="'+g.id+'-block"><h3 class="sg-h3 wchain-h"><span class="wsw" style="background:'+g.color+'"></span>'+waterEsc(g.title)+(g.sub?' <span class="wcount">'+waterEsc(g.sub)+'</span>':'')+'</h3>'
       +'<div class="sg-chart"><svg id="'+g.id+'" viewBox="0 0 1000 320" preserveAspectRatio="none" role="img" aria-label="'+waterEsc(g.title)+'"></svg><div class="sg-tip" id="'+g.id+'-tip"></div></div>'
-      +'<div class="w7-panel" id="'+g.id+'-panel"><span class="w7-hint">Hover a line for that gauge’s readings and records; click to pin.</span></div></div>'; }).join('');
+      +'<div class="w7-panel" id="'+g.id+'-panel"></div></div>'; }).join('');
   }
   function renderWater(){
     if(!_wm) return;
