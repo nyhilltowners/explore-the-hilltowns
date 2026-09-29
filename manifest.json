@@ -130,7 +130,8 @@
       "glyph": "⛏️",
       "color": "#8b4513",
       "default_on": false,
-      "lazy": true
+      "lazy": true,
+      "wip": true
     },
     {
       "key": "waste",
@@ -141,7 +142,8 @@
       "glyph": "🏭",
       "color": "#6e7f3e",
       "default_on": false,
-      "lazy": true
+      "lazy": true,
+      "wip": true
     },
     {
       "key": "independent_media",

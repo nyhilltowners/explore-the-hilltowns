@@ -899,19 +899,25 @@
       var cap=(WATER_SHORT[rd.code]||meta.label); cap=cap.charAt(0).toUpperCase()+cap.slice(1);
       var nowV=rd.value!=null?+rd.value:null, nowTxt=rd.text.replace(/ below surface$/,'');
       var yr=function(y){ return y?' <span class="wyr">'+waterEsc(y)+'</span>':''; };
-      var lo,hi,mid,loY,hiY,midLbl,since;
-      if(s && s.max!=null && s.min!=null){ hi=meta.invert?s.min:s.max; hiY=meta.invert?s.minYr:s.maxYr; lo=meta.invert?s.max:s.min; loY=meta.invert?s.maxYr:s.minYr; mid=s.mean; midLbl='Avg, this date'; since=s.begin?'since '+s.begin:''; }
-      else if(r30){ hi=meta.invert?r30.min:r30.max; lo=meta.invert?r30.max:r30.min; mid=r30.med; midLbl='Median'; since='last 30 days'; }
+      var lo,hi,mid,loY,hiY,foot,loLbl,hiLbl;
+      if(s && s.max!=null && s.min!=null){ hi=meta.invert?s.min:s.max; hiY=meta.invert?s.minYr:s.maxYr; lo=meta.invert?s.max:s.min; loY=meta.invert?s.maxYr:s.minYr; mid=s.mean;
+        foot=(mid!=null?'avg this date'+(s.begin?' since '+s.begin:'')+': '+f(mid):(s.begin?'records since '+s.begin:''));
+        loLbl=meta.invert?'Lowest water':'Record low'; hiLbl=meta.invert?'Highest water':'Record high'; }
+      else if(r30){ hi=meta.invert?r30.min:r30.max; lo=meta.invert?r30.max:r30.min; mid=r30.med;
+        foot=(mid!=null?'median, last 30 days: '+f(mid):'last 30 days');
+        loLbl=meta.invert?'30-day lowest water':'30-day low'; hiLbl=meta.invert?'30-day highest water':'30-day high'; }
       else return '<div class="wg"><div class="wg-cap">'+waterEsc(cap)+'</div><div class="wg-now-only">'+waterEsc(nowTxt)+' <span class="wsince">no statistics published</span></div></div>';
       var pos=function(v){ if(v==null||lo==null||hi==null||hi===lo) return null; var t=meta.invert?(lo-v)/(lo-hi):(v-lo)/(hi-lo); return Math.max(0,Math.min(1,t)); };
-      var pm=pos(mid), pn=pos(nowV);
-      var loLbl=meta.invert?'Lowest water':'Record low', hiLbl=meta.invert?'Highest water':'Record high';
+      var pn=pos(nowV);
+      /* v973 (Laurie): scale shows only low | high with NOW riding it; the average/median moves into a lowercase
+         italic footnote merged with the "since" note ("avg this date since 1979: 76 ft³/s"); 30-day ranges are
+         labelled 30-day low/high, never "record". */
       return '<div class="wg"><div class="wg-cap">'+waterEsc(cap)+'</div>'
-        +'<div class="wg-head"><span>'+loLbl+'</span><span>'+midLbl+'</span><span>'+hiLbl+'</span></div>'
-        +'<div class="wg-vals"><span>'+(lo!=null?waterEsc(f(lo))+yr(loY):'\u2014')+'</span><span>'+(mid!=null?waterEsc(f(mid)):'\u2014')+'</span><span>'+(hi!=null?waterEsc(f(hi))+yr(hiY):'\u2014')+'</span></div>'
-        +'<div class="wg-track">'+(pm!=null?'<span class="wg-avg" style="left:'+(pm*100).toFixed(1)+'%" title="'+midLbl+'"></span>':'')
+        +'<div class="wg-head"><span>'+loLbl+'</span><span>'+hiLbl+'</span></div>'
+        +'<div class="wg-vals"><span>'+(lo!=null?waterEsc(f(lo))+yr(loY):'\u2014')+'</span><span>'+(hi!=null?waterEsc(f(hi))+yr(hiY):'\u2014')+'</span></div>'
+        +'<div class="wg-track">'
         +(pn!=null?'<span class="wg-now" style="left:'+(pn*100).toFixed(1)+'%">'+waterEsc(nowTxt)+'</span>':'<span class="wg-now wg-now-nopos">'+waterEsc(nowTxt)+'</span>')+'</div>'
-        +(since?'<div class="wsince">'+waterEsc(since)+'</div>':'')+'</div>';
+        +(foot?'<div class="wsince">'+waterEsc(foot)+'</div>':'')+'</div>';
     }).filter(Boolean);
     return blocks.length?'<div class="wtab">'+blocks.join('')+'</div>':'';
   }

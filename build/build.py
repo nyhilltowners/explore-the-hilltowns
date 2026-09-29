@@ -1253,6 +1253,20 @@ def emit_page(src, out_name: str) -> None:
     (SITE / out_name).write_text(apply_partials(html, out_name), encoding="utf-8")
 
 
+def emit_wipmap(template) -> None:
+    """v973 (2026-09-28, Laurie): site/wipmap.html — the atlas template rendered a second time with
+    window.ATLAS_WIP set, so categories flagged "wip": true in manifest.json (Mines & Quarries, Waste &
+    Contamination) get their checkboxes here and nowhere else. No nav link points at it and it is marked
+    noindex; you reach it by typing /wipmap.html. Same data.js and lazy data_<key>.js files as the atlas."""
+    html = Path(template).read_text(encoding="utf-8")
+    html = html.replace('<script src="data.js"></script>',
+                        '<meta name="robots" content="noindex,nofollow">\n<script>window.ATLAS_WIP = true;</script>\n<script src="data.js"></script>', 1)
+    html = html.replace("<title>", "<title>WIP map — ", 1)
+    (SITE / "wipmap.html").write_text(apply_partials(html, "atlas.html"), encoding="utf-8")
+    wip = [c["label"] for c in json.loads((ROOT / "manifest.json").read_text(encoding="utf-8"))["categories"] if c.get("wip")]
+    print(f"  wipmap.html: atlas + WIP layers {wip}")
+
+
 # ---------------------------------------------------------------------------
 # Trading Post (2026-09-18, Laurie): data/trading_post.xlsx → site/trading_post.js
 # Columns: Category, Business, Town, Product, Price, URL, Image, Notes, Display.
@@ -1582,6 +1596,7 @@ def main() -> int:
                            "default_on": cat.get("default_on", True),
                            "atlas": cat.get("atlas", True),  # v867: false = directory-only category, no atlas checkbox or pins
                            "lazy": bool(cat.get("lazy", False)),  # v969: heavy layer shipped as site/data_<key>.js, fetched when its checkbox is ticked
+                           "wip": bool(cat.get("wip", False)),    # v973: work-in-progress layer — shown only on the unlinked wipmap.html, hidden on atlas.html
                            "glyph": cat.get("glyph", "")})
         if schema not in PARSERS:
             fail(f"manifest: unknown schema '{schema}' for '{label}'")
@@ -1651,6 +1666,7 @@ def main() -> int:
         print("ERROR: no index.template.html (or index.html) found at repo root")
         return 1
     emit_page(template, "atlas.html")      # 2026-09-18 (Laurie): the map now lives at atlas.html
+    emit_wipmap(template)                  # v973 (Laurie): unlinked wipmap.html = the same map plus the "wip" layers
     # Standalone pages (hand-authored). Each carries <!-- @@header --> / <!-- @@footer -->
     # markers that emit_page() fills from partials/, so the nav + skyline + footer are
     # written once and stamped everywhere (2026-09-16, per Laurie).
