@@ -957,7 +957,8 @@
   function waterCardHtml(d){
     if(d.dead) return '<div class="sg-row wcard wdead" data-site="'+waterEsc(d.siteNo)+'"><div class="sg-ico" style="color:'+colorOf(d,'dark')+'">'+WATER_ICON[d.kind]+(d.num?'<span class="wnum" style="background:'+colorOf(d,'dark')+'">'+d.num+'</span>':'')+'</div><div><p class="sg-eye">'+waterEsc(eyebrow(d))+'</p><p class="sg-val">no data</p><p class="sg-det"><b><a class="wsite" href="'+siteUrl(d)+'" target="_blank" rel="noopener" title="This gauge on USGS Water Data">'+waterEsc(d.displayName)+'</a></b><br><span class="wread">USGS: '+waterEsc(d.why)+'</span></p></div></div>';
     var main=d.readings[0], extra=d.readings.slice(1), sts=d.readings.map(function(r){ return statLine(d,r); }).filter(Boolean);
-    return '<div class="sg-row wcard" data-site="'+waterEsc(d.siteNo)+'"><div class="sg-ico" style="color:'+colorOf(d,'dark')+'">'+WATER_ICON[d.kind]+(d.num?'<span class="wnum" style="background:'+colorOf(d,'dark')+'">'+d.num+'</span>':'')+'</div><div><p class="sg-eye">'+waterEsc(eyebrow(d))+'</p><p class="sg-val">'+waterEsc(main.text)+trendHtml(main)+'</p><p class="sg-det"><b><a class="wsite" href="'+siteUrl(d)+'" target="_blank" rel="noopener" title="This gauge on USGS Water Data">'+waterEsc(d.displayName)+'</a></b>'
+    var step=(d.num?'<span class="wstep"><button type="button" onclick="w7Step(this,-1)" title="Previous gauge (upstream)" aria-label="Previous gauge">\u2039</button><button type="button" onclick="w7Step(this,1)" title="Next gauge (downstream)" aria-label="Next gauge">\u203a</button></span>':'');   /* v978 */
+    return '<div class="sg-row wcard" data-site="'+waterEsc(d.siteNo)+'"><div class="sg-ico" style="color:'+colorOf(d,'dark')+'">'+WATER_ICON[d.kind]+(d.num?'<span class="wnum" style="background:'+colorOf(d,'dark')+'">'+d.num+'</span>':'')+step+'</div><div><p class="sg-eye">'+waterEsc(eyebrow(d))+'</p><p class="sg-val">'+waterEsc(main.text)+trendHtml(main)+'</p><p class="sg-det"><b><a class="wsite" href="'+siteUrl(d)+'" target="_blank" rel="noopener" title="This gauge on USGS Water Data">'+waterEsc(d.displayName)+'</a></b>'
       +(d.when?' <i class="wread">'+waterEsc(fmtWhen(d.when))+'</i>':'')   /* v972 (Laurie): time/date to the right of the name, italic, no "Read" */
       +(extra.length?'<br>'+extra.map(function(e){ return '<span class="wx">'+waterEsc(e.label)+': '+waterEsc(e.text)+trendHtml(e)+'</span>'; }).join(' · '):'')
       +'</p>'+waterTableHtml(d)+'</div></div>';   /* v963 (Laurie): a small table of now / average / record high / record low per reading replaces the bars */
@@ -991,6 +992,16 @@
     if(_w7) drawWater7();
     document.querySelectorAll('.w7-panel[data-site]').forEach(function(pn){ var d=_wm.all.find(function(x){ return x.siteNo===pn.getAttribute('data-site'); }); if(d) pn.innerHTML=waterCardHtml(d); });
   }
+  var _w7order={};
+  /* v978 (2026-09-29, Laurie): ‹ › under the water glyph steps through the chain's gauges in transect order
+     (upstream → downstream), pinning the panel so the chart hover doesn't snatch it back. Wraps at the ends. */
+  window.w7Step=function(btn, dir){
+    var pn=btn.closest('.w7-panel'); if(!pn) return; var gid=pn.id.replace(/-panel$/,''), order=_w7order[gid]||[]; if(order.length<2) return;
+    var i=order.indexOf(pn.getAttribute('data-site')), next=order[((i<0?0:i)+dir+order.length)%order.length], d=_wm.all.find(function(x){ return x.siteNo===next; }); if(!d) return;
+    pn.classList.add('pinned'); pn.setAttribute('data-site', d.siteNo); pn.innerHTML=waterCardHtml(d);
+    _waterMarkers.forEach(function(m){ var el=m.getElement&&m.getElement(); if(el) el.classList.toggle('hot', m._siteNo===d.siteNo); });
+    var svg=$(gid); if(svg){ svg._w7best=d; svg.querySelectorAll('polyline').forEach(function(pl){ var on=pl.getAttribute('data-site')===d.siteNo; pl.setAttribute('stroke-opacity', on?'1':'.3'); pl.setAttribute('stroke-width', on?'3':'1.5'); }); }
+  };
   function showWaterPanel(gid, d, pin){
     var pn=$(gid+'-panel'); if(!pn) return;
     if(pin!=null){ var was=pn.classList.contains('pinned') && pn.getAttribute('data-site')===d.siteNo; pn.classList.toggle('pinned', !was); }
@@ -1101,6 +1112,7 @@
     ]);
     groups.forEach(function(g){ var svg=$(g.id); if(!svg) return;
       var series=g.rows.map(function(d){ return _w7[d.siteNo]; }).filter(Boolean);
+      _w7order[g.id]=series.map(function(sr){ return sr.d.siteNo; });   /* v978: transect order for the ‹ › stepper */
       var host=svg.parentNode, hd=host.previousElementSibling;
       if(!series.length){ host.style.display='none'; if(hd && /sg-h3/.test(hd.className)) hd.style.display='none'; return; }
       host.style.display=''; if(hd && /sg-h3/.test(hd.className)) hd.style.display='';
@@ -1270,7 +1282,7 @@ function fetchINat(){
       /* v941 (2026-09-27, Laurie): leaderboard shows the top 10; a "+" button reveals the rest. */
       var LB_SHOW=10, hiddenN=Math.max(0, olderHtml.length-LB_SHOW);
       var lbRows=olderHtml.map(function(h,i){ return i<LB_SHOW ? h : h.replace('<div class="eb" ','<div class="eb lb-more" '); }).join('');
-      $('inat-list').innerHTML = olderHtml.length ? '<p class="sg-eye" style="margin:14px 0 4px">Species leaderboard \u00b7 last 10 days</p><div class="inat-list inat-older">'+lbRows+'</div>'
+      $('inat-list').innerHTML = olderHtml.length ? '<p class="sg-eye" style="margin:14px 0 4px">Hilltown Hotties: Species leaderboard \u00b7 last 10 days</p><div class="inat-list inat-older">'+lbRows+'</div>'
         +(hiddenN?'<button type="button" class="sg-btn lb-toggle" aria-expanded="false">+ '+hiddenN+' more species</button>':'') : '';
       var tg=$('inat-list').querySelector('.lb-toggle');
       if(tg){ tg.addEventListener('click', function(){ var open=tg.getAttribute('aria-expanded')==='true'; $('inat-list').querySelector('.inat-older').classList.toggle('lb-open', !open); tg.setAttribute('aria-expanded', String(!open)); tg.textContent = open ? '+ '+hiddenN+' more species' : '\u2212 Show top 10 only'; }); }
