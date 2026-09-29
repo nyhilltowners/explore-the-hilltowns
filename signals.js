@@ -1228,10 +1228,21 @@ function fetchINat(){
     ];
     var base='https://api.inaturalist.org/v1/observations?quality_grade=research&photos=true&order_by=observed_on&order=desc&per_page=200&d1='+iso(10)+box+'&';
     var results=[], capped=[], seen={};
-    var pull=function(g){ return fetch(base+g.q).then(function(r){ return r.json(); }).then(function(j){
-      var rs=(j&&j.results)||[]; rs.forEach(function(o){ if(!seen[o.id]){ seen[o.id]=1; results.push(o); } });
-      if(j && j.total_results>rs.length && rs.length>=200) capped.push(g.label+' ('+rs.length+' of '+j.total_results+')');
-    }).catch(function(){}); };
+    /* v988 (2026-09-29, Laurie): dicots were maxing the 200-per-page cap (200 of 206 in 10 days), which made the
+       10-day count a floor. per_page is capped at 200, but the API pages: when total_results says a group has
+       more, fetch page 2, 3, 4 in turn (INAT_MAX_PAGES x 200 = 800 records per group) before calling it a floor.
+       Pages are pulled one after another, never in parallel, to stay polite; a group is named in the footnote
+       only if it is still short after the last page. */
+    var INAT_MAX_PAGES=4;
+    var pull=function(g){
+      var got=0, total=0;
+      var page=function(n){ return fetch(base+g.q+'&page='+n).then(function(r){ return r.json(); }).then(function(j){
+        var rs=(j&&j.results)||[]; total=(j&&j.total_results)||0; got+=rs.length;
+        rs.forEach(function(o){ if(!seen[o.id]){ seen[o.id]=1; results.push(o); } });
+        if(rs.length>=200 && got<total && n<INAT_MAX_PAGES) return page(n+1);
+        if(got<total && rs.length>=200) capped.push(g.label+' ('+got+' of '+total+')');
+      }); };
+      return page(1).catch(function(){}); };
     var chunks=[]; for(var ci=0; ci<GROUPS.length; ci+=4) chunks.push(GROUPS.slice(ci,ci+4));
     chunks.reduce(function(pr,ch){ return pr.then(function(){ return Promise.all(ch.map(pull)); }); }, Promise.resolve()).then(function(){
       results.sort(function(a,b){ return (Date.parse(b.time_observed_at||b.observed_on)||0)-(Date.parse(a.time_observed_at||a.observed_on)||0); });   /* newest first across groups, so g.latest stays right */
@@ -1299,7 +1310,7 @@ function fetchINat(){
       if(tg){ tg.addEventListener('click', function(){ var open=tg.getAttribute('aria-expanded')==='true'; $('inat-list').querySelector('.inat-older').classList.toggle('lb-open', !open); tg.setAttribute('aria-expanded', String(!open)); tg.textContent = open ? '+ '+hiddenN+' more species' : '\u2212 Show top 10 only'; }); }
       wikiPics();
       var parts=[]; if(recent.length) parts.push(recent.length+' species in the last 5 days'); if(older.length) parts.push(older.length+' species over the last 10 days');
-      $('inat-note').textContent=(parts.join(', ')||'Nothing recent')+(capped.length?' \u00b7 10-day counts are a floor for '+capped.join(', ')+' \u2014 iNaturalist returns at most 200 per group':'')+' \u00b7 Data \u00a9 iNaturalist contributors; Creative Commons photos displayed here, click to review others on iNaturalist.';
+      $('inat-note').textContent=(parts.join(', ')||'Nothing recent')+(capped.length?' \u00b7 10-day counts are a floor for '+capped.join(', ')+' \u2014 more than '+(INAT_MAX_PAGES*200)+' records in 10 days':'')+' \u00b7 Data \u00a9 iNaturalist contributors; Creative Commons photos displayed here, click to review others on iNaturalist.';
     }).catch(function(e){ grid.innerHTML='<p class="ph-empty">iNaturalist is unreachable right now.</p>'; status('iNaturalist: '+(e && e.message || 'fetch failed')); });
   }
   /* ---------- eBird: recent + notable sightings near Berne (key per Laurie, 2026-09-20) ---------- */

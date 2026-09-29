@@ -1,7 +1,12 @@
-# NY Hilltowners Folk Atlas — Session Handoff (2026-09-29, v987)
+# NY Hilltowners Folk Atlas — Session Handoff (2026-09-29, v988)
 
-> **Where things stand (for the next chat).** Baseline is **v987**; next version continues from **v988**. Laurie has
-> deployed through v980; v981–v987 ship together — the v987 CHANGED-ONLY zip carries everything since v980.
+> **Where things stand (for the next chat).** Baseline is **v988**; next version continues from **v989**. Laurie has
+> deployed through v980; v981–v988 ship together — the v988 CHANGED-ONLY zip carries everything since v980.
+> **v988:** Signals iNaturalist pull now pages past the 200-per-page cap (`INAT_MAX_PAGES=4` → up to 800 records per
+> taxonomic group, pages fetched in sequence); dicots had hit 200 of 206 so the 10-day count was a floor. The footnote
+> now names a group only if it is still short after the last page. Live verification impossible from the sandbox
+> (api.inaturalist.org is robots-blocked for WebFetch and off the shell allowlist) — Laurie to confirm the dicot
+> floor note is gone on the live page.
 > **v987 = all 23 contaminant profiles written + the three-shelf carousel.** `data/water/contaminant_profiles.md` now
 > holds every key (20 new entries written from per-key fact sheets generated off the workbook, every non-workbook claim
 > linked to a fetched agency page; 15 claims marked "(general literature; no fetched source)" for Laurie to accept or cut).
@@ -202,6 +207,7 @@ Fixed-hinge wingbeat, 4 white wing-spots. Day-only, reduced-motion safe. The
 
 ## UX state (recent)
 
+- **v988 (2026-09-29, Laurie):** `signals.js` `fetchINat()`: `pull(g)` walks `&page=n` while `results.length >= 200 && got < total_results && n < INAT_MAX_PAGES`; `capped` only when still short. Footnote wording: "more than 800 records in 10 days". Harness (`scripts/signals_harness/run.js`, maplibre-gl installed under a scratch prefix and symlinked as `node_modules`) passes unchanged.
 - **v987 (2026-09-29, Laurie): contaminant profiles complete + carousel.** 20 entries appended to `contaminant_profiles.md` (writers: PB AS RADON RADIUM BA · FE MN NA CL NO3 · PFOA PFHXS DIOXANE TOLUENE XYLENE · TTHM HAA5 TP FECAL DO; ~590 words each; 68 distinct sources). Carousel chrome in waterwip.html (`.cp-tabs`, `.cp-car`, `.cp-arrow`, `.cp-top`, `.cp-img`), `SHELVES`/`step()`/swipe in water.js; `images/contaminants/` created (README only). Verified headless: deep link → next → keyboard → tab switch. `data_water.js` ≈ 6.1 MB.
 - **v986 (2026-09-29, Laurie): contaminant profiles.** New page section 0 (`drawContaminants()` in water.js — NB the DO-depth chart already owned the name `drawProfiles`), `data/water/contaminant_profiles.md` (3 entries), `read_profiles()` + `cres`/`cres_dict`/`tri_keyed`/`hab_by_year`/`contaminants` in `build/water.py`; `dmr` rows carry `ck`. Bloom history rewritten on `hab_by_year`. Harness screenshots `cp` and `bloom`. Headless: 23 chips, zero page errors.
 - **v985 (2026-09-29, Laurie):** the other two Wild Hudson Valley rows — `Adventures` 19 and `Flowers & Garden` 36 — also `Display=No` until spring (whole operation closed until Memorial Day 2027; events come through the ingestor, not POI). Dated notes; Lodging note amended. Read-back verified.
@@ -532,7 +538,7 @@ Big ongoing effort to tame tag sprawl. Started at 2,332 unique tags; now ~2,178.
 7. Clean-room verify: unzip the package fresh, rebuild, confirm BUILD OK.
 8. `present_files` the zip + both xlsx.
 
-Version at handoff: **v987**. Next chat continues from v988. Harness in `scripts/signals_harness/` (Signals).
+Version at handoff: **v988**. Next chat continues from v989. Harness in `scripts/signals_harness/` (Signals).
 
 ---
 
