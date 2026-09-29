@@ -443,6 +443,7 @@ table.hours tr.today td:first-child{color:var(--gold-ink);}
       if(!target.addr && r.addr) target.addr = r.addr;
       if(!target.ph && r.ph) target.ph = r.ph;
       if(!target.web && r.web) target.web = r.web;
+      if(!target.src && r.src) target.src = r.src;   /* v975: dataset provenance */
       if(r.s && r.s.length > target.s.length) target.s = r.s;  /* longest copy wins */
       var hasHrs = r.hrs && Object.keys(r.hrs).some(function(k){ return r.hrs[k]; });
       if(!target.hrs && hasHrs) target.hrs = r.hrs;
@@ -570,6 +571,9 @@ table.hours tr.today td:first-child{color:var(--gold-ink);}
       h += '<div class="frow"><span class="k">Site</span><span><a class="weblink" href="'+esc(href)+'" target="_blank" rel="noopener">'+esc(label)+'</a></span></div>';
     }
     h += hoursTable(o.hrs);
+    if(o.src){ /* v975 (Laurie): Source line, URL linked */
+      h += '<div class="frow"><span class="k">Source</span><span>'+esc(o.src).replace(/(https?:\/\/[^\s<]+[^\s<.,;:)\]])/g,'<a class="weblink" href="$1" target="_blank" rel="noopener">$1</a>')+'</span></div>';
+    }
     h += "</div></div></div>";
     return h;
   }

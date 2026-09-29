@@ -949,19 +949,23 @@
         +'<div class="wg-head"><span>'+loLbl+'</span><span>'+hiLbl+'</span></div>'
         +'<div class="wg-vals"><span>'+(lo!=null?waterEsc(f(lo))+yr(loY):'\u2014')+'</span><span>'+(hi!=null?waterEsc(f(hi))+yr(hiY):'\u2014')+'</span></div>'
         +'<div class="wg-track">'+fl.ticks
-        +(pn!=null?'<span class="wg-now" style="left:'+(pn*100).toFixed(1)+'%">'+waterEsc(nowTxt)+'</span>':'<span class="wg-now wg-now-nopos">'+waterEsc(nowTxt)+'</span>')+'</div>'
+        +(pn!=null?'<span class="wg-now t-'+(rd.trend?rd.trend.dir:'flat')+'" style="left:'+(pn*100).toFixed(1)+'%"><i class="wg-tri"></i>'+waterEsc(nowTxt)+'</span>':'<span class="wg-now wg-now-nopos">'+waterEsc(nowTxt)+'</span>')+'</div>'   /* v979: triangle on the line, pointing right when rising, left when falling, up when steady */
         +fl.line+'</div>';
     }).filter(Boolean);
     return blocks.length?'<div class="wtab">'+blocks.join('')+'</div>':'';
   }
   function waterCardHtml(d){
     if(d.dead) return '<div class="sg-row wcard wdead" data-site="'+waterEsc(d.siteNo)+'"><div class="sg-ico" style="color:'+colorOf(d,'dark')+'">'+WATER_ICON[d.kind]+(d.num?'<span class="wnum" style="background:'+colorOf(d,'dark')+'">'+d.num+'</span>':'')+'</div><div><p class="sg-eye">'+waterEsc(eyebrow(d))+'</p><p class="sg-val">no data</p><p class="sg-det"><b><a class="wsite" href="'+siteUrl(d)+'" target="_blank" rel="noopener" title="This gauge on USGS Water Data">'+waterEsc(d.displayName)+'</a></b><br><span class="wread">USGS: '+waterEsc(d.why)+'</span></p></div></div>';
-    var main=d.readings[0], extra=d.readings.slice(1), sts=d.readings.map(function(r){ return statLine(d,r); }).filter(Boolean);
+    var main=d.readings[0], sts=d.readings.map(function(r){ return statLine(d,r); }).filter(Boolean);
+    var hasBlock=function(r){ var m=WATER_PARAMS[r.code]; return !m.nobar && ((d.stats&&d.stats[r.code]&&d.stats[r.code].max!=null) || (d.range30&&d.range30[r.code])); };
+    var extra=d.readings.slice(1).filter(function(r){ return !hasBlock(r); });   /* v979: readings that get a gauge block below aren't repeated in the header */
     var step=(d.num?'<span class="wstep"><button type="button" onclick="w7Step(this,-1)" title="Previous gauge (upstream)" aria-label="Previous gauge">\u2039</button><button type="button" onclick="w7Step(this,1)" title="Next gauge (downstream)" aria-label="Next gauge">\u203a</button></span>':'');   /* v978 */
-    return '<div class="sg-row wcard" data-site="'+waterEsc(d.siteNo)+'"><div class="sg-ico" style="color:'+colorOf(d,'dark')+'">'+WATER_ICON[d.kind]+(d.num?'<span class="wnum" style="background:'+colorOf(d,'dark')+'">'+d.num+'</span>':'')+step+'</div><div><p class="sg-eye">'+waterEsc(eyebrow(d))+'</p><p class="sg-val">'+waterEsc(main.text)+trendHtml(main)+'</p><p class="sg-det"><b><a class="wsite" href="'+siteUrl(d)+'" target="_blank" rel="noopener" title="This gauge on USGS Water Data">'+waterEsc(d.displayName)+'</a></b>'
-      +(d.when?' <i class="wread">'+waterEsc(fmtWhen(d.when))+'</i>':'')   /* v972 (Laurie): time/date to the right of the name, italic, no "Read" */
-      +(extra.length?'<br>'+extra.map(function(e){ return '<span class="wx">'+waterEsc(e.label)+': '+waterEsc(e.text)+trendHtml(e)+'</span>'; }).join(' · '):'')
-      +'</p>'+waterTableHtml(d)+'</div></div>';   /* v963 (Laurie): a small table of now / average / record high / record low per reading replaces the bars */
+    return '<div class="sg-row wcard" data-site="'+waterEsc(d.siteNo)+'"><div class="sg-ico" style="color:'+colorOf(d,'dark')+'">'+WATER_ICON[d.kind]+(d.num?'<span class="wnum" style="background:'+colorOf(d,'dark')+'">'+d.num+'</span>':'')+step+'</div><div><p class="sg-eye">'+waterEsc(eyebrow(d))+'</p>'
+      +'<p class="sg-det wname"><b><a class="wsite" href="'+siteUrl(d)+'" target="_blank" rel="noopener" title="This gauge on USGS Water Data">'+waterEsc(d.displayName)+'</a></b>'
+      +(d.when?' <i class="wread">'+waterEsc(fmtWhen(d.when))+'</i>':'')+'</p>'   /* v979 (Laurie): name + time above the headline number */
+      +'<p class="sg-val">'+waterEsc(main.text)+trendHtml(main)+'</p>'
+      +(extra.length?'<p class="sg-det">'+extra.map(function(e){ return '<span class="wx">'+waterEsc(e.label)+': '+waterEsc(e.text)+trendHtml(e)+'</span>'; }).join(' · ')+'</p>':'')
+      +waterTableHtml(d)+'</div></div>';   /* v963 (Laurie): a small table of now / average / record high / record low per reading replaces the bars */
   }
   /* v962 (2026-09-28, Laurie): the seven 7-day charts ARE the water section now. Each chart sits above a detail panel;
      hovering a line fills the panel with that gauge's full card (name -> USGS, chain/elevation, live readings with
@@ -993,6 +997,12 @@
     document.querySelectorAll('.w7-panel[data-site]').forEach(function(pn){ var d=_wm.all.find(function(x){ return x.siteNo===pn.getAttribute('data-site'); }); if(d) pn.innerHTML=waterCardHtml(d); });
   }
   var _w7order={};
+  /* v979 (Laurie): one place to light a gauge — thick glowing chart line, chain-coloured bar up the whole block */
+  function hiLine(gid, siteNo, on){
+    var svg=$(gid); if(!svg) return;
+    svg.querySelectorAll('polyline').forEach(function(pl){ var me=on && pl.getAttribute('data-site')===siteNo; if(!on){ pl.setAttribute('stroke-opacity','.9'); pl.setAttribute('stroke-width','2'); pl.style.filter=''; return; } pl.setAttribute('stroke-opacity', me?'1':'.3'); pl.setAttribute('stroke-width', me?'3.5':'1.5'); pl.style.filter=me?'drop-shadow(0 0 3px '+pl.getAttribute('stroke')+') drop-shadow(0 0 7px '+pl.getAttribute('stroke')+')':''; });
+    var blk=$(gid+'-block'); if(blk){ var d=on&&_wm.all.find(function(x){ return x.siteNo===siteNo; }); var ch=blk.querySelector('.sg-chart'); blk.style.setProperty('--bar', d?colorOf(d,'light'):'transparent'); if(ch) blk.style.setProperty('--bar-top', ch.offsetTop+'px'); }
+  }
   /* v978 (2026-09-29, Laurie): ‹ › under the water glyph steps through the chain's gauges in transect order
      (upstream → downstream), pinning the panel so the chart hover doesn't snatch it back. Wraps at the ends. */
   window.w7Step=function(btn, dir){
@@ -1000,13 +1010,14 @@
     var i=order.indexOf(pn.getAttribute('data-site')), next=order[((i<0?0:i)+dir+order.length)%order.length], d=_wm.all.find(function(x){ return x.siteNo===next; }); if(!d) return;
     pn.classList.add('pinned'); pn.setAttribute('data-site', d.siteNo); pn.innerHTML=waterCardHtml(d);
     _waterMarkers.forEach(function(m){ var el=m.getElement&&m.getElement(); if(el) el.classList.toggle('hot', m._siteNo===d.siteNo); });
-    var svg=$(gid); if(svg){ svg._w7best=d; svg.querySelectorAll('polyline').forEach(function(pl){ var on=pl.getAttribute('data-site')===d.siteNo; pl.setAttribute('stroke-opacity', on?'1':'.3'); pl.setAttribute('stroke-width', on?'3':'1.5'); }); }
+    var svg=$(gid); if(svg){ svg._w7best=d; } hiLine(gid, d.siteNo, true);
   };
   function showWaterPanel(gid, d, pin){
     var pn=$(gid+'-panel'); if(!pn) return;
-    if(pin!=null){ var was=pn.classList.contains('pinned') && pn.getAttribute('data-site')===d.siteNo; pn.classList.toggle('pinned', !was); }
+    if(pin!=null){ var was=pn.classList.contains('pinned') && pn.getAttribute('data-site')===d.siteNo; pn.classList.toggle('pinned', !was); if(was){ hiLine(gid, null, false); } }
     else if(pn.classList.contains('pinned')) return;   /* hovering doesn't disturb a pinned panel */
     pn.setAttribute('data-site', d.siteNo); pn.innerHTML=waterCardHtml(d);
+    hiLine(gid, d.siteNo, true);
     _waterMarkers.forEach(function(m){ var el=m.getElement&&m.getElement(); if(el) el.classList.toggle('hot', m._siteNo===d.siteNo); });
   }
   function fetchWater(){
@@ -1146,12 +1157,12 @@
           var meta=WATER_PARAMS[best.sr.code], f=meta.fmtS||meta.fmt;
           var when=new Intl.DateTimeFormat('en-US',{timeZone:'America/New_York',month:'short',day:'numeric',hour:'numeric',minute:'2-digit'}).format(new Date(best.p.t));
           tip.style.display=''; tip.textContent=(best.sr.d.num?best.sr.d.num+' · ':'')+best.sr.d.displayName+' · '+when+' · '+f(best.p.v)+(g.absolute?'':' ('+(best.p.d>=0?'+':'−')+Math.abs(best.p.d).toFixed(2)+' ft vs a week ago)');
-          svg.querySelectorAll('polyline').forEach(function(pl){ var on=pl.getAttribute('data-site')===best.sr.d.siteNo; pl.setAttribute('stroke-opacity', on?'1':'.3'); pl.setAttribute('stroke-width', on?'3':'1.5'); });
-          svg._w7best=best.sr.d; showWaterPanel(g.id, best.sr.d, null);
+          svg._w7best=best.sr.d; var pnh=$(g.id+'-panel'); if(!(pnh&&pnh.classList.contains('pinned'))) hiLine(g.id, best.sr.d.siteNo, true);   /* v979: a pinned gauge keeps its glow while you hover others */
+          showWaterPanel(g.id, best.sr.d, null);
         });
         svg.addEventListener('click', function(){ if(svg._w7best) showWaterPanel(g.id, svg._w7best, true); });
-        svg.addEventListener('mouseleave', function(){ tip.style.display='none'; svg.querySelectorAll('polyline').forEach(function(pl){ pl.setAttribute('stroke-opacity','.9'); pl.setAttribute('stroke-width','2'); });
-          var pn=$(g.id+'-panel'); if(pn && !pn.classList.contains('pinned')){ _waterMarkers.forEach(function(m){ var el=m.getElement&&m.getElement(); if(el) el.classList.remove('hot'); }); } });
+        svg.addEventListener('mouseleave', function(){ tip.style.display='none';
+          var pn=$(g.id+'-panel'); if(pn && pn.classList.contains('pinned')){ hiLine(g.id, pn.getAttribute('data-site'), true); } else { hiLine(g.id, null, false); _waterMarkers.forEach(function(m){ var el=m.getElement&&m.getElement(); if(el) el.classList.remove('hot'); }); } });
       }
     });
   }

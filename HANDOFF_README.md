@@ -1,20 +1,33 @@
-# NY Hilltowners Folk Atlas — Session Handoff (2026-09-28, v963)
+# NY Hilltowners Folk Atlas — Session Handoff (2026-09-29, v981)
 
-> **Where things stand (for the next chat).** Baseline is **v980**; next version continues from **v981**. Tonight's session (v934–v963)
-> was almost entirely the Signs + Signals page: the USGS water section rebuilt around a sticky grey/blue map and seven
-> 7-day charts with hover/click detail panels; a 26-gauge curated river transect in four numbered, colour-coded chains
-> plus nine pinned wells; one station picker (Berne reanalysis default, active stations only) driving Rain & snow and the
-> year-by-year charts; iNaturalist by taxonomic group with a kinship-ordered grid and a 10-day leaderboard; eBird
-> provisional reports on the notable band; species names linked to Wikipedia; events drop-in 78 with the new
-> `scripts/events_carryover.py`; workflow `paths:` filter fixed (v944). **Open:** (1) Laurie is editing the phenology
-> workbook offline — `microseasons-24-seasons-v956.xlsx` will come back with a notes column G; merge into
-> `data/microseasons.xlsx` › Entries (Long Form), regenerate Calendar Matrix + Summary. (2) Verify the OpenFreeMap
-> grey/blue vector basemap loads on Laurie's machine (sandbox can only test the Esri fallback). (3) Confirm with Laurie
-> the three glyph changes left as upstream edits in events (78): Inventing the Gig 🎵→🎨, Round Baskets 🧺→🧑‍🌾,
-> Shamrock Oktoberfest 🎵→🍀. (4) Deferred from earlier notes: Blue Cross construction year, phenology elevation
-> vantage, extraction/waste layer (blocked on data.ny.gov allowlist). **Delivery rule learned the hard way:** the
-> CHANGED-ONLY zip must contain every file changed since the last one Laurie deployed, not since the last version.
-> **Test harness:** `scripts/signals_harness/` (see its README).
+> **Where things stand (for the next chat).** Baseline is **v981**; next version continues from **v982**. Laurie has
+> deployed through v980 (this v981 is README-only — ship it with the next real change). The 2026-09-28/29 session
+> (v964–v981) added two heavy **lazy layers** — *Mines & Quarries* (7,184 pins: USGS MRDS + DEC Mined Land Permits) and
+> *Waste & Contamination* (29,974 rows / 16,216 visible: 17 DEC datasets — remediation, bulk storage, orphaned wells,
+> SWMF, MSGP, CSOs, WWTPs, Title V, PWL estuary, tires, e-waste, sediment caps, 512 Places-resolved hazmat spill sites)
+> — both flagged `"wip": true` so they appear **only on the unlinked `wipmap.html`**, never on `atlas.html`; plus
+> 408 DEC wildfires on Natural History (and in the climate register), 54 Birding Trail sites on Adventures (🦅),
+> 182 CDPHP Cycle hubs on Transportation (🚲), Bloom Room + Good Cheap Food (Delhi). **Two new standing rules:**
+> (a) every dataset-derived row carries a `Source` column — "<dataset> — <URL it was pulled from>" — shown in the
+> popup and Directory (`scripts/source_backfill.py`); (b) dataset pins get a synthesised plain-English `Description`
+> from their Notes (`scripts/description_synth.py`) since Notes never ship. Signals water panel was reworked over
+> v972–v980: low|high gauge track with the live value as a gold pill, directional pulsing triangles (→ rising,
+> ← falling, ↑ steady), avg/median beside the FLOW/HEIGHT caption, NWS flood stages (static `FLOOD_STAGES`), ‹ ›
+> stepper through each chain in transect order, chain-coloured bar + glowing chart line, name+time above the headline
+> number, tracks always full width. Prescribed burns were deleted at Laurie's request (not retained).
+> **Open:** (1) Park South CDPHP hub name (v965) — Laurie to confirm; (2) 🫟 for orphaned wells — undecided (Emoji 16.0,
+> boxes on older devices; currently ⚫); (3) Transportation still `default_on: false`; (4) hazmat spills only for the
+> five counties Laurie named — 373 records had no resolvable premise (residences, manholes, road segments; list in
+> `data/spill_incidents_regional.xlsx › Hazmat unresolved`); (5) flood stages are baked in — recheck yearly;
+> (6) unchanged from v963: microseasons workbook merge, OpenFreeMap basemap check on Laurie's machine, three event
+> glyph edits. **Laurie's next ask: a NEW PAGE (not yet specified) — start there.**
+> **Sandbox gotchas learned this session:** data.ny.gov, mrdata.usgs.gov, api.us.socrata.com, api.water.noaa.gov and
+> data.gis.ny.gov are all off the shell allowlist but reachable via **WebFetch** (Socrata catalog API gives `/d/<4x4>`
+> permalinks); never put bulk URLs in the `Website` column (build fetches OG previews → 3,500 blocked requests, hang);
+> `openpyxl.delete_rows` on 30k-row sheets times out — rebuild by append; `delete_rows` never shifts formulas — re-point
+> them; the harness needs `node_modules` → symlink `/home/claude/node_modules`; never `pkill -f` with text that matches
+> your own shell. **Delivery rule:** the CHANGED-ONLY zip must contain every file changed since the last one Laurie
+> deployed, not since the last version. **Test harness:** `scripts/signals_harness/` (now also exercises the stepper).
 
 This ZIP is a **complete, self-contained source tree**. A new chat can unzip it,
 run the build, and continue exactly where this session left off. Everything here
@@ -31,7 +44,7 @@ python3 build/build.py        # deterministic; reads the 3 xlsx in data/
 # -> writes site/ (index.html, calendar.html, directory.html, data.js, ...)
 ```
 
-Expected: `BUILD OK — 6344 records (5933 mappable), ~2950 warning(s)`.
+Expected: `BUILD OK — ~30,280 records (~29,870 mappable), ~2,950 warning(s)` (v981; core `data.js` ≈ 6,400 records, the rest in the lazy `data_mines.js` / `data_waste.js`). Also emits `wipmap.html`.
 The warnings are almost all "couldn't reach <url> for a preview image" and the
 hearts/abacus 403 — cosmetic, retried next build. **Zero ERRORs = good.**
 
@@ -136,6 +149,7 @@ Fixed-hinge wingbeat, 4 white wing-spots. Day-only, reduced-motion safe. The
 
 ## UX state (recent)
 
+- **v981 (2026-09-29, Laurie):** Handoff refresh — the "Where things stand" note above rewritten for the 2026-09-28/29 session; no code or data change.
 - **v980 (2026-09-29, Laurie):** Gauge tracks are always full panel width: the card's text column is now `flex:1 1 auto; min-width:0` and `.wtab` lost its 560 px cap, so the low→high track no longer stretches or shrinks with the longest text line as you step through a chain.
 - **v979 (2026-09-29, Laurie):** Water panel cohesion: (1) the pinned/hovered bar is now the **chain colour** (was gold) and runs as one 3 px bar from the top of the chart box down through the panel (`.w7-block:before`, `--bar`/`--bar-top` set by the new `hiLine(gid, siteNo, on)` helper, which also thickens the lit chart line to 3.5 px and gives it a two-layer drop-shadow glow in its own stroke colour; hover, click, stepper and mouseleave all route through it; a pinned gauge keeps its glow while you hover others). (2) Live-value **triangles** now sit on the track line and encode the trend: up + soft pulse when steady, **pointing right and nudging right when rising, left when falling** (`.wg-now.t-up/.t-down .wg-tri`, 1.6–1.8 s CSS keyframes, disabled under `prefers-reduced-motion`). (3) Header order is now eyebrow → **gauge name + read time** → headline number with trend; secondary readings that get their own gauge block below (height, flow) are no longer repeated in the header — only readings without a block (temperature, tidal speed, anything with no stats) still print there.
 - **v978 (2026-09-29, Laurie):** **‹ › gauge stepper** under the water glyph on every chain panel: `w7Step(btn, ±1)` walks `_w7order[chain]` (the chart's series order = transect order, upstream → downstream), wraps at the ends, pins the panel, lights the map marker and thickens that gauge's chart line. Only numbered (chain) gauges get the buttons; dead cards don't. `.wstep` in signals.html sits absolutely under the 34 px icon. Harness (`run.js`) now clicks through the Schoharie chain and prints the sites visited.

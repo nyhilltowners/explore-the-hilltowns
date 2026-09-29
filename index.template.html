@@ -306,6 +306,7 @@ html[data-theme="night"] .sidefoot{color:var(--birch);}
 }
 .field .fv{font-size:13.5px; line-height:1.55; color:var(--paper);}
 .field .fv.story{font-size:14.5px; line-height:1.62;}
+.field .fv.srcline{font-size:12px; opacity:.85; word-break:break-word;} /* v975: Source line */
 .certline{display:flex; gap:8px; align-items:center; margin:8px 0 14px; flex-wrap:wrap;}
 .certnote{font-size:12px; color:var(--birch); font-style:italic; line-height:1.4;}
 .srcbox{background:var(--ink); border:1px solid #26268f; border-radius:8px; padding:12px 14px; margin-top:6px;}
@@ -2108,6 +2109,7 @@ function detailBody(r){
     b += hoursTable(r.hrs);
     b += fieldHtml('Phone', r.ph);
     b += linkHtml('Website', r.web);
+    b += fieldHtml('Source', r.src, 'srcline'); /* v975 (Laurie): dataset provenance, URL linkified */
     b += affiliationNote();
     return b;
   }
