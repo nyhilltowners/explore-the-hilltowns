@@ -1,7 +1,17 @@
-# NY Hilltowners Folk Atlas — Session Handoff (2026-09-30, v997)
+# NY Hilltowners Folk Atlas — Session Handoff (2026-09-30, v998)
 
-> **Where things stand (for the next chat).** Baseline is **v997**; next version continues from **v998**. Laurie has
-> deployed through v980; v981–v997 ship together — the v997 CHANGED-ONLY zip carries everything since v980.
+> **Where things stand (for the next chat).** Baseline is **v998**; next version continues from **v999**. Laurie has
+> deployed through v980; v981–v998 ship together — the v998 CHANGED-ONLY zip carries everything since v980.
+> **v998 = water package 2026-09-30 (`_core`).** Workbook replaced (now 64 sheets): new `NYC_DEP_PWS` comparison node
+> (22 sites), +104 NYC finished-water rows in `measurements`, `nyc_reservoir_benchmarks` (23 reservoirs × 19 analytes ×
+> 2020–23) and `nyc_distribution_monthly` (2015–2026). Geo layers, brief text and PACKAGE_README refreshed. Page: the NYC
+> node is `txOf() = 'compare'` — never placed on the transect (a dashed box top-right points to its card), card dashed
+> with a "comparison · 33 km W" chip and sorted last; NYC placeholder zeros (`note` "NOT DETECTED — placeholder") print as
+> "not detected"; the lake-TP small multiples gain a dashed **Schoharie Reservoir (NYC)** panel (DEP annual mean TP
+> 2020–23, all seasons, against DEP's 15 µg/L benchmark; tooltip carries % of samples over 15 and turbidity over 5 NTU) from
+> water.py `nyc_bench` (Schoharie + Kensico; TP, turbidity, chl-a). `nyc_distribution_monthly` not yet drawn.
+> **Still unfixed upstream (resend to the water chat):** 120 undated mercury rows, 105 zero-valued "detected" rows with no
+> detection limit, `source_url` with notes appended (6,662 rows) — water.py keeps its workarounds.
 > **v997 = Waste & Contamination split.** On wipmap.html the one toxic layer is now eight checkboxes, each its own sheet in
 > `points_of_interest.xlsx` and its own lazy `data_<key>.js`: Spills 512 (`spills`) · Fuel & Chemical Storage 4,046
 > (`storage`) · Cleanup Sites 1,925 incl. the 2 impaired Hudson segments (`cleanup`) · Orphaned Wells 7,798 (`orphanwells`) ·
@@ -282,6 +292,7 @@ Fixed-hinge wingbeat, 4 white wing-spots. Day-only, reduced-motion safe. The
 
 ## UX state (recent)
 
+- **v998 (2026-09-30, Laurie):** `data/water/` workbook + geo + brief + PACKAGE_README from the 09-30 `_core` package; `build/water.py` `nyc_bench`; `water.js` compare transect type (txOf, COL, TXNAME, ORDER, transect box, card chip/dashed, ND placeholder), `nycPanel()` in drawLakes; `waterwip.html` `.nc.cmp` CSS, lakes subtitle.
 - **v997 (2026-09-30, Laurie):** `points_of_interest.xlsx` (8 new sheets, 'Waste & Contamination' removed); `manifest.json`; `calendar.html`; new `scripts/split_waste.py`; SCRIPTS_README.
 - **v996 (2026-09-30, Laurie):** `water.js` `drawInteract()` (called with drawBloom/drawToxin); `waterwip.html` `#ix` block + note + table, `.lim-lbl` no uppercase.
 - **v995 (2026-09-30, Laurie):** new `scripts/draw_molecules.py`, `data/water/molecules.csv`, `images/contaminants/*.svg` (23) + README.txt; `build/water.py` `mol_caption`; `water.js` card figure (svg, link, caption); `waterwip.html` `.cp-fig`/`.cp-cap` CSS, 380 px column.
@@ -622,7 +633,7 @@ Big ongoing effort to tame tag sprawl. Started at 2,332 unique tags; now ~2,178.
 7. Clean-room verify: unzip the package fresh, rebuild, confirm BUILD OK.
 8. `present_files` the zip + both xlsx.
 
-Version at handoff: **v997**. Next chat continues from v998. Harness in `scripts/signals_harness/` (Signals).
+Version at handoff: **v998**. Next chat continues from v999. Harness in `scripts/signals_harness/` (Signals).
 
 ---
 

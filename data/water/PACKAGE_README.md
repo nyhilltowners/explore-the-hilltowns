@@ -120,7 +120,7 @@ Clipping box for the *_clip layers: lon −74.75 to −73.55, lat 42.05 to 42.85
 - `references.csv` — 22 rows × 13 cols
 - `pfas_map_studies.csv` — 8 rows × 21 cols
 - `pfas_map_cannon_sites.csv` — 40 rows × 25 cols
-- `sources.csv` — 73 rows × 6 cols
+- `sources.csv` — 79 rows × 6 cols
 
 ## Contaminant profiles (key: contaminants.key)
 
@@ -128,6 +128,16 @@ Clipping box for the *_clip layers: lon −74.75 to −73.55, lat 42.05 to 42.85
 - `contaminant_results.csv` — long-format join, one row per ambient measurement (finished water, raw lake, creek, groundwater, bloom sample, fish muscle, bird blood) keyed to `contaminants.key`; non-detects carry `qualifier = "not detected"` and the limit in `detection_limit` with `value` blank.
 - `contaminant_key` column on dmr_annual, dmr_summary, dmr_limits, tri_releases, loading_tool_pollutant, regional_loads_fy2025, dec_results, usgs_wells_raw and measurements, so "who releases it" ranks itself from the release tables.
 - `dec_hab_reports.csv` / `dec_hab_by_year.csv` — per-report bloom status (S / C / HT) 2012–2025 from the DEC portal export, and the worst status per lake per year.
+
+## NYC comparison layer (node `NYC_DEP_PWS`, off-transect)
+
+Added 2026-09-29 at the user's request so the transect towns can be read against the best-monitored surface supply in the state. Draw it dashed and beside the strips, never on them — Gilboa Dam is 33 km west across the Schoharie divide.
+
+- `measurements.csv` rows with `site_id = NYC_DEP_PWS` — 2024 and 2025 finished-water tables (NYC Drinking Water Supply and Quality Reports, pp. 11–15), ~80 rows on the same columns as the town AWQR rows. Non-detects carry value 0 with "NOT DETECTED — placeholder" in `note`; in `contaminant_results.csv` the same rows have `value` blank and `qualifier = "not detected"`.
+- `nyc_reservoir_benchmarks.csv` — 1,746 rows: 23 reservoirs × 19 analytes × 2020–2023, parsed from the benchmark appendix of each DEP Watershed Water Quality Annual Report (F in 2020, H in 2021, G in 2022–23). Join across years on `analyte` (canonical); `analyte_verbatim` is as printed. `single_sample_max` and `annual_mean_standard` are DEP's own benchmarks; `n_exceed_ssm` / `pct_exceed_ssm` verbatim; `censoring_method` explains how censored means were estimated (KM, ROS, >80%, C19 = not sampled). Schoharie is the nearest reservoir; Kensico is the terminal one.
+- `nyc_distribution_monthly.csv` — 136 monthly rows (2015-01 → 2026-08) rolled up from `nyc_distribution_monitoring_raw.csv` (172,399 grab samples, 405 sites; free chlorine, turbidity, fluoride, total coliform, E. coli). The raw file is CSV-only, not in the workbook.
+
+Reading it: NYC's 2025 TTHM average (52 µg/L) sits in the same band as the town systems; its lead 90th percentile (10 µg/L) is *higher* than several of the small districts because the sampling pool is 326 old-plumbing homes. Schoharie Reservoir's share of samples over the 15 µg/L phosphorus benchmark swings with the weather: 6 % (dry 2020), 61 % (2021), 49 % (2022), 30 % (2023), tracking turbidity (19 %, 86 %, 80 %, 45 % over 5 NTU). Phosphorus there rides in on storm-borne sediment, the same mechanism as Basic Creek.
 
 ## Cadence warning
 
@@ -139,7 +149,7 @@ EPA's FY2009–2016 bulk extracts carry no DMR unit field. Because the DMR unit 
 
 ## Known holes (as of 2026-09-29)
 
-- FY2017–18 monthly DMRs: EPA's bulk extracts for those years are header-only (their defect, reported). Annual Loading Tool figures bridge the gap.
+- FY2017–18 monthly DMRs: EPA's bulk extracts for those years are header-only (their defect), and ECHO Effluent Charts only reach back to 2023. Annual Loading Tool figures bridge the gap; the only remaining route to the monthly values is a records request to NYSDEC or EPA Region 2.
 - Basic Creek Reservoir water-column sampling after 2018 not found.
 - Ten of 21 node elevations are still estimates (marked in `elev_source`).
 - Study centroids for Cape Cod, NAWC, Darby Creek: ±0.5–1 km.
@@ -149,4 +159,4 @@ EPA's FY2009–2016 bulk extracts carry no DMR unit field. Because the DMR unit 
 
 ## Provenance
 
-Every sheet's A1 comment names the source, date and processing. `sources.csv` lists every document and export used; `references.csv` (REF-001…022) is the study bibliography. Distances are equirectangular, ±0.1 km at this scale. Point-in-polygon tags were computed with shapely against the GeoJSON layers included here.
+Every sheet's A1 comment names the source, date and processing. `sources.csv` lists every document and export used; `references.csv` (REF-001…027) is the study bibliography. Distances are equirectangular, ±0.1 km at this scale. Point-in-polygon tags were computed with shapely against the GeoJSON layers included here.

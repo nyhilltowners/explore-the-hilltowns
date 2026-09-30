@@ -1,801 +1,304 @@
 Cartographer's Brief — Helderberg–Hudson Water
 
+Sep 28, 2026 · @u_OJe8H6n0rJ9ZyqXzECLsXA · Working draft; theories are labeled as theories.
+
+Purpose
+
+The map shows how water moves off the Helderberg escarpment toward the Hudson, and what is known about its quality at each stop along the way. The reader is someone who lives in the Hilltowns and drinks from a well, a reservoir or a small water district, and wants to understand what the public record says about their water and where that record goes quiet.
+
+The map must not overclaim. Most nodes have one or two numbers from different years and different labs. It can show what has been measured, when, and against what standard; it cannot show a trend along the slope until the raw ambient series is in hand (section 9). Empty nodes are a finding, not a gap to hide: the headwaters that feed everything are the least sampled.
+
+Glossary: what is measured, and what it means
+
+Every number in the workbook belongs to one of these families. The standard quoted is the one the dashboard compares against (parameters sheet); a standard for finished water at a tap is not a standard for a lake or a pipe, and the family header says which applies.
+
+Nutrients and the things they grow (lakes, reservoirs, streams; DEC guidance values)
+
+- Total phosphorus (TP), µg/L — the fertilizer. In most fresh water it is the nutrient in shortest supply, so it sets how much algae can grow. DEC's guidance for lakes is 20 µg/L as a summer mean; Basic Creek Reservoir's TMDL target. Comes from soil, manure, fertilizer, septic and sediment.
+- Chlorophyll-a, µg/L — the green pigment in algae; a proxy for how much algae is actually in the water. Rises with phosphorus.
+- Secchi depth, m — how deep a white disk stays visible. Clarity. Falls as algae and sediment rise. Larger is better.
+- Nitrate / nitrite / ammonia / total Kjeldahl nitrogen, mg/L as N — the nitrogen family. Nitrate is the oxidised form that moves freely in groundwater (drinking-water limit 10 mg/L as N; septic and fertilizer signature). Ammonia is the reduced form fresh from sewage or manure and is toxic to fish; effluent limits around 1–2 mg/L. TKN = organic N + ammonia.
+- Dissolved oxygen (DO), mg/L — what fish breathe. Below about 5 mg/L, trout suffer; near 0, iron, manganese and phosphorus dissolve out of the sediment. Basic Creek's bottom water hit 0.04.
+- Trophic state — the summary word: oligotrophic (clear, low nutrients: Alcove), mesotrophic, eutrophic (green, high nutrients: Basic Creek). Built from TP, chlorophyll and Secchi together.
+- Microcystin, µg/L — the liver toxin made by some blue-green algae during a bloom. Recreational guidance 4 µg/L (NY) / 8 (EPA); drinking-water advisory 0.3 for young children. Basic Creek shoreline scum reached 6,993.
+- HAB (harmful algal bloom) report — a DEC listing that a bloom was seen or confirmed on a given date; a count of weeks on the list, not a concentration.
 
+Oxygen demand and solids (what a sewage plant is permitted on)
 
-
-  Cartographer's Brief — Helderberg–Hudson
-  Water
-    Sep 28, 2026         · ​@Laurie · Working draft; theories are labeled as theories.
-
-
-  Purpose
-  The map shows how water moves off the Helderberg escarpment toward the Hudson, and
-  what is known about its quality at each stop along the way. The reader is someone who
-  lives in the Hilltowns and drinks from a well, a reservoir or a small water district, and wants
-  to understand what the public record says about their water and where that record goes
-  quiet.
-
-  The map must not overclaim. Most nodes have one or two numbers from different years
-  and different labs. It can show what has been measured, when, and against what
-  standard; it cannot show a trend along the slope until the raw ambient series is in hand
-  (section 9). Empty nodes are a finding, not a gap to hide: the headwaters that feed
-  everything are the least sampled.
-
-
-  The territory
-  The Westerlo–Rensselaerville plateau is a drainage divide at 1,500–1,800 ft, so the map has
-  two transects sharing one headwater, not one slope. North side: Basic Creek → Basic
-  Creek Reservoir → Alcove Reservoir → Hannacroix Creek → Hudson at Coeymans; this is
-  Albany's drinking water. South side: Myosotis Lake → Ten Mile Creek (Rensselaerville) →
-  Catskill Creek past Greenville and Cairo → Hudson at Catskill. Potic Reservoir, which
-  serves Catskill village, is a third small drainage that enters the Hudson at Coxsackie.
-
-
-
-
-                                                                                           Page 1 of 17
-Cartographer's Brief — Helderberg–Hudson Water
-
-
-
-
-  two transects from the Westerlo divide to the Hudson · 12 nodes
-
-  Read top down: the one node with no data feeds both columns. Tinted boxes are taps,
-  where numbers describe treated water; outlined boxes are the waterbodies themselves.
-
-  The escarpment is Silurian–Devonian limestone (the Helderberg Group) over Ordovician
-  shale, which is why it is New York's type karst: sinkholes, caves, and closed depressions
-  where surface water drops straight into bedrock. Below the escarpment the valleys are
-  cut in shale with glacial till and alluvium on top. Wells on the plateau draw from fractured
-  limestone and shale; wells in the Cairo and Catskill valleys draw from alluvium that is in
-  contact with the creeks.
-
-  Source type sorts the water quality signal better than elevation does. Every surface-water
-  supply (Rensselaerville, Catskill, Albany) fights disinfection byproducts, which form when
-  chlorine meets dissolved organic carbon; neither groundwater supply (Greenville, Cairo)
-  does. The groundwater supplies instead carry a bedrock signature: radium, barium,
-  fluoride, iron and manganese. The layout should make that split visible before it makes
-  elevation visible.
-
-
-
-                                                                                          Page 2 of 17
-Cartographer's Brief — Helderberg–Hudson Water
-
-
-
-
-  Node inventory
-  Twenty-one nodes, ordered by watershed then downstream rank. Elevations marked ~ are
-  estimates; the others are USGS 3DEP values; the full attribute set is the sites sheet of
-  the workbook.
-
-
-    Rank       Node                          Type                 Watershed    Elev ft   Data status   Headline
-
-    0          Plateau private               private-well zone    divide       ~1,700    none          Generic plateau
-               wells (reference                                                                        well zone at
-               point,                                                                                  ~1,500 ft on the
-               Rensselaerville)                                                                        divide; no public
-                                                                                                       system in
-                                                                                                       Westerlo except
-                                                                                                       a small Westerlo
-                                                                                                       Southside Water
-                                                                                                       Coop (ECHO
-                                                                                                       listing,
-                                                                                                       unverified); on
-                                                                                                       shale; 10 plateau
-                                                                                                       USGS wells
-                                                                                                       within 15 km
-                                                                                                       (2008), 10
-                                                                                                       plateau wells
-                                                                                                       within 15 km,
-                                                                                                       2008–2021
-
-    0          USGS well A2183               monitoring well,     divide       960       1 sample,     Inactive
-                                             200 ft bedrock                              2012
-
-    0          Berne-Knox-                   public system        divide       ~1,500    not pulled    Nearest public
-               Westerlo CSD                  (well)                                                    bedrock-well
-                                                                                                       data to Westerlo
-
-    1          Basic Creek                   reservoir, Class A   Hannacroix   ~1,150    rich: DEC     Summer TP 44 →
-               Reservoir                                                                 lake          32 → 21 µg/L
-                                                                                         sampling      (2004–2018);
-                                                                                         2004, 2013,   bottom DO to
-                                                                                         2018;         0.04; microcystin
-                                                                                         profiles;     to 6,993 µg/L
-                                                                                         bloom         (2014); 15 HAB
-                                                                                         toxins        reports 2025
-
-
-
-
-                                                                                                                   Page 3 of 17
-Cartographer's Brief — Helderberg–Hudson Water
-
-
-
-
-    Rank       Node                          Type                 Watershed        Elev ft   Data status   Headline
-
-    2          Alcove Reservoir              reservoir, Class A   Hannacroix       ~400      thin          One year of data
-                                                                                                           (2004): TP 5.6
-                                                                                                           µg/L, Secchi 6.7
-                                                                                                           m, oligotrophic; 3
-                                                                                                           HAB reports
-                                                                                                           2025
-
-    3          City of Albany                public system        Hannacroix       —         rich, AWQR    TTHM LRAA 43–
-               system                        (surface)                                       2019–2025     59 µg/L; lead
-                                                                                                           90th pct 13–17,
-                                                                                                           action level
-                                                                                                           exceeded 2023;
-                                                                                                           PFAS and
-                                                                                                           dioxane all non-
-                                                                                                           detect
-
-    1          Lawson Lake                   lake                 Hannacroix       ~700      thin          3 HAB reports
-                                                                                                           2025
-
-    0          Thompsons Lake                lake                 verify           ~1,200    thin          1 HAB report
-                                                                                                           2025
-
-    1          Myosotis Lake                 lake                 Catskill Creek   ~1,400 thin             2 HAB reports
-                                                                                                           2025
-
-    2          Rensselaerville               public system        Catskill Creek   ~1,300    rich, 2025    TTHM range to
-               WD                            (Ten Mile Creek)                                              84 µg/L vs 80
-                                                                                                           MCL; lead 90th
-                                                                                                           pct 9.3
-
-    3          Greenville WD                 public system (3     Catskill Creek   ~620      rich, 2025    Radium 0.82
-                                             bedrock wells)                                                pCi/L; greensand
-                                                                                                           for Fe/Mn
-
-    4          Cairo WD                      public system        Catskill Creek   ~380      rich, 2022    PFOS 6.75 ng/L;
-                                             (wells under                                                  arsenic 2.7 µg/L
-                                             surface
-                                             influence)
-
-    5          Catskill Creek                stream               Catskill Creek   ~100      thin          2 HAB reports
-               main stem                                                                                   Sept 2025
-
-    1          Potic Reservoir               reservoir            Coxsackie        ~250      via AWQR      High microbial
-                                                                                             only          susceptibility;
-                                                                                                           aerator being
-                                                                                                           added
-
-    6          Village of Catskill           public system        Catskill Creek   ~40       rich, 2022    TTHM MCL
-               system                        (Potic)              mouth                                    violation 2022;
-                                                                                                           lead 90th pct 9.6
-
-
-
-
-                                                                                                                       Page 4 of 17
-Cartographer's Brief — Helderberg–Hudson Water
-
-
-
-
-    Rank       Node                          Type              Watershed         Elev ft   Data status   Headline
-
-    0.4        Greenville (T)                point source,     Hannacroix /      ~1,050    rich (ECHO    0.02 MGD; 7
-               WWTP,                         sewage effluent   Basic Creek                 DMRs)         effluent
-               NY0094854                                       trib, below the                           exceedances; no
-                                                               dam,                                      phosphorus limit;
-                                                               upstream of                               drains to Alcove
-                                                               Alcove
-
-    0.4        Camp Malka plant,             point source,     Hannacroix /      ~1,150    rich (ECHO    0.027 MGD; 22
-               NY0269093                     seasonal sewage   Basic Creek                 DMRs)         exceedances, 8
-                                             effluent          trib, below the                           non-compliant
-                                                               dam,                                      quarters; on
-                                                               upstream of                               valley fill; 9.6 km
-                                                               Alcove                                    from the
-                                                                                                         reference point
-
-    3.5        Haleon (ex-GSK)               point source,     Catskill Creek,   ~700      rich (DMRs    Only
-               Oak Hill,                     pharmaceutical    Durham                      2009–2026)    phosphorus-
-               NY0191973                     process water                                               limited
-                                                                                                         discharger
-                                                                                                         within 20 km (6.8
-                                                                                                         mg/L). Effluent P
-                                                                                                         median 0.02
-                                                                                                         mg/L through
-                                                                                                         2023, then 0.085,
-                                                                                                         0.07, 0.24 (2026)
-                                                                                                         with a 6.0 mg/L
-                                                                                                         month in 2024 —
-                                                                                                         tenfold rise, no
-                                                                                                         violation.
-
-
-
-
-  Symbol grammar and layout rules
-  Shape encodes what the node is; nesting encodes what it draws from; fill encodes how
-  much we know.
-
-       Circle = lake or reservoir. Line = stream. Triangle = groundwater (well or well field).
-       Diamond = public water system.
-       A diamond nested inside a circle or triangle says what that system draws from. Cairo's
-       triangle is hatched: groundwater under the influence of surface water.
-       Hollow symbol = no data. Westerlo's hollow triangle at the top of both transects is the
-       first thing the map should say.
-
-
-
-
-                                                                                                                       Page 5 of 17
-Cartographer's Brief — Helderberg–Hudson Water
-
-
-
-
-       Ring weight or opacity scales with data status: none, thin, rich. Staleness shows as a
-       date label, not a color; Basic Creek's most recent lake phosphorus is from 2018 and the
-       reader should see that.
-       Two vertical columns sharing a headwater node at the top, ordered by downstream
-       rank, with elevation on the y-axis. A third short column for Potic if it fits; otherwise a
-       footnote node beside Catskill.
-       Flip card: front = one badge (impaired, violation, clean, no data), one headline number
-       with its percent of standard, and a June–November bloom strip for surface nodes.
-       Back = the measurement rows grouped by parameter family (nutrient, disinfection
-       byproduct, geogenic metal, PFAS, plumbing metal), each with sample date and source
-       link.
-       Any panel that mixes finished-water numbers with raw-source numbers labels the two
-       differently. They describe different water at different stages of treatment and should
-       never sit on the same axis.
-       PFAS and phosphorus panels use log scales. The PFAS range in hand is 2 ng/L to 27,819
-       ng/L; on a linear scale every local point disappears.
-       Karst sinkholes from the lidar layer are a base-map layer along the escarpment front,
-       drawn as small dots or stipple, never as symbols that compete with the water nodes.
-       Confident outcrop sinkholes solid, covered-karst candidates hollow. The belt should
-       read as a boundary between two ground types, with Westerlo visibly above it on the
-       shale.
-
-
-  Data layers
-  Seven kinds of information, each with a different cadence and a different subject. The
-  workbook helderberg_hudson_water_quality.xlsx holds them as separate sheets; the
-  map should treat them as separate layers.
-
-
-     Layer                      Subject          Cadence        Source             Workbook sheet
-
-     Regulatory                 the waterbody    every 2–3 yr   DEC Waterbody      assessments
-     assessments                                                Inventory / PWL
-                                                                factsheets
-
-     Finished-water             the tap, after   annual         municipal Annual   measurements
-     compliance                 treatment                       Water Quality
-                                                                Reports (AWQR)
-
-
-
-
-                                                                                                    Page 6 of 17
-Cartographer's Brief — Helderberg–Hudson Water
-
-
-
-
-     Layer                      Subject          Cadence            Source               Workbook sheet
-
-     Raw ambient                the source,      irregular;         Water Quality        wqp_import (awaiting
-     samples                    before           multi-year         Portal; DEC DOW      corrected pull)
-                                treatment        series             data portal
-
-     Bloom event                surface          weekly in          DEC NYHABS           habs_2025
-     counts                     waterbodies      season             archive
-
-     Load model                 the watershed    one-time           Basic Creek          tmdl_basic_creek
-                                                 (2013)             phosphorus TMDL
-
-     Karst recharge             the plateau      static GIS         USGS NY karst        references REF-010; layer
-     features                   bedrock                             inventory (4         not yet loaded
-                                                                    geodatabases)
-
-     Reference                  far-afield       n/a                USGS data            references;
-     studies                    exemplars                           releases             pfas_map_studies;
-                                                                                         pfas_map_cannon_sites
-
-     Permitted                  outfalls:        monthly            EPA ECHO CWA         echo_cwa_permits,
-     discharges                 sewage,          DMRs; permits      export; DEC          echo_local_facilities,
-                                industrial,      5-yr               WWTP outfalls;       ny_wwtp_outfalls,
-                                stormwater                          MSGP                 ny_msgp_stormwater,
-                                                                                         ny_cso_outfalls
-
-     Withdrawals                who takes        annual             DEC Water            ny_withdrawals,
-                                water, how       (≥100,000 gpd      Withdrawal           ny_withdrawals_by_user
-                                much             only)              reporting
-
-     Land                       septage,         registrations 5-   DEC Part 361         ny_land_application,
-     application                papermill        yr; annual         SWMF list            ny_waste_facilities
-                                sludge, manure   reports
-                                on fields
-
-     Legacy                     remediation      status             DEC                  ny_remediation_sites,
-     contamination              sites, orphan    changes;           Environmental        ny_orphan_wells
-                                wells            irregular          Remediation Sites;
-                                                                    orphan wells
-
-     Air deposition             what falls on    annual             Title V inventory;   ny_titlev_summary,
-                                the watershed    emissions;         NADP mercury         ny_titlev_annual,
-                                                 weekly                                  ny_hg_deposition
-                                                 deposition
-
-     Impoundments               dams: hazard,    inspection         DEC Inventory of     ny_dams
-                                condition,       every 1–5 yr       Dams
-                                storage,
-                                drainage
-
-
-
-
-                                                                                                                  Page 7 of 17
-Cartographer's Brief — Helderberg–Hudson Water
-
-
-
-
-     Layer                      Subject            Cadence   Source               Workbook sheet
-
-     Geologic                   valley-fill        static    DEC                  aquifer_setting columns on
-     framework                  aquifers, karst,             Unconsolidated       sites / usgs_wells /
-                                wetlands, DEC                Aquifers 250K;       ny_dams; karst_sinkholes;
-                                basins                       USGS lidar karst;    ny_wetlands_summary
-                                                             DEC wetlands;
-                                                             Major Water Basins
-
-     Report index               where each         live      DEC Lake             ny_lake_reports (61 links)
-                                lake's DEC                   Monitoring
-                                report lives                 Reports layer
-
-
-  Only the raw ambient layer can show change over time; it is now in hand for 21 local
-  waterbodies (17,121 samples, DEC portal export 2026-09-28). Sleepy Hollow Lake, with
-  phosphorus in 16 summers since 2004, is the regional control series; Thompsons Lake has
-  seven summers 1994–2000 and resumed in 2025. Everything else is a snapshot or a
-  judgment.
-
-
-  Working theories
-  Each is labeled with what supports it, what cuts against it, and what would settle it. None
-  is established.
-
-   1. Basic Creek Reservoir is improving but still blooms, and the mechanism is shallow-
-       water anoxia, not deep stratification. DEC's own follow-up sampling (portal export,
-       2026-09-28) shows summer-mean total phosphorus of 44 µg/L in 2004, 32 in 2013 and
-       21 in 2018, against the 20 target; chlorophyll fell from 38 to 11 µg/L and Secchi depth
-       doubled to 1.9 m. The watershed side of the TMDL appears to be working. But the
-       reservoir is only 3.5–4 m deep and does not thermally stratify (surface and bottom
-       within 1 °C), and bottom dissolved oxygen still fell to 0.04 mg/L (July 2013) and 0.91
-       (Aug 2018), with manganese near 200 µg/L and iron 381 µg/L in the same events. In a
-       shallow polymictic reservoir that is sediment oxygen demand under a warm, calm
-       water column, and it recharges phosphorus from the bottom on any hot still week.
-       Shoreline bloom samples carried microcystin of 83 µg/L (Sept 2013), 487 (Aug 2014)
-       and 6,993 (Oct 2014), against a recreational guidance of 4. Against: three sampling
-       years is a thin trend, and 2025's fifteen bloom reports came after 2018's improvement.
-       Settled by: 2023 and 2026 lake sampling if it exists, and the 2025 bloom sample results.
-   2. The reservoir is a five-week mirror of its watershed. Hydraulic residence time is 0.1
-       years, so Basic Creek barely buffers what comes off the land. Wet years should show
-       up as phosphorus spikes within the same season. Against: a fast-flushing reservoir also
-
-
-                                                                                                         Page 8 of 17
-Cartographer's Brief — Helderberg–Hudson Water
-
-
-
-
-       clears quickly, which could mask internal loading. Settled by: joining the raw ambient
-       series to the regional climate event register by year.
-   3. Thirty percent of the phosphorus arrives underground, but not through karst. The
-      TMDL attributes 616 lbs/yr to groundwater transport, two-thirds from agriculture. The
-      lidar karst layer (USGS SIR 2021-5094; 40 verified outcrop sinkholes, 14 covered-karst
-       candidates) shows the soluble limestone belt runs along the escarpment front 15–20
-       km north and east of Westerlo, from Knox through Berne, New Scotland and Clarksville
-       to Coeymans — the Onesquethaw, Vloman Kill and Coeymans Creek drainages, on the
-       Albany side. Nothing lies within 12 km of the Westerlo divide, the septage site, the
-       anomalous well or Basic Creek Reservoir; the nearest outcrop sinkhole is 16 km away.
-       The Basic Creek watershed sits on Hamilton Group shale above the carbonate, so its
-       groundwater fraction moves as fractured-shale and till interflow, slower and more
-       diffuse than sinkhole recharge. That is consistent with the plateau wells' sodium-
-       bicarbonate chemistry, which takes long residence in shale to develop. Against:
-       covered-karst collapse is possible wherever Onondaga is buried under Hamilton, and
-       three candidates sit 12–14 km east toward Coeymans. Settled: karst is a real story for
-       the Thacher Park escarpment and the Albany-side creeks, not for the Westerlo divide.
-       Map it as its own belt, not as the plateau's recharge mechanism.
-   4. Same carbon, two rulebooks. The vegetation and nutrient loading that shows up as
-       phosphorus and blooms at the top of the hill shows up as trihalomethanes at every
-       surface-water tap below it. Rensselaerville hit 84 µg/L in one quarter; Catskill violated
-       the 80 µg/L running average in 2022; Albany runs 43–59 every year from 2019 to 2025
-       with finished-water TOC of 1.6–1.9 mg/L, and Basic Creek Reservoir's raw DOC is 3–6
-       mg/L. Against: TTHM also depends on chlorine dose and contact time, which are
-       treatment choices, and Albany draws from Alcove, which is deep and clear, not from
-       Basic Creek. Settled by: raw-water TOC at each intake, which the AWQRs do not
-       report; ask the operators.
-   5. Groundwater picks up geology going down and picks up us going toward the valley
-      floor. The USGS groundwater layer (193 wells in the box, 10 on the plateau; WQP export
-       2026-09-28) now shows the split directly. Plateau bedrock wells within 15 km of the
-       divide, sampled 2008–2021, are soft sodium-bicarbonate water: pH 7.9–9.0, sodium 109–
-       139 mg/L against chloride of 2–6, hardness 30–40, lithium 220–448 µg/L, boron 330–640,
-       arsenic to 5.9. That chemistry is cation exchange in shale: calcium swapped for sodium
-       on clay surfaces as water sits in the rock for a long time. The nearest well (3.6 km,
-       2008) is the exception, with chloride 62 and sodium 109, which is road salt riding on the
-       same base. The Cairo valley well (2018) is the opposite water: iron 879, manganese 744,
-       methane detected, chloride 82, a reducing alluvial aquifer in contact with the creek.
-
-
-
-                                                                                            Page 9 of 17
-Cartographer's Brief — Helderberg–Hudson Water
-
-
-
-
-       Radon is the plateau's other signature: 1,830 pCi/L in a Rensselaerville-area well (2013),
-       900 at Cairo, 360–460 elsewhere, against a proposed 300 MCL. Against: one sample
-       per well, most from a single year; the 1992 cluster near Oak Hill with chloride to 13,000
-       mg/L is a salt-storage study, not ambient water. Settled by: the summer 2026 USGS
-       resample, and a plateau private-well test that reports pH, sodium, hardness, lithium
-       and radon.
-   6. Cairo's PFOS came from somewhere nearby. At Cannon AFB, PFHxS out-runs PFOS
-      along the flow path, so a downgradient well is PFHxS-dominant. Cairo's finished water
-       is PFOS-dominant (6.75 ng/L) with PFHxS at 2.5, which on that logic suggests a short
-       travel distance. Against: one sample; different geology; AFFF fingerprints differ from
-       other PFAS sources. Settled by: a full PFAS panel with precursor assay at the two Cairo
-       wells, or a DEC source investigation if one exists.
-   7. Westerlo's silence is structural, not accidental. No public system beyond a small
-      Westerlo Southside Water Coop that surfaced in ECHO and is not yet confirmed with
-      the town, no active USGS well, no ambient-network site. The state monitors where
-       people are served, and the plateau serves no one but itself. Against: the USGS ambient
-       network has sampled ten plateau wells since 2008, so the plateau is not unmonitored,
-       only unmonitored by the public-supply rules. What changes it: a certified private-well
-       test on the divide, compared against those ten.
-   8. The two sewage plants on Basic Creek are Alcove's problem, not the TMDL's.
-      Resolved 2026-09-29. A StreamStats catchment delineated at the Basic Creek Dam
-      (11,318 acres; the TMDL's 10,522 plus the reservoir and a sliver below the dam) extends
-       north into Berne, not south into Greenville: Basic Creek flows south out of the
-       reservoir, through Greenville, to Alcove Reservoir. Greenville (T) WWTP (NY0094854,
-       0.02 MGD, 7 effluent exceedances) and Camp Malka (NY0269093, 0.027 MGD
-       seasonal, 22 exceedances over 8 non-compliant quarters) discharge to Basic Creek
-       tributaries 4–5 km outside that boundary, below the dam. So the TMDL's zero
-       wasteload allocation is correct for Basic Creek Reservoir, and the earlier draft of this
-       theory was wrong. What survives is sharper: both plants sit upstream of Alcove,
-       Albany's primary supply, which has no TMDL, no phosphorus limit on either permit, and
-       an oligotrophic assessment that rests on a 32.5 sq mi catchment diluting whatever
-       arrives. The TMDL's own weaknesses stand on their own: built with no observed
-       phosphorus data (validated afterward on five samples each in 2004 and 2005, which
-       came in at 42 and 55 µg/L against a simulated 31), and internal loading from anoxic
-       sediment left at zero despite DEC's 2013 and 2018 profiles showing bottom anoxia.
-       Only four dams sit inside the catchment (Basic Creek, Camp Givah, Duker Pond,
-
-
-
-
-                                                                                           Page 10 of 17
-Cartographer's Brief — Helderberg–Hudson Water
-
-
-
-
-       Snyder Farm Pond); no USGS well and no land-application site does. Draw the two
-       plants as point-source glyphs on Basic Creek between the two reservoirs, pointed at
-       Alcove.
-   9. The valley-fill aquifers are the corridors; everything we monitor sits on bedrock. The
-       DEC Unconsolidated Aquifers layer (907 polygons, now point-in-polygon tagged for
-       every node, well, dam and facility in the workbook) maps sand-and-gravel aquifers only
-       along the valley floors: Basic Creek below the reservoir, Eightmile and Ten Mile creeks,
-       Catskill Creek from Greenville down. Every public intake on both transects, the
-       reference point, the USGS plateau wells and 18 of 19 nodes fall outside them; the one
-       exception is Camp Malka's plant, which sits on a 10–100 gpm valley-fill unit. Read with
-       theory 5, this says the sodium-bicarbonate signature is the bedrock-well norm here
-       and the valley aquifers, where road salt, septic and fertilizer arrive fastest, are the
-       places the state does not have a public well to watch. Against: the 250K layer is coarse
-       and 1980s-vintage; a bedrock well drilled through thin valley fill is still tagged "valley-
-       fill." Draw the aquifer polygons as a pale underlay so the hollow nodes read as sitting on
-       rock beside them.
- 10. Compliance hides trend. Eighteen years of discharge reports show movements that
-     no violation ever flagged: Haleon Oak Hill's phosphorus median rising tenfold since
-       2023 while staying under a generous limit; SABIC's phosphate falling by two-thirds
-       since 2007 (2,270 → 760 kg/yr) with no one to credit; CSX Selkirk's phosphorus
-       climbing (205 → 384 kg/yr) as its ammonia fell to zero; Greenville's influent taking 1,600
-       mg/L BOD slugs a small town cannot generate; Berne WWTP's load quadrupling in nine
-       years. A limit is a threshold, and a threshold is blind to direction. The dashboard should
-       show each outfall as a sparkline against its limit, not as a green or red dot. Against:
-       annual Loading Tool figures carry an estimation factor when months are missing, and
-       pre-2009 reporting is patchy; treat any single-year jump as unverified until the monthly
-       rows agree.
-
-
-  Stories worth telling, and stories to refuse
-  In priority order, with what each needs.
-
-   1. The monitoring shadow. Where the state looks and where it doesn't. Fully supported
-       now; the hollow nodes at the top of both transects carry it. Lead with this. Note the
-       elevation order the 3DEP values give: Myosotis 1,536 → Rensselaerville intake 1,500 →
-       Onderdonk 1,392 → Warners 1,199 → Basic Creek Reservoir 928 → Greenville wells 697 →
-       Alcove 609 → Potic 424 → Cairo wells 370.
-
-
-
-
-                                                                                            Page 11 of 17
-Cartographer's Brief — Helderberg–Hudson Water
-
-
-
-
-   2. Same carbon, two rulebooks. Phosphorus and blooms above, disinfection byproducts
-       below, sorted by source type rather than elevation. Fully supported by the AWQRs and
-       the DEC factsheet.
-   3. Bedrock signature versus human signature. Greenville against Cairo. Supported as a
-       contrast of two nodes; becomes a gradient only when the Lower Hudson groundwater
-       release is in hand.
-   4. The five-week reservoir. Basic Creek against the climate event register. Needs the raw
-      ambient series; this is the story the dashboard should be built toward.
-   5. Where the water goes underground. The karst belt along the escarpment front
-      against the shale plateau above it — two recharge regimes side by side. Fully
-      supported now by the lidar sinkhole layer; the surprise is that Westerlo is on the shale
-       side.
-   6. The dam that holds the impaired water is rated unsound. Basic Creek Dam (1928, high
-      hazard, 3,922 ac-ft) was inspected 2024-04-09 and carries DEC's "Unsound –
-       Deficiency Recognized" rating; Alcove Dam below it has no deficiencies. Myosotis,
-       Potic, Onderdonk and Warners lake dams are all "Unsound" or "Deficiently maintained."
-       A condition-coded ring on each impoundment glyph tells this without a word. Needs
-       the inspection reports themselves before saying what the deficiency is.
-
-  Refuse, for now:
-
-       Any claim of a downslope trend in a single parameter. With one or two values per site
-       from different years and labs, a gradient plot would look convincing and mean nothing.
-       Any statement about private-well safety in Westerlo. There is no data; the map says so.
-       Any comparison of finished-water numbers to raw-water numbers on one axis.
-       Any implication that the Cannon, Cape Cod or New Jersey studies describe local
-       conditions. They are exemplars of process, and the map labels them as such.
-
-
-  Reference studies and the PFAS study layer
-  Thirteen studies are logged in the references sheet, each tagged by what it contributes:
-  regional baseline, geological analog, method, effects, or local. They inform interpretation
-  and tooltips; only two produce map geometry.
-
-
-
-
-                                                                                         Page 12 of 17
-Cartographer's Brief — Helderberg–Hudson Water
-
-
-
-
-     Study                                       Where           Role         What it gives the map
-
-     NY karst inventory (Root,                   statewide NY    local        Closed-depression GIS
-     Kappel, Reddy 2020)                                                      layer for the plateau base
-                                                                              map
-
-     Cannon AFB PFAS (Lorah                      Clovis, NM      source-      42 sites with coordinates
-     et al. 2024)                                                gradient     and PFAS maxima; the
-                                                                 exemplar     scale bar
-
-     Upper Hudson                                Saratoga–       regional     Expected bedrock ranges
-     groundwater 2022                            Warren, NY      baseline     for radon, radium, arsenic
-
-     Pohatcong Valley model                      Warren Co.,     geological   Contaminant transport in a
-     (Carleton 2021)                             NJ              analog       carbonate valley under till
-
-     JBMDL PFAS model                            NJ Coastal      method       Reverse particle tracking
-     (Fiore, Colarullo 2023)                     Plain                        from wells to sources
-
-     NAWC mudstone                               West Trenton,   geological   Redox zonation in
-     (Imbrigiotta et al. 2017)                   NJ              analog       fractured shale
-
-     Darby Creek seeps (Foss                     Folcroft, PA    method       Groundwater-to-creek
-     et al. 2025)                                                             handoff, sampled at seeps
-
-     Cape Cod PFAS uptake                        Cape Cod,       effects      Exposure → tissue →
-     and two sperm-quality                       MA                           reproductive endpoint
-     releases
-
-     National pesticide                          national;       method       Decadal-resample design;
-     network; DBCP decades                       California                   30-year aquifer memory
-
-
-  The Cannon site layer is the one to draw as a zoomed exemplar. PFOS in groundwater runs
-  from 27,819 ng/L beside the fire-training area to non-detect at perimeter wells about 2 km
-  away. PFHxS, a shorter chain that sorbs less, leads the front: at well MW-D it is 6,088 ng/L
-  against PFOS at 2,028. Soil at the source holds 2,749 ng/g PFOS; porewater under it 889
-  ng/L; the plume below is fed by decades of accumulated mass. Cairo's 6.75 ng/L sits four
-  orders of magnitude below the Cannon source, which is the reason the two must share a
-  log axis or not share an axis at all.
-
-
-
-
-                                                                                                      Page 13 of 17
-Cartographer's Brief — Helderberg–Hudson Water
-
-
-
-
-  Open gaps and next pulls
-  Closed tonight: the WQP results export (319k rows, 193 wells), the DEC portal chemistry
-  export (17,121 local samples), Albany AWQRs for five of seven years, and eighteen NY
-  open-data layers (facilities, outfalls, withdrawals, mercury, remediation, stormwater
-  permits, emissions). Remaining, in the order they unlock stories:
-
-       Karst: done, with the better source (30 cm lidar, bedrock-tested, USGS SIR 2021-5094)
-       rather than the statewide inventory. Theory 3 revised: the parcel is on shale, not karst.
-       DEC lake sampling for Basic Creek Reservoir after 2018. The portal's last water-column
-       year is 2018; the TMDL cadence implies 2023. Ask DEC Region 4 Lake Monitoring, or
-       check whether the 2025 bloom reports were lab-sampled. Settles whether 2018 was a
-       trend or a good year.
-       City of Albany AWQR 2022 and 2024 to complete the 2019–2025 series.
-       Schreiber Farm septage annual reports (DEC facility documents site, Land Application
-       – Septage, Region 4): acreage, gallons and fields applied; whether reports exist before
-       2025.
-       DEC SPDES individual-permit lookup for Owens Corning Delmar and SABIC Selkirk:
-       permitted parameters and outfall limits. Owens Corning has only a stormwater general
-       permit in the open data.
-       USDA Organic Integrity Database: is Schreiber Farm certified, and by whom.
-       Site metadata for the Cape Cod, NAWC and Darby Creek releases to replace
-       estimated study centroids. (Cannon is done: all 42 sites have exact coordinates and
-       well construction.)
-       Berne-Knox-Westerlo CSD annual water report; nearest public bedrock-well data on
-       the divide. Ask the district.
-       USGS elevations for the ten nodes still marked ~ in sites .
-       A certified private-well test anywhere on the divide: pH, sodium, hardness, chloride,
-       lithium, boron, arsenic, iron, manganese, radon, nitrate. The panel that lets one number
-       sit on the same axes as the ten USGS plateau wells.
-       Summer 2026 USGS ambient groundwater resample of the Lower Hudson basin, when
-       released (expected 2027).
-       Unconsolidated Aquifers layer: done. Every node, USGS well, dam, land-application site
-       and lake report point now carries an aquifer_setting tag and distance to the nearest
-       valley-fill polygon.
-
-
-
-
-                                                                                           Page 14 of 17
-Cartographer's Brief — Helderberg–Hudson Water
-
-
-
-
-       Full 2013 TMDL read; tmdl_basic_creek_detail sheet built; NYC Phase II TMDLs (2000)
-       and implementation plans (2001, 2002) logged as method exemplars.
-       Basic Creek Reservoir catchment: delineated in StreamStats 2026-09-29
-       ( basic_creek_res_basin.geojson ); both outfalls are outside it, below the dam.
-       Theory 8 rewritten. Every layer now carries an in_basic_creek_res_catchment
-       column.
-       DMR flow and effluent records for NY0094854 and NY0269093 (ECHO DFR → Effluent
-       Charts), and the SPDES fact sheets: does either permit have a phosphorus monitoring-
-       only requirement. Now framed as a question about Alcove's inputs.
-       Dam safety inspection report for Basic Creek Dam (DEC Region 4 Dam Safety, FOIL if
-       needed): what "Deficiency Recognized" refers to.
-       Confirm the Westerlo Southside Water Coop with the Town of Westerlo or the NYS
-       DOH PWS list; get its PWS ID and AWQR if it files one.
-       Re-export the AA/AA(s) Classified Watersheds and Freshwater Wetlands layers as
-       GeoJSON (the CSV exports carry no names and no geometry, so they cannot be
-       mapped or joined).
-       Point-source layer complete: ECHO bulk DMRs FY2009–2016 and FY2019–2026
-       (415,530 local rows, influent retained), current limits for 174 permits, and EPA Loading
-       Tool annual pollutant loads for 2007, 2008, 2017, 2018 bridging EPA's broken FY2017–18
-       extracts. Sheets dmr_limits , dmr_results , dmr_summary , dmr_annual ,
-        loading_tool_pollutant ; raw history in two companion workbooks.
-       Report the empty FY2017–18 NPDES_DMRS extracts (national and NY) to EPA via the
-       ECHO contact form so the monthly rows eventually exist.
-       USGS 3DEP elevations for 11 nodes (the service timed out on the rest; still marked ~).
-       Two corrections fell out: Basic Creek Reservoir is at 928 ft, not ~1,150, and Alcove at
-       609 ft, not ~400.
-       Reference point re-centred 2026-09-29. The study is regional, not property-specific:
-       every distance column ( km_from_ref ) now measures from Rensselaerville hamlet,
-       42.515 / −74.145, ~1,500 ft, on the Hannacroix–Catskill divide. The old Westerlo well
-       node is now PLATEAU_WELLS , a generic plateau private-well zone at that point. Camp
-       Malka is 9.6 km from it, Greenville WWTP 11.5, Basic Creek Dam 11.5, Schreiber Farm
-       about 12.
-       Loading Tool rows (2007, 2008, 2017, 2018) are now inside dmr_annual with source =
-       "EPA Loading Tool annual"; EPA's grouped pollutant names differ from DMR names, so a
-       trend chart must match on parameter family.
-
-
-
-
-                                                                                           Page 15 of 17
-Cartographer's Brief — Helderberg–Hudson Water
-
-
-
-
-  Handoff package (2026-09-29)
-  Everything the dashboard needs is in one zip, helderberg_hudson_package_2026-09-
-  29.zip . Its README repeats this section with file-level detail.
-
-  Data model. Three keys join everything. site_id (the sites sheet, 21 nodes) is the node
-  key for measurements, assessments, HABs, TMDL and profiles. permit (NPDES ID, e.g.
-  NY0094854) is the key for every discharge table: echo_cwa_permits → dmr_limits /
-  dmr_results / dmr_summary / dmr_annual / loading_tool_pollutant . sid (USGS site
-  number) keys the groundwater tables. Every table with coordinates carries km_from_ref
-  (distance from Rensselaerville hamlet), aquifer_setting (valley-fill vs bedrock),
-   dec_basin , and in_basic_creek_res_catchment where relevant, so a layer can be
-  filtered without a spatial join.
-
-  What to draw, in priority. (1) The two transects as ordered node strips, elevation on the
-  vertical, sites.downstream_rank for order, with the symbol grammar above and hollow
-  glyphs where data_status is thin or none. (2) The catchment polygon and the valley-fill
-  aquifer underlay, so hollow nodes read as sitting on rock beside the corridors the state
-  does not watch. (3) Outfalls as sparklines against their limit from dmr_annual (effluent
-  rows only), not as pass/fail dots — theory 10. (4) Impoundments with a condition ring from
-   ny_dams.LastConditionRating . (5) The reference-study markers from
-   pfas_map_studies , clearly labelled as exemplars of process, with Cannon's 42 exact
-  sites as the one drillable study.
-
-  Cadence and comparability. Finished-water (annual, at the tap), raw ambient (DEC, years
-  apart), continuous DMR (monthly, at the pipe) and EPA annual loads are four different
-  clocks. Never put two on one axis without saying so; the layer column in the data-layers
-  table is the guide. Concentrations (mg/L) and loads (kg/yr) are different quantities;
-   dmr_annual.unit and loading_tool_kg_yr keep them apart.
-
-  Known holes. FY2017–18 monthly DMRs (EPA extract defect; annual loads bridge it). Basic
-  Creek Reservoir water-column data after 2018. Ten of 21 node elevations still estimates
-  (3DEP timed out). Study centroids for Cape Cod, NAWC and Darby Creek are ±0.5–1 km.
-  AA/AA(s) watersheds and wetlands have no geometry yet. Albany AWQR 2022 and 2024
-  not obtained.
-
-  Provenance rule. Blue cells are verbatim from the named source; black are derived; yellow
-  are assumptions meant to be edited. Every sheet's A1 comment says where it came from
-  and what was done to it; the sources and references sheets are the bibliography. If a
-
-
-
-
-                                                                                          Page 16 of 17
-Cartographer's Brief — Helderberg–Hudson Water
-
-
-
-
-  number on the dashboard cannot be traced to a blue cell, it should not be on the
-  dashboard.
-
-
-  Sources
-       Basic Creek Reservoir factsheet, DEC segment 1309-0001 (updated 2025-07-21)
-       Basic Creek Reservoir phosphorus TMDL, DEC 2013
-       Alcove Reservoir 2024 lake report, DEC
-       2025 archived HABs notices, DEC
-       Albany County public water supply contact list, NYS DOH
-       Greene County public water supply contact list, NYS DOH
-       Rensselaerville WD 2025 AWQR
-       Greenville WD 2025 AWQR
-       Cairo WD 2022 AWQR
-       Catskill water system 2022 annual report
-       City of Albany water quality report page
-       USGS well A2183
-       USGS ambient groundwater quality monitoring in New York
-       Cannon AFB PFAS data release; site values computed from
-        Cannon_Reporting_Table.csv
-       Workbook: helderberg_hudson_water_quality.xlsx (sites, measurements,
-       assessments, habs_2025, tmdl_basic_creek, parameters, references,
-       pfas_map_studies, pfas_map_cannon_sites, wqp_import, sources)
-       TMDL for Phosphorus in Basic Creek Reservoir, NYSDEC, March 2013 (full document)
-       Phase II Phosphorus TMDLs for Reservoirs in the NYC Water Supply Watershed,
-       NYSDEC, June 2000; NPS Implementation Plan (2001) and Interim Report (2002) —
-       user PDFs, method exemplars
-       NYS DEC Inventory of Dams — user GIS export 2026-09-28
-       NYS GIS Clearinghouse: Unconsolidated Aquifers 250K, Major Water Basins, Lake
-       Monitoring Reports, Freshwater Wetlands — user GeoJSON/CSV exports 2026-09-28
-       EPA ECHO detailed facility reports for NY0094854 (Greenville WWTP) and NY0269093
-       (Camp Malka)
-
-
-
-
-                                                                                     Page 17 of 17
-
+- BOD₅ / CBOD, mg/L — biochemical oxygen demand: how much oxygen bacteria will consume digesting what is in the water over five days. The classic measure of sewage strength. Raw sewage ~200 mg/L; a well-run small plant's effluent 5–30. Carbonaceous (CBOD) excludes the nitrogen part.
+- COD, mg/L — chemical oxygen demand; the same idea measured with a chemical oxidant, so it also counts what bacteria cannot eat. Always ≥ BOD.
+- Total suspended solids (TSS), mg/L — particles that a filter catches. Cloudiness, sediment, floc.
+- Settleable solids, mL/L — the fraction that sinks in an hour; a failing plant shows it first.
+- Total dissolved solids (TDS), mg/L — everything dissolved: salts, minerals. Road salt and cooling water push it up. Not toxic in itself; a tracer.
+- Fecal coliform / E. coli, count per 100 mL — bacteria from warm-blooded guts; the indicator that sewage or manure reached the water. Effluent limits 200 (monthly) / 400 (weekly).
+- Chlorine, total residual, mg/L — disinfectant left over after treatment; toxic to fish at very low levels, so plants must limit it (often 0.1 mg/L or less).
+- Flow, MGD or gal/d — how much water the plant discharges. Load = flow × concentration, which is why a permit limits both.
+
+Disinfection byproducts (finished drinking water only; Safe Drinking Water Act MCLs)
+
+- Total trihalomethanes (TTHM), µg/L and haloacetic acids (HAA5), µg/L — formed when chlorine meets natural organic carbon in the source water. MCLs 80 and 60, as a locational running annual average (LRAA). Every surface-water supply here fights them; groundwater supplies mostly do not. The proxy for how much dissolved organic carbon the source carries.
+- Total / dissolved organic carbon (TOC/DOC), mg/L — the leaf litter, soil and algae carbon dissolved in water. The raw material for byproducts; also stains water brown.
+
+Geogenic — from the rock (groundwater; MCLs or guidance)
+
+- Radon, pCi/L — a radioactive gas from uranium decay in shale and granite; released into indoor air when well water is used. Proposed MCL 300 (or 4,000 with an air program). Plateau wells to 1,830.
+- Radium-226/228, pCi/L — radon's parent; MCL 5 combined.
+- Uranium, µg/L — MCL 30. Arsenic, µg/L — MCL 10; occurs naturally in some shales and glacial sediments.
+- Iron and manganese, µg/L — nuisance metals from reducing (oxygen-poor) aquifers: staining, taste. Secondary standards 300 and 50; manganese has a health advisory at 300 for infants. Cairo's valley well: iron 879, manganese 744.
+- Barium, fluoride, strontium — dissolved from carbonate and evaporite minerals; MCLs 2,000 µg/L, 4 mg/L, none.
+- Sodium, calcium, magnesium, bicarbonate/alkalinity, hardness, pH — the major-ion signature that says what rock the water sat in. Sodium-bicarbonate water with high pH and low hardness = long residence in shale (cation exchange). Calcium-bicarbonate = limestone. Sodium-chloride = road salt or brine.
+- Lithium and boron, µg/L — trace elements that ride with the sodium-bicarbonate signature; markers of deep, old bedrock water. No MCL; EPA health reference for lithium 10 µg/L.
+- Methane, mg/L — dissolved natural gas in reducing aquifers; a safety issue above ~10 mg/L, a geochemistry marker below.
+
+Human signature — from us (groundwater and streams)
+
+- Chloride, mg/L — road salt, septic, water softeners. Secondary standard 250; aquatic-life chronic guidance 230. Rising chloride in a bedrock well means the road is winning.
+- Specific conductance, µS/cm — how well water carries current; the sum of all ions, so a quick field proxy for salt and TDS.
+- PFAS: PFOA, PFOS, PFHxS, PFNA and others, ng/L (parts per trillion) — the fluorinated "forever chemicals" from firefighting foam, non-stick coatings and industrial use. NY MCL 10 ng/L each for PFOA and PFOS; EPA 4. They do not break down; shorter chains (PFHxS) travel faster than longer ones (PFOS), so the mix tells you distance from the source. Cairo: PFOS 6.75.
+- 1,4-dioxane, µg/L — an industrial solvent stabiliser; NY MCL 1. VOCs (TCE, PCE, benzene, etc.), µg/L — solvents and fuel components; MCLs mostly 5.
+- Pesticides and degradates, µg/L — agricultural chemistry; mostly reference-study context here.
+- Mercury, ng/L in water; µg/m² in deposition — arrives from the air (coal, cement kilns, waste) and builds up in fish. Water standard 0.7 ng/L for fish consumption.
+
+Plumbing (finished water at the tap; action levels, not MCLs)
+
+- Lead and copper, µg/L, 90th percentile — leached from household pipes and solder, not from the source. Action levels 15 and 1,300; the system must act if more than 10% of sampled homes exceed. Corrosion inhibitors and pH adjustment are the fix.
+
+Regulatory words that appear on cards
+
+- MCL — maximum contaminant level, an enforceable drinking-water limit. Guidance value — DEC's non-enforceable threshold for ambient water. Action level — triggers treatment changes rather than a violation. Secondary standard — taste, odour, staining, not health.
+- Impaired / 303(d) — a waterbody DEC has found not meeting its designated use; TMDL — the pollution budget written to fix it; WLA / LA — the share of that budget assigned to permitted pipes / to everything else.
+- SPDES / NPDES permit — the state/federal permission to discharge, with numeric limits per outfall; DMR — the monthly self-report against those limits; E90 — EPA's code for an effluent limit exceeded; SNC — significant non-compliance.
+- Class A / AA / B / C — NY's best-use classes for surface water: AA and A are drinking-water sources, B swimming, C fishing. GWUDI — groundwater under the direct influence of surface water, treated as if it were a stream.
+- Influent / effluent — what enters a treatment plant / what leaves it. Only effluent is limited.
+
+Where they come from: products, makers and local sources by family. Named examples are the documented, well-known associations for each chemical, given so a reader can connect a number to a thing they have held. A company named here is not thereby a source in this watershed; the workbook's echo_cwa_permits.watchlist_note and references say who is actually on record locally.
+
+- PFAS. Made or used at scale by 3M (Scotchgard; the original PFOS-based AFFF firefighting foam, "Light Water"), DuPont and its spin-off Chemours (Teflon; PFOA, "C8", at Parkersburg WV), Daikin, Solvay, Arkema and AGC. Products: non-stick cookware, stain-resistant carpet and fabric (Stainmaster, Scotchgard), water-repellent outdoor wear (Gore-Tex membranes), grease-proof food wrappers and microwave-popcorn bags, dental floss, ski wax, cosmetics, and above all AFFF foam from 3M, Ansul/Tyco, National Foam, Chemguard and Kidde, used at airports, military bases and fire-training grounds — the Cannon AFB, Joint Base Cape Cod and JBMDL studies are all AFFF sites. New York's own cases: Saint-Gobain and Honeywell's Teflon-coating plant in Hoosick Falls (PFOA in the village wells, 2014–16), Taconic in Petersburgh, and the Norlite kiln in Cohoes that burned AFFF stockpiles in 2018–19. Locally nothing is on record as a PFAS source; Cairo's 6.75 ng/L PFOS has no identified origin.
+- 1,4-dioxane. A stabiliser added to the solvent 1,1,1-trichloroethane, so it rides with old degreaser plumes (Long Island's Grumman/Bethpage plume is the state's largest), and an unintended by-product of ethoxylation in surfactants, so it turns up in laundry detergents, shampoos and body washes — New York's 2019 law capped it at 1 ppm in those products from 2023. Makers of the solvents were Dow, PPG and Vulcan.
+- VOCs. Trichloroethylene (TCE) and perchloroethylene (PCE) are metal degreasers and dry-cleaning fluid (historically Dow, PPG, Occidental; used by every machine shop and dry cleaner); benzene, toluene, ethylbenzene and xylene (BTEX) are gasoline components, so their source is fuel tanks, terminals and spills (Buckeye and Global terminals in Albany, any gas station); chloroform is a chlorination by-product; MTBE was the 1990s gasoline oxygenate. Vinyl chloride is what TCE and PCE break down into underground.
+- Pesticides. Atrazine and metolachlor (Syngenta; corn herbicides, the most-detected pesticides in northeastern groundwater); glyphosate (Roundup — Monsanto, now Bayer); 2,4-D (Dow/Corteva; lawn weed-and-feed); the neonicotinoids imidacloprid and clothianidin (Bayer; seed coatings and lawn grub control, restricted in NY from 2027); chlorpyrifos (Dursban/Lorsban, Dow; banned in NY 2021); the fumigant DBCP (Nemagon, Shell and Dow; banned 1979, still in Central Valley wells in the reference study); and the legacy organochlorines DDT, chlordane and dieldrin that persist in orchard and farmstead soils. Locally the record is hay, pasture and corn, so atrazine, metolachlor and glyphosate are the ones to look for; none has been sampled on the transects.
+- Mercury. Reaches water mostly from the air: coal-fired power (now closed in NY), cement kilns (the Ravena plant was for years the state's largest single mercury emitter under its former owners Lafarge/Holcim, now Amrize), waste incinerators, and the Norlite kiln; and from old chlor-alkali plants and dental amalgam in sewer sludge. Effluent mercury in the DMR tables is in grams per year; deposition is the bigger flux.
+- Chloride and sodium. Road salt — NYSDOT and the towns buy from American Rock Salt (Livingston Co.), Cargill and Morton; a private well beside a state route will show it. Water-softener backwash and septic effluent add the rest.
+- Phosphorus and nitrogen. Manure and dairy operations, lawn and field fertilizer (Scotts, and the agricultural blends sold through the co-ops), septic systems, and the phosphate builders that were in laundry detergent until the 1990s and dishwasher detergent until NY's 2010 ban. In effluent, the source is people; in a headwater lake, it is the land.
+- Oxygen demand, solids, ammonia. Sewage first; then food and dairy processing (whey is one of the strongest organic wastes there is), paper mills (Finch Paper and Mohawk Fine Papers are the region's largest BOD dischargers), and slaughterhouses. Camp and school plants fail on these when they are overloaded or under-staffed.
+- Disinfection byproducts. Not a product: made in the treatment plant when chlorine (from suppliers like Olin and OxyChem) meets the organic carbon the reservoir grew.
+- Geogenic metals and radon. No maker. The Marcellus and Hamilton shales, the Helderberg limestone and the glacial till are the source; well depth and rock type decide the dose.
+- Lead and copper. Lead service lines and lead solder (banned 1986), brass fixtures ("lead-free" brass could contain 8% lead until 2014), copper pipe. The source is inside the house, which is why the number is a 90th percentile of homes rather than a reading at the plant.
+- Glycol. Aircraft de-icing fluid (propylene and ethylene glycol; Dow, Kilfrost, Cryotech) — the pollutant behind Albany International Airport's 27 exceedances; enormous BOD when it reaches a stream.
+
+Effects and field signs, by family. What each does to soil, plants and people, over a season and over decades, and what you can see, smell or taste. A caution before the list: almost every field sign here is non-specific — a foaming creek is far more often detergent or natural organic matter than PFAS, and most of the contaminants that matter for drinking water (PFAS, nitrate, radon, arsenic, lead) have no taste, smell or colour at the concentrations that count. Field signs tell you where to sample; only a lab tells you what is there. Symptoms listed are what the toxicology literature associates with exposure, not a diagnosis; anyone with those symptoms should talk to a physician and test the water rather than reason backward from this list.
+
+- Phosphorus and nitrogen (nutrients). Water and plants: within weeks of a warm spell, algae and cyanobacteria bloom — pea-green or blue-green water, paint-like surface scum, a sour or musty smell, and in late summer a fish kill after the bloom dies and consumes the oxygen. Long term, a lake fills with sediment and switches to a turbid, weedy state that is hard to reverse (Basic Creek Reservoir is partway there). Duckweed carpets, dense watermilfoil and cattail take over nutrient-rich shallows; on land, nettles, lamb's-quarters and lush dark-green grass mark manure and septic seepage. Soil: excess phosphorus binds in the top few centimetres and stays for decades; it leaves in eroded sediment. People: nitrate above 10 mg/L is dangerous to infants under six months (methaemoglobinaemia, "blue baby": blue-grey lips and skin, lethargy) and is linked to colorectal cancer and thyroid effects with long exposure; the nutrients themselves are otherwise not toxic — the harm comes through the blooms.
+- Cyanobacterial toxins (microcystin, anatoxin). Field signs: the bloom itself; dogs are the sentinel — a dog that swims in scum and vomits, staggers or collapses within hours is a poisoning until proven otherwise. People: skin rash, eye irritation, sore throat within hours of contact; nausea, vomiting, diarrhoea if swallowed; liver damage with heavy or repeated exposure (microcystin), and anatoxin acts on nerves within minutes. Long term, chronic low-dose microcystin is a suspected liver-cancer promoter. Boiling does not remove the toxins and can concentrate them.
+- Dissolved oxygen collapse. Field signs: fish gasping at the surface at dawn, dead fish after hot still weather, black anoxic mud that smells of rotten eggs (hydrogen sulphide) when stirred. Bottom water from an anoxic reservoir carries dissolved iron and manganese that stain fixtures orange and black at any tap fed from it.
+- Sewage indicators (BOD, solids, fecal bacteria, ammonia). Field signs: grey or milky water, sewage fungus (grey-white slimy strands on rocks downstream of an outfall), a septic or ammonia smell, toilet paper, tampons and wet wipes in streamside brush after storms, black sediment; a septic-field failure shows as a wet, bright-green patch of lawn in a dry spell and a smell after rain. Ammonia above about 1–2 mg/L kills fish and invertebrates outright; below that, it thins the sensitive species — a stream with only midges and worms is telling you something. People: gastroenteritis, giardia, cryptosporidium, hepatitis A from swallowing or from a well beside a failing septic system; the classic pattern is a household that gets sick after heavy rain.
+- Disinfection byproducts (TTHM, HAA5). Field signs: none in the water; the chlorine smell that goes with them is the disinfectant, not the byproduct. Formation is highest in late summer and autumn when the reservoir has grown and dropped the most organic carbon. People: short term none; long term, decades of exposure above the MCL are associated with modestly raised bladder-cancer risk and, less firmly, with pregnancy outcomes. Water that is brown or yellow at the tap is the organic carbon that makes them.
+- Geogenic: iron, manganese, hardness. Field signs: orange-brown staining on sinks and laundry (iron), black staining and black slime in the toilet tank (manganese), a metallic taste, cloudy water that clears as it stands, rotten-egg smell from sulphate-reducing bacteria in the well, white scale on kettles (hardness). Manganese in the 100s of µg/L is a neurodevelopmental concern for infants and children (attention and memory effects in the literature) and is common in valley-fill wells like Cairo's. Iron is a nuisance, not a poison, at the levels wells produce. Plants: iron and manganese excess is rarely a problem; extreme alkalinity chlorosis (yellow leaves, green veins) shows up in acid-loving plants watered from limestone wells.
+- Geogenic: arsenic. Field signs: none — no taste, smell or colour. People: long term is what matters: skin darkening and small warty growths on palms and soles after years of exposure, and raised risk of bladder, lung and skin cancers; cardiovascular effects; children's IQ. Boiling concentrates it. Plants take it up modestly; rice is the crop that matters, not gardens.
+- Geogenic: radon and radium. Field signs: none. Radon leaves the water into the house air during showers and laundry; the risk is lung cancer from inhaled radon, dose-dependent and much worse in smokers. Radium is a bone-seeker; the concern is bone cancer at high lifetime exposure. Both are why a plateau well should be tested even if the water tastes perfect.
+- Geogenic: sodium-bicarbonate water, lithium, boron, fluoride. Field signs: very soft, slippery-feeling water that lathers instantly, sometimes slightly alkaline taste; high pH can make it corrosive in a different way from acid water. Sodium at 100+ mg/L matters for people on sodium-restricted diets. Boron above ~1 mg/L injures boron-sensitive plants — leaf-tip and leaf-edge yellowing then browning on beans, grapes, stone fruit — which is a real garden sign of a bedrock well. Fluoride above 2 mg/L mottles children's teeth; above 4 it affects bone. Lithium has no established water standard; EPA's health reference is 10 µg/L, and plateau wells run twenty to forty times that — an open research question, not a known harm.
+- Chloride and road salt. Field signs: the clearest one is roadside: brown, scorched needles on the road-facing side of white pines and hemlocks in spring, dead strips of grass, and a salt crust on soil in dry weather; in a well, a salty taste above ~250 mg/L, faster corrosion of fixtures, and softener use that climbs year on year. In streams, salt-tolerant cattail and phragmites advance and the amphibian egg masses fail. Long term, sodium replaces calcium on soil particles and the soil loses structure; in a lake, dense salty water can stall spring mixing and deepen the anoxia problem. People: sodium for the diet-restricted; otherwise a nuisance.
+- PFAS. Field signs: the foam. Persistent white foam that piles up at the edge of a creek or lake, is bright white rather than tan, sticky and light, and does not fall apart when you stir it. Natural foam is tan, smells earthy, and collapses. AFFF-contaminated groundwater can also foam from the tap. But foam concentrates PFAS a thousandfold, so the absence of foam says nothing, and the presence of it is still usually detergent or algae. No taste, smell or colour. Plants take PFAS up into leaves and fruit from irrigation water — leafy greens most — without visible symptoms. People: nothing acute at drinking-water levels. Long term (the levels at Hoosick Falls, tens to hundreds of ng/L, over years): raised cholesterol, reduced antibody response to vaccines, thyroid changes, lower birth weight, pregnancy hypertension, and raised risk of kidney and testicular cancer. Blood serum PFAS is measurable and is what NY DOH tested at Hoosick Falls.
+- 1,4-dioxane and VOCs (TCE, PCE, benzene). Field signs: a solvent or sweet chemical smell from the tap or, more reliably, from a hot shower with the door closed; a gasoline smell after heavy rain near a tank; an oily sheen on a stream that does not break into plates when poked (natural iron-bacteria sheen shatters; petroleum sheen swirls). Vapour intrusion into basements is the exposure pathway people forget. People: headache, dizziness, nausea at high concentrations; long term TCE is a kidney-cancer carcinogen and linked to Parkinson's, PCE to bladder cancer, benzene to leukaemia, 1,4-dioxane to liver cancer in animals. Plants: petroleum in soil stunts and yellows; solvents mostly pass through.
+- Pesticides. Field signs: drift damage on the downwind edge of a garden — cupped, twisted leaves on tomatoes, grapes and beans after a neighbour sprays 2,4-D or dicamba; dead pollinators under flowering trees after a neonicotinoid application; a sudden absence of insects in a wet meadow. In water, none. People: acute organophosphate exposure gives a characteristic picture — salivation, tearing, sweating, pinpoint pupils, nausea, muscle twitching; chronic low-level atrazine is linked to birth defects and hormonal effects; glyphosate's cancer classification is contested. Atrazine persists a season in soil, longer in groundwater; the organochlorines persist for decades and bioaccumulate.
+- Mercury. Field signs: none in water or soil at environmental levels. The sign is in the fish advisories: the longer-lived predators (walleye, pickerel, bass, lake trout) from the most acidic, wetland-rich or anoxic waters carry the most. People: methylmercury from fish is the exposure that matters; it is a developmental neurotoxin — the risk group is the foetus and young child, and the advice is on which fish and how often, not on the water. Adult effects at high doses are tingling, tremor, loss of coordination and vision-field narrowing. Plants take up little; soil mercury persists for decades to centuries and is remobilised by wetland flooding and by fire.
+- Lead and copper. Field signs: copper gives blue-green stains on fixtures and a metallic taste, and a bitter, blue-green first-draw glass in the morning; lead has no sign at all. Both are worst in the first litre after water has sat in the pipes overnight, which is why the fix starts with running the tap. People: copper causes stomach upset acutely; lead is the one that matters — no safe level for children, with effects on IQ, attention and growth at blood levels once thought harmless, and raised blood pressure and kidney effects in adults. Symptoms are absent until damage is done, which is why the test is the blood level, not the child.
+- Glycol (de-icer). Field signs: a sweet smell and a sudden, severe oxygen crash in a stream below an airport in freeze-thaw weather; dead fish with no other explanation. Toxic to dogs and cats at small doses (ethylene glycol; propylene is much less so). Breaks down in weeks.
+- Acids, chlorine and ammonia from industry (the TRI air layer). Field signs: downwind, a bleach or sharp acid smell, and on vegetation, brown-tipped or spotted leaves in a plume-shaped patch after a release event. Sulphuric and hydrochloric acid aerosols are respiratory irritants within hours; ammonia likewise. These are air exposures, not water ones, and they show up on the TRI layer rather than the outfall layer.
+
+The territory
+
+The Westerlo–Rensselaerville plateau is a drainage divide at 1,500–1,800 ft, so the map has two transects sharing one headwater, not one slope. North side: Basic Creek → Basic Creek Reservoir → Alcove Reservoir → Hannacroix Creek → Hudson at Coeymans; this is Albany's drinking water. South side: Myosotis Lake → Ten Mile Creek (Rensselaerville) → Catskill Creek past Greenville and Cairo → Hudson at Catskill. Potic Reservoir, which serves Catskill village, is a third small drainage that enters the Hudson at Coxsackie.
+
+two transects from the Westerlo divide to the Hudson · 12 nodes
+
+Read top down: the one node with no data feeds both columns. Tinted boxes are taps, where numbers describe treated water; outlined boxes are the waterbodies themselves.
+
+The escarpment is Silurian–Devonian limestone (the Helderberg Group) over Ordovician shale, which is why it is New York's type karst: sinkholes, caves, and closed depressions where surface water drops straight into bedrock. Below the escarpment the valleys are cut in shale with glacial till and alluvium on top. Wells on the plateau draw from fractured limestone and shale; wells in the Cairo and Catskill valleys draw from alluvium that is in contact with the creeks.
+
+Source type sorts the water quality signal better than elevation does. Every surface-water supply (Rensselaerville, Catskill, Albany) fights disinfection byproducts, which form when chlorine meets dissolved organic carbon; neither groundwater supply (Greenville, Cairo) does. The groundwater supplies instead carry a bedrock signature: radium, barium, fluoride, iron and manganese. The layout should make that split visible before it makes elevation visible.
+
+Node inventory
+
+Twenty-two nodes, ordered by watershed then downstream rank. Elevations marked ~ are estimates; the others are USGS 3DEP values; the full attribute set is the sites sheet of the workbook.
+
+| Rank | Node | Type | Watershed | Elev ft | Data status | Headline |
+| 0 | Plateau private wells (reference point, Rensselaerville) | private-well zone | divide | ~1,700 | none | Generic plateau well zone at ~1,500 ft on the divide; no public system in Westerlo except a small Westerlo Southside Water Coop (ECHO listing, unverified); on shale; 10 plateau USGS wells within 15 km (2008), 10 plateau wells within 15 km, 2008–2021 |
+| 0 | USGS well A2183 | monitoring well, 200 ft bedrock | divide | 960 | 1 sample, 2012 | Inactive |
+| 0 | Berne-Knox-Westerlo CSD | public system (well) | divide | ~1,500 | not pulled | Nearest public bedrock-well data to Westerlo |
+| 1 | Basic Creek Reservoir | reservoir, Class A | Hannacroix | ~1,150 | rich: DEC lake sampling 2004, 2013, 2018; profiles; bloom toxins | Summer TP 44 → 32 → 21 µg/L (2004–2018); bottom DO to 0.04; microcystin to 6,993 µg/L (2014); 15 HAB reports 2025 |
+| 2 | Alcove Reservoir | reservoir, Class A | Hannacroix | ~400 | thin | One year of data (2004): TP 5.6 µg/L, Secchi 6.7 m, oligotrophic; 3 HAB reports 2025 |
+| 3 | City of Albany system | public system (surface) | Hannacroix | — | rich, AWQR 2019–2025 | TTHM LRAA 43–59 µg/L; lead 90th pct 13–17, action level exceeded 2023; PFAS and dioxane all non-detect |
+| 1 | Lawson Lake | lake | Hannacroix | ~700 | thin | 3 HAB reports 2025 |
+| 0 | Thompsons Lake | lake | verify | ~1,200 | thin | 1 HAB report 2025 |
+| 1 | Myosotis Lake | lake | Catskill Creek | ~1,400 | thin | 2 HAB reports 2025 |
+| 2 | Rensselaerville WD | public system (Ten Mile Creek) | Catskill Creek | ~1,300 | rich, 2025 | TTHM range to 84 µg/L vs 80 MCL; lead 90th pct 9.3 |
+| 3 | Greenville WD | public system (3 bedrock wells) | Catskill Creek | ~620 | rich, 2025 | Radium 0.82 pCi/L; greensand for Fe/Mn |
+| 4 | Cairo WD | public system (wells under surface influence) | Catskill Creek | ~380 | rich, 2022 + 2024 | PFOS 6.75 ng/L (2022) → 5.35 (2024); arsenic 2.7 µg/L; 2024 reporting violations (late AWQR, no lead service line inventory); copper flagged, treatment change under way |
+| 5 | Catskill Creek main stem | stream | Catskill Creek | ~100 | thin | 2 HAB reports Sept 2025 |
+| 1 | Potic Reservoir | reservoir | Coxsackie | ~250 | via AWQR only | High microbial susceptibility; aerator being added |
+| 6 | Village of Catskill system | public system (Potic) | Catskill Creek mouth | ~40 | rich, 2022 | TTHM MCL violation 2022; lead 90th pct 9.6 |
+| 0.4 | Greenville (T) WWTP, NY0094854 | point source, sewage effluent | Hannacroix / Basic Creek trib, below the dam, upstream of Alcove | ~1,050 | rich (ECHO DMRs) | 0.02 MGD; 7 effluent exceedances; no phosphorus limit; drains to Alcove |
+| 0.4 | Camp Malka plant, NY0269093 | point source, seasonal sewage effluent | Hannacroix / Basic Creek trib, below the dam, upstream of Alcove | ~1,150 | rich (ECHO DMRs) | 0.027 MGD; 22 exceedances, 8 non-compliant quarters; on valley fill; 9.6 km from the reference point |
+| 3.5 | Haleon (ex-GSK) Oak Hill, NY0191973 | point source, pharmaceutical process water | Catskill Creek, Durham | ~700 | rich (DMRs 2009–2026) | Only phosphorus-limited discharger within 20 km (6.8 mg/L). Effluent P median 0.02 mg/L through 2023, then 0.085, 0.07, 0.24 (2026) with a 6.0 mg/L month in 2024 — tenfold rise, no violation. |
+| off-transect | New York City system (Catskill/Delaware + Croton) — comparison node, NYC_DEP_PWS | public system (19 reservoirs, unfiltered Cat/Del) | Schoharie / Esopus / Delaware headwaters; Gilboa Dam 33 km W of the reference point | — | rich: DWSQ reports 2024–2025; watershed reports 2020–2023; 172k open-data tap samples 2015–2026 | TTHM avg 52 (2025) / 48 (2024) µg/L; lead 90th pct 10 both years; PFOA ND–2.7 ng/L; PFOS, PFHxS, 1,4-dioxane, mercury, arsenic all ND. Schoharie Reservoir over the 15 µg/L TP benchmark in 6–61% of samples a year (2020–2023), rising and falling with storm turbidity. Draw dashed, beside the strips, never on them. |
+
+Symbol grammar and layout rules
+
+Shape encodes what the node is; nesting encodes what it draws from; fill encodes how much we know.
+
+- Circle = lake or reservoir. Line = stream. Triangle = groundwater (well or well field). Diamond = public water system.
+- A diamond nested inside a circle or triangle says what that system draws from. Cairo's triangle is hatched: groundwater under the influence of surface water.
+- Hollow symbol = no data. Westerlo's hollow triangle at the top of both transects is the first thing the map should say.
+- Ring weight or opacity scales with data status: none, thin, rich. Staleness shows as a date label, not a color; Basic Creek's most recent lake phosphorus is from 2018 and the reader should see that.
+- Two vertical columns sharing a headwater node at the top, ordered by downstream rank, with elevation on the y-axis. A third short column for Potic if it fits; otherwise a footnote node beside Catskill.
+- Flip card: front = one badge (impaired, violation, clean, no data), one headline number with its percent of standard, and a June–November bloom strip for surface nodes. Back = the measurement rows grouped by parameter family (nutrient, disinfection byproduct, geogenic metal, PFAS, plumbing metal), each with sample date and source link.
+- Any panel that mixes finished-water numbers with raw-source numbers labels the two differently. They describe different water at different stages of treatment and should never sit on the same axis.
+- PFAS and phosphorus panels use log scales. The PFAS range in hand is 2 ng/L to 27,819 ng/L; on a linear scale every local point disappears.
+- Karst sinkholes from the lidar layer are a base-map layer along the escarpment front, drawn as small dots or stipple, never as symbols that compete with the water nodes. Confident outcrop sinkholes solid, covered-karst candidates hollow. The belt should read as a boundary between two ground types, with Westerlo visibly above it on the shale.
+
+Data layers
+
+Seven kinds of information, each with a different cadence and a different subject. The workbook helderberg_hudson_water_quality.xlsx holds them as separate sheets; the map should treat them as separate layers.
+
+| Layer | Subject | Cadence | Source | Workbook sheet |
+| Regulatory assessments | the waterbody | every 2–3 yr | DEC Waterbody Inventory / PWL factsheets | assessments |
+| Finished-water compliance | the tap, after treatment | annual | municipal Annual Water Quality Reports (AWQR) | measurements |
+| Raw ambient samples | the source, before treatment | irregular; multi-year series | Water Quality Portal; DEC DOW data portal | wqp_import (awaiting corrected pull) |
+| Bloom event counts | surface waterbodies | weekly in season | DEC NYHABS archive | habs_2025 |
+| Load model | the watershed | one-time (2013) | Basic Creek phosphorus TMDL | tmdl_basic_creek |
+| Karst recharge features | the plateau bedrock | static GIS | USGS NY karst inventory (4 geodatabases) | references REF-010; layer not yet loaded |
+| Reference studies | far-afield exemplars | n/a | USGS data releases | references; pfas_map_studies; pfas_map_cannon_sites |
+| Permitted discharges | outfalls: sewage, industrial, stormwater | monthly DMRs; permits 5-yr | EPA ECHO CWA export; DEC WWTP outfalls; MSGP | echo_cwa_permits, echo_local_facilities, ny_wwtp_outfalls, ny_msgp_stormwater, ny_cso_outfalls |
+| Withdrawals | who takes water, how much | annual (≥100,000 gpd only) | DEC Water Withdrawal reporting | ny_withdrawals, ny_withdrawals_by_user |
+| Land application | septage, papermill sludge, manure on fields | registrations 5-yr; annual reports | DEC Part 361 SWMF list | ny_land_application, ny_waste_facilities |
+| Legacy contamination | remediation sites, orphan wells | status changes; irregular | DEC Environmental Remediation Sites; orphan wells | ny_remediation_sites, ny_orphan_wells |
+| Air deposition | what falls on the watershed | annual emissions; weekly deposition | Title V inventory; NADP mercury | ny_titlev_summary, ny_titlev_annual, ny_hg_deposition |
+| Impoundments | dams: hazard, condition, storage, drainage | inspection every 1–5 yr | DEC Inventory of Dams | ny_dams |
+| Geologic framework | valley-fill aquifers, karst, wetlands, DEC basins | static | DEC Unconsolidated Aquifers 250K; USGS lidar karst; DEC wetlands; Major Water Basins | aquifer_setting columns on sites / usgs_wells / ny_dams; karst_sinkholes; ny_wetlands_summary |
+| Report index | where each lake's DEC report lives | live | DEC Lake Monitoring Reports layer | ny_lake_reports (61 links) |
+
+Only the raw ambient layer can show change over time; it is now in hand for 21 local waterbodies (17,121 samples, DEC portal export 2026-09-28). Sleepy Hollow Lake, with phosphorus in 16 summers since 2004, is the regional control series; Thompsons Lake has seven summers 1994–2000 and resumed in 2025. Everything else is a snapshot or a judgment.
+
+Working theories
+
+Each is labeled with what supports it, what cuts against it, and what would settle it. None is established.
+
+1. Basic Creek Reservoir is improving but still blooms, and the mechanism is shallow-water anoxia, not deep stratification. DEC's own follow-up sampling (portal export, 2026-09-28) shows summer-mean total phosphorus of 44 µg/L in 2004, 32 in 2013 and 21 in 2018, against the 20 target; chlorophyll fell from 38 to 11 µg/L and Secchi depth doubled to 1.9 m. The watershed side of the TMDL appears to be working. But the reservoir is only 3.5–4 m deep and does not thermally stratify (surface and bottom within 1 °C), and bottom dissolved oxygen still fell to 0.04 mg/L (July 2013) and 0.91 (Aug 2018), with manganese near 200 µg/L and iron 381 µg/L in the same events. In a shallow polymictic reservoir that is sediment oxygen demand under a warm, calm water column, and it recharges phosphorus from the bottom on any hot still week. Shoreline bloom samples carried microcystin of 83 µg/L (Sept 2013), 487 (Aug 2014) and 6,993 (Oct 2014), against a recreational guidance of 4. Against: three sampling years is a thin trend, and 2025's fifteen bloom reports came after 2018's improvement. Settled by: 2023 and 2026 lake sampling if it exists, and the 2025 bloom sample results.
+2. The reservoir is a five-week mirror of its watershed. Hydraulic residence time is 0.1 years, so Basic Creek barely buffers what comes off the land. Wet years should show up as phosphorus spikes within the same season. Against: a fast-flushing reservoir also clears quickly, which could mask internal loading. Settled by: joining the raw ambient series to the regional climate event register by year.
+3. Thirty percent of the phosphorus arrives underground, but not through karst. The TMDL attributes 616 lbs/yr to groundwater transport, two-thirds from agriculture. The lidar karst layer (USGS SIR 2021-5094; 40 verified outcrop sinkholes, 14 covered-karst candidates) shows the soluble limestone belt runs along the escarpment front 15–20 km north and east of Westerlo, from Knox through Berne, New Scotland and Clarksville to Coeymans — the Onesquethaw, Vloman Kill and Coeymans Creek drainages, on the Albany side. Nothing lies within 12 km of the Westerlo divide, the septage site, the anomalous well or Basic Creek Reservoir; the nearest outcrop sinkhole is 16 km away. The Basic Creek watershed sits on Hamilton Group shale above the carbonate, so its groundwater fraction moves as fractured-shale and till interflow, slower and more diffuse than sinkhole recharge. That is consistent with the plateau wells' sodium-bicarbonate chemistry, which takes long residence in shale to develop. Against: covered-karst collapse is possible wherever Onondaga is buried under Hamilton, and three candidates sit 12–14 km east toward Coeymans. Settled: karst is a real story for the Thacher Park escarpment and the Albany-side creeks, not for the Westerlo divide. Map it as its own belt, not as the plateau's recharge mechanism.
+4. Same carbon, two rulebooks. The vegetation and nutrient loading that shows up as phosphorus and blooms at the top of the hill shows up as trihalomethanes at every surface-water tap below it. Rensselaerville hit 84 µg/L in one quarter; Catskill violated the 80 µg/L running average in 2022; Albany runs 43–59 every year from 2019 to 2025 with finished-water TOC of 1.6–1.9 mg/L, and Basic Creek Reservoir's raw DOC is 3–6 mg/L. Against: TTHM also depends on chlorine dose and contact time, which are treatment choices, and Albany draws from Alcove, which is deep and clear, not from Basic Creek. Settled by: raw-water TOC at each intake, which the AWQRs do not report; ask the operators.
+5. Groundwater picks up geology going down and picks up us going toward the valley floor. The USGS groundwater layer (193 wells in the box, 10 on the plateau; WQP export 2026-09-28) now shows the split directly. Plateau bedrock wells within 15 km of the divide, sampled 2008–2021, are soft sodium-bicarbonate water: pH 7.9–9.0, sodium 109–139 mg/L against chloride of 2–6, hardness 30–40, lithium 220–448 µg/L, boron 330–640, arsenic to 5.9. That chemistry is cation exchange in shale: calcium swapped for sodium on clay surfaces as water sits in the rock for a long time. The nearest well (3.6 km, 2008) is the exception, with chloride 62 and sodium 109, which is road salt riding on the same base. The Cairo valley well (2018) is the opposite water: iron 879, manganese 744, methane detected, chloride 82, a reducing alluvial aquifer in contact with the creek. Radon is the plateau's other signature: 1,830 pCi/L in a Rensselaerville-area well (2013), 900 at Cairo, 360–460 elsewhere, against a proposed 300 MCL. Against: one sample per well, most from a single year; the 1992 cluster near Oak Hill with chloride to 13,000 mg/L is a salt-storage study, not ambient water. Settled by: the summer 2026 USGS resample, and a plateau private-well test that reports pH, sodium, hardness, lithium and radon.
+6. Cairo's PFOS came from somewhere nearby. At Cannon AFB, PFHxS out-runs PFOS along the flow path, so a downgradient well is PFHxS-dominant. Cairo's finished water is PFOS-dominant (6.75 ng/L) with PFHxS at 2.5, which on that logic suggests a short travel distance. Against: one sample; different geology; AFFF fingerprints differ from other PFAS sources. Settled by: a full PFAS panel with precursor assay at the two Cairo wells, or a DEC source investigation if one exists.
+7. Westerlo's silence is structural, not accidental. No public system beyond a small Westerlo Southside Water Coop that surfaced in ECHO and is not yet confirmed with the town, no active USGS well, no ambient-network site. The state monitors where people are served, and the plateau serves no one but itself. Against: the USGS ambient network has sampled ten plateau wells since 2008, so the plateau is not unmonitored, only unmonitored by the public-supply rules. What changes it: a certified private-well test on the divide, compared against those ten.
+8. The two sewage plants on Basic Creek are Alcove's problem, not the TMDL's. Resolved 2026-09-29. A StreamStats catchment delineated at the Basic Creek Dam (11,318 acres; the TMDL's 10,522 plus the reservoir and a sliver below the dam) extends north into Berne, not south into Greenville: Basic Creek flows south out of the reservoir, through Greenville, to Alcove Reservoir. Greenville (T) WWTP (NY0094854, 0.02 MGD, 7 effluent exceedances) and Camp Malka (NY0269093, 0.027 MGD seasonal, 22 exceedances over 8 non-compliant quarters) discharge to Basic Creek tributaries 4–5 km outside that boundary, below the dam. So the TMDL's zero wasteload allocation is correct for Basic Creek Reservoir, and the earlier draft of this theory was wrong. What survives is sharper: both plants sit upstream of Alcove, Albany's primary supply, which has no TMDL, no phosphorus limit on either permit, and an oligotrophic assessment that rests on a 32.5 sq mi catchment diluting whatever arrives. The TMDL's own weaknesses stand on their own: built with no observed phosphorus data (validated afterward on five samples each in 2004 and 2005, which came in at 42 and 55 µg/L against a simulated 31), and internal loading from anoxic sediment left at zero despite DEC's 2013 and 2018 profiles showing bottom anoxia. Only four dams sit inside the catchment (Basic Creek, Camp Givah, Duker Pond, Snyder Farm Pond); no USGS well and no land-application site does. Draw the two plants as point-source glyphs on Basic Creek between the two reservoirs, pointed at Alcove.
+9. The valley-fill aquifers are the corridors; everything we monitor sits on bedrock. The DEC Unconsolidated Aquifers layer (907 polygons, now point-in-polygon tagged for every node, well, dam and facility in the workbook) maps sand-and-gravel aquifers only along the valley floors: Basic Creek below the reservoir, Eightmile and Ten Mile creeks, Catskill Creek from Greenville down. Every public intake on both transects, the reference point, the USGS plateau wells and 18 of 19 nodes fall outside them; the one exception is Camp Malka's plant, which sits on a 10–100 gpm valley-fill unit. Read with theory 5, this says the sodium-bicarbonate signature is the bedrock-well norm here and the valley aquifers, where road salt, septic and fertilizer arrive fastest, are the places the state does not have a public well to watch. Against: the 250K layer is coarse and 1980s-vintage; a bedrock well drilled through thin valley fill is still tagged "valley-fill." Draw the aquifer polygons as a pale underlay so the hollow nodes read as sitting on rock beside them.
+10. Compliance hides trend. Eighteen years of discharge reports show movements that no violation ever flagged: Haleon Oak Hill's phosphorus median rising tenfold since 2023 while staying under a generous limit; SABIC's phosphate falling by two-thirds since 2007 (2,270 → 760 kg/yr) with no one to credit; CSX Selkirk's phosphorus climbing (205 → 384 kg/yr) as its ammonia fell to zero; Greenville's influent taking 1,600 mg/L BOD slugs a small town cannot generate; Berne WWTP's load quadrupling in nine years. A limit is a threshold, and a threshold is blind to direction. The dashboard should show each outfall as a sparkline against its limit, not as a green or red dot. Against: annual Loading Tool figures carry an estimation factor when months are missing, and pre-2009 reporting is patchy; treat any single-year jump as unverified until the monthly rows agree.
+
+Stories worth telling, and stories to refuse
+
+In priority order, with what each needs.
+
+1. The monitoring shadow. Where the state looks and where it doesn't. Fully supported now; the hollow nodes at the top of both transects carry it. Lead with this. Note the elevation order the 3DEP values give: Myosotis 1,536 → Rensselaerville intake 1,500 → Onderdonk 1,392 → Warners 1,199 → Basic Creek Reservoir 928 → Greenville wells 697 → Alcove 609 → Potic 424 → Cairo wells 370.
+2. Same carbon, two rulebooks. Phosphorus and blooms above, disinfection byproducts below, sorted by source type rather than elevation. Fully supported by the AWQRs and the DEC factsheet.
+3. Bedrock signature versus human signature. Greenville against Cairo. Supported as a contrast of two nodes; becomes a gradient only when the Lower Hudson groundwater release is in hand.
+4. The five-week reservoir. Basic Creek against the climate event register. Needs the raw ambient series; this is the story the dashboard should be built toward.
+5. Where the water goes underground. The karst belt along the escarpment front against the shale plateau above it — two recharge regimes side by side. Fully supported now by the lidar sinkhole layer; the surprise is that Westerlo is on the shale side.
+6. The dam that holds the impaired water is rated unsound. Basic Creek Dam (1928, high hazard, 3,922 ac-ft) was inspected 2024-04-09 and carries DEC's "Unsound – Deficiency Recognized" rating; Alcove Dam below it has no deficiencies. Myosotis, Potic, Onderdonk and Warners lake dams are all "Unsound" or "Deficiently maintained." A condition-coded ring on each impoundment glyph tells this without a word. Needs the inspection reports themselves before saying what the deficiency is.
+
+Refuse, for now:
+
+- Any claim of a downslope trend in a single parameter. With one or two values per site from different years and labs, a gradient plot would look convincing and mean nothing.
+- Any statement about private-well safety in Westerlo. There is no data; the map says so.
+- Any comparison of finished-water numbers to raw-water numbers on one axis.
+- Any implication that the Cannon, Cape Cod or New Jersey studies describe local conditions. They are exemplars of process, and the map labels them as such.
+
+Reference studies and the PFAS study layer
+
+Thirteen studies are logged in the references sheet, each tagged by what it contributes: regional baseline, geological analog, method, effects, or local. They inform interpretation and tooltips; only two produce map geometry.
+
+| Study | Where | Role | What it gives the map |
+| NY karst inventory (Root, Kappel, Reddy 2020) | statewide NY | local | Closed-depression GIS layer for the plateau base map |
+| Cannon AFB PFAS (Lorah et al. 2024) | Clovis, NM | source-gradient exemplar | 42 sites with coordinates and PFAS maxima; the scale bar |
+| Upper Hudson groundwater 2022 | Saratoga–Warren, NY | regional baseline | Expected bedrock ranges for radon, radium, arsenic |
+| Pohatcong Valley model (Carleton 2021) | Warren Co., NJ | geological analog | Contaminant transport in a carbonate valley under till |
+| JBMDL PFAS model (Fiore, Colarullo 2023) | NJ Coastal Plain | method | Reverse particle tracking from wells to sources |
+| NAWC mudstone (Imbrigiotta et al. 2017) | West Trenton, NJ | geological analog | Redox zonation in fractured shale |
+| Darby Creek seeps (Foss et al. 2025) | Folcroft, PA | method | Groundwater-to-creek handoff, sampled at seeps |
+| Cape Cod PFAS uptake and two sperm-quality releases | Cape Cod, MA | effects | Exposure → tissue → reproductive endpoint |
+| National pesticide network; DBCP decades | national; California | method | Decadal-resample design; 30-year aquifer memory |
+
+The Cannon site layer is the one to draw as a zoomed exemplar. PFOS in groundwater runs from 27,819 ng/L beside the fire-training area to non-detect at perimeter wells about 2 km away. PFHxS, a shorter chain that sorbs less, leads the front: at well MW-D it is 6,088 ng/L against PFOS at 2,028. Soil at the source holds 2,749 ng/g PFOS; porewater under it 889 ng/L; the plume below is fed by decades of accumulated mass. Cairo's 6.75 ng/L sits four orders of magnitude below the Cannon source, which is the reason the two must share a log axis or not share an axis at all.
+
+Open gaps and next pulls
+
+Closed tonight: the WQP results export (319k rows, 193 wells), the DEC portal chemistry export (17,121 local samples), Albany AWQRs for five of seven years, and eighteen NY open-data layers (facilities, outfalls, withdrawals, mercury, remediation, stormwater permits, emissions). Remaining, in the order they unlock stories:
+
+- [x] Karst: done, with the better source (30 cm lidar, bedrock-tested, USGS SIR 2021-5094) rather than the statewide inventory. Theory 3 revised: the parcel is on shale, not karst.
+- [ ] DEC lake sampling for Basic Creek Reservoir after 2018. The portal's last water-column year is 2018; the TMDL cadence implies 2023. Ask DEC Region 4 Lake Monitoring, or check whether the 2025 bloom reports were lab-sampled. Settles whether 2018 was a trend or a good year.
+- [ ] City of Albany AWQR 2022 and 2024 to complete the 2019–2025 series.
+- [ ] Schreiber Farm septage annual reports (DEC facility documents site, Land Application – Septage, Region 4): acreage, gallons and fields applied; whether reports exist before 2025.
+- [x] DEC SPDES individual-permit lookup for Owens Corning Delmar and SABIC Selkirk: permitted parameters and outfall limits. Owens Corning has only a stormwater general permit in the open data.
+- [ ] USDA Organic Integrity Database: is Schreiber Farm certified, and by whom.
+- [x] Site metadata for the Cape Cod, NAWC and Darby Creek releases to replace estimated study centroids. (Cannon is done: all 42 sites have exact coordinates and well construction.)
+- [ ] Berne-Knox-Westerlo CSD annual water report; nearest public bedrock-well data on the divide. Ask the district.
+- [ ] USGS elevations for the ten nodes still marked ~ in sites.
+- [ ] A certified private-well test anywhere on the divide: pH, sodium, hardness, chloride, lithium, boron, arsenic, iron, manganese, radon, nitrate. The panel that lets one number sit on the same axes as the ten USGS plateau wells.
+- [ ] Summer 2026 USGS ambient groundwater resample of the Lower Hudson basin, when released (expected 2027).
+- [x] Unconsolidated Aquifers layer: done. Every node, USGS well, dam, land-application site and lake report point now carries an aquifer_setting tag and distance to the nearest valley-fill polygon.
+- [x] Full 2013 TMDL read; tmdl_basic_creek_detail sheet built; NYC Phase II TMDLs (2000) and implementation plans (2001, 2002) logged as method exemplars.
+- [x] Basic Creek Reservoir catchment: delineated in StreamStats 2026-09-29 (basic_creek_res_basin.geojson); both outfalls are outside it, below the dam. Theory 8 rewritten. Every layer now carries an in_basic_creek_res_catchment column.
+- [x] DMR flow and effluent records for NY0094854 and NY0269093 (ECHO DFR → Effluent Charts), and the SPDES fact sheets: does either permit have a phosphorus monitoring-only requirement. Now framed as a question about Alcove's inputs.
+- [ ] Dam safety inspection report for Basic Creek Dam (DEC Region 4 Dam Safety, FOIL if needed): what "Deficiency Recognized" refers to.
+- [ ] Confirm the Westerlo Southside Water Coop with the Town of Westerlo or the NYS DOH PWS list; get its PWS ID and AWQR if it files one.
+- [ ] Re-export the AA/AA(s) Classified Watersheds and Freshwater Wetlands layers as GeoJSON (the CSV exports carry no names and no geometry, so they cannot be mapped or joined).
+- [x] Point-source layer complete: ECHO bulk DMRs FY2009–2016 and FY2019–2026 (415,530 local rows, influent retained), current limits for 174 permits, and EPA Loading Tool annual pollutant loads for 2007, 2008, 2017, 2018 bridging EPA's broken FY2017–18 extracts. Sheets dmr_limits, dmr_results, dmr_summary, dmr_annual, loading_tool_pollutant; raw history in two companion workbooks.
+- [ ] Report the empty FY2017–18 NPDES_DMRS extracts (national and NY) to EPA via the ECHO contact form so the monthly rows eventually exist. ECHO Effluent Charts only reach back to 2023 (checked 2026-09-30), so a records request to NYSDEC Region 4 or EPA Region 2 is the only other route to the 2017–18 monthly values; the annual Loading Tool figures bridge the gap meanwhile.
+- [x] USGS 3DEP elevations for 11 nodes (the service timed out on the rest; still marked ~). Two corrections fell out: Basic Creek Reservoir is at 928 ft, not ~1,150, and Alcove at 609 ft, not ~400.
+- [x] Reference point re-centred 2026-09-29. The study is regional, not property-specific: every distance column (km_from_ref) now measures from Rensselaerville hamlet, 42.515 / −74.145, ~1,500 ft, on the Hannacroix–Catskill divide. The old Westerlo well node is now PLATEAU_WELLS, a generic plateau private-well zone at that point. Camp Malka is 9.6 km from it, Greenville WWTP 11.5, Basic Creek Dam 11.5, Schreiber Farm about 12.
+- [ ] Loading Tool rows (2007, 2008, 2017, 2018) are now inside dmr_annual with source = "EPA Loading Tool annual"; EPA's grouped pollutant names differ from DMR names, so a trend chart must match on parameter family.
+- [x] NYC comparison complete: DEP reservoir benchmark tables for 2020–2023 (four annual reports) and finished-water tables for 2024–2025. The set stops there by design.
+
+Handoff package (2026-09-29)
+
+Everything the dashboard needs is in one zip, helderberg_hudson_package_2026-09-29.zip. Its README repeats this section with file-level detail.
+
+Data model. Three keys join everything. site_id (the sites sheet, 21 nodes) is the node key for measurements, assessments, HABs, TMDL and profiles. permit (NPDES ID, e.g. NY0094854) is the key for every discharge table: echo_cwa_permits → dmr_limits / dmr_results / dmr_summary / dmr_annual / loading_tool_pollutant. sid (USGS site number) keys the groundwater tables. Every table with coordinates carries km_from_ref (distance from Rensselaerville hamlet), aquifer_setting (valley-fill vs bedrock), dec_basin, and in_basic_creek_res_catchment where relevant, so a layer can be filtered without a spatial join.
+
+What to draw, in priority. (1) The two transects as ordered node strips, elevation on the vertical, sites.downstream_rank for order, with the symbol grammar above and hollow glyphs where data_status is thin or none. (2) The catchment polygon and the valley-fill aquifer underlay, so hollow nodes read as sitting on rock beside the corridors the state does not watch. (3) Outfalls as sparklines against their limit from dmr_annual (effluent rows only), not as pass/fail dots — theory 10. (4) Impoundments with a condition ring from ny_dams.LastConditionRating. (5) The reference-study markers from pfas_map_studies, clearly labelled as exemplars of process, with Cannon's 42 exact sites as the one drillable study.
+
+Cadence and comparability. Finished-water (annual, at the tap), raw ambient (DEC, years apart), continuous DMR (monthly, at the pipe) and EPA annual loads are four different clocks. Never put two on one axis without saying so; the layer column in the data-layers table is the guide. Concentrations (mg/L) and loads (kg/yr) are different quantities; dmr_annual.unit and loading_tool_kg_yr keep them apart.
+
+Known holes. FY2017–18 monthly DMRs (EPA extract defect; annual loads bridge it). Basic Creek Reservoir water-column data after 2018. Ten of 21 node elevations still estimates (3DEP timed out). Study centroids for Cape Cod, NAWC and Darby Creek are ±0.5–1 km. AA/AA(s) watersheds and wetlands have no geometry yet. Albany AWQR 2022 and 2024 not obtained.
+
+Industrial dischargers are a layer, not nodes. SABIC, Owens Corning, the Ravena cement plant, CSX Selkirk, Port Albany Ventures, Norlite, the paper mills and the county sewage plants are not in the 21-node sites table and should not be; they live in echo_cwa_permits (603 permittees, geo/echo_cwa_permits.geojson) and their loads in dmr_annual. A watchlist_note column now names the 24 facilities the brief discusses, so the dashboard can draw a curated industrial layer from watchlist_note IS NOT NULL without rendering all 603. Owens Corning and Hannay Reels hold stormwater general permits only — no monthly loads exist for them in ECHO, and the card should say so rather than show an empty chart. A regional ranking, regional_top10_fy2025 (top ten NY dischargers of each of 29 pollutants within 100 miles, FY2025, with method and outlier flags), is the source for any "who discharges the most" panel.
+
+NYC comparison layer (added 2026-09-29). Node NYC_DEP_PWS is the yardstick, not a transect member: the same Catskill shale and the same phosphorus-TMDL lineage as Basic Creek (the 2000 Phase II TMDLs in source_docs/), but ~240,000 watershed analyses a year. Three tables: (1) measurements rows with site_id = NYC_DEP_PWS — the 2024 and 2025 finished-water tables on the same columns as the town AWQR rows (non-detects carry value 0 with a NOT DETECTED note; in contaminant_results they are blank with qualifier = "not detected"); (2) nyc_reservoir_benchmarks — 1,746 rows, 23 reservoirs × 19 analytes × 2020–2023, parsed from the benchmark appendix of each DEP Watershed Water Quality Annual Report, with DEP's own single-sample and annual-mean benchmarks and a censoring_method column (KM / ROS / >80% / C19 = not sampled); (3) nyc_distribution_monthly — 136 monthly rows rolled up from 172,399 tap grab samples (csv/nyc_distribution_monitoring_raw.csv; chlorine, turbidity, fluoride, coliform, E. coli). Two readings worth a caption: NYC's lead 90th percentile (10 µg/L) is higher than several small districts because its sampling pool is 326 pre-1961 homes, not because the water is worse; and Schoharie's phosphorus exceedance rate swings with the weather (6% of samples over 15 µg/L in dry 2020, 61% in 2021, 49% in 2022, 30% in 2023, tracking turbidity), the same storm-sediment mechanism as Basic Creek, which is the point — a 15 µg/L benchmark is hard for any Catskill-shale reservoir with farms in its basin. The earlier fetch-tool transcription of Appendix G (Schoharie "8 of 12") was wrong and has been discarded.
+
+Provenance rule. Blue cells are verbatim from the named source; black are derived; yellow are assumptions meant to be edited. Every sheet's A1 comment says where it came from and what was done to it; the sources and references sheets are the bibliography. If a number on the dashboard cannot be traced to a blue cell, it should not be on the dashboard.
+
+Sources
+
+- Basic Creek Reservoir factsheet, DEC segment 1309-0001 (updated 2025-07-21)
+- Basic Creek Reservoir phosphorus TMDL, DEC 2013
+- Alcove Reservoir 2024 lake report, DEC
+- 2025 archived HABs notices, DEC
+- Albany County public water supply contact list, NYS DOH
+- Greene County public water supply contact list, NYS DOH
+- Rensselaerville WD 2025 AWQR
+- Greenville WD 2025 AWQR
+- Cairo WD 2022 AWQR
+- Catskill water system 2022 annual report
+- City of Albany water quality report page
+- USGS well A2183
+- USGS ambient groundwater quality monitoring in New York
+- Cannon AFB PFAS data release; site values computed from Cannon_Reporting_Table.csv
+- Workbook: helderberg_hudson_water_quality.xlsx (sites, measurements, assessments, habs_2025, tmdl_basic_creek, parameters, references, pfas_map_studies, pfas_map_cannon_sites, wqp_import, sources)
+- TMDL for Phosphorus in Basic Creek Reservoir, NYSDEC, March 2013 (full document)
+- Phase II Phosphorus TMDLs for Reservoirs in the NYC Water Supply Watershed, NYSDEC, June 2000; NPS Implementation Plan (2001) and Interim Report (2002) — user PDFs, method exemplars
+- NYS DEC Inventory of Dams — user GIS export 2026-09-28
+- NYS GIS Clearinghouse: Unconsolidated Aquifers 250K, Major Water Basins, Lake Monitoring Reports, Freshwater Wetlands — user GeoJSON/CSV exports 2026-09-28
+- EPA ECHO detailed facility reports for NY0094854 (Greenville WWTP) and NY0269093 (Camp Malka)
+- NYC DEP, Drinking Water Supply and Quality Report, 2024 and 2025 editions (user PDFs; pp. 11–15 transcribed).
+- NYC DEP Bureau of Water Supply, Watershed Water Quality Annual Report (FAD deliverable 5.1), 2021 (July 2022, Appendix H) and 2022 (July 2023, Appendix G) — reservoir benchmark comparisons parsed by script from user text extracts.
+- NYC Open Data, Drinking Water Quality Distribution Monitoring Data (bkwf-xfky), user CSV export 2026-09-29, 172,399 rows 2015-01 → 2026-08.

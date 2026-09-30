@@ -685,6 +685,13 @@ def emit_water(site_dir: Path, warns: list | None = None) -> int:
         rec["href"] = enc("href", href)
         cres.append({k: v for k, v in rec.items() if v is not None})
     hab_by_year = read_sheet(wb, "dec_hab_by_year", with_prov=False)
+    # v998: NYC DEP reservoir benchmarks (comparison node) — Schoharie (nearest, 33 km W) and Kensico (terminal), the three
+    # analytes that bear on Basic Creek: total phosphorus, turbidity, chlorophyll a. Verbatim DEP columns only.
+    nyc_bench = [r for r in read_sheet(wb, "nyc_reservoir_benchmarks", with_prov=False,
+                                       keep=["report_year", "reservoir", "analyte", "unit", "single_sample_max", "n_samples",
+                                             "n_exceed_ssm", "pct_exceed_ssm", "annual_mean_standard", "annual_mean_reported",
+                                             "annual_mean_num", "censoring_method", "source_doc", "source_url"])
+                 if r.get("reservoir") in ("Schoharie", "Kensico") and r.get("analyte") in ("Total phosphorus", "Turbidity", "Chlorophyll a")]
     profiles = read_profiles()
     world_std = read_world_standards()
     # v995: diagram captions ("how to read this") — data/water/molecules.csv; the SVGs themselves are drawn by
@@ -731,7 +738,7 @@ def emit_water(site_dir: Path, warns: list | None = None) -> int:
         "karst": karst, "estuary": estuary, "lake_reports": lake_reports,
         "sources": sources, "references": references,
         "tri_trend": tri_trend, "tri_mercury": tri_mercury, "tri_facilities": tri_facilities, "tri_chemicals": tri_chemicals,
-        "tri_keyed": tri_keyed, "contaminants": contaminants, "cres": cres, "cres_dict": cdict, "hab_by_year": hab_by_year, "profiles": profiles, "world_std": world_std, "mol_caption": mol_caption,
+        "tri_keyed": tri_keyed, "contaminants": contaminants, "cres": cres, "cres_dict": cdict, "hab_by_year": hab_by_year, "nyc_bench": nyc_bench, "profiles": profiles, "world_std": world_std, "mol_caption": mol_caption,
         "regional_top10": regional_top10,
         "geo": geo,
     }
