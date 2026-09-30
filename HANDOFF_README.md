@@ -1,7 +1,22 @@
-# NY Hilltowners Folk Atlas — Session Handoff (2026-09-29, v988)
+# NY Hilltowners Folk Atlas — Session Handoff (2026-09-30, v990)
 
-> **Where things stand (for the next chat).** Baseline is **v988**; next version continues from **v989**. Laurie has
-> deployed through v980; v981–v988 ship together — the v988 CHANGED-ONLY zip carries everything since v980.
+> **Where things stand (for the next chat).** Baseline is **v990**; next version continues from **v991**. Laurie has
+> deployed through v980; v981–v990 ship together — the v990 CHANGED-ONLY zip carries everything since v980.
+> **v990:** the live iNaturalist section had gone blank ("No research-grade observations with photos came back")
+> after the v988 paging change. Cause not provable from the sandbox (api.inaturalist.org unreachable), so `fetchINat()` in
+> `signals.js` is now self-reporting: a non-2xx answer is no longer parsed as an empty page (that is what turned a 429
+> into "no observations"), each group's failure is recorded (`errors`), groups are fetched two at a time with a 350 ms
+> pause and 400 ms between pages (v988 fired 18 groups at once, a likely 429 trigger), and when every group fails the grid
+> says **"iNaturalist did not answer: birds HTTP 429, … (18 groups). Retrying in a minute."** and retries once after
+> 60 s. Partial failures append " · some groups did not load (…)" to the footnote. Harness check with a mocked 429
+> renders the message. **Laurie: the live message now names the HTTP status — 429 = rate limit (we throttle further),
+> 5xx = their outage, anything else = our bug; tell the next chat what it says.** Record count 30,251 (was 30,277) is
+> only the calendar: past events are dropped at build and the date rolled to 09-30.
+> **v989:** profile result rows now carry coordinates (6,694 of 6,696, filled at build from usgs_wells / sites /
+> dec_results / ny_mercury_summary since the workbook join has none), a distance from Rensselaerville, an
+> OpenStreetMap locate link, and a working per-row source link (`href`: USGS station page by site number, DEC portal,
+> the AWQR PDF, the data.ny.gov mercury dataset). The workbook's `source_url` was a URL with a note appended
+> ("https://www.waterqualitydata.us/ (WQP export …)") so every link had been dead — another item for the water chat.
 > **v988:** Signals iNaturalist pull now pages past the 200-per-page cap (`INAT_MAX_PAGES=4` → up to 800 records per
 > taxonomic group, pages fetched in sequence); dicots had hit 200 of 206 so the 10-day count was a floor. The footnote
 > now names a group only if it is still short after the last page. Live verification impossible from the sandbox
@@ -207,6 +222,8 @@ Fixed-hinge wingbeat, 4 white wing-spots. Day-only, reduced-motion safe. The
 
 ## UX state (recent)
 
+- **v990 (2026-09-30, Laurie):** `signals.js` `fetchINat()` — per-group error capture, non-OK responses not parsed, 2-at-a-time groups with pauses, 60 s single retry when all groups fail, footnote lists failed groups. No build.py/water.py changes.
+- **v989 (2026-09-29, Laurie):** `build/water.py` `locate()` + `km_from()` on the results join (`lat`/`lon`/`km`/`href` per row; `cres_dict.href`); `water.js` `cresRow()` reads them, place cell shows km + OSM link, source cell links `href` with a short label (`SRC_LABEL`). Verified: arsenic rows link to USGS station pages and the DEC portal.
 - **v988 (2026-09-29, Laurie):** `signals.js` `fetchINat()`: `pull(g)` walks `&page=n` while `results.length >= 200 && got < total_results && n < INAT_MAX_PAGES`; `capped` only when still short. Footnote wording: "more than 800 records in 10 days". Harness (`scripts/signals_harness/run.js`, maplibre-gl installed under a scratch prefix and symlinked as `node_modules`) passes unchanged.
 - **v987 (2026-09-29, Laurie): contaminant profiles complete + carousel.** 20 entries appended to `contaminant_profiles.md` (writers: PB AS RADON RADIUM BA · FE MN NA CL NO3 · PFOA PFHXS DIOXANE TOLUENE XYLENE · TTHM HAA5 TP FECAL DO; ~590 words each; 68 distinct sources). Carousel chrome in waterwip.html (`.cp-tabs`, `.cp-car`, `.cp-arrow`, `.cp-top`, `.cp-img`), `SHELVES`/`step()`/swipe in water.js; `images/contaminants/` created (README only). Verified headless: deep link → next → keyboard → tab switch. `data_water.js` ≈ 6.1 MB.
 - **v986 (2026-09-29, Laurie): contaminant profiles.** New page section 0 (`drawContaminants()` in water.js — NB the DO-depth chart already owned the name `drawProfiles`), `data/water/contaminant_profiles.md` (3 entries), `read_profiles()` + `cres`/`cres_dict`/`tri_keyed`/`hab_by_year`/`contaminants` in `build/water.py`; `dmr` rows carry `ck`. Bloom history rewritten on `hab_by_year`. Harness screenshots `cp` and `bloom`. Headless: 23 chips, zero page errors.
@@ -538,7 +555,7 @@ Big ongoing effort to tame tag sprawl. Started at 2,332 unique tags; now ~2,178.
 7. Clean-room verify: unzip the package fresh, rebuild, confirm BUILD OK.
 8. `present_files` the zip + both xlsx.
 
-Version at handoff: **v988**. Next chat continues from v989. Harness in `scripts/signals_harness/` (Signals).
+Version at handoff: **v990**. Next chat continues from v991. Harness in `scripts/signals_harness/` (Signals).
 
 ---
 

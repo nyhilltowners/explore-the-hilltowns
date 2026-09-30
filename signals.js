@@ -1234,17 +1234,32 @@ function fetchINat(){
        Pages are pulled one after another, never in parallel, to stay polite; a group is named in the footnote
        only if it is still short after the last page. */
     var INAT_MAX_PAGES=4;
+    /* v990 (2026-09-30, Laurie): the section went blank on the live site the evening v988 shipped, and nothing on the
+       page said why - every failed request was swallowed by an empty catch(). Now each group records the HTTP
+       status (or the fetch error) it got; a non-2xx answer is not parsed as observations; the footnote names what
+       failed; and if EVERY group failed (a 429 rate limit or an API outage looks exactly like "no observations"),
+       the section says so and retries once after 60 s instead of showing the empty-state text. Groups are also
+       pulled two at a time instead of four, with a short pause between chunks, to stay under iNat's rate limit. */
+    var errors=[];
     var pull=function(g){
       var got=0, total=0;
-      var page=function(n){ return fetch(base+g.q+'&page='+n).then(function(r){ return r.json(); }).then(function(j){
+      var page=function(n){ return fetch(base+g.q+'&page='+n).then(function(r){ if(!r.ok){ errors.push(g.label+' HTTP '+r.status); return null; } return r.json(); }).then(function(j){
+        if(!j) return;
         var rs=(j&&j.results)||[]; total=(j&&j.total_results)||0; got+=rs.length;
         rs.forEach(function(o){ if(!seen[o.id]){ seen[o.id]=1; results.push(o); } });
-        if(rs.length>=200 && got<total && n<INAT_MAX_PAGES) return page(n+1);
+        if(rs.length>=200 && got<total && n<INAT_MAX_PAGES) return new Promise(function(res){ setTimeout(res, 400); }).then(function(){ return page(n+1); });
         if(got<total && rs.length>=200) capped.push(g.label+' ('+got+' of '+total+')');
       }); };
-      return page(1).catch(function(){}); };
-    var chunks=[]; for(var ci=0; ci<GROUPS.length; ci+=4) chunks.push(GROUPS.slice(ci,ci+4));
-    chunks.reduce(function(pr,ch){ return pr.then(function(){ return Promise.all(ch.map(pull)); }); }, Promise.resolve()).then(function(){
+      return page(1).catch(function(e){ errors.push(g.label+' '+((e&&e.message)||'fetch failed')); }); };
+    var pause=function(ms){ return new Promise(function(res){ setTimeout(res, ms); }); };
+    var chunks=[]; for(var ci=0; ci<GROUPS.length; ci+=2) chunks.push(GROUPS.slice(ci,ci+2));
+    chunks.reduce(function(pr,ch){ return pr.then(function(){ return Promise.all(ch.map(pull)); }).then(function(){ return pause(350); }); }, Promise.resolve()).then(function(){
+      if(!results.length && errors.length){
+        var why=errors.slice(0,4).join(', ')+(errors.length>4?' \u2026 ('+errors.length+' groups)':'');
+        grid.innerHTML='<p class="ph-empty">iNaturalist did not answer: '+esc(why)+'. Retrying in a minute.</p>'; $('inat-list').innerHTML=''; $('inat-note').textContent='';
+        if(!fetchINat._retried){ fetchINat._retried=true; setTimeout(function(){ fetchINat._retried=false; fetchINat(); }, 60000); }
+        return;
+      }
       results.sort(function(a,b){ return (Date.parse(b.time_observed_at||b.observed_on)||0)-(Date.parse(a.time_observed_at||a.observed_on)||0); });   /* newest first across groups, so g.latest stays right */
       var cut=Date.now()-5*86400000;
       var recentObs=results.filter(function(o){ return (Date.parse(o.time_observed_at||o.observed_on)||0)>=cut; });
@@ -1310,7 +1325,7 @@ function fetchINat(){
       if(tg){ tg.addEventListener('click', function(){ var open=tg.getAttribute('aria-expanded')==='true'; $('inat-list').querySelector('.inat-older').classList.toggle('lb-open', !open); tg.setAttribute('aria-expanded', String(!open)); tg.textContent = open ? '+ '+hiddenN+' more species' : '\u2212 Show top 10 only'; }); }
       wikiPics();
       var parts=[]; if(recent.length) parts.push(recent.length+' species in the last 5 days'); if(older.length) parts.push(older.length+' species over the last 10 days');
-      $('inat-note').textContent=(parts.join(', ')||'Nothing recent')+(capped.length?' \u00b7 10-day counts are a floor for '+capped.join(', ')+' \u2014 more than '+(INAT_MAX_PAGES*200)+' records in 10 days':'')+' \u00b7 Data \u00a9 iNaturalist contributors; Creative Commons photos displayed here, click to review others on iNaturalist.';
+      $('inat-note').textContent=(parts.join(', ')||'Nothing recent')+(errors.length?' \u00b7 some groups did not load ('+errors.slice(0,3).join('; ')+(errors.length>3?' \u2026':'')+')':'')+(capped.length?' \u00b7 10-day counts are a floor for '+capped.join(', ')+' \u2014 more than '+(INAT_MAX_PAGES*200)+' records in 10 days':'')+' \u00b7 Data \u00a9 iNaturalist contributors; Creative Commons photos displayed here, click to review others on iNaturalist.';
     }).catch(function(e){ grid.innerHTML='<p class="ph-empty">iNaturalist is unreachable right now.</p>'; status('iNaturalist: '+(e && e.message || 'fetch failed')); });
   }
   /* ---------- eBird: recent + notable sightings near Berne (key per Laurie, 2026-09-20) ---------- */

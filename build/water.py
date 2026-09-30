@@ -545,7 +545,58 @@ def emit_water(site_dir: Path, warns: list | None = None) -> int:
         if m:
             return m.group(1)
         return d
-    cres, cdict = [], {"pl": [], "url": [], "std": [], "m": [], "sh": [], "st": []}
+    # v989: coordinates and a per-row link. The join arrives without lat/lon on almost every row; fill them from the
+    # sheets the row came from — USGS site number (in `place`) → usgs_wells; DEC site_id → sites; NY Hg synthesis
+    # Site_ID → ny_mercury_summary — and give each row an `href` the page can open: USGS station page, DEC portal,
+    # the AWQR PDF, or the data.ny.gov dataset. Distance from Rensselaerville computed here (equirectangular).
+    well_ll = {str(w.get("sid")): (w.get("lat"), w.get("lon")) for w in wells if w.get("lat") is not None}
+    site_ll = {s_.get("site_id"): (s_.get("lat_approx"), s_.get("lon_approx")) for s_ in sites if s_.get("lat_approx") is not None}
+    hg_ll = {}
+    for m_ in mercury:
+        if m_.get("Site_ID") and m_.get("lat") is not None:
+            hg_ll.setdefault(m_["Site_ID"], (m_["lat"], m_["lon"]))
+    # DEC portal waterbody coordinates (first row per site_id in dec_results)
+    dec_ll = {}
+    for r in dec_rows:
+        if r.get("site_id") and r.get("LATITUDE") is not None and r["site_id"] not in dec_ll:
+            dec_ll[r["site_id"]] = (r["LATITUDE"], r["LONGITUDE"])
+    REF = (42.515, -74.145)
+    def km_from(lat, lon):
+        import math
+        dlat = (lat - REF[0]) * 111.32; dlon = (lon - REF[1]) * 111.32 * math.cos(math.radians(REF[0]))
+        return round(math.sqrt(dlat * dlat + dlon * dlon), 1)
+    HG_DATASET = "https://data.ny.gov/Energy-Environment/Synthesis-of-Environmental-Mercury-Loads-in-New-Yo/2ei4-24ka"
+    DEC_PORTAL = "https://experience.arcgis.com/experience/1c4bd9f5ad2b4f0a9e6f1a5f4a8f6d1a"
+    def locate(r):
+        sheet = r.get("source_sheet") or ""; place = str(r.get("place") or ""); sid = r.get("site_id")
+        lat = r.get("lat"); lon = r.get("lon"); href = None
+        m = re.search(r"USGS well (\d{15})", place)
+        if m:
+            href = f"https://waterdata.usgs.gov/monitoring-location/USGS-{m.group(1)}/"
+            if lat is None and m.group(1) in well_ll:
+                lat, lon = well_ll[m.group(1)]
+        elif sheet in ("dec_results", "dec_hab_toxins"):
+            href = DEC_PORTAL
+            if lat is None and sid in dec_ll:
+                lat, lon = dec_ll[sid]
+            elif lat is None and sid in site_ll:
+                lat, lon = site_ll[sid]
+        elif sheet == "ny_mercury_raw":
+            href = HG_DATASET
+            key = place.replace("NY Hg synthesis site ", "").strip()
+            if lat is None and key in hg_ll:
+                lat, lon = hg_ll[key]
+        elif sheet == "measurements":
+            u = str(r.get("source_url") or "")
+            mm = re.match(r"(https?://\S+)", u)
+            href = mm.group(1) if mm else None
+            if lat is None and sid in site_ll:
+                lat, lon = site_ll[sid]
+        if href is None:
+            mm = re.match(r"(https?://\S+)", str(r.get("source_url") or ""))
+            href = mm.group(1) if mm else None
+        return (_fnum(lat), _fnum(lon), href)
+    cres, cdict = [], {"pl": [], "url": [], "std": [], "m": [], "sh": [], "st": [], "href": []}
     cidx = {k: {} for k in cdict}
     def enc(field, val):
         if val is None or val == "":
@@ -561,8 +612,10 @@ def emit_water(site_dir: Path, warns: list | None = None) -> int:
                "s": r.get("site_id"), "m": enc("m", r.get("medium")), "st": enc("st", r.get("statistic")), "v": v, "u": r.get("unit"),
                "q": r.get("qualifier"), "dl": r.get("detection_limit"), "std": enc("std", r.get("standard_applied")),
                "url": enc("url", r.get("source_url")), "n": r.get("note")}
-        if r.get("lat") is not None:
-            rec["lat"], rec["lon"] = round(float(r["lat"]), 4), round(float(r["lon"]), 4)
+        lat, lon, href = locate(r)
+        if lat is not None and lon is not None:
+            rec["lat"], rec["lon"], rec["km"] = round(lat, 4), round(lon, 4), km_from(lat, lon)
+        rec["href"] = enc("href", href)
         cres.append({k: v for k, v in rec.items() if v is not None})
     hab_by_year = read_sheet(wb, "dec_hab_by_year", with_prov=False)
     profiles = read_profiles()
