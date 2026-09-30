@@ -1,7 +1,16 @@
-# NY Hilltowners Folk Atlas — Session Handoff (2026-09-30, v996)
+# NY Hilltowners Folk Atlas — Session Handoff (2026-09-30, v997)
 
-> **Where things stand (for the next chat).** Baseline is **v996**; next version continues from **v997**. Laurie has
-> deployed through v980; v981–v996 ship together — the v996 CHANGED-ONLY zip carries everything since v980.
+> **Where things stand (for the next chat).** Baseline is **v997**; next version continues from **v998**. Laurie has
+> deployed through v980; v981–v997 ship together — the v997 CHANGED-ONLY zip carries everything since v980.
+> **v997 = Waste & Contamination split.** On wipmap.html the one toxic layer is now eight checkboxes, each its own sheet in
+> `points_of_interest.xlsx` and its own lazy `data_<key>.js`: Spills 512 (`spills`) · Fuel & Chemical Storage 4,046
+> (`storage`) · Cleanup Sites 1,925 incl. the 2 impaired Hudson segments (`cleanup`) · Orphaned Wells 7,798 (`orphanwells`) ·
+> Landfills & Waste Handling 554 — landfills, transfer, recycling, dismantlers, tires, septage/sludge/medical (`landfills`) ·
+> Sewage & Overflows 398 — plants + CSOs (`sewage`) · Industrial Discharges 769 — SPDES wastewater + stormwater
+> (`discharges`) · Air Emissions 214 (`air`). Same 16,216 displayed pins as before; each row's first tag now names its new
+> sheet. Done by `scripts/split_waste.py` (routes by the second, type tag; idempotent; re-run it after any old waste ingest
+> script, which still writes to the old sheet name). `manifest.json` `waste` entry replaced by the eight (all `wip`,
+> `lazy`, off by default); `calendar.html` Explore-nearby exclusion list updated. The old `data_waste.js` is no longer built.
 > **v996:** section 4 gains **"Phosphorus, blooms, toxin and fish mercury, year by year"** (`drawInteract()`, `#ix`): four
 > lake blocks (Sleepy Hollow, Basic Creek Res., Alcove Res., Lawson) on one 1998–2025 timeline, four rows each with its own
 > scale and reference line — summer (Jun–Sep) median TP (log 5–150, 20 µg/L), worst bloom status per year (hatched before
@@ -273,6 +282,7 @@ Fixed-hinge wingbeat, 4 white wing-spots. Day-only, reduced-motion safe. The
 
 ## UX state (recent)
 
+- **v997 (2026-09-30, Laurie):** `points_of_interest.xlsx` (8 new sheets, 'Waste & Contamination' removed); `manifest.json`; `calendar.html`; new `scripts/split_waste.py`; SCRIPTS_README.
 - **v996 (2026-09-30, Laurie):** `water.js` `drawInteract()` (called with drawBloom/drawToxin); `waterwip.html` `#ix` block + note + table, `.lim-lbl` no uppercase.
 - **v995 (2026-09-30, Laurie):** new `scripts/draw_molecules.py`, `data/water/molecules.csv`, `images/contaminants/*.svg` (23) + README.txt; `build/water.py` `mol_caption`; `water.js` card figure (svg, link, caption); `waterwip.html` `.cp-fig`/`.cp-cap` CSS, 380 px column.
 - **v994 (2026-09-30, Laurie):** `water.js` drawMap — no cooperativeGestures; click-to-enable wheel zoom.
@@ -612,7 +622,7 @@ Big ongoing effort to tame tag sprawl. Started at 2,332 unique tags; now ~2,178.
 7. Clean-room verify: unzip the package fresh, rebuild, confirm BUILD OK.
 8. `present_files` the zip + both xlsx.
 
-Version at handoff: **v996**. Next chat continues from v997. Harness in `scripts/signals_harness/` (Signals).
+Version at handoff: **v997**. Next chat continues from v998. Harness in `scripts/signals_harness/` (Signals).
 
 ---
 

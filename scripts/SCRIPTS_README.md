@@ -70,3 +70,9 @@ Headless Playwright screenshot check for waterwip.html — see scripts/water_har
 Draws the 23 contaminant-card diagrams into images/contaminants/<key>.svg from data/water/molecules.csv (skeletal formulas,
 mini periodic tables, the uranium decay chain, E. coli). Needs RDKit (`pip install rdkit`); run it by hand after editing
 the csv and commit the SVGs — the site build only copies them.
+
+## split_waste.py (v997)
+Splits the old 'Waste & Contamination' sheet of points_of_interest.xlsx into eight sheets by each row's type tag (Spills,
+Fuel & Chemical Storage, Cleanup Sites, Orphaned Wells, Landfills & Waste Handling, Sewage & Overflows, Industrial
+Discharges, Air Emissions). Idempotent. The older waste ingest scripts still write to 'Waste & Contamination' — if one is
+re-run, run split_waste.py after it and the new rows are routed into the right sheets.
