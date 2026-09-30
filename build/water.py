@@ -350,7 +350,74 @@ def slim_props(gj, keep):
 
 
 # ---------------------------------------------------------------------------
-PROFILE_SECTIONS = ["What it is", "How it gets here", "What it does", "What is not known"]
+PROFILE_SECTIONS = ["What it is", "Who made it, and who still does", "How it gets here", "What it does", "What is not known"]
+
+# v991: world standards. data/water/standards_world.csv — one row per (contaminant, jurisdiction, scope, kind), the number
+# exactly as the source states it (unit as written, `url` = the page that states it). Normalised here to one unit per key
+# so the page can rank "strictest": lowest level wins, except DO where the standard is a floor and the highest wins.
+STD_CANON = {  # key → (canonical unit, factor from each source unit)
+    "ng/L": {"ng/L": 1, "µg/L": 1e3, "mg/L": 1e6},
+    "µg/L": {"ng/L": 1e-3, "µg/L": 1, "mg/L": 1e3},
+    "mg/L": {"ng/L": 1e-6, "µg/L": 1e-3, "mg/L": 1},
+    "pCi/L": {"pCi/L": 1, "Bq/L": 27.027},
+    "cfu/100 mL": {"cfu/100 mL": 1},
+}
+STD_UNIT = {"PFOS": "ng/L", "PFOA": "ng/L", "PFHXS": "ng/L", "RADON": "pCi/L", "RADIUM": "pCi/L", "FECAL": "cfu/100 mL",
+            "NA": "mg/L", "CL": "mg/L", "NO3": "mg/L", "DO": "mg/L", "TP": "µg/L"}
+STD_FLOOR = {"DO"}
+
+
+def read_world_standards():
+    """→ {KEY: [rows]} each row {j, sc, k, lv, u, lvn, un, b, y, n, url, strict}. `lvn` is the level in the key's
+    canonical unit (NO3 rows written 'as nitrate ion' are converted to nitrogen ÷ 4.427 and say so in `n`).
+    `strict` marks, per (key, scope), the strictest enforceable row(s) ('e') and strictest non-enforceable row(s) ('g')."""
+    import csv
+    p = WDIR / "standards_world.csv"
+    if not p.exists():
+        WARNS.append("water: data/water/standards_world.csv missing — no world standards panel")
+        return {}
+    out = defaultdict(list)
+    with p.open(newline="", encoding="utf-8") as f:
+        for r in csv.DictReader(f):
+            key = r["key"].strip()
+            canon = STD_UNIT.get(key, "µg/L")
+            lv = float(r["level"]) if r["level"].strip() else None
+            u = r["unit"].strip().replace("ug/L", "µg/L")
+            note = r["note"].strip()
+            lvn, un = None, canon
+            if lv is not None:
+                if u == "% saturation":
+                    un = u; lvn = None            # not comparable to mg/L floors; shown, not ranked
+                elif u in STD_CANON[canon]:
+                    lvn = round(lv * STD_CANON[canon][u], 6)
+                else:
+                    WARNS.append(f"water: standards_world {key} {r['jurisdiction']}: unit '{u}' not convertible to {canon}")
+                if key == "NO3" and lvn is not None and re.search(r"as (nitrate|NO3)|nitrate ion|mg-NO3", note, re.I) and not re.search(r"as (N|nitrogen)(?![A-Za-z])|nitrate-N", note):                lvn = round(lvn / 4.427, 2); note = note + " · shown as nitrogen (÷ 4.43)"
+            flags = ""
+            if re.search(r"(from|until|thereafter|effective|applies|compliance|binding)\D{0,40}\b(20(2[7-9]|[3-9]\d))\b", note) or re.search(r"\b(20(2[7-9]|[3-9]\d))\b\D{0,20}(thereafter|onwards)", note):
+                flags += "f"          # not yet in force: shown with its date, not ranked
+            if key in ("TTHM", "HAA5") and re.search(r"chloroform|bromoform|BDCM|DBCM|dichlorobromo|bromodichloro|\bMCA\b|\bDCA\b|\bTCA\b|chloroacet|monochloroacet|dichloroacet|trichloroacet", r["basis"], re.I):
+                flags += "s"          # a single member of the group, not the sum the local number is
+            out[key].append({"j": r["jurisdiction"].strip(), "fl": flags, "sc": r["scope"].strip(), "k": r["kind"].strip(), "lv": lv, "u": u,
+                             "lvn": lvn, "un": un, "b": r["basis"].strip(), "y": r["year"].strip(), "n": note, "url": r["url"].strip()})
+    for key, rows in out.items():
+        for sc in {r["sc"] for r in rows}:
+            for kinds, tag in ((("enforceable",), "e"), (("guideline", "health goal", "notification/action level", "proposed"), "g")):
+                cand = [r for r in rows if r["sc"] == sc and r["k"] in kinds and r["lvn"] is not None and not r["fl"]]
+                if not cand:
+                    continue
+                best = max(cand, key=lambda r: r["lvn"]) if key in STD_FLOOR else min(cand, key=lambda r: r["lvn"])
+                for r in cand:
+                    if abs(r["lvn"] - best["lvn"]) < 1e-12:
+                        r["strict"] = (r.get("strict", "") + tag)
+                if tag == "g" and best["lvn"] == 0:      # a zero MCLG is a goal, not a number to compare; also mark the lowest non-zero goal
+                    nz = [r for r in cand if r["lvn"] > 0]
+                    if nz:
+                        nzb = min(nz, key=lambda r: r["lvn"])
+                        for r in nz:
+                            if abs(r["lvn"] - nzb["lvn"]) < 1e-12:
+                                r["strict"] = (r.get("strict", "") + "z")
+    return dict(out)
 
 
 def read_profiles():
@@ -619,6 +686,18 @@ def emit_water(site_dir: Path, warns: list | None = None) -> int:
         cres.append({k: v for k, v in rec.items() if v is not None})
     hab_by_year = read_sheet(wb, "dec_hab_by_year", with_prov=False)
     profiles = read_profiles()
+    world_std = read_world_standards()
+    # v995: diagram captions ("how to read this") — data/water/molecules.csv; the SVGs themselves are drawn by
+    # scripts/draw_molecules.py into images/contaminants/<key>.svg and committed (the build needs no RDKit)
+    mol_caption = {}
+    mp = WDIR / "molecules.csv"
+    if mp.exists():
+        import csv as _csv
+        with mp.open(newline="", encoding="utf-8") as f:
+            for r in _csv.DictReader(f):
+                mol_caption[r["key"].strip()] = r["caption"].strip()
+                if not (ROOT / "images" / "contaminants" / f"{r['key'].strip().lower()}.svg").exists():
+                    WARNS.append(f"water: no diagram images/contaminants/{r['key'].strip().lower()}.svg — run scripts/draw_molecules.py")
     regional_top10 = read_sheet(wb, "regional_top10_fy2025", with_prov=False)
 
     comments = {n: a1_comment(wb, n) for n in wb.sheetnames}
@@ -652,7 +731,7 @@ def emit_water(site_dir: Path, warns: list | None = None) -> int:
         "karst": karst, "estuary": estuary, "lake_reports": lake_reports,
         "sources": sources, "references": references,
         "tri_trend": tri_trend, "tri_mercury": tri_mercury, "tri_facilities": tri_facilities, "tri_chemicals": tri_chemicals,
-        "tri_keyed": tri_keyed, "contaminants": contaminants, "cres": cres, "cres_dict": cdict, "hab_by_year": hab_by_year, "profiles": profiles,
+        "tri_keyed": tri_keyed, "contaminants": contaminants, "cres": cres, "cres_dict": cdict, "hab_by_year": hab_by_year, "profiles": profiles, "world_std": world_std, "mol_caption": mol_caption,
         "regional_top10": regional_top10,
         "geo": geo,
     }

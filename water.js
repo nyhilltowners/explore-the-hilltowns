@@ -123,6 +123,33 @@
   var SRC_LABEL = { usgs_wells_raw: 'USGS station', dec_results: 'DEC portal', dec_hab_toxins: 'DEC portal', ny_mercury_raw: 'NY Hg synthesis', measurements: 'report' };
   function normU(u) { return String(u || '').toLowerCase().replace('ug', 'µg').replace(/\s*(ww|dw|fw)$/, '').replace('ppm', 'mg/kg').replace('µg/g', 'mg/kg').replace('mg/l', 'mg/L').trim(); }
   function stdNumber(std) { var m = /([\d.,]+)\s*(ng\/L|µg\/L|ug\/L|mg\/L|mg\/kg|pCi\/L|ppm|µg\/g|\/100 ?mL)/i.exec(std || ''); return m ? { v: parseFloat(m[1].replace(/,/g, '')), u: m[2] } : null; }
+
+  /* v991: world standards — the strictest numbers on earth for this substance (data/water/standards_world.csv, normalised
+     in water.py to one unit per key; DO is a floor so the highest wins). Headline per scope: strictest enforceable limit,
+     strictest goal/guideline (and the lowest non-zero one when the strictest is a zero MCLG); full table under <details>. */
+  var SCOPE_ORDER = ['drinking water', 'recreational water', 'lake water', 'stream (aquatic life)', 'groundwater', 'fish tissue', 'indoor air'];
+  var KIND_LABEL = { 'enforceable': 'enforceable', 'guideline': 'guideline', 'health goal': 'health goal', 'notification/action level': 'action level', 'proposed': 'proposed' };
+  function fmtStd(r) { return (r.lvn != null ? fmt(r.lvn) + ' ' + r.un : (r.lv != null ? fmt(r.lv) + ' ' + esc(r.u) : 'none set')); }
+  function worldHTML(key, isFloor) {
+    var rows = (W.world_std || {})[key]; if (!rows || !rows.length) return null;
+    var link = function (r, txt) { return r.url ? '<a href="' + esc(r.url) + '" target="_blank" rel="noopener">' + txt + '</a>' : txt; };
+    var who = function (r) { return esc(r.j) + (r.y ? ' ' + esc(r.y) : ''); };
+    var scopes = SCOPE_ORDER.filter(function (sc) { return rows.some(function (r) { return r.sc === sc && r.strict; }); });
+    var head = scopes.map(function (sc) {
+      var E = rows.filter(function (r) { return r.sc === sc && /e/.test(r.strict || ''); });
+      var G = rows.filter(function (r) { return r.sc === sc && /g/.test(r.strict || ''); });
+      var Z = rows.filter(function (r) { return r.sc === sc && /z/.test(r.strict || ''); });
+      var line = function (list, lbl) { if (!list.length) return ''; var r0 = list[0]; return '<div><b>' + lbl + '</b> <span class="num">' + fmtStd(r0) + '</span> — ' + list.map(function (r) { return link(r, who(r)); }).join(', ') + (r0.n ? ' <small>' + esc(r0.n) + '</small>' : '') + '</div>'; };
+      return '<div class="cp-world-scope"><span class="sc">' + esc(sc) + (isFloor ? ' · floor' : '') + '</span>' + line(E, 'Strictest enforceable limit:') + line(G, 'Strictest goal or guideline:') + (Z.length ? line(Z, 'Lowest non-zero goal:') : '') + '</div>';
+    }).join('');
+    var sorted = rows.slice().sort(function (a, b) { var sa = SCOPE_ORDER.indexOf(a.sc), sb = SCOPE_ORDER.indexOf(b.sc); if (sa !== sb) return sa - sb; if (a.lvn == null) return 1; if (b.lvn == null) return -1; return isFloor ? b.lvn - a.lvn : a.lvn - b.lvn; });
+    var tab = '<table class="ddtab"><thead><tr><th>Jurisdiction</th><th>Applies to</th><th>Kind</th><th>Level as written</th><th>Same unit</th><th>Basis</th><th>Note</th></tr></thead><tbody>' + sorted.map(function (r) {
+      var cls = /e/.test(r.strict || '') ? ' class="strict"' : '';
+      var flag = (r.fl && /f/.test(r.fl) ? '<span class="pv a" title="not yet in force">soon</span>' : '') + (r.fl && /s/.test(r.fl) ? '<span class="pv d" title="a single member of the group, not the sum the local number is">one</span>' : '');
+      return '<tr' + cls + '><td class="l">' + link(r, esc(r.j)) + (r.y ? ' <span style="opacity:.7">' + esc(r.y) + '</span>' : '') + '</td><td class="l">' + esc(r.sc) + '</td><td class="l">' + esc(KIND_LABEL[r.k] || r.k) + '</td><td>' + (r.lv != null ? fmt(r.lv) + ' ' + esc(r.u) : '<span class="nd">none set</span>') + flag + '</td><td>' + (r.lvn != null && (r.u !== r.un || r.lvn !== r.lv) ? fmt(r.lvn) + ' ' + esc(r.un) : '') + '</td><td class="l">' + esc(r.b) + '</td><td class="l">' + esc(r.n) + '</td></tr>';
+    }).join('') + '</tbody></table>';
+    return { head: '<div class="sg-eye" style="margin-top:10px">Strictest on earth</div><div class="cp-world">' + head + '</div>', table: '<div class="cp-world"><details><summary>all ' + rows.length + ' standards on record for ' + esc(key) + ' · source per row</summary>' + tab + '<p class="sg-note">Levels converted to one unit per substance for the ranking; "soon" = adopted but not yet in force; "one" = a limit on a single member of the group (a single trihalomethane, one haloacetic acid), not the sum the local results report. Enforceable = a legal limit with compliance consequences; a goal has none. New York and EPA rows are in the table so the gap is visible.</p></details></div>' };
+  }
   function drawContaminants() {
     var C = W.contaminants || []; if (!C.length) { $('cp').innerHTML = '<p class="sg-det">No contaminants sheet in the workbook.</p>'; return; }
     var byKey = {}; C.forEach(function (c) { byKey[c.key] = c; });
@@ -144,12 +171,16 @@
       $('cp-chips').innerHTML = sh.keys.map(function (k) { var cc = byKey[k]; return '<button type="button" data-key="' + esc(k) + '" class="' + (k === key ? 'on' : '') + '" title="' + esc(cc.summary || '') + '">' + esc(cc.name) + '<span class="n">' + (cc.n_results || 0) + '</span></button>'; }).join('');
       var pr = (W.profiles || {})[key] || {};
       var rows = (W.cres || []).filter(function (r) { return r.k === key; }).map(cresRow);
-      var o = '<div class="cp-top"><div class="cp-img" id="cp-img"><span class="ph">image · ' + esc(c.name) + '<br><small style="letter-spacing:0;text-transform:none;opacity:.8">images/contaminants/' + esc(key.toLowerCase()) + '.jpg</small></span><img alt="" src="images/contaminants/' + esc(key.toLowerCase()) + '.jpg" onload="this.parentNode.classList.add(\'has-img\')" onerror="this.remove()"></div><div><div class="cp-pos">' + esc(sh.label) + ' · ' + (idx + 1) + ' of ' + sh.keys.length + '</div><div class="cp-head"><h3>' + esc(c.name) + '</h3><span class="kind">' + esc(GROUP_LABEL[c.group] || c.group || '') + (c.cas ? ' · CAS ' + esc(c.cas) : '') + '</span>' + (c.first_date ? '<span class="kind">on record ' + esc(String(c.first_date).slice(0, 4)) + '–' + esc(String(c.last_date).slice(0, 4)) + '</span>' : '') + '</div>';
-      o += '<div class="cp-sum">' + esc(c.summary || '') + '</div>' + (c.standards ? '<div class="sg-eye" style="margin-top:8px">Standards it is judged against</div><ul class="cp-std">' + String(c.standards).split(/;\s*/).map(function (x) { return '<li>' + esc(x) + '</li>'; }).join('') + '</ul>' : '') + '</div></div>';
+      var wh = worldHTML(key, key === 'DO');
+      var dsrc = 'images/contaminants/' + esc(key.toLowerCase()) + '.svg', dcap = (W.mol_caption || {})[key];
+      var o = '<div class="cp-top"><div class="cp-fig"><a class="cp-img" id="cp-img" href="' + dsrc + '" target="_blank" rel="noopener" title="open the diagram full size"><span class="ph">diagram · ' + esc(c.name) + '</span><img alt="' + esc(c.name) + ' diagram" src="' + dsrc + '" onload="this.parentNode.classList.add(\'has-img\')" onerror="this.remove()"></a>' + (dcap ? '<p class="cp-cap"><b>How to read this.</b> ' + esc(dcap) + '</p>' : '') + '</div><div><div class="cp-pos">' + esc(sh.label) + ' · ' + (idx + 1) + ' of ' + sh.keys.length + '</div><div class="cp-head"><h3>' + esc(c.name) + '</h3><span class="kind">' + esc(GROUP_LABEL[c.group] || c.group || '') + (c.cas ? ' · CAS ' + esc(c.cas) : '') + '</span>' + (c.first_date ? '<span class="kind">on record ' + esc(String(c.first_date).slice(0, 4)) + '–' + esc(String(c.last_date).slice(0, 4)) + '</span>' : '') + '</div>';
+      o += '<div class="cp-sum">' + esc(c.summary || '') + '</div>' + (c.standards ? '<div class="sg-eye" style="margin-top:8px">Standards it is judged against</div><ul class="cp-std">' + String(c.standards).split(/;\s*/).map(function (x) { return '<li>' + esc(x) + '</li>'; }).join('') + '</ul>' : '') + (wh ? wh.head : '') + '</div></div>' + (wh ? wh.table : '');
       /* What it is */
       o += '<h4>What it is</h4>';
       if (pr['What it is']) o += '<div class="prose">' + pr['What it is'] + '</div>';
       else o += '<div class="prose"><p>' + esc(c.natural_occurrence || '') + (c.persistence ? ' ' + esc(c.persistence) + '.' : '') + '</p><p class="todo">Full entry to be written; the summary and standards above are from the workbook.</p></div>';
+      /* Who made it (man-made chemicals; v991) */
+      if (pr['Who made it, and who still does']) o += '<h4>Who made it, and who still does <span class="sub">discovery · uses · makers then and now</span></h4><div class="prose">' + pr['Who made it, and who still does'] + '</div>';
       /* How / What it does */
       o += '<h4>How it gets here</h4>' + (pr['How it gets here'] ? '<div class="prose">' + pr['How it gets here'] + '</div>' : '<p class="todo">To be written.</p>');
       o += '<h4>What it does <span class="sub">people · plants and animals</span></h4>' + (pr['What it does'] ? '<div class="prose">' + pr['What it does'] + '</div>' : '<p class="todo">To be written.</p>');
@@ -377,6 +408,94 @@
     years.forEach(function (y, i) { var yy = T + i * rowH; o += '<text class="lbl dim" x="' + (L - 8) + '" y="' + (yy + 12) + '" text-anchor="end">' + y + '</text>'; var rows = hist.filter(function (r) { return +r.Year === y; }); var hr = hy.filter(function (r) { return +r.year === y; })[0]; if (hr && hr.first && hr.last && hr.worst_status && hr.worst_status !== 'none') { var c = hr.worst_status === 'HT' ? RED : hr.worst_status === 'C' ? AMBER : GREY; var a = xs(doy(String(hr.first).slice(0, 10))), b = xs(doy(String(hr.last).slice(0, 10))); var lbl = (hr.worst_status === 'HT' ? 'confirmed, high toxins' : hr.worst_status === 'C' ? 'confirmed' : 'suspicious') + ' · ' + hr.n_reports + ' report' + (hr.n_reports == 1 ? '' : 's'); o += '<rect x="' + a + '" y="' + (yy + 3) + '" width="' + Math.max(3, b - a) + '" height="10" rx="3" fill="' + c + '" fill-opacity=".85"><title>' + y + ': ' + lbl + '</title></rect><text class="lbl dim" x="' + (b > Wd - 230 ? a - 6 : b + 6) + '" y="' + (yy + 12) + '"' + (b > Wd - 230 ? ' text-anchor="end"' : '') + '>' + lbl + '</text>'; } else if (y === 2025 && h25) { o += '<rect x="' + xs(doy(h25.first_report)) + '" y="' + (yy + 3) + '" width="' + Math.max(3, xs(doy(h25.last_report)) - xs(doy(h25.first_report))) + '" height="10" rx="3" fill="' + GREY + '" fill-opacity=".8"><title>2025: ' + h25.n_reports + ' reports, ' + h25.first_report + ' → ' + h25.last_report + '</title></rect><text class="lbl dim" x="' + (xs(doy(h25.last_report)) > Wd - 300 ? xs(doy(h25.first_report)) - 6 : xs(doy(h25.last_report)) + 6) + '" y="' + (yy + 12) + '"' + (xs(doy(h25.last_report)) > Wd - 300 ? ' text-anchor="end"' : '') + '>' + h25.n_reports + ' report' + (h25.n_reports == 1 ? '' : 's') + ' · season window, weekly detail not in record</text>'; } else if (rows.length) rows.forEach(function (r) { var c = r['Bloom Type'] === 'HT' ? RED : r['Bloom Type'] === 'C' ? AMBER : GREY; var a = xs(doy(new Date(r['Date of First Listing']))), b = xs(doy(new Date(r['Date of Last Listing']))); o += '<rect x="' + a + '" y="' + (yy + 3) + '" width="' + Math.max(3, b - a) + '" height="10" rx="3" fill="' + c + '" fill-opacity=".85"><title>' + y + ': ' + esc(r.bloom_type_meaning) + ', ' + r['Number of Weeks on DEC Notification List'] + ' weeks listed</title></rect><text class="lbl dim" x="' + (b > Wd - 230 ? a - 6 : b + 6) + '" y="' + (yy + 12) + '"' + (b > Wd - 230 ? ' text-anchor="end"' : '') + '>' + esc(r.bloom_type_meaning) + ' · ' + r['Number of Weeks on DEC Notification List'] + ' wk</text>'; }); else o += '<text class="lbl dim" x="' + (L + 4) + '" y="' + (yy + 12) + '" font-style="italic" opacity=".45">no DEC report</text>'; });
     $('bloom').innerHTML = '<svg viewBox="0 0 ' + Wd + ' ' + H + '">' + o + '</svg>';
   }
+
+  /* v996 (Laurie): phosphorus → bloom → microcystin, with fish mercury, year by year on one timeline, one lake per block.
+     Separate rows, separate scales (never a shared axis): each row is its own measure against its own reference line.
+     Built only from what is on record; empty years stay empty. Sampling differs by row and the note says so. */
+  function drawInteract() {
+    var el = $('ix'); if (!el) return;
+    var LAKES = [
+      { name: 'Sleepy Hollow Lake', pl: /^Sleepy Hollow Lake$/, hg: null },
+      { name: 'Basic Creek Reservoir', pl: /^Basic Creek Reservoir$/, hg: /BASIC RESERVOIR/ },
+      { name: 'Alcove Reservoir', pl: /^Alcove Reservoir$/, hg: /ALCOVE RES/ },
+      { name: 'Lawson Lake', pl: /^Lawson Lake$/, hg: null }
+    ];
+    var Y0 = 1998, Y1 = 2025, Wd = 900, L = 150, R = 20;
+    var xs = function (y) { return L + (y - Y0 + 0.5) / (Y1 - Y0 + 1) * (Wd - L - R); }, colW = (Wd - L - R) / (Y1 - Y0 + 1);
+    var rows = (W.cres || []).map(cresRow);
+    var med = function (a) { a = a.slice().sort(function (x, y) { return x - y; }); var n = a.length; return n % 2 ? a[(n - 1) / 2] : (a[n / 2 - 1] + a[n / 2]) / 2; };
+    var yearOf = function (d) { return +String(d).slice(0, 4); }, monOf = function (d) { return +String(d).slice(5, 7); };
+    var logY = function (lo, hi, top, h) { return function (v) { return top + (1 - (Math.log10(v) - Math.log10(lo)) / (Math.log10(hi) - Math.log10(lo))) * h; }; };
+    var tip = tipper('ix-tip'), o = '', y = 8, table = [];
+    var ROW = { tp: 72, bl: 14, mc: 72, hg: 56 }, GAP = 12;
+    /* shared year axis at the top */
+    for (var yr = Y0; yr <= Y1; yr++) if (yr % 5 === 0 || yr === Y1) o += '<text class="lbl dim" x="' + xs(yr) + '" y="' + (y + 10) + '" text-anchor="middle">' + yr + '</text>';
+    y += 22;
+    var H0 = y;
+    LAKES.forEach(function (lk) {
+      var tp = rows.filter(function (r) { return r.k === 'TP' && lk.pl.test(r.pl) && r.m === 'raw lake' && r.v != null && r.d && monOf(r.d) >= 6 && monOf(r.d) <= 9; });
+      var mc = rows.filter(function (r) { return r.k === 'MICROCYSTIN' && lk.pl.test(r.pl) && (r.m === 'bloom sample' || r.m === 'raw lake') && r.d; });
+      var hg = lk.hg ? rows.filter(function (r) { return r.k === 'HG' && lk.hg.test(r.pl) && r.m === 'fish muscle' && r.v != null && r.d; }) : [];
+      var hgOld = hg.filter(function (r) { return yearOf(r.d) < Y0; }); hg = hg.filter(function (r) { return yearOf(r.d) >= Y0; });
+      var hab = HABYR[lk.name] || [];
+      o += '<text class="lbl" x="0" y="' + (y + 12) + '" style="font-size:13px">' + esc(lk.name) + '</text>'; y += 20;
+      var top = y;
+      /* row 1: summer phosphorus */
+      var ug = function (r) { return /mg/i.test(r.u) ? r.v * 1000 : r.v; };
+      var byY = {}; tp.forEach(function (r) { var k = yearOf(r.d); (byY[k] = byY[k] || []).push(r); });
+      var ty = logY(5, 150, y, ROW.tp);
+      o += '<text class="lbl dim" x="' + (L - 10) + '" y="' + (y + ROW.tp / 2 + 4) + '" text-anchor="end">summer phosphorus</text>';
+      [5, 10, 50, 150].forEach(function (v) { o += '<line class="grid" x1="' + L + '" x2="' + (Wd - R) + '" y1="' + ty(v) + '" y2="' + ty(v) + '"/><text class="lbl dim" x="' + (L + 2) + '" y="' + (ty(v) - 2) + '" style="font-size:9px">' + v + (v === 150 ? ' µg/L' : '') + '</text>'; });
+      o += '<line class="lim" x1="' + L + '" x2="' + (Wd - R) + '" y1="' + ty(20) + '" y2="' + ty(20) + '"/><text class="lim-lbl" x="' + (L + 40) + '" y="' + (ty(20) - 3) + '">20 µg/L guidance</text>';
+      var pts = Object.keys(byY).map(Number).filter(function (k) { return k >= Y0; }).sort().map(function (k) { var rs = byY[k], det = rs.filter(function (r) { return !/not detected/.test(r.q); }).map(ug); var nd = rs.length - det.length; return { y: k, m: det.length ? med(det) : null, n: rs.length, nd: nd, lo: det.length ? Math.min.apply(null, det) : null, hi: det.length ? Math.max.apply(null, det) : null }; }).filter(function (p) { return p.m != null; });
+      for (var i = 1; i < pts.length; i++) if (pts[i].y === pts[i - 1].y + 1) o += '<line x1="' + xs(pts[i - 1].y) + '" y1="' + ty(Math.min(150, Math.max(5, pts[i - 1].m))) + '" x2="' + xs(pts[i].y) + '" y2="' + ty(Math.min(150, Math.max(5, pts[i].m))) + '" stroke="rgba(255,255,255,.5)" stroke-width="2"/>';
+      pts.forEach(function (p) { var v = Math.min(150, Math.max(5, p.m)); o += '<circle cx="' + xs(p.y) + '" cy="' + ty(v) + '" r="4.5" fill="' + (p.m > 20 ? RED : '#fff') + '" stroke="#00004d" stroke-width="2" data-tip="' + esc('<b>' + lk.name + ' · ' + p.y + '</b><br>summer (Jun–Sep) median total phosphorus <b>' + fmt(p.m, 1) + ' µg/L</b><br>' + p.n + ' sample' + (p.n == 1 ? '' : 's') + ', range ' + fmt(p.lo, 1) + '–' + fmt(p.hi, 1) + (p.nd ? '<br>' + p.nd + ' not detected, left out of the median' : '')) + '"/>'; table.push([lk.name, p.y, 'summer phosphorus (median)', fmt(p.m, 1) + ' µg/L', p.n + ' samples']); });
+      if (!pts.length) o += '<text class="lbl dim" x="' + (L + 40) + '" y="' + (ty(20) + 16) + '" font-style="italic" opacity=".6">no open-water phosphorus sample since ' + Y0 + '</text>';
+      y += ROW.tp + GAP;
+      /* row 2: bloom status */
+      o += '<text class="lbl dim" x="' + (L - 10) + '" y="' + (y + 11) + '" text-anchor="end">bloom (worst that year)</text>';
+      o += '<rect x="' + L + '" y="' + y + '" width="' + (xs(2011.5) - L) + '" height="' + ROW.bl + '" fill="url(#ix-hatch)"><title>DEC bloom reporting begins 2012</title></rect>';
+      for (var by2 = 2012; by2 <= Y1; by2++) { var h = hab.filter(function (r) { return +r.year === by2; })[0]; var st = h && h.worst_status && h.worst_status !== 'none' ? h.worst_status : null; var c = st === 'HT' ? RED : st === 'C' ? AMBER : st === 'S' ? GREY : null; var lab = st === 'HT' ? 'confirmed, high toxins' : st === 'C' ? 'confirmed' : st === 'S' ? 'suspicious' : 'no bloom reported'; o += '<rect x="' + (xs(by2) - colW / 2 + 1) + '" y="' + y + '" width="' + (colW - 2) + '" height="' + ROW.bl + '" rx="3" fill="' + (c || 'none') + '" stroke="' + (c ? '#00004d' : 'rgba(255,255,255,.25)') + '" stroke-width="1" data-tip="' + esc('<b>' + lk.name + ' · ' + by2 + '</b><br>' + lab + (h && h.n_reports ? ' · ' + h.n_reports + ' DEC report' + (h.n_reports == 1 ? '' : 's') : '')) + '"/>'; if (st) table.push([lk.name, by2, 'bloom, worst status', lab, (h.n_reports || '') + ' reports']); }
+      y += ROW.bl + GAP;
+      /* row 3: microcystin, yearly maximum — shoreline bloom samples (circle) vs open water (diamond) */
+      var my = logY(0.1, 10000, y, ROW.mc);
+      o += '<text class="lbl dim" x="' + (L - 10) + '" y="' + (y + ROW.mc / 2 + 4) + '" text-anchor="end">microcystin (yearly max)</text>';
+      [0.1, 1, 10, 100, 1000, 10000].forEach(function (v) { o += '<line class="grid" x1="' + L + '" x2="' + (Wd - R) + '" y1="' + my(v) + '" y2="' + my(v) + '"/>' + (v === 1 || v === 100 || v === 10000 ? '<text class="lbl dim" x="' + (L + 2) + '" y="' + (my(v) - 2) + '" style="font-size:9px">' + v.toLocaleString() + (v === 10000 ? ' µg/L' : '') + '</text>' : ''); });
+      o += '<line class="lim" x1="' + L + '" x2="' + (Wd - R) + '" y1="' + my(4) + '" y2="' + my(4) + '"/><text class="lim-lbl" x="' + (L + 40) + '" y="' + (my(4) + 11) + '">4 µg/L guidance</text>';
+      ['bloom sample', 'raw lake'].forEach(function (med_) {
+        var g = {}; mc.filter(function (r) { return r.m === med_; }).forEach(function (r) { var k = yearOf(r.d); (g[k] = g[k] || []).push(r); });
+        Object.keys(g).map(Number).filter(function (k) { return k >= Y0; }).forEach(function (k) {
+          var rs = g[k], det = rs.filter(function (r) { return !/not detected/.test(r.q) && r.v != null && r.v > 0; }); var mx = det.length ? Math.max.apply(null, det.map(function (r) { return r.v; })) : null;
+          var cx = xs(k) + (med_ === 'raw lake' ? 6 : -6), cy = my(mx != null ? Math.min(10000, Math.max(0.1, mx)) : 0.1);
+          var fill = mx == null ? 'none' : (mx >= 4 ? RED : GREEN), stroke = mx == null ? GREY : '#00004d';
+          var t = esc('<b>' + lk.name + ' · ' + k + '</b><br>' + (med_ === 'raw lake' ? 'open water' : 'shoreline bloom samples') + ': ' + (mx == null ? 'not detected in ' + rs.length + ' sample' + (rs.length == 1 ? '' : 's') : 'highest <b>' + fmt(mx, 1) + ' µg/L</b> of ' + rs.length + ' sample' + (rs.length == 1 ? '' : 's')));
+          o += med_ === 'raw lake' ? '<path d="M' + cx + ',' + (cy - 6) + ' l6,6 l-6,6 l-6,-6 z" fill="' + fill + '" stroke="' + stroke + '" stroke-width="1.5" data-tip="' + t + '"/>' : '<circle cx="' + cx + '" cy="' + cy + '" r="5" fill="' + fill + '" stroke="' + stroke + '" stroke-width="1.5" data-tip="' + t + '"/>';
+          table.push([lk.name, k, 'microcystin, ' + (med_ === 'raw lake' ? 'open water' : 'shoreline bloom') + ' (max)', mx == null ? 'not detected' : fmt(mx, 1) + ' µg/L', rs.length + ' samples']);
+        });
+      });
+      if (!mc.length) o += '<text class="lbl dim" x="' + (L + 40) + '" y="' + (my(4) - 8) + '" font-style="italic" opacity=".6">no microcystin sample on record</text>';
+      y += ROW.mc + GAP;
+      /* row 4: fish mercury (fillet, mg/kg wet weight) */
+      var hy = function (v) { return y + (1 - Math.min(v, 0.8) / 0.8) * ROW.hg; };
+      o += '<text class="lbl dim" x="' + (L - 10) + '" y="' + (y + ROW.hg / 2 + 4) + '" text-anchor="end">fish mercury (fillet)</text>';
+      [0, 0.4, 0.8].forEach(function (v) { o += '<line class="grid" x1="' + L + '" x2="' + (Wd - R) + '" y1="' + hy(v) + '" y2="' + hy(v) + '"/>'; });
+      o += '<text class="lbl dim" x="' + (L + 2) + '" y="' + (hy(0.8) + 9) + '" style="font-size:9px">0.8 mg/kg</text>';
+      o += '<line class="lim" x1="' + L + '" x2="' + (Wd - R) + '" y1="' + hy(0.3) + '" y2="' + hy(0.3) + '"/><text class="lim-lbl" x="' + (Wd - R) + '" y="' + (hy(0.3) - 3) + '" text-anchor="end">0.3 mg/kg EPA fish criterion</text>';
+      var hgY = {}; hg.forEach(function (r) { var k = yearOf(r.d); (hgY[k] = hgY[k] || []).push(r); });
+      Object.keys(hgY).map(Number).forEach(function (k) { var rs = hgY[k], vs = rs.map(function (r) { return r.v; }); rs.forEach(function (r, j) { var jx = xs(k) + ((j * 37) % 23 - 11); o += '<circle cx="' + jx + '" cy="' + hy(r.v) + '" r="2" fill="rgba(255,255,255,.4)"/>'; }); var m = med(vs); o += '<rect x="' + (xs(k) - 13) + '" y="' + (hy(m) - 1.5) + '" width="26" height="3" rx="1.5" fill="' + (m > 0.3 ? RED : '#fff') + '" data-tip="' + esc('<b>' + lk.name + ' · ' + k + '</b><br>' + rs.length + ' fish fillets, median <b>' + fmt(m, 2) + ' mg/kg</b> (range ' + fmt(Math.min.apply(null, vs), 2) + '–' + fmt(Math.max.apply(null, vs), 2) + ')<br>no methylmercury, water or sediment mercury measured in the lake') + '"/><rect x="' + (xs(k) - 12) + '" y="' + y + '" width="24" height="' + ROW.hg + '" fill="transparent" data-tip="' + esc('<b>' + lk.name + ' · ' + k + '</b><br>' + rs.length + ' fish fillets, median <b>' + fmt(m, 2) + ' mg/kg</b> (range ' + fmt(Math.min.apply(null, vs), 2) + '–' + fmt(Math.max.apply(null, vs), 2) + ')') + '"/>'; table.push([lk.name, k, 'fish mercury, fillet (median)', fmt(m, 2) + ' mg/kg', rs.length + ' fish']); });
+      var hgNote = !lk.hg ? 'no fish mercury on record' : (!hg.length ? 'no fish mercury since ' + Y0 : '') + (hgOld.length ? (hg.length ? '' : '') + '← off the chart: ' + hgOld.length + ' fish in ' + uniq(hgOld.map(function (r) { return yearOf(r.d); })).join(', ') : '');
+      if (hgNote) o += '<text class="lbl dim" x="' + (hg.length ? xs(2002) : L + 40) + '" y="' + (y + 16) + '" font-style="italic" opacity=".65">' + esc(hgNote.trim()) + '</text>';
+      y += ROW.hg + 18;
+      o += '<line x1="0" x2="' + Wd + '" y1="' + (y - 8) + '" y2="' + (y - 8) + '" stroke="rgba(255,255,255,.15)"/>';
+    });
+    /* year gridlines through everything */
+    var yg = ''; for (var yr2 = Y0; yr2 <= Y1; yr2++) if (yr2 % 5 === 0) yg += '<line x1="' + xs(yr2) + '" x2="' + xs(yr2) + '" y1="' + H0 + '" y2="' + (y - 10) + '" stroke="rgba(255,255,255,.07)"/>';
+    var defs = '<defs><pattern id="ix-hatch" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="6" stroke="rgba(255,255,255,.18)" stroke-width="2"/></pattern></defs>';
+    el.innerHTML = '<svg viewBox="0 0 ' + Wd + ' ' + (y - 6) + '">' + defs + yg + o + '</svg>';
+    bindTips(el, tip, 'data-tip');
+    table.sort(function (a, b) { return a[0] === b[0] ? a[1] - b[1] : 0; });
+    $('ix-table').innerHTML = '<table class="ddtab"><thead><tr><th>Lake</th><th>Year</th><th>Measure</th><th>Value</th><th>Basis</th></tr></thead><tbody>' + table.map(function (r) { return '<tr><td class="l">' + esc(r[0]) + '</td><td>' + r[1] + '</td><td class="l">' + esc(r[2]) + '</td><td>' + esc(r[3]) + '</td><td>' + esc(r[4]) + '</td></tr>'; }).join('') + '</tbody></table>';
+  }
   function drawToxin(name) {
     var site = SITES.filter(function (s) { return lakeName(s) === name; })[0]; var rows = site ? W.hab_toxins.filter(function (t) { return t.site_id === site.site_id && t.PARAMETER_NAME === 'microcystin'; }) : [];
     if (!rows.length) { $('toxin').innerHTML = '<p class="sg-det" style="padding:6px">No shoreline microcystin results on file for ' + esc(name) + '.</p>'; return; }
@@ -537,7 +656,10 @@
   /* ---------- 8 · map ---------- */
   function drawMap() {
     if (!window.maplibregl) { $('wq-map').innerHTML = '<p class="sg-det" style="padding:12px">Map library did not load.</p>'; return; }
-    var map = new maplibregl.Map({ container: 'wq-map', style: 'https://tiles.openfreemap.org/styles/positron', center: [-73.98, 42.42], zoom: 9.2, attributionControl: true, cooperativeGestures: true });
+    var map = new maplibregl.Map({ container: 'wq-map', style: 'https://tiles.openfreemap.org/styles/positron', center: [-73.98, 42.42], zoom: 9.2, attributionControl: true, scrollZoom: false });
+    /* v994 (Laurie): no cooperative-gesture overlay. The wheel scrolls the page until you click the map; after a click it zooms the map, and leaving the map hands the wheel back to the page. +/- buttons, double-click and pinch always work. */
+    map.getCanvasContainer().addEventListener('mousedown', function () { map.scrollZoom.enable(); });
+    map.getContainer().addEventListener('mouseleave', function () { map.scrollZoom.disable(); });
     map.addControl(new maplibregl.NavigationControl({ showCompass: false }), 'top-right');
     var pts = function (rows, f) { return { type: 'FeatureCollection', features: rows.filter(function (r) { return r.lat != null && r.lon != null; }).map(function (r) { return { type: 'Feature', geometry: { type: 'Point', coordinates: [+r.lon, +r.lat] }, properties: f(r) }; }) }; };
     var nodes = { type: 'FeatureCollection', features: SITES.filter(function (s) { return s.lat_approx != null; }).map(function (s) { return { type: 'Feature', geometry: { type: 'Point', coordinates: [+s.lon_approx, +s.lat_approx] }, properties: { id: s.site_id, name: s.name, col: COL[txOf(s)], st: statusOf(s), html: '<b>' + esc(s.name) + '</b><div>' + esc(s.node_type.replace(/_/g, ' ')) + ' · ' + esc(s.data_status || '') + '</div>' + (s.topline_summary ? '<div style="margin-top:4px">' + esc(s.topline_summary) + '</div>' : '') } }; }) };
@@ -577,7 +699,7 @@
 
   try {
     drawContaminants(); drawTransects(); drawCards(); drawBugs(); drawLakes(); drawProfiles(); drawTMDL();
-    var sel = $('bloom-sel'); var names = bloomLakes(); sel.innerHTML = names.map(function (n) { return '<option>' + esc(n) + '</option>'; }).join(''); var cur = names[0] || 'Basic Creek Reservoir'; drawBloom(cur); drawToxin(cur); sel.addEventListener('change', function () { drawBloom(sel.value); drawToxin(sel.value); });
+    var sel = $('bloom-sel'); var names = bloomLakes(); sel.innerHTML = names.map(function (n) { return '<option>' + esc(n) + '</option>'; }).join(''); var cur = names[0] || 'Basic Creek Reservoir'; drawBloom(cur); drawToxin(cur); drawInteract(); sel.addEventListener('change', function () { drawBloom(sel.value); drawToxin(sel.value); });
     drawGroundwater(); drawOutfalls(); drawLoads(); drawTRI(); drawProvenance(); drawMap();
   } catch (e) { status('Something in the dashboard failed to draw: ' + e.message); if (window.console) console.error(e); }
 })();

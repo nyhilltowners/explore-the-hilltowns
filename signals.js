@@ -442,6 +442,31 @@
     var wins=[]; for(var m=1;m<=12;m++){ wins.push({m:m,lo:1,hi:15}); wins.push({m:m,lo:16,hi:31}); }
     var now=new Date(), curIdx=(now.getMonth())*2+(now.getDate()<=15?0:1);
     var TAG={ghost:'Ghost',health:'Nature health watch',garden:'Garden & orchard',foodways:'Foodways'};
+    /* v993 (2026-09-30, Laurie): hazard glyph under the year — snow/ice/cold, water (flood, mudslide), wind, fire,
+       heat/drought, ground (landslide, sinkhole, rockfall). Classified from the register's `cat` text: the FIRST-named
+       hazard wins for multi-hazard rows ("Tropical cyclone / flood" → wind), whole string as fallback. White, stroke-only. */
+    var GLYPH={
+      snow:'<svg viewBox="0 0 24 24"><path d="M12 2v20M2 12h20M5 5l14 14M19 5L5 19M12 2l-2 3M12 2l2 3M12 22l-2-3M12 22l2-3M2 12l3-2M2 12l3 2M22 12l-3-2M22 12l-3 2"/></svg>',
+      water:'<svg viewBox="0 0 24 24"><path d="M12 3s6 7 6 12a6 6 0 0 1-12 0c0-5 6-12 6-12z"/><path d="M9 15a3 3 0 0 0 3 3"/></svg>',
+      wind:'<svg viewBox="0 0 24 24"><path d="M3 8h11a2.5 2.5 0 1 0-2.5-2.5M3 13h15a2.5 2.5 0 1 1-2.5 2.5M3 18h8a2 2 0 1 1-2 2"/></svg>',
+      fire:'<svg viewBox="0 0 24 24"><path d="M12 22c-4 0-7-3-7-7 0-3 2-5 3-7 0 2 1 3 2 3 0-4 2-7 5-9-1 4 2 5 3 8 1 2 1 3 1 5 0 4-3 7-7 7z"/><path d="M12 22c-2 0-3-1.5-3-3 0-2 2-3 3-5 1 2 3 3 3 5 0 1.5-1 3-3 3z"/></svg>',
+      heat:'<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1L7 17M17 7l2.1-2.1"/></svg>',
+      ground:'<svg viewBox="0 0 24 24"><path d="M3 20h18M3 20l6-10 4 6 3-4 5 8"/><path d="M14 8l2-3 1 2"/></svg>'
+    };
+    var GLYPH_TITLE={snow:'snow, ice or cold',water:'flood or mudslide',wind:'wind: tornado, hurricane, gale',fire:'fire',heat:'heat or drought',ground:'landslide, sinkhole, rockfall'};
+    var RULES=[
+      [/wildfire|\bfire\b|brush/i,'fire'],
+      [/tornado|hurricane|tropical|cyclone|wind|gale|derecho|downburst|microburst|macroburst|squall|nor'?easter|coastal storm|thunderstorm|hail|multi-hazard/i,'wind'],
+      [/flood|freshet|mudslide|debris flow|cloudburst|rain|washout|scour|ice jam|ice-jam|ice gorge/i,'water'],
+      [/landslide|rockfall|sinkhole|karst|subsidence|collapse|excavation|erosion|cave|avalanche/i,'ground'],
+      [/heat|drought|hot|mild winter/i,'heat'],
+      [/snow|blizzard|ice|frost|freeze|cold|arctic|winter|thaw/i,'snow']
+    ];
+    function glyphFor(cat){
+      var c=String(cat||''); var first=c.split(/\s*[\/+(]\s*/)[0];
+      var pick=function(t){ for(var i=0;i<RULES.length;i++){ if(RULES[i][0].test(t)) return RULES[i][1]; } return null; };
+      return pick(first)||pick(c);
+    }
     row.innerHTML = wins.map(function(w,idx){
       var label = MON[w.m-1]+' '+w.lo+'–'+(w.hi===15?15:dim(w.m));
       var ex = EX[idx];
@@ -451,7 +476,7 @@
       var hist = '<article class="ph-card'+(idx===curIdx?' cur':'')+'"><div class="ph-head"><div><p class="ph-sub">On record</p><div class="ph-win">'+label+'</div></div><div class="ph-count">'+items.length+' event'+(items.length===1?'':'s')+'</div></div>'
         + (items.length ? '<ol class="ph-list">'+items.map(function(e){
             var when = e.prec==='day' ? MON[e.m-1].slice(0,3)+' '+e.d : (e.prec==='days' ? MON[e.m-1].slice(0,3)+' '+e.d+' onset' : (e.prec||''));
-            return '<li><span class="ph-y">'+e.y+'</span><div><div class="ph-name">'+esc(e.t)+'</div><div class="ph-meta">'+esc(e.cat)+(when?' · '+esc(when):'')+(e.area?' · '+esc(e.area):'')+'</div>'
+            var g=glyphFor(e.cat); return '<li><span class="ph-y">'+e.y+(g?'<span class="ph-g" title="'+GLYPH_TITLE[g]+'">'+GLYPH[g]+'</span>':'')+'</span><div><div class="ph-name">'+esc(e.t)+'</div><div class="ph-meta">'+esc(e.cat)+(when?' · '+esc(when):'')+(e.area?' · '+esc(e.area):'')+'</div>'
               + (e.meas?'<div class="ph-meta"><b>Measured:</b> '+esc(e.meas)+(e.station?' — '+esc(e.station):'')+'</div>':'')
               + (e.impact?'<div class="ph-meta">'+esc(e.impact.length>200?e.impact.slice(0,197)+'…':e.impact)+'</div>':'')
               + '<div class="ph-src">'+(e.url?'<a href="'+esc(e.url)+'" target="_blank" rel="noopener">'+esc(e.source||'source')+'</a>':esc(e.source))+'</div></div></li>'; /* 2026-09-27 (v898, Laurie): confidence note removed from display */

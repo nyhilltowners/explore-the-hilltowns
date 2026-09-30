@@ -205,7 +205,7 @@ a.link:hover{background:rgba(252,163,21,.14);}
 .sg-chart .lbl.gold, .sg-wrap svg .lbl.gold{fill:var(--gold,#c9a227); opacity:1;}
 .sg-chart .lbl.dim, .sg-wrap svg .lbl.dim{opacity:.6; font-weight:400;}
 .sg-chart .lim, .sg-wrap svg .lim{stroke:#ff8a8a; stroke-width:1.5; stroke-dasharray:5 4;}
-.sg-chart .lim-lbl, .sg-wrap svg .lim-lbl{font:700 10px "Montserrat",sans-serif; fill:#ff8a8a; letter-spacing:.08em; text-transform:uppercase;}
+.sg-chart .lim-lbl, .sg-wrap svg .lim-lbl{font:700 10px "Montserrat",sans-serif; fill:#ff8a8a; letter-spacing:.04em;} /* v996: no uppercase — it turned µg/L into "MG/L" */
 .sg-tip{position:absolute; z-index:5; font:600 12px "Montserrat",sans-serif; color:#fff; background:rgba(8,12,48,.96); border:1px solid rgba(255,255,255,.3); padding:6px 9px; border-radius:8px; pointer-events:none; display:none; max-width:280px; line-height:1.4; box-shadow:0 6px 18px rgba(0,0,0,.5);}
 .sg-tip b{color:var(--gold,#c9a227) !important;}
 .ddtab{width:100%; border-collapse:collapse; margin-top:10px; font-size:12.5px; font-variant-numeric:tabular-nums;}
@@ -237,6 +237,9 @@ a.link:hover{background:rgba(252,163,21,.14);}
 .cp .cp-head{display:flex; gap:14px; align-items:baseline; flex-wrap:wrap;} .cp .cp-head h3{margin:0; font-size:22px; font-weight:800; color:var(--gold,#c9a227) !important;} .cp .cp-head .kind{font-size:11px; letter-spacing:.12em; text-transform:uppercase; opacity:.8;}
 .cp .cp-sum{font-size:14px; line-height:1.5; margin:6px 0 4px; max-width:860px;}
 .cp .cp-std{margin:8px 0 0; padding:0 0 0 18px; font-size:12.5px; line-height:1.5;} .cp .cp-std li{margin:2px 0;}
+.cp .cp-world{font-size:12.5px; line-height:1.5; margin-top:6px;} .cp .cp-world-scope{margin:4px 0 6px;} .cp .cp-world .sc{display:inline-block; font-size:10.5px; letter-spacing:.06em; text-transform:uppercase; opacity:.75; margin-bottom:2px;}
+.cp .cp-world b{font-weight:600; opacity:.85;} .cp .cp-world .num{font-variant-numeric:tabular-nums; font-weight:700; color:#fff;} .cp .cp-world small{opacity:.7; display:block; padding-left:12px;}
+.cp .cp-world details{margin-top:6px;} .cp .cp-world summary{cursor:pointer; font-size:12px; opacity:.85;} .cp .cp-world details[open] summary{margin-bottom:6px;} .cp .cp-world tr.strict td{background:rgba(255,255,255,.07);}
 .cp h4{margin:18px 0 6px; font-size:12px; letter-spacing:.14em; text-transform:uppercase; color:var(--gold,#c9a227) !important; display:flex; align-items:center; gap:10px;} .cp h4:after{content:""; flex:1; height:1px; background:currentColor; opacity:.3;} .cp h4 .sub{font-weight:400; letter-spacing:.02em; text-transform:none; color:#fff !important; opacity:.8; font-size:11.5px;}
 .cp .prose{font-size:13.5px; line-height:1.55; max-width:860px;} .cp .prose p{margin:0 0 9px;} .cp .prose a{color:var(--gold,#c9a227) !important;} .cp .prose i, .cp .prose em{font-style:italic;} .cp .prose ul{padding-left:18px; margin:0 0 9px;}
 .cp .todo{font-style:italic; opacity:.7; font-size:13px;}
@@ -256,13 +259,15 @@ a.link:hover{background:rgba(252,163,21,.14);}
 .cp-stage{min-width:0; overflow:hidden;}
 .cp{outline:none; animation:cp-in .28s ease;} .cp.slide-l{animation:cp-in-l .28s ease;} .cp.slide-r{animation:cp-in-r .28s ease;}
 @keyframes cp-in{from{opacity:0} to{opacity:1}} @keyframes cp-in-l{from{opacity:0; transform:translateX(24px)} to{opacity:1; transform:none}} @keyframes cp-in-r{from{opacity:0; transform:translateX(-24px)} to{opacity:1; transform:none}}
-.cp .cp-top{display:grid; grid-template-columns:300px 1fr; gap:18px; align-items:start; margin-bottom:6px;}
+.cp .cp-top{display:grid; grid-template-columns:380px 1fr; gap:18px; align-items:start; margin-bottom:6px;}
 .cp .cp-img{aspect-ratio:4/3; border:1.5px dashed rgba(255,255,255,.35); border-radius:12px; background:rgba(255,255,255,.04); display:flex; align-items:center; justify-content:center; text-align:center; padding:12px; font-size:11px; letter-spacing:.12em; text-transform:uppercase; opacity:.7; overflow:hidden; position:relative;}
-.cp .cp-img img{position:absolute; inset:0; width:100%; height:100%; object-fit:cover; display:block;}
+.cp .cp-img img{position:absolute; inset:0; width:100%; height:100%; object-fit:contain; display:block;}
+.cp a.cp-img{text-decoration:none; color:inherit;} .cp .cp-img.has-img{background:rgba(255,255,255,.03); border:1px solid rgba(255,255,255,.18); cursor:zoom-in;}
+.cp .cp-cap{margin:8px 2px 0; font-size:12.5px; line-height:1.5; opacity:.88;} .cp .cp-cap b{color:var(--gold,#fca315); font-weight:700;}
 .cp .cp-img .ph{position:relative; z-index:1;} .cp .cp-img.has-img{border-style:solid; opacity:1;} .cp .cp-img.has-img .ph{display:none;}
 .cp .cp-pos{font-size:10px; letter-spacing:.14em; text-transform:uppercase; opacity:.7; margin-bottom:4px;}
 .cp-chips{margin-top:10px;} .cp-chips button{font-size:11px; padding:4px 9px;}
-@media (max-width:760px){ .cp .cp-top{grid-template-columns:1fr;} .cp .cp-img{max-width:360px;} .cp-car{grid-template-columns:28px 1fr 28px; gap:4px;} .cp-arrow{font-size:24px;} }
+@media (max-width:760px){ .cp .cp-top{grid-template-columns:1fr;} .cp .cp-fig{max-width:420px;} .cp-car{grid-template-columns:28px 1fr 28px; gap:4px;} .cp-arrow{font-size:24px;} }
 /* provenance marks */
 .pv{font-size:9px; vertical-align:super; margin-left:2px; letter-spacing:.04em; opacity:.75;}
 .pv.a{color:#f5c04a !important;} .pv.d{color:#b9bde6 !important;}
@@ -366,10 +371,9 @@ details.sg-more summary{cursor:pointer; color:var(--gold,#c9a227); font-weight:7
 
 <main class="sg-wrap">
   <h1 class="sg-head">Water</h1>
-  <p class="sg-sub">How water moves off the Helderberg escarpment toward the Hudson, and what the public record says about its quality at each stop — and where that record goes quiet. Two transects from the Westerlo–Rensselaerville divide: north through Basic Creek and Alcove to Coeymans (Albany's drinking water), south through Ten Mile and Catskill Creek to Catskill. Empty nodes are a finding, not a gap to hide.</p>
   <p id="wq-status"></p>
 
-  <h2 class="sg-sec">What’s in the water <span class="n">— every substance the record names, in plain English. Three shelves; flip through the cards with the arrows, the keys, or a swipe.</span></h2>
+  <h2 class="sg-sec">What’s in the water</h2>
   <div class="cp-tabs" id="cp-tabs" role="tablist"></div>
   <div class="cp-car">
     <button type="button" class="cp-arrow prev" id="cp-prev" aria-label="Previous">&#8249;</button>
@@ -415,6 +419,11 @@ details.sg-more summary{cursor:pointer; color:var(--gold,#c9a227); font-weight:7
   <div class="lg"><span><i class="sq" style="color:#ff8a8a"></i>confirmed, high toxin</span><span><i class="sq" style="color:#f5c04a"></i>confirmed (lab)</span><span><i class="sq" style="color:#b9bde6"></i>suspicious (visual only)</span></div>
   <h3 class="sg-h3">Shoreline microcystin <span class="sub">µg/L, log scale, against the 4 µg/L recreational guidance in force at the time</span></h3>
   <div class="sg-chart" id="toxin"></div>
+  <h3 class="sg-h3">Phosphorus, blooms, toxin and fish mercury, year by year <span class="sub">four lakes, one timeline; each row its own measure and scale</span></h3>
+  <div class="sg-chart" id="ix-wrap" style="position:relative"><div id="ix"></div><div class="sg-tip" id="ix-tip"></div></div>
+  <div class="lg"><span><i style="color:#fff"></i>summer phosphorus, median of Jun–Sep samples</span><span><i class="sq" style="color:#ff8a8a"></i>confirmed bloom, high toxin</span><span><i class="sq" style="color:#f5c04a"></i>confirmed bloom</span><span><i class="sq" style="color:#b9bde6"></i>suspicious bloom</span><span><i style="color:#5fd39a"></i>microcystin, shoreline bloom sample (circle) · open water (diamond)</span><span><i style="color:#ff8a8a"></i>above its reference line</span><span><i class="hollow" style="color:#b9bde6"></i>not detected</span></div>
+  <p class="sg-note">The expected chain runs from phosphorus to algae to toxin: more phosphorus feeds bigger blooms, and bigger blooms can make more microcystin. Mercury connects through oxygen. When a lake's bottom water runs out of oxygen, as Basic Creek's did in July 2013 (0.04 mg/L), bacteria in the mud turn mercury into methylmercury, the form fish store. Heavy blooms can push fish mercury the other way by spreading the same mercury through more algae (bloom dilution). The record cannot test any of this. Phosphorus is sampled in open water on a schedule, while microcystin mostly comes from shoreline scum sampled because it looked bad. Fish mercury exists only for 2000–2008, before DEC bloom reporting began in 2012. No methylmercury, and no mercury in lake water or bottom sediment, has been measured in any of these four lakes. Read it as a timeline of what was measured, not as proof that one thing caused another.</p>
+  <details class="sg-note"><summary>the numbers behind the chart</summary><div id="ix-table"></div></details>
 
   <h2 class="sg-sec">5 · Groundwater <span class="n">— USGS ambient wells: the plateau's bedrock signature against the valley floor</span></h2>
   <p class="sg-det" style="margin:0 0 8px">Plateau bedrock wells within 15 km of the divide are soft sodium-bicarbonate water — calcium swapped for sodium on clay surfaces during a long stay in shale — with lithium, boron and radon along for the ride. Valley wells in alluvium that touches the creeks are the opposite water: iron, manganese, methane, road salt. Each dot is one well (its latest sample year); hover for the panel.</p>

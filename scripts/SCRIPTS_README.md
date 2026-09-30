@@ -65,3 +65,8 @@ Both append to `Waste & Contamination` from CSVs in `data/layers/dec_waste_extra
 
 ## water_harness/ (v982)
 Headless Playwright screenshot check for waterwip.html — see scripts/water_harness/README.md.
+
+## draw_molecules.py (v995)
+Draws the 23 contaminant-card diagrams into images/contaminants/<key>.svg from data/water/molecules.csv (skeletal formulas,
+mini periodic tables, the uranium decay chain, E. coli). Needs RDKit (`pip install rdkit`); run it by hand after editing
+the csv and commit the SVGs — the site build only copies them.

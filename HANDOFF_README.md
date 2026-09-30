@@ -1,7 +1,58 @@
-# NY Hilltowners Folk Atlas — Session Handoff (2026-09-30, v990)
+# NY Hilltowners Folk Atlas — Session Handoff (2026-09-30, v996)
 
-> **Where things stand (for the next chat).** Baseline is **v990**; next version continues from **v991**. Laurie has
-> deployed through v980; v981–v990 ship together — the v990 CHANGED-ONLY zip carries everything since v980.
+> **Where things stand (for the next chat).** Baseline is **v996**; next version continues from **v997**. Laurie has
+> deployed through v980; v981–v996 ship together — the v996 CHANGED-ONLY zip carries everything since v980.
+> **v996:** section 4 gains **"Phosphorus, blooms, toxin and fish mercury, year by year"** (`drawInteract()`, `#ix`): four
+> lake blocks (Sleepy Hollow, Basic Creek Res., Alcove Res., Lawson) on one 1998–2025 timeline, four rows each with its own
+> scale and reference line — summer (Jun–Sep) median TP (log 5–150, 20 µg/L), worst bloom status per year (hatched before
+> DEC reporting began in 2012), yearly max microcystin (log, 4 µg/L; circle = shoreline bloom sample, diamond = open water,
+> hollow = not detected), fish-fillet mercury (dots + median bar, 0.3 mg/kg). Built from `cres` + `hab_by_year` only. Honest
+> finding in the note: only Sleepy Hollow has TP, bloom and toxin together (2012–2022); fish Hg exists only 1970/2000–2008
+> (Basic Creek Res. and Alcove 2000, Thompsons 2004/08 — Thompsons not charted, no bloom/toxin series), before bloom
+> reporting; no methylmercury, lake-water or sediment Hg anywhere. Table view under <details>. Also fixed site-wide:
+> `.lim-lbl` was `text-transform:uppercase`, which rendered "µg/L" as "MG/L" on every reference line — now mixed case.
+> **v995 = contaminant diagrams.** The card image slot now shows a teaching diagram, `images/contaminants/<key>.svg` (all 23,
+> committed), drawn by `scripts/draw_molecules.py` (RDKit; run locally, the site build does not need it) from
+> `data/water/molecules.csv`. Four kinds: skeletal formulas for molecules (PFAS chains, benzene rings, the four THMs and
+> vinegar + five HAAs as swap-a-hydrogen grids, the three xylene isomers, nitrate, phosphate, O₂ beside H₂O, microcystin-LR —
+> SMILES hand-written and checked against C49H74N10O12 because PubChem/ChEMBL were unreachable); a mini periodic table for
+> elements (gold = this element, outlined = the related one: As↔P, Fe↔Mn, Ba↔Ca, Na↔Cl; mercury adds methylmercury in the
+> table's empty bay); the U-238 → Pb-206 decay chain for radium and radon; a drawn E. coli with a 1 µm scale bar. One colour per
+> element on every card (F green, O red, N blue, S gold, Cl teal, Br tan, P orange). The csv `caption` column is shown under
+> the picture as **"How to read this."** (water.py → `mol_caption`). Diagram column widened 300 → 380 px; clicking opens the
+> SVG full size.
+> **v994:** water map (panel 8) — MapLibre `cooperativeGestures` dropped (its "Use ⌘ + scroll to zoom" overlay stuck on screen).
+> Now `scrollZoom:false` at load; a mousedown on the map enables wheel zoom, mouseleave disables it, so the page still scrolls
+> past the map. +/- buttons, double-click and pinch always zoom.
+> **v993:** Signals "On record" cards — a white hazard glyph under each year (`.ph-g`, inline stroke SVG in `GLYPH`,
+> signals.js): snowflake = snow/ice/frost/cold, drop = flood/mudslide/ice jam, wind lines = tornado/hurricane/gale/thunderstorm,
+> flame = fire, sun = heat/drought, strata = landslide/sinkhole/rockfall (Laurie asked for five; ground hazards needed a sixth).
+> `glyphFor(cat)` classifies the register's `cat` text — first-named hazard wins on multi-hazard rows ("Tropical cyclone /
+> flood" → wind). All 856 events classify; tooltip names the class. To recolour or reshape, edit `GLYPH`/`RULES` only.
+> Also v993: `waterwip.html` intro paragraph under the "Water" title and the "— every substance the record names…" subtitle
+> on "What's in the water" deleted at Laurie's request (the `<meta name=description>` is untouched — it does not show on the page).
+> **v992 (prose only):** septage correction. v991 said Schreiber Farm was "the one registered septage site within reach" —
+> wrong. `ny_waste_facilities` has 8 septage land-application registrations; the registrant under 361-2.3 is the *operator*
+> (usually the hauler), so DEC's row carries the hauler's address, not the fields: Becker & Son's Septic Service (Berne, 11 km)
+> is registered to spread on fields the public list never names. Schreiber holds land-application + transfer + storage in its
+> own name at one address, so it is the one receiving farm the map can *place*, not the only one. PFOS/PFOA/NO3 entries now say so.
+> **v991 = world standards + manufacturing history + septage fairness.** (1) `data/water/standards_world.csv` — 279 rows,
+> 23 keys: every standard found for the substance (WHO, EU 2020/2184, EPA, NY, California, Canada, Japan, Australia, Germany,
+> Denmark, Netherlands, Sweden, Vermont, NJ, MI, MN, NH, MA, Ohio, Oregon, Hong Kong, Switzerland, Ireland/WFD), level exactly as the
+> source writes it + the page that states it (every URL opened). `water.py read_world_standards()` normalises to one unit per
+> key (`STD_UNIT`; Bq→pCi ×27.03; NO3 'as nitrate ion' ÷4.43 to nitrogen), flags rows not yet in force (`fl:'f'`, e.g. EU lead
+> 5 µg/L from 2036, EPA PFAS MCL compliance 2029) and single-member DBP limits (`fl:'s'`, Japan BDCM, WHO chloroform) so they
+> are shown but not ranked, and marks per (key, scope) the strictest enforceable (`strict:'e'`), strictest goal/guideline
+> (`'g'`) and lowest non-zero goal when the strictest is a zero MCLG (`'z'`). DO ranks as a floor. Card header gains
+> **"Strictest on earth"** (per scope: enforceable / goal / non-zero goal, linked) and a full-width `<details>` table of
+> every row. Headlines worth knowing: PFOS/PFOA/PFHxS Denmark 2 ng/L sum-of-4; arsenic NJ + Denmark 5 µg/L; lead EU 5 µg/L
+> (2036) else Japan/EU 10; mercury Japan 0.5 µg/L; TTHM Germany 50 µg/L; 1,4-dioxane NY 1 µg/L is the strictest MCL on earth;
+> toluene/xylene NY 5 µg/L likewise; TP Vermont/Ireland 10 µg/L lakes vs NY 20. (2) Every man-made chemical (PFOS PFOA PFHXS
+> DIOXANE TOLUENE XYLENE TTHM HAA5) has a new profile section **"Who made it, and who still does"** (Discovery / Uses, past
+> and present / Makers, then / Makers, now — sourced; PFOS's old paragraph promoted to the section). `PROFILE_SECTIONS` knows
+> it; water.js renders it after What it is. (3) Septage: 6 NYCRR 361-2.2(a) exempts a farm's own manure; septage spreading
+> is never exempt (registration ≤2 trucks, ≥15 acres/truck, ≤25,000 gal/acre/yr under 361-2.3, permit above). PFOS/PFOA/NO3
+> prose now says Schreiber Farm appears because it filed, not because it is unusual.
 > **v990:** the live iNaturalist section had gone blank ("No research-grade observations with photos came back")
 > after the v988 paging change. Cause not provable from the sandbox (api.inaturalist.org unreachable), so `fetchINat()` in
 > `signals.js` is now self-reporting: a non-2xx answer is no longer parsed as an empty page (that is what turned a 429
@@ -222,6 +273,12 @@ Fixed-hinge wingbeat, 4 white wing-spots. Day-only, reduced-motion safe. The
 
 ## UX state (recent)
 
+- **v996 (2026-09-30, Laurie):** `water.js` `drawInteract()` (called with drawBloom/drawToxin); `waterwip.html` `#ix` block + note + table, `.lim-lbl` no uppercase.
+- **v995 (2026-09-30, Laurie):** new `scripts/draw_molecules.py`, `data/water/molecules.csv`, `images/contaminants/*.svg` (23) + README.txt; `build/water.py` `mol_caption`; `water.js` card figure (svg, link, caption); `waterwip.html` `.cp-fig`/`.cp-cap` CSS, 380 px column.
+- **v994 (2026-09-30, Laurie):** `water.js` drawMap — no cooperativeGestures; click-to-enable wheel zoom.
+- **v993 (2026-09-30, Laurie):** `signals.js` `GLYPH`/`GLYPH_TITLE`/`RULES`/`glyphFor()` in renderPhenology; `signals.html` `.ph-g` CSS; `waterwip.html` intro paragraph + What's-in-the-water subtitle removed.
+- **v992 (2026-09-30, Laurie):** `contaminant_profiles.md` only — septage wording in PFOS, PFOA, NO3 (Becker & Son's named; Schreiber = only *placeable* receiving farm).
+- **v991 (2026-09-30, Laurie):** `data/water/standards_world.csv` (new master-adjacent data file, hand-collected; keep it with the workbook); `build/water.py` `read_world_standards()`, `STD_UNIT/STD_CANON/STD_FLOOR`, `PROFILE_SECTIONS` + history section; `water.js` `worldHTML()`, history section render; `waterwip.html` `.cp-world` CSS; `contaminant_profiles.md` 8 history sections + septage wording (PFOS, PFOA, NO3). Research briefs in the chat only (STANDARDS_BRIEF / HISTORY_BRIEF) — the CSV and prose are the deliverable.
 - **v990 (2026-09-30, Laurie):** `signals.js` `fetchINat()` — per-group error capture, non-OK responses not parsed, 2-at-a-time groups with pauses, 60 s single retry when all groups fail, footnote lists failed groups. No build.py/water.py changes.
 - **v989 (2026-09-29, Laurie):** `build/water.py` `locate()` + `km_from()` on the results join (`lat`/`lon`/`km`/`href` per row; `cres_dict.href`); `water.js` `cresRow()` reads them, place cell shows km + OSM link, source cell links `href` with a short label (`SRC_LABEL`). Verified: arsenic rows link to USGS station pages and the DEC portal.
 - **v988 (2026-09-29, Laurie):** `signals.js` `fetchINat()`: `pull(g)` walks `&page=n` while `results.length >= 200 && got < total_results && n < INAT_MAX_PAGES`; `capped` only when still short. Footnote wording: "more than 800 records in 10 days". Harness (`scripts/signals_harness/run.js`, maplibre-gl installed under a scratch prefix and symlinked as `node_modules`) passes unchanged.
@@ -555,7 +612,7 @@ Big ongoing effort to tame tag sprawl. Started at 2,332 unique tags; now ~2,178.
 7. Clean-room verify: unzip the package fresh, rebuild, confirm BUILD OK.
 8. `present_files` the zip + both xlsx.
 
-Version at handoff: **v990**. Next chat continues from v991. Harness in `scripts/signals_harness/` (Signals).
+Version at handoff: **v996**. Next chat continues from v997. Harness in `scripts/signals_harness/` (Signals).
 
 ---
 

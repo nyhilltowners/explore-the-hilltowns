@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" width="400" height="300" role="img" aria-label="toluene"><title>toluene</title>
+<svg x="0" y="5" width="400" height="290" viewBox="0 0 400 290">
+<!-- END OF HEADER -->
+<path class='bond-0 atom-0 atom-1' d='M 299.0,144.7 L 233.0,144.7' style='fill:none;fill-rule:evenodd;stroke:#FFFFFF;stroke-width:2.0px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1' />
+<path class='bond-1 atom-1 atom-2' d='M 233.0,144.7 L 200.0,201.9' style='fill:none;fill-rule:evenodd;stroke:#FFFFFF;stroke-width:2.0px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1' />
+<path class='bond-1 atom-1 atom-2' d='M 221.6,144.7 L 194.3,192.0' style='fill:none;fill-rule:evenodd;stroke:#FFFFFF;stroke-width:2.0px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1' />
+<path class='bond-2 atom-2 atom-3' d='M 200.0,201.9 L 134.0,201.9' style='fill:none;fill-rule:evenodd;stroke:#FFFFFF;stroke-width:2.0px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1' />
+<path class='bond-3 atom-3 atom-4' d='M 134.0,201.9 L 101.0,144.7' style='fill:none;fill-rule:evenodd;stroke:#FFFFFF;stroke-width:2.0px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1' />
+<path class='bond-3 atom-3 atom-4' d='M 139.7,192.0 L 112.4,144.7' style='fill:none;fill-rule:evenodd;stroke:#FFFFFF;stroke-width:2.0px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1' />
+<path class='bond-4 atom-4 atom-5' d='M 101.0,144.7 L 134.0,87.5' style='fill:none;fill-rule:evenodd;stroke:#FFFFFF;stroke-width:2.0px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1' />
+<path class='bond-5 atom-5 atom-6' d='M 134.0,87.5 L 200.0,87.5' style='fill:none;fill-rule:evenodd;stroke:#FFFFFF;stroke-width:2.0px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1' />
+<path class='bond-5 atom-5 atom-6' d='M 139.7,97.4 L 194.3,97.4' style='fill:none;fill-rule:evenodd;stroke:#FFFFFF;stroke-width:2.0px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1' />
+<path class='bond-6 atom-6 atom-1' d='M 200.0,87.5 L 233.0,144.7' style='fill:none;fill-rule:evenodd;stroke:#FFFFFF;stroke-width:2.0px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1' />
+<path d='M 201.6,199.0 L 200.0,201.9 L 196.7,201.9' style='fill:none;stroke:#FFFFFF;stroke-width:2.0px;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:10;stroke-opacity:1;' />
+<path d='M 137.3,201.9 L 134.0,201.9 L 132.3,199.0' style='fill:none;stroke:#FFFFFF;stroke-width:2.0px;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:10;stroke-opacity:1;' />
+<path d='M 102.6,147.6 L 101.0,144.7 L 102.7,141.8' style='fill:none;stroke:#FFFFFF;stroke-width:2.0px;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:10;stroke-opacity:1;' />
+<path d='M 132.4,90.4 L 134.0,87.5 L 137.3,87.5' style='fill:none;stroke:#FFFFFF;stroke-width:2.0px;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:10;stroke-opacity:1;' />
+<path d='M 196.7,87.5 L 200.0,87.5 L 201.7,90.4' style='fill:none;stroke:#FFFFFF;stroke-width:2.0px;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:10;stroke-opacity:1;' />
+</svg>
+</svg>
