@@ -1,7 +1,12 @@
-# NY Hilltowners Folk Atlas — Session Handoff (2026-09-30, v1001)
+# NY Hilltowners Folk Atlas — Session Handoff (2026-09-30, v1002)
 
-> **Where things stand (for the next chat).** Baseline is **v1001**; next version continues from **v1002**. Laurie has
-> deployed through v980; v981–v1001 ship together — the v1001 CHANGED-ONLY zip carries everything since v980.
+> **Where things stand (for the next chat).** Baseline is **v1002**; next version continues from **v1003**. Laurie has
+> deployed through v980; v981–v1002 ship together — the v1002 CHANGED-ONLY zip carries everything since v980.
+> **v1002:** GitHub Actions deploy was stuck on "Waiting" (build had finished and uploaded its Pages artifact,
+> sha256:0a95fc7a…). `.github/workflows/build.yml`: `concurrency.cancel-in-progress: true` (newest push supersedes a
+> stuck/queued run — safe, every run builds the full site from main) and `timeout-minutes: 15` on the deploy job. A job
+> that waits *before* starting is usually the github-pages environment (required reviewer / wait timer / branch rule) or
+> Pages source not set to GitHub Actions — see the checklist given to Laurie 2026-09-30.
 > **v1001:** Fuel & Chemical Storage pins fade (same `dim` style) when DEC's status tag is "Unregulated/Closed" (2,362) or
 > "Inactive" (223); the 1,461 "Active" registrations stay lit. One line in `isDimmed()` beside the mines rule.
 > **v1000:** the 42 waste tire dumps (tag "Waste Tire Dump", DEC Tire Abatement, sheet Landfills & Waste Handling) now use
@@ -302,6 +307,7 @@ Fixed-hinge wingbeat, 4 white wing-spots. Day-only, reduced-motion safe. The
 
 ## UX state (recent)
 
+- **v1002 (2026-09-30, Laurie):** `.github/workflows/build.yml` cancel-in-progress true, deploy timeout 15 min.
 - **v1001 (2026-09-30, Laurie):** `index.template.html` `isDimmed()` — storage faded when Unregulated/Closed or Inactive.
 - **v1000 (2026-09-30, Laurie):** `points_of_interest.xlsx` Glyph 🚬 on 42 tire-dump rows; `scripts/waste_extras_ingest.py` glyph.
 - **v999 (2026-09-30, Laurie):** `index.template.html` `isDimmed()` — mines lit only with "Permit active".
@@ -646,7 +652,7 @@ Big ongoing effort to tame tag sprawl. Started at 2,332 unique tags; now ~2,178.
 7. Clean-room verify: unzip the package fresh, rebuild, confirm BUILD OK.
 8. `present_files` the zip + both xlsx.
 
-Version at handoff: **v1001**. Next chat continues from v1002. Harness in `scripts/signals_harness/` (Signals).
+Version at handoff: **v1002**. Next chat continues from v1003. Harness in `scripts/signals_harness/` (Signals).
 
 ---
 
