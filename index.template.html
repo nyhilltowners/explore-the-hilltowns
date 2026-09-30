@@ -1547,6 +1547,14 @@ function eventsAtVenue(r){
 }
 function isDimmed(r){
   if(isGasQuietHours(r)) return false;
+  /* v999 (2026-09-30, Laurie): Mines & Quarries — lit only with a current DEC Mined Land permit ("Permit active" on any of
+     its permits). Reclaimed / expired / terminated / void / pending / never-permitted pits fade, and so do USGS MRDS-only
+     sites: MRDS "Producer" is the status when the USGS record was compiled, not today, and every working mine in NY over
+     1,000 tons a year must hold a DEC permit, so the DEC list is the current one. */
+  if(r.cat === 'Mines & Quarries') return !(r.tags || []).some(function(t){ return t === 'Permit active'; });
+  /* v1001 (Laurie): Fuel & Chemical Storage — fade what DEC lists as closed or out of service ("Unregulated/Closed",
+     "Inactive"); only "Active" registrations stay lit. */
+  if(r.cat === 'Fuel & Chemical Storage') return (r.tags || []).some(function(t){ return t === 'Unregulated/Closed' || t === 'Inactive'; });
   if(r.ty==='events'){
     var ref = planDate || TODAY_E;
     return r.d1 > ref;         /* announced but not yet begun: gray */

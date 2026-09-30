@@ -30,7 +30,7 @@ for r in csv.DictReader(open(D+'Waste_Tire_Abatement_Sites_20260928.csv',encodin
     name=f"{cl(r['Noncompliant Site Name'])} — waste tire dump ({status.lower()}{', ~'+tires+' tires' if tires else ''})"
     tags='; '.join(['Waste & Contamination','Legacy Site','Waste Tire Dump',status,f"{cl(r['County'])} County",cl(r['City/Town']),'Major Facility','NYSDEC Tire Abatement']+[f'Near {f}' for f in flags])
     notes=prov('Waste Tire Abatement Sites (noncompliant tire dumps)')+f" Site ID {cl(r['Site ID'])}; est. {tires or 'unknown number of'} tires; status: {status}; DEC Region {cl(r['DEC Region'])}. Sensitive receivers nearby: {', '.join(flags) or 'none flagged'}. Display=Yes: legacy site statewide per Laurie 2026-09-28."
-    add(name,tags,f"{cl(r['City/Town'])}, {cl(r['County'])} County, NY",lat,lon,'🛞',notes,'Yes')
+    add(name,tags,f"{cl(r['City/Town'])}, {cl(r['County'])} County, NY",lat,lon,'🚬',notes,'Yes')  # v1000: tire dumps use 🚬 (Laurie)
 # 2. Title V — one pin per DEC ID, emissions history in notes
 fac=collections.defaultdict(list)
 for r in csv.DictReader(open(D+'Title_V_Emissions_Inventory_20260928.csv',encoding='utf-8-sig')): fac[r['DEC ID']].append(r)

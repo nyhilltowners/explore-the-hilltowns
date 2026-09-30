@@ -1,7 +1,17 @@
-# NY Hilltowners Folk Atlas — Session Handoff (2026-09-30, v998)
+# NY Hilltowners Folk Atlas — Session Handoff (2026-09-30, v1001)
 
-> **Where things stand (for the next chat).** Baseline is **v998**; next version continues from **v999**. Laurie has
-> deployed through v980; v981–v998 ship together — the v998 CHANGED-ONLY zip carries everything since v980.
+> **Where things stand (for the next chat).** Baseline is **v1001**; next version continues from **v1002**. Laurie has
+> deployed through v980; v981–v1001 ship together — the v1001 CHANGED-ONLY zip carries everything since v980.
+> **v1001:** Fuel & Chemical Storage pins fade (same `dim` style) when DEC's status tag is "Unregulated/Closed" (2,362) or
+> "Inactive" (223); the 1,461 "Active" registrations stay lit. One line in `isDimmed()` beside the mines rule.
+> **v1000:** the 42 waste tire dumps (tag "Waste Tire Dump", DEC Tire Abatement, sheet Landfills & Waste Handling) now use
+> the 🚬 glyph (Laurie). The 25 permitted waste-tire storage/processing facilities (SWMF "Waste Tires") keep 🛞.
+> `scripts/waste_extras_ingest.py` writes 🚬 for dumps if re-run.
+> **v999:** Mines & Quarries pins fade (the existing grey 55% `dim` style) unless the site carries the tag "Permit active"
+> (a current DEC Mined Land permit, on any of its merged permits): 1,527 lit, 5,657 faded. Reclaimed, expired, terminated,
+> void, pending and never-permitted fade, and so do USGS MRDS-only rows — MRDS "Producer" is the status when the USGS record
+> was compiled, not today; every NY mine over 1,000 t/yr needs a DEC permit, so DEC is the current list. One line in
+> `isDimmed()` (index.template.html).
 > **v998 = water package 2026-09-30 (`_core`).** Workbook replaced (now 64 sheets): new `NYC_DEP_PWS` comparison node
 > (22 sites), +104 NYC finished-water rows in `measurements`, `nyc_reservoir_benchmarks` (23 reservoirs × 19 analytes ×
 > 2020–23) and `nyc_distribution_monthly` (2015–2026). Geo layers, brief text and PACKAGE_README refreshed. Page: the NYC
@@ -292,6 +302,9 @@ Fixed-hinge wingbeat, 4 white wing-spots. Day-only, reduced-motion safe. The
 
 ## UX state (recent)
 
+- **v1001 (2026-09-30, Laurie):** `index.template.html` `isDimmed()` — storage faded when Unregulated/Closed or Inactive.
+- **v1000 (2026-09-30, Laurie):** `points_of_interest.xlsx` Glyph 🚬 on 42 tire-dump rows; `scripts/waste_extras_ingest.py` glyph.
+- **v999 (2026-09-30, Laurie):** `index.template.html` `isDimmed()` — mines lit only with "Permit active".
 - **v998 (2026-09-30, Laurie):** `data/water/` workbook + geo + brief + PACKAGE_README from the 09-30 `_core` package; `build/water.py` `nyc_bench`; `water.js` compare transect type (txOf, COL, TXNAME, ORDER, transect box, card chip/dashed, ND placeholder), `nycPanel()` in drawLakes; `waterwip.html` `.nc.cmp` CSS, lakes subtitle.
 - **v997 (2026-09-30, Laurie):** `points_of_interest.xlsx` (8 new sheets, 'Waste & Contamination' removed); `manifest.json`; `calendar.html`; new `scripts/split_waste.py`; SCRIPTS_README.
 - **v996 (2026-09-30, Laurie):** `water.js` `drawInteract()` (called with drawBloom/drawToxin); `waterwip.html` `#ix` block + note + table, `.lim-lbl` no uppercase.
@@ -633,7 +646,7 @@ Big ongoing effort to tame tag sprawl. Started at 2,332 unique tags; now ~2,178.
 7. Clean-room verify: unzip the package fresh, rebuild, confirm BUILD OK.
 8. `present_files` the zip + both xlsx.
 
-Version at handoff: **v998**. Next chat continues from v999. Harness in `scripts/signals_harness/` (Signals).
+Version at handoff: **v1001**. Next chat continues from v1002. Harness in `scripts/signals_harness/` (Signals).
 
 ---
 
