@@ -1,7 +1,21 @@
-# NY Hilltowners Folk Atlas — Session Handoff (2026-10-02, v1004)
+# NY Hilltowners Folk Atlas — Session Handoff (2026-10-02, v1007)
 
-> **Where things stand (for the next chat).** Baseline is **v1004**; next version continues from **v1005**. Laurie has
-> deployed through v980; v981–v1004 ship together — the v1004 CHANGED-ONLY zip carries everything since v980.
+> **Where things stand (for the next chat).** Baseline is **v1007**; next version continues from **v1008**. Laurie has
+> deployed through v980; v981–v1007 ship together — the v1007 CHANGED-ONLY zip carries everything since v980.
+> **v1007:** iNaturalist area is now a 40 km **circle** around Berne (`lat/lng/radius`) instead of the ±40 km square,
+> whose corners reached ~56 km (Ghent, Columbia Co. turned up). Still includes County Knolls (~41 km) and the
+> Troy/Rensselaer side of the Hudson; Laurie chose this over a Hudson/Mohawk river cut (options 2–3, not built). The
+> "Explore more on iNaturalist" button on society.html points at the same circle. `INAT_BOX` is now unused.
+> **v1006:** out-of-region events are map-only. Four Sanborn Mills Farm classes (7097 Sanborn Road, Loudon NH — address from
+> sanbornmills.org; coords 43.333431, −71.385818 from the ingestor's existing row), the Oak Spring Garden Foundation intensive
+> (1776 Loughborough Lane, Upperville VA; 38.96332, −77.85199 per Visit Middleburg) and both Winterthur DE events: venue/
+> address/coords set in events.xlsx, Display=Yes, Agenda=No. Durable copy of the agenda rule in `data/agenda_quiet.txt`
+> (Sanborn Mills Farm / Oak Spring Garden Foundation / Winterthur) so the next ingestor drop keeps them off the agenda;
+> the addresses themselves live only in events.xlsx.
+> **v1005:** `data/events.xlsx` replaced with Laurie's `events_81.xlsx` (Events 2,580 → 2,950 rows; nothing removed; 2,499
+> upcoming events build, 421 past skipped). One fix: row 2905 "Buffalo, New York, USA 6th Annual Food As Medicine
+> Symposium" was geocoded to the Land Institute in Salina, KS and duplicates row 876 → Display=No with a note. Other
+> far-flung new rows (Winterthur DE, Oak Spring VA, Sanborn Mills NH, Brooklyn) left as the ingestor delivered them.
 > **v1004:** iNaturalist leaderboard window 10 → 14 days (`INAT_DAYS` in `fetchINat()`, signals.js) so Society Pages'
 > "this fortnight" is true for both feeds; labels and the floor footnote follow the constant. Photo grid stays last 5 days.
 > Same rate-limit scheme: 18 taxonomic-group pulls, two at a time, 350 ms between pairs, each paged up to 4 × 200 with
@@ -318,6 +332,9 @@ Fixed-hinge wingbeat, 4 white wing-spots. Day-only, reduced-motion safe. The
 
 ## UX state (recent)
 
+- **v1007 (2026-10-02, Laurie):** `signals.js` iNat query circle; `society.html` explore link.
+- **v1006 (2026-10-02, Laurie):** `data/events.xlsx` 7 rows (addresses, coords, Agenda=No); `data/agenda_quiet.txt` 3 rules.
+- **v1005 (2026-10-02, Laurie):** `data/events.xlsx` ← events_81 (+ row 2905 hidden).
 - **v1004 (2026-10-02, Laurie):** `signals.js` `INAT_DAYS = 14`.
 - **v1003 (2026-10-02, Laurie):** new `society.html`; `signals.html` wildlife sections removed; `signals.js` init page-aware; `partials/header.html`, `partials/footer.html` nav link; `build/build.py` page list.
 - **v1002 (2026-09-30, Laurie):** `.github/workflows/build.yml` cancel-in-progress true, deploy timeout 15 min.
@@ -665,7 +682,7 @@ Big ongoing effort to tame tag sprawl. Started at 2,332 unique tags; now ~2,178.
 7. Clean-room verify: unzip the package fresh, rebuild, confirm BUILD OK.
 8. `present_files` the zip + both xlsx.
 
-Version at handoff: **v1004**. Next chat continues from v1005. Harness in `scripts/signals_harness/` (Signals).
+Version at handoff: **v1007**. Next chat continues from v1008. Harness in `scripts/signals_harness/` (Signals).
 
 ---
 

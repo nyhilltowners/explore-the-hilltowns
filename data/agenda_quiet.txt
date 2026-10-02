@@ -13,3 +13,7 @@ re:story hour.*phoenicia library|phoenicia library.*story hour
 re:the campus\b.*open hours|open hours.*the campus
 hudson valley irish festival
 new skete
+# v1006 (2026-10-02, Laurie): out-of-region workshops/markets — map pin only, kept off the agenda
+Sanborn Mills Farm
+Oak Spring Garden Foundation
+Winterthur

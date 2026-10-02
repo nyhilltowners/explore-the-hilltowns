@@ -1195,7 +1195,9 @@
 function fetchINat(){
     var grid=$('inat-grid'); if(!grid) return;
     var esc=function(v){ return String(v||'').replace(/[&<>"]/g,function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); };
-    var box='&nelat='+INAT_BOX.nelat+'&nelng='+INAT_BOX.nelng+'&swlat='+INAT_BOX.swlat+'&swlng='+INAT_BOX.swlng;
+    /* v1007 (2026-10-02, Laurie): a 40 km circle around Berne instead of the square box, whose corners reached ~56 km
+       (Ghent, Columbia Co.). iNat's lat/lng/radius (km) filter; same requests, smaller area. */
+    var box='&lat='+LAT.toFixed(4)+'&lng='+LNG.toFixed(4)+'&radius='+INAT_DIST_KM;
     var iso=function(daysAgo){ return new Date(Date.now()-daysAgo*86400000).toISOString().slice(0,10); };
     /* 2026-09-27 (v925, Laurie): v922's single 14-day query was quietly truncating itself \u2014 iNat's per_page
        caps at 200 raw observations, and this area produces enough research-grade photo records
