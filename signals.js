@@ -1251,7 +1251,10 @@ function fetchINat(){
       {label:'microbes',         q:'iconic_taxa=Protozoa,Chromista'},
       {label:'other life',       q:'iconic_taxa=unknown,Animalia&without_taxon_id=3,40151,20978,26036,47178,47115,47119,47158'}
     ];
-    var base='https://api.inaturalist.org/v1/observations?quality_grade=research&photos=true&order_by=observed_on&order=desc&per_page=200&d1='+iso(10)+box+'&';
+    /* v1004 (2026-10-02, Laurie): leaderboard window widened 10 -> 14 days to match Society Pages' "this fortnight". Same
+       18 group pulls, paged, two at a time; a longer window only means some groups need a second page. */
+    var INAT_DAYS=14;
+    var base='https://api.inaturalist.org/v1/observations?quality_grade=research&photos=true&order_by=observed_on&order=desc&per_page=200&d1='+iso(INAT_DAYS)+box+'&';
     var results=[], capped=[], seen={};
     /* v988 (2026-09-29, Laurie): dicots were maxing the 200-per-page cap (200 of 206 in 10 days), which made the
        10-day count a floor. per_page is capped at 200, but the API pages: when total_results says a group has
@@ -1337,20 +1340,20 @@ function fetchINat(){
          iNaturalist sighting, scientific name linking to the Wikipedia species page, and the 10-day count. */
       var olderHtml = older.map(function(g){ var d=g.latest||g.best;
         /* v942: names -> Wikipedia; the count badge -> most recent sighting on iNaturalist (thumbnail gets swapped in by wikiPics, so it isn't the link) */
-        return '<div class="eb" data-sci="'+esc(d.sciKey)+'"><div class="img ph">'+g.icon+'</div><div><div class="n">'+wikiA(d.sciKey, esc(d.name), 'Wikipedia: '+d.name)+' <a class="c" href="'+esc(d.url)+'" target="_blank" rel="noopener" title="Most recent sighting on iNaturalist">'+g.count+'<span class="c-lbl"> '+(g.count===1?'sighting':'sightings')+', last 10 days \u2197</span></a></div>'
+        return '<div class="eb" data-sci="'+esc(d.sciKey)+'"><div class="img ph">'+g.icon+'</div><div><div class="n">'+wikiA(d.sciKey, esc(d.name), 'Wikipedia: '+d.name)+' <a class="c" href="'+esc(d.url)+'" target="_blank" rel="noopener" title="Most recent sighting on iNaturalist">'+g.count+'<span class="c-lbl"> '+(g.count===1?'sighting':'sightings')+', last '+INAT_DAYS+' days \u2197</span></a></div>'
           +(d.sciKey?'<div class="sci" style="font-style:italic;opacity:.85;font-size:12px">'+wikiA(d.sciKey, esc(d.sciKey))+'</div>':'')
           +'<div class="photo-credit" style="opacity:.7;font-size:10px"></div></div></div>';
       });
       /* v941 (2026-09-27, Laurie): leaderboard shows the top 10; a "+" button reveals the rest. */
       var LB_SHOW=10, hiddenN=Math.max(0, olderHtml.length-LB_SHOW);
       var lbRows=olderHtml.map(function(h,i){ return i<LB_SHOW ? h : h.replace('<div class="eb" ','<div class="eb lb-more" '); }).join('');
-      $('inat-list').innerHTML = olderHtml.length ? '<p class="sg-eye" style="margin:14px 0 4px">Hilltown Hotties: Species leaderboard \u00b7 last 10 days</p><div class="inat-list inat-older">'+lbRows+'</div>'
+      $('inat-list').innerHTML = olderHtml.length ? '<p class="sg-eye" style="margin:14px 0 4px">Hilltown Hotties: Species leaderboard \u00b7 last '+INAT_DAYS+' days</p><div class="inat-list inat-older">'+lbRows+'</div>'
         +(hiddenN?'<button type="button" class="sg-btn lb-toggle" aria-expanded="false">+ '+hiddenN+' more species</button>':'') : '';
       var tg=$('inat-list').querySelector('.lb-toggle');
       if(tg){ tg.addEventListener('click', function(){ var open=tg.getAttribute('aria-expanded')==='true'; $('inat-list').querySelector('.inat-older').classList.toggle('lb-open', !open); tg.setAttribute('aria-expanded', String(!open)); tg.textContent = open ? '+ '+hiddenN+' more species' : '\u2212 Show top 10 only'; }); }
       wikiPics();
-      var parts=[]; if(recent.length) parts.push(recent.length+' species in the last 5 days'); if(older.length) parts.push(older.length+' species over the last 10 days');
-      $('inat-note').textContent=(parts.join(', ')||'Nothing recent')+(errors.length?' \u00b7 some groups did not load ('+errors.slice(0,3).join('; ')+(errors.length>3?' \u2026':'')+')':'')+(capped.length?' \u00b7 10-day counts are a floor for '+capped.join(', ')+' \u2014 more than '+(INAT_MAX_PAGES*200)+' records in 10 days':'')+' \u00b7 Data \u00a9 iNaturalist contributors; Creative Commons photos displayed here, click to review others on iNaturalist.';
+      var parts=[]; if(recent.length) parts.push(recent.length+' species in the last 5 days'); if(older.length) parts.push(older.length+' species over the last '+INAT_DAYS+' days');
+      $('inat-note').textContent=(parts.join(', ')||'Nothing recent')+(errors.length?' \u00b7 some groups did not load ('+errors.slice(0,3).join('; ')+(errors.length>3?' \u2026':'')+')':'')+(capped.length?' \u00b7 '+INAT_DAYS+'-day counts are a floor for '+capped.join(', ')+' \u2014 more than '+(INAT_MAX_PAGES*200)+' records in '+INAT_DAYS+' days':'')+' \u00b7 Data \u00a9 iNaturalist contributors; Creative Commons photos displayed here, click to review others on iNaturalist.';
     }).catch(function(e){ grid.innerHTML='<p class="ph-empty">iNaturalist is unreachable right now.</p>'; status('iNaturalist: '+(e && e.message || 'fetch failed')); });
   }
   /* ---------- eBird: recent + notable sightings near Berne (key per Laurie, 2026-09-20) ---------- */
@@ -1471,6 +1474,8 @@ function fetchINat(){
   function init(){
     safeCall('iNaturalist', fetchINat);
     safeCall('eBird', fetchEBird);
+    /* v1003 (2026-10-02, Laurie): society.html shares this script but carries only the iNaturalist + eBird sections */
+    if(!$('ph-row')) return;   /* the header sky strip is drawn by skyline.js on every page */
     safeCall('Water levels', fetchWater);
     safeCall('Phenology', renderPhenology);
     safeCall('Sun/moon', renderSunMoon);

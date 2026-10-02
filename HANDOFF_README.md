@@ -1,7 +1,18 @@
-# NY Hilltowners Folk Atlas — Session Handoff (2026-09-30, v1002)
+# NY Hilltowners Folk Atlas — Session Handoff (2026-10-02, v1004)
 
-> **Where things stand (for the next chat).** Baseline is **v1002**; next version continues from **v1003**. Laurie has
-> deployed through v980; v981–v1002 ship together — the v1002 CHANGED-ONLY zip carries everything since v980.
+> **Where things stand (for the next chat).** Baseline is **v1004**; next version continues from **v1005**. Laurie has
+> deployed through v980; v981–v1004 ship together — the v1004 CHANGED-ONLY zip carries everything since v980.
+> **v1004:** iNaturalist leaderboard window 10 → 14 days (`INAT_DAYS` in `fetchINat()`, signals.js) so Society Pages'
+> "this fortnight" is true for both feeds; labels and the floor footnote follow the constant. Photo grid stays last 5 days.
+> Same rate-limit scheme: 18 taxonomic-group pulls, two at a time, 350 ms between pairs, each paged up to 4 × 200 with
+> 400 ms between pages. Busier groups (dicots, likely bees/flies/fungi in season) will now take a second page.
+> **v1003 = new page Society Pages (`society.html`, in nav + footer after Signs + Signals).** The "Seen lately · iNaturalist"
+> and "Birds lately · eBird" sections moved off signals.html onto it, markup unchanged (same ids, so `fetchINat()` /
+> `fetchEBird()` in the shared signals.js drive them). Intro copy (Laurie): "Who's getting noticed in the Hilltowns this
+> fortnight. Submit tips via iNaturalist [inaturalist.org/observations/upload] or eBird [ebird.org/submit]." Own sources
+> line; the "Wildlife: …" clause removed from the Signs + Signals sources note. `init()` in signals.js returns after the
+> two wildlife fetches when the page has no `#ph-row` (society.html loads no phenology/station data). Note: iNat window is
+> still 5-day grid / 10-day leaderboard and eBird 14 days — "fortnight" is only literally true for eBird.
 > **v1002:** GitHub Actions deploy was stuck on "Waiting" (build had finished and uploaded its Pages artifact,
 > sha256:0a95fc7a…). `.github/workflows/build.yml`: `concurrency.cancel-in-progress: true` (newest push supersedes a
 > stuck/queued run — safe, every run builds the full site from main) and `timeout-minutes: 15` on the deploy job. A job
@@ -307,6 +318,8 @@ Fixed-hinge wingbeat, 4 white wing-spots. Day-only, reduced-motion safe. The
 
 ## UX state (recent)
 
+- **v1004 (2026-10-02, Laurie):** `signals.js` `INAT_DAYS = 14`.
+- **v1003 (2026-10-02, Laurie):** new `society.html`; `signals.html` wildlife sections removed; `signals.js` init page-aware; `partials/header.html`, `partials/footer.html` nav link; `build/build.py` page list.
 - **v1002 (2026-09-30, Laurie):** `.github/workflows/build.yml` cancel-in-progress true, deploy timeout 15 min.
 - **v1001 (2026-09-30, Laurie):** `index.template.html` `isDimmed()` — storage faded when Unregulated/Closed or Inactive.
 - **v1000 (2026-09-30, Laurie):** `points_of_interest.xlsx` Glyph 🚬 on 42 tire-dump rows; `scripts/waste_extras_ingest.py` glyph.
@@ -652,7 +665,7 @@ Big ongoing effort to tame tag sprawl. Started at 2,332 unique tags; now ~2,178.
 7. Clean-room verify: unzip the package fresh, rebuild, confirm BUILD OK.
 8. `present_files` the zip + both xlsx.
 
-Version at handoff: **v1002**. Next chat continues from v1003. Harness in `scripts/signals_harness/` (Signals).
+Version at handoff: **v1004**. Next chat continues from v1005. Harness in `scripts/signals_harness/` (Signals).
 
 ---
 

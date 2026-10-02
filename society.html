@@ -3,9 +3,9 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Signs + Signals — Hilltowns Field Guide</title>
-<meta name="description" content="Sun, moon, weather, winds aloft and degree days for the Hilltowns — the natural cycles, on one dashboard.">
-<meta property="og:title" content="Signs + Signals — Hilltowns Field Guide">
+<title>Society Pages — Hilltowns Field Guide</title>
+<meta name="description" content="Who's getting noticed in the Hilltowns this fortnight — iNaturalist observations and eBird sightings around Berne.">
+<meta property="og:title" content="Society Pages — Hilltowns Field Guide">
 <meta property="og:type" content="website">
 <meta property="og:image" content="images/share-card.png">
 <link rel="icon" href="images/favicon.svg">
@@ -264,7 +264,7 @@ a.link:hover{background:rgba(252,163,21,.14);}
 /* ---- Signs + Signals (v749): the header's own vocabulary, laid out with room to read ---- */
 .sg-wrap{max-width:1080px; margin:0 auto; padding:26px 18px 60px; color:#ffffff; font-family:'Montserrat',sans-serif;}
 .sg-head{margin:0; font-weight:800; letter-spacing:.04em; font-size:clamp(26px,4vw,40px); color:var(--gold,#c9a227);}
-.sg-sub{margin:4px 0 22px; font-style:italic; opacity:1; font-family:inherit;}
+.sg-sub{margin:4px 0 22px; font-style:italic; opacity:1; font-family:inherit;} .sg-sub a{color:var(--gold,#c9a227) !important;} /* v1003 */
 .sg-sec{margin:28px 0 8px; font-weight:700; text-transform:uppercase; letter-spacing:.16em; font-size:12px; color:var(--gold,#c9a227); display:flex; align-items:center; gap:10px;}
 .sg-sec:after{content:""; flex:1; height:1px; background:currentColor; opacity:.35;}
 .sg-grid{display:grid; grid-template-columns:repeat(auto-fill, minmax(250px,1fr)); gap:12px 24px;}
@@ -410,114 +410,28 @@ a.link:hover{background:rgba(252,163,21,.14);}
 </nav>
 
 <main class="sg-wrap">
-  <h1 class="sg-head">Signs + Signals</h1>
+  <!-- v1003 (2026-10-02, Laurie): iNaturalist + eBird moved here from Signs + Signals -->
+  <h1 class="sg-head">Society Pages</h1>
+  <p class="sg-sub">Who's getting noticed in the Hilltowns this fortnight. Submit tips via <a href="https://www.inaturalist.org/observations/upload" target="_blank" rel="noopener">iNaturalist</a> or <a href="https://ebird.org/submit" target="_blank" rel="noopener">eBird</a>.</p>
   <p id="sg-status"></p>
 
-  <h2 class="sg-sec">Phenology</h2>
-  <div class="ph-nav"><button type="button" class="sg-btn" id="ph-prev">&larr; earlier</button><div class="ph-title" id="ph-title"></div><button type="button" class="sg-btn" id="ph-next">later &rarr;</button></div>
-  <div class="ph-row" id="ph-row"></div>
+  <h2 class="sg-sec">Seen lately · iNaturalist</h2>
+  <p class="sg-det" style="margin:0 0 10px">Research-grade observations within about 40 km of Berne — Helderbergs to the northern Catskills, Schoharie to the Hudson.</p>
+  <div class="sg-grid" id="inat-grid"><p class="ph-empty">Loading observations…</p></div>
+  <div id="inat-list"></div>
+  <p class="sg-note" id="inat-note"></p>
+  <a class="sg-btn" id="inat-more" href="https://www.inaturalist.org/observations?quality_grade=research&subview=map&nelat=42.72799866533435&nelng=-73.7475942353335&swlat=42.23036745843211&swlng=-74.39711226427585" target="_blank" rel="noopener" style="display:inline-block; text-decoration:none">Explore more on iNaturalist &rarr;</a>
+  <h2 class="sg-sec">Birds lately · eBird</h2>
+  <p class="sg-det" style="margin:0 0 10px">Reported within 25 km of Berne in the last 14 days, newest first. The <a href="https://dashboard.birdcast.info/region/US-NY-001" target="_blank" rel="noopener" style="color:var(--gold,#c9a227)">BirdCast migration dashboard for Albany County</a> has tonight's radar forecast.</p>
+  <div id="ebird-notable"></div>
+  <div class="sg-grid" id="ebird-grid"><p class="ph-empty">Loading sightings…</p></div>
+  <p class="sg-note" id="ebird-note"></p>
+  <a class="sg-btn" href="https://merlin.allaboutbirds.org/" target="_blank" rel="noopener" style="display:inline-block; text-decoration:none; margin-top:8px">Get the Merlin Bird ID App &rarr;</a> <!-- 2026-09-27 (v906, Laurie) -->
 
-  <h2 class="sg-sec">Sky</h2>
-  <p class="sg-det" style="margin:0 0 8px">For Berne, NY, ~1,700 ft. Sun and moon are computed here; today's forecast, the air and the winds are Open-Meteo model values.</p> <!-- v954 (2026-09-28, Laurie): these blocks are pinned to Berne; the station picker below governs only the station-based sections -->
-  <div class="sg-grid">
-    <div class="sg-row"><div class="sg-ico" ><svg viewBox="0 0 24 24"><path d="M3 18h18M5 14a7 7 0 0 1 14 0"/><path d="M12 3v4M8 8l1.5 1.5M16 8l-1.5 1.5"/></svg></div><div><p class="sg-eye">Sunrise · sunset</p><p class="sg-val" id="sun-times">—</p><p class="sg-det" id="sun-det"></p></div></div>
-    <div class="sg-row"><div class="sg-ico" id="moon-ico"><svg viewBox="0 0 24 24"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg></div><div><p class="sg-eye">Moon</p><p class="sg-val" id="moon-phase">—</p><p class="sg-det" id="moon-det"></p></div></div>
-    <div class="sg-row"><div class="sg-ico" ><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg></div><div><p class="sg-eye">Today</p><p class="sg-val" id="day-val">—</p><p class="sg-det" id="day-det"></p></div></div>
-  </div>
-
-  <h2 class="sg-sec">Air</h2>
-  <div class="sg-grid" id="air-grid">
-    <div class="sg-row"><div class="sg-ico" ><svg viewBox="0 0 24 24"><path d="M14 14.8V5a2 2 0 0 0-4 0v9.8a4 4 0 1 0 4 0z"/></svg></div><div><p class="sg-eye">Temperature</p><p class="sg-val" id="temp-val">—</p><p class="sg-det" id="temp-sub"></p></div></div><div class="sg-row"><div class="sg-ico" ><svg viewBox="0 0 24 24"><path d="M12 3s6 6.5 6 11a6 6 0 0 1-12 0c0-4.5 6-11 6-11z"/></svg></div><div><p class="sg-eye">Humidity</p><p class="sg-val" id="hum-val">—</p><p class="sg-det" id="hum-sub"></p></div></div><div class="sg-row"><div class="sg-ico" ><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 12l4-4M12 7v1M17 12h-1M12 17v-1M7 12h1"/></svg></div><div><p class="sg-eye">Barometer</p><p class="sg-val" id="pres-val">—</p><p class="sg-det" id="pres-sub"></p></div></div><div class="sg-row"><div class="sg-ico" ><svg viewBox="0 0 24 24"><path d="M7 18a4 4 0 0 1-.5-8A6 6 0 0 1 18 9a4 4 0 0 1 0 9H7z"/></svg></div><div><p class="sg-eye">Sky</p><p class="sg-val" id="cloud-val">—</p><p class="sg-det" id="cloud-sub"></p></div></div>
-  </div>
-
-  <h2 class="sg-sec">Winds, ground to stratosphere</h2>
-  <div class="sg-winds">
-    <div class="sg-cap"><svg viewBox="0 0 24 24"><path d="M12 2L7 9h3l-4 6h4l-4 6h12l-4-6h4l-4-6h3z"/></svg></div>
-    <div class="sg-row wind"><div class="sg-ico" id="w10-ico"><svg viewBox="0 0 24 24"><g class="arrow"><line x1="12" y1="18" x2="12" y2="5"/><polyline points="7,10 12,5 17,10"/></g></svg></div><div><p class="sg-eye">Surface · 10 m</p><p class="sg-val" id="w10-val">—</p><p class="sg-det" id="w10-sub"></p><p class="sg-alt">the wind on the hill</p></div></div>
-    <div class="sg-row wind"><div class="sg-ico" id="w850-ico"><svg viewBox="0 0 24 24"><g class="arrow"><line x1="12" y1="18" x2="12" y2="5"/><polyline points="7,10 12,5 17,10"/></g></svg></div><div><p class="sg-eye">850 hPa · ~1.5 km</p><p class="sg-val" id="w850-val">—</p><p class="sg-det" id="w850-sub"></p><p class="sg-alt">steers the valley weather</p></div></div>
-    <div class="sg-row wind"><div class="sg-ico" id="w500-ico"><svg viewBox="0 0 24 24"><g class="arrow"><line x1="12" y1="18" x2="12" y2="5"/><polyline points="7,10 12,5 17,10"/></g></svg></div><div><p class="sg-eye">500 hPa · ~5.5 km</p><p class="sg-val" id="w500-val">—</p><p class="sg-det" id="w500-sub"></p><p class="sg-alt">troughs and ridges</p></div></div>
-    <div class="sg-row wind"><div class="sg-ico" id="w100-ico"><svg viewBox="0 0 24 24"><g class="arrow"><line x1="12" y1="18" x2="12" y2="5"/><polyline points="7,10 12,5 17,10"/></g></svg></div><div><p class="sg-eye">100 hPa · ~16 km</p><p class="sg-val" id="w100-val">—</p><p class="sg-det" id="w100-sub"></p><p class="sg-alt">tropopause; where jets fly</p></div></div>
-    <div class="sg-row wind"><div class="sg-ico" id="w10hpa-ico"><svg viewBox="0 0 24 24"><g class="arrow"><line x1="12" y1="18" x2="12" y2="5"/><polyline points="7,10 12,5 17,10"/></g></svg></div><div><p class="sg-eye">10 hPa · ~30 km</p><p class="sg-val" id="w10hpa-val">—</p><p class="sg-det" id="w10hpa-sub"></p><p class="sg-alt">polar vortex level</p></div></div>
-    <div class="sg-cap"><svg viewBox="0 0 24 24"><path d="M12 2l1.8 5.6H20l-4.7 3.4 1.8 5.6L12 13.2 6.9 16.6l1.8-5.6L4 7.6h6.2z"/></svg></div>
-  </div>
-
-  <!-- 2026-09-27 (v915, Laurie): the "Degree days · year to date" module (Heating/Cooling/Growing cards) and the
-       year-by-year table both removed — Laurie: they weren't showing anything the charts above
-       don't already show, and most stations in the picker have no temperature record at all
-       (precip/snow-only CoCoRaHS gauges), which made the cards read as broken ("0 · no average")
-       for the majority of the list. The station picker itself is still needed, for Water below. -->
-  <!-- v954 (2026-09-28, Laurie): ONE picker — Berne reanalysis (default) or an active observed station — governs Rain & snow and the year-by-year charts -->
-  <div class="sg-pick"><label for="st-pick" class="sg-det" style="margin:0">Station:</label> <select id="st-pick" class="sg-sel"></select> <span class="sg-det" id="st-note" style="margin:0"></span></div>
-  <h2 class="sg-sec">Rain &amp; snow · year to date</h2>
-  <div class="sg-grid" id="water-grid">
-    <div class="sg-row"><div class="sg-ico"><svg viewBox="0 0 24 24"><path d="M12 3s6 6.5 6 11a6 6 0 0 1-12 0c0-4.5 6-11 6-11z"/></svg></div><div><p class="sg-eye">Precipitation</p><p class="sg-val" id="w-p">—</p><p class="sg-det" id="w-p-d"></p></div></div>
-    <div class="sg-row"><div class="sg-ico"><svg viewBox="0 0 24 24"><path d="M12 2v20M2 12h20M5 5l14 14M19 5L5 19"/></svg></div><div><p class="sg-eye">Snowfall</p><p class="sg-val" id="w-s">—</p><p class="sg-det" id="w-s-d"></p></div></div>
-    <div class="sg-row"><div class="sg-ico"><svg viewBox="0 0 24 24"><path d="M14 14.8V5a2 2 0 0 0-4 0v9.8a4 4 0 1 0 4 0z"/></svg></div><div><p class="sg-eye">Extremes this year</p><p class="sg-val" id="w-x">—</p><p class="sg-det" id="w-x-d"></p></div></div>
-  </div>
-
-
-
-  <h2 class="sg-sec">Year-by-year weather history</h2>
-  <p class="sg-det" style="margin:0 0 10px">Raw daily values for the station chosen above. This year is white; earlier years run from pale lavender back to deep violet, oldest darkest. <span id="ch-src-note"></span></p>
-  <h3 class="sg-h3" data-temp="1">Daily high</h3>
-  <p class="sg-det" data-temp="1" style="margin:0 0 8px"></p>
-  <div class="sg-chart" data-temp="1"><svg id="ch-hi" viewBox="0 0 1000 420" preserveAspectRatio="none" role="img" aria-label="Daily high"></svg><div class="sg-tip" id="ch-hi-tip"></div></div>
-  <h3 class="sg-h3" data-temp="1">Daily low</h3>
-  <p class="sg-det" data-temp="1" style="margin:0 0 8px"></p>
-  <div class="sg-chart" data-temp="1"><svg id="ch-lo" viewBox="0 0 1000 420" preserveAspectRatio="none" role="img" aria-label="Daily low"></svg><div class="sg-tip" id="ch-lo-tip"></div></div>
-  <h3 class="sg-h3">Total precipitation, accumulating</h3>
-  <p class="sg-det" style="margin:0 0 8px">All moisture as water — rain plus the melted equivalent of snow — since January 1.</p>
-  <div class="sg-chart"><svg id="ch-precip" viewBox="0 0 1000 420" preserveAspectRatio="none" role="img" aria-label="Total precipitation, accumulating"></svg><div class="sg-tip" id="ch-precip-tip"></div></div>
-  <!-- v956 (2026-09-28, Laurie): high, low and total precipitation up front; the other six behind a toggle -->
-  <button type="button" class="sg-btn" id="yr-more-btn" aria-expanded="false" style="margin:8px 0 4px">+ 6 more charts: average temp, rain, snow, heating, cooling and growing degree days</button>
-  <div id="yr-more" style="display:none">
-  <h3 class="sg-h3" data-temp="1">Daily mean temperature</h3>
-  <p class="sg-det" data-temp="1" style="margin:0 0 8px"></p>
-  <div class="sg-chart" data-temp="1"><svg id="ch-mean" viewBox="0 0 1000 420" preserveAspectRatio="none" role="img" aria-label="Daily mean temperature"></svg><div class="sg-tip" id="ch-mean-tip"></div></div>
-  <h3 class="sg-h3">Rain, accumulating</h3>
-  <p class="sg-det" style="margin:0 0 8px">Inches of rain since January 1. <span id="ch-rain-note"></span></p>
-  <div class="sg-chart"><svg id="ch-rain" viewBox="0 0 1000 420" preserveAspectRatio="none" role="img" aria-label="Rain, accumulating"></svg><div class="sg-tip" id="ch-rain-tip"></div></div>
-  <h3 class="sg-h3">Snowfall, accumulating</h3>
-  <p class="sg-det" style="margin:0 0 8px">Depth as it fell, not water content. <span id="snow-mode" class="sg-seg"><a href="#" data-mode="year" class="on">By calendar year</a> <a href="#" data-mode="winter">By winter (July–June)</a></span> — winter mode keys each line to the year it began (1994–95 counts with 1994 in the picker), so one snow season is one line.</p>
-  <div class="sg-chart"><svg id="ch-snow" viewBox="0 0 1000 420" preserveAspectRatio="none" role="img" aria-label="Snowfall, accumulating"></svg><div class="sg-tip" id="ch-snow-tip"></div></div>
-  <h3 class="sg-h3" data-temp="1">Heating degree days, accumulating</h3>
-  <p class="sg-det" data-temp="1" style="margin:0 0 8px">Base 65°F.</p>
-  <div class="sg-chart" data-temp="1"><svg id="ch-hdd" viewBox="0 0 1000 420" preserveAspectRatio="none" role="img" aria-label="Heating degree days, accumulating"></svg><div class="sg-tip" id="ch-hdd-tip"></div></div>
-  <h3 class="sg-h3" data-temp="1">Cooling degree days, accumulating</h3>
-  <p class="sg-det" data-temp="1" style="margin:0 0 8px">Base 65°F.</p>
-  <div class="sg-chart" data-temp="1"><svg id="ch-cdd" viewBox="0 0 1000 420" preserveAspectRatio="none" role="img" aria-label="Cooling degree days, accumulating"></svg><div class="sg-tip" id="ch-cdd-tip"></div></div>
-  <h3 class="sg-h3" data-temp="1">Growing degree days, accumulating</h3>
-  <p class="sg-det" data-temp="1" style="margin:0 0 8px">Base 50°F, capped at 86°F.</p>
-  <div class="sg-chart" data-temp="1"><svg id="ch-gdd" viewBox="0 0 1000 420" preserveAspectRatio="none" role="img" aria-label="Growing degree days, accumulating"></svg><div class="sg-tip" id="ch-gdd-tip"></div></div>
-  </div>
-  <p class="sg-note" id="yr-note"></p>
-  <p class="sg-note" id="no-temp-note" style="display:none"></p>
-
-  <!-- 2026-09-27 (v923, Laurie): live USGS water levels — streams, lakes/reservoirs, groundwater wells.
-       v934 (Laurie): one section, "Water levels"; streams on the top row, reservoirs in the middle, wells at the bottom (renderWater builds one grid per kind into #water-cards) -->
-  <h2 class="sg-sec">Water levels</h2>
-  <!-- v949 (2026-09-28, Laurie): map is a tall sticky column on the left; chains on the right -->
-  <div id="water-layout">
-    <div id="water-map-col"><div id="water-map"></div></div>
-    <div id="water-cards-col">
-      <!-- v962 (2026-09-28, Laurie): the card list is gone; the seven 7-day charts live beside the map; each has a detail panel below it. -->
-      <div id="water-charts"></div>
-      <p class="sg-note" id="water-stat-note"></p>
-    </div>
-  </div>
-  <p class="sg-note" id="water-live-src">Data © USGS Water Data for the Nation (waterservices.usgs.gov), provisional and subject to revision. Refreshes every 15 minutes.</p>
-
-
-
-
-  <!-- v954 (2026-09-28, Laurie): one sources footnote for the whole page, at the bottom -->
-  <p class="sg-note" id="dd-note"><b>Sources.</b> Sky computed locally for Berne, NY (~1,700 ft). Today, air, winds and the Berne history: ERA5 reanalysis and current models via <a href="https://open-meteo.com/" target="_blank" rel="noopener">Open-Meteo</a> (CC BY 4.0); winds aloft from the Canadian GEM Global model, GFS as fallback. Observed stations: NOAA GHCN-Daily via xmACIS2 (NRCC); station averages are the full period of record through the same calendar date, complete years only, current year excluded. River and groundwater levels: USGS Water Data for the Nation, provisional. Refreshes every 15 minutes.</p>
+  <p class="sg-note"><b>Sources.</b> Observations by <a href="https://www.inaturalist.org/" target="_blank" rel="noopener">iNaturalist</a> and <a href="https://ebird.org/" target="_blank" rel="noopener">eBird</a> contributors; photos and records belong to the people who made them.</p>
 </main>
 
 <script src="skyline.js"></script>
-<script src="station_dd.js"></script>
-<script src="phenology_history.js"></script>
-<script src="phenology_expected.js"></script>
 <script src="signals.js"></script>
 <!-- @@footer -->
 

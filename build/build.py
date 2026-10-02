@@ -1686,7 +1686,7 @@ def main() -> int:
     # Standalone pages (hand-authored). Each carries <!-- @@header --> / <!-- @@footer -->
     # markers that emit_page() fills from partials/, so the nav + skyline + footer are
     # written once and stamped everywhere (2026-09-16, per Laurie).
-    for name in ("about.html", "calendar.html", "directory.html", "instagram.html", "bulletin.html", "tradingpost.html", "signals.html",
+    for name in ("about.html", "calendar.html", "directory.html", "instagram.html", "bulletin.html", "tradingpost.html", "signals.html", "society.html",
                  "waterwip.html"):   # v982 (2026-09-29, Laurie): water-quality dashboard, unlinked (no nav) — reach it by typing /waterwip.html
         if (ROOT / name).exists():
             emit_page(ROOT / name, "index.html" if name == "calendar.html" else name)   # calendar (list view) is the landing page
