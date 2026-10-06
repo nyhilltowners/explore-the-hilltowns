@@ -1,7 +1,7 @@
 /* ============ SIGNS + SIGNALS (2026-09-19, per Laurie) ============
    Phenology / natural-cycles dashboard for Berne, NY. Reuses skyline.js (loaded first)
    for BERNE, sunTimes(), moon math, compass(). All data from Open-Meteo (CC BY 4.0):
-   - surface + pressure-level winds (10/100/500/850 hPa) via GEM Global (GFS fallback)
+   - surface + pressure-level winds (10/500/700/850 hPa) via GEM Global (GFS fallback)
    - degree days from the archive API: daily Tmax/Tmin since Jan 1, base 65°F for
      heating/cooling and base 50°F for growing (corn/standard), capped at 86°F. */
 (function(){
@@ -81,8 +81,8 @@
       $('day-val').innerHTML = '↑ '+Math.round(d.temperature_2m_max[0])+'°<span class="c">↓ '+Math.round(d.temperature_2m_min[0])+'°</span>';
       $('day-det').textContent = 'forecast high / low · '+(d.precipitation_sum[0]||0).toFixed(2)+' in precipitation expected'; });
     }).catch(function(e){ status('Surface weather: '+(e && e.message || 'fetch failed')); });
-    var lv = ['850','500','100','10'];
-    var q2 = Q+'&hourly='+lv.map(function(l){ return 'wind_speed_'+l+'hPa,wind_direction_'+l+'hPa,geopotential_height_'+l+'hPa'; }).join(',')+',relative_humidity_850hPa,temperature_850hPa&wind_speed_unit=kn&past_hours=3&forecast_hours=6'; /* 2026-09-27 (v928, Laurie): 850 hPa temperature alongside humidity \u2014 saturated air near or below 0\u00b0C at this level is the classic snow setup */ /* 2026-09-27 (v924, Laurie): humidity only at 850 — the level moisture actually shows up at */
+    var lv = ['850','700','500','10'];   /* v1008 (2026-10-05, Laurie): 700 hPa replaces 100 hPa */
+    var q2 = Q+'&hourly='+lv.map(function(l){ return 'wind_speed_'+l+'hPa,wind_direction_'+l+'hPa,geopotential_height_'+l+'hPa'; }).join(',')+',relative_humidity_850hPa,temperature_850hPa,relative_humidity_700hPa,temperature_700hPa&wind_speed_unit=kn&past_hours=3&forecast_hours=6'; /* 2026-09-27 (v928, Laurie): 850 hPa temperature alongside humidity \u2014 saturated air near or below 0\u00b0C at this level is the classic snow setup */ /* 2026-09-27 (v924, Laurie): humidity only at 850 — the level moisture actually shows up at */
     function nearestIdx(j){ if(!j||!j.hourly||!j.hourly.time) return -1; var t=j.hourly.time, now=Date.now(), best=-1,bd=1e18; for(var i=0;i<t.length;i++){ var ms=new Date(t[i]+(j.utc_offset_seconds?'':'Z')).getTime()-(j.utc_offset_seconds||0)*1000; var d=Math.abs(ms-now); if(d<bd){ bd=d; best=i; } } return bd>4*3600*1000?-1:best; }   /* 2026-09-27 (v924, Laurie): mirrors skyline.js's nearestHour matching, just to pull one extra field (humidity) it doesn't expose */
     var tries = ['https://api.open-meteo.com/v1/gem?'+q2+'&models=cmc_gem_global','https://api.open-meteo.com/v1/gfs?'+q2+'&models=gfs_global'];
     (function attempt(i){
@@ -93,7 +93,8 @@
         var t850 = (rhIdx>=0 && j.hourly && j.hourly.temperature_850hPa) ? j.hourly.temperature_850hPa[rhIdx] : null;
         lv.forEach(function(l){ var h = nearestHour ? nearestHour(j,'wind_speed_'+l+'hPa','wind_direction_'+l+'hPa','geopotential_height_'+l+'hPa') : null;
           var pid = (l==='10') ? 'w10hpa' : 'w'+l;
-          var extra = h ? (h.gph/1000).toFixed(1)+' km up'+(l==='850'&&typeof rh850==='number'?' \u00b7 '+Math.round(rh850)+'% RH':'')+(l==='850'&&typeof t850==='number'?' \u00b7 '+Math.round(t850)+'\u00b0C ('+Math.round(t850*9/5+32)+'\u00b0F)':'') : null; /* 2026-09-27 (v924, Laurie): relative humidity appended to the 850 hPa row only */
+          var hv = function(k){ return (rhIdx>=0 && j.hourly && j.hourly[k]) ? j.hourly[k][rhIdx] : null; }, rhL = hv('relative_humidity_'+l+'hPa'), tL = hv('temperature_'+l+'hPa');   /* v1008: humidity + temperature for 850 and 700 */
+          var extra = h ? (h.gph/1000).toFixed(1)+' km up'+((l==='850'||l==='700')&&typeof rhL==='number'?' \u00b7 '+Math.round(rhL)+'% RH':'')+((l==='850'||l==='700')&&typeof tL==='number'?' \u00b7 '+Math.round(tL)+'\u00b0C ('+Math.round(tL*9/5+32)+'\u00b0F)':'') : null; /* 2026-09-27 (v924, Laurie): relative humidity appended to the 850 hPa row only */
           if(h){ ok = true; windDial(pid, h.kt, h.dir, extra); } else windDial(pid, null); });
         if(!ok) attempt(i+1);
       }).catch(function(e){ if(i===tries.length-1) status('Winds aloft: '+(e && e.message || 'fetch failed')); attempt(i+1); });
@@ -164,22 +165,26 @@
   }
   /* v886 (2026-09-26, Laurie): snowfall by winter — key = the July year, index 0 = Jul 1, accumulating through Jun 30 */
   var _winterBerne=null;
-  function winterFromDaily(T, ss){
-    var out={}, doyOf=function(y,d){ return Math.round((d-Date.UTC(y,0,1))/86400000); };
-    for(var i=0;i<T.length;i++){ if(typeof ss[i]!=='number') continue;
+  function winterFromDaily(T, ss, mx, mn){
+    /* v1012 (2026-10-05, Laurie): heating degree days by winter too (Jul 1 → Jun 30, base 65°F), from daily max/min */
+    var out={}, doyOf=function(y,d){ return Math.round((d-Date.UTC(y,0,1))/86400000); }; mx=mx||[]; mn=mn||[];
+    for(var i=0;i<T.length;i++){ var hasS=typeof ss[i]==='number', hasT=typeof mx[i]==='number'&&typeof mn[i]==='number'; if(!hasS && !hasT) continue;
       var y=+T[i].slice(0,4), d=new Date(T[i]+'T00:00:00Z'), doy=doyOf(y,d), jul=(y%4===0&&(y%100!==0||y%400===0))?182:181;
       var wy=doy>=jul?y:y-1, idx=doy>=jul?doy-jul:doy+184;
-      var W=out[wy]||(out[wy]={snow:new Array(366),_s:0}); W._s+=ss[i]; W.snow[idx]=W._s; }
+      var W=out[wy]||(out[wy]={snow:new Array(366),hdd:new Array(366),_s:0,_h:0});
+      if(hasS){ W._s+=ss[i]; W.snow[idx]=W._s; }
+      if(hasT){ W._h+=Math.max(0,65-(mx[i]+mn[i])/2); W.hdd[idx]=W._h; } }
     return out;
   }
   function winterFromStation(S){
-    var out={}; Object.keys(S.years).map(Number).sort().forEach(function(y){ var Y=S.years[y]; if(!Y.np||!Y.s) return;
-      var jul=(y%4===0&&(y%100!==0||y%400===0))?182:181;
-      for(var d=0; d<Y.s.length; d++){ var daily=Y.s[d]-(d?Y.s[d-1]:0); var wy=d>=jul?y:y-1, idx=d>=jul?d-jul:d+184;
-        var W=out[wy]||(out[wy]={snow:new Array(366),_s:0}); W._s+=daily; W.snow[idx]=W._s; } });
+    var out={}; Object.keys(S.years).map(Number).sort().forEach(function(y){ var Y=S.years[y];
+      var jul=(y%4===0&&(y%100!==0||y%400===0))?182:181, mk=function(wy){ return out[wy]||(out[wy]={snow:new Array(366),hdd:new Array(366),_s:0,_h:0}); };
+      if(Y.np&&Y.s){ for(var d=0; d<Y.s.length; d++){ var daily=Y.s[d]-(d?Y.s[d-1]:0); var wy=d>=jul?y:y-1, idx=d>=jul?d-jul:d+184; var W=mk(wy); W._s+=daily; W.snow[idx]=W._s; } }
+      /* v1012: heating degree days by winter from the station's daily highs/lows */
+      if(Y.dhi&&Y.dlo){ for(var e=0; e<366 && e<Y.dhi.length; e++){ var mx=Y.dhi[e], mn=Y.dlo[e]; if(typeof mx!=='number'||typeof mn!=='number') continue; var wy2=e>=jul?y:y-1, idx2=e>=jul?e-jul:e+184; var W2=mk(wy2); W2._h+=Math.max(0,65-(mx+mn)/2); W2.hdd[idx2]=W2._h; } } });
     return out;
   }
-  var _snowMode='year';
+  var _snowMode='year', _hddMode='year';   /* v1012: heating degree days get the same by-winter switch */
   function stationSeries(S){
     var out={}; Object.keys(S.years).forEach(function(y){ var Y=S.years[y]; if(!Y.dhi && !(Y.np>0)) return;   /* v954: precip-only years still draw the moisture charts */
       var o={hi:new Array(366),lo:new Array(366),mean:new Array(366),hdd:new Array(366),cdd:new Array(366),gdd:new Array(366),rain:new Array(366),snow:new Array(366),precip:new Array(366)}, h=0,c=0,g=0;
@@ -303,7 +308,9 @@
     drawChart('ch-mean', years, 'mean', -20, 95, false, '°');
     drawChart('ch-hi',   years, 'hi',  -10, 105, false, '°');
     drawChart('ch-lo',   years, 'lo',  -35,  80, false, '°');
-    drawChart('ch-hdd',  years, 'hdd',   0, 8500, false, 'HDD');
+    if(_hddMode==='winter' && _curWinter){ var hsel={}; Object.keys(_curWinter).forEach(function(w){ hsel[w]=_curWinter[w]; }); drawChart('ch-hdd', hsel, 'hdd', 0, 8500, false, 'HDD', {shift:6, curYear:(CUR_MONTH>=7?CUR_YEAR:CUR_YEAR-1), label:function(y){ return y+'\u2013'+String(y+1).slice(2); }}); }
+    else drawChart('ch-hdd',  years, 'hdd',   0, 8500, false, 'HDD');
+    var hm=$('hdd-mode'); if(hm){ hm.querySelectorAll('a').forEach(function(a){ a.classList.toggle('on', a.getAttribute('data-mode')===_hddMode); }); }
     drawChart('ch-cdd',  years, 'cdd',   0, 1400, false, 'CDD');
     drawChart('ch-gdd',  years, 'gdd',   0, 4000, false, 'GDD');
     drawChart('ch-rain', years, 'rain',  0,  60, false, ' in');
@@ -318,9 +325,10 @@
   var _yearsBerne=null;
   document.addEventListener('DOMContentLoaded',function(){ var mb=$('yr-more-btn'), mw=$('yr-more'); if(mb&&mw){ mb.addEventListener('click',function(){ var open=mb.getAttribute('aria-expanded')==='true'; mw.style.display=open?'none':''; mb.setAttribute('aria-expanded',String(!open)); mb.textContent=open?'+ 6 more charts: average temp, rain, snow, heating, cooling and growing degree days':'\u2212 Fewer charts'; if(!open) drawCharts(); }); } });   /* v956 */
   document.addEventListener('DOMContentLoaded',function(){ var sm=$('snow-mode'); if(sm) sm.addEventListener('click',function(e){ var a=e.target.closest&&e.target.closest('a[data-mode]'); if(!a) return; e.preventDefault(); _snowMode=a.getAttribute('data-mode'); drawCharts(); }); });
+  document.addEventListener('DOMContentLoaded',function(){ var hm=$('hdd-mode'); if(hm) hm.addEventListener('click',function(e){ var a=e.target.closest&&e.target.closest('a[data-mode]'); if(!a) return; e.preventDefault(); _hddMode=a.getAttribute('data-mode'); drawCharts(); }); });   /* v1012 */
   function renderYearChart(j){
     if(!j||!j.daily){ status('Year charts: '+(j&&j.reason?j.reason:'no data')); return; }
-    _yearsBerne=yearSeries(j); _winterBerne=winterFromDaily(j.daily.time, j.daily.snowfall_sum||[]);
+    _yearsBerne=yearSeries(j); _winterBerne=winterFromDaily(j.daily.time, j.daily.snowfall_sum||[], j.daily.temperature_2m_max, j.daily.temperature_2m_min);
     drawAll();   /* v954: the single station picker (#st-pick) is the source */
   }
   /* 2026-09-27 (v933, Laurie): a closed station has no current-year line to compare against. When the station has known
@@ -520,6 +528,78 @@
      (waterservices.usgs.gov) — no key needed, CORS-open, same "just fetch it from the browser"
      pattern as Open-Meteo/eBird/iNaturalist elsewhere on this page. One request, a bounding box
      around Berne, several parameter codes at once; USGS returns whatever each site actually has. */
+
+  /* ---------- v1010 (2026-10-05, Laurie): USGS Water Data API adapter ----------
+     waterservices.usgs.gov has been answering 503 for days and USGS is retiring it (degradation from Aug 2026,
+     off in early 2027). Everything below talks to the modern OGC API (api.waterdata.usgs.gov/ogcapi/v1) and the
+     statistics API, and hands the rest of the page the SAME shape the old instantaneous-values JSON had
+     ({value:{timeSeries:[...]}}), so the card/chart code above and below is untouched. If the new API refuses a
+     request, the old URL is tried once, and the status line names which one failed and how (HTTP code).
+     USGS_KEY: optional api.waterdata.usgs.gov key (api_key=...), raises the per-hour limit; blank still works.
+     Multiple sites/codes: CQL2 text filter (OGC API Features part 3); if the server rejects it (400), the
+     comma-list form is tried. */
+  var USGS_KEY='imM50bTg9Hd7VWPGYA0fRs73FcFYLN8UchnfbZZO';   /* v1011 (2026-10-05, Laurie): api.waterdata.usgs.gov key, public in the page like EBIRD_KEY */
+  var USGS_BASE='https://api.waterdata.usgs.gov/ogcapi/v1/collections/', USGS_STATS='https://api.waterdata.usgs.gov/statistics/v0/';
+  var USGS_LAST={};   /* what each adapter call ended up doing, for the status line */
+  function usgsKeyQ(){ return USGS_KEY?'&api_key='+encodeURIComponent(USGS_KEY):''; }
+  function usgsId(sn){ return 'USGS-'+sn; }
+  function usgsSn(id){ return String(id||'').replace(/^USGS-/,''); }
+  function usgsFetchJson(url, timeoutMs){
+    var ctl=(typeof AbortController!=='undefined')?new AbortController():null, tm=ctl?setTimeout(function(){ ctl.abort(); }, timeoutMs||30000):null;
+    return fetch(url, ctl?{signal:ctl.signal}:{}).then(function(r){ if(!r.ok){ var e=new Error('HTTP '+r.status); e.status=r.status; throw e; } return r.json(); })
+      .then(function(j){ if(tm) clearTimeout(tm); return j; }, function(e){ if(tm) clearTimeout(tm); throw e; });
+  }
+  /* all pages of an OGC items query (follows rel=next) */
+  function usgsItems(url, maxPages){
+    var out=[]; maxPages=maxPages||6;
+    var step=function(u, n){ return usgsFetchJson(u).then(function(j){ out=out.concat((j&&j.features)||[]); var nx=((j&&j.links)||[]).find(function(l){ return l.rel==='next'; }); if(nx && nx.href && n<maxPages) return step(nx.href, n+1); return out; }); };
+    return step(url, 1);
+  }
+  function cqlIn(field, vals){ return field+' IN ('+vals.map(function(v){ return "'"+String(v).replace(/'/g,"''")+"'"; }).join(',')+')'; }
+  /* one items query with either CQL2 (many ids) or plain params; opts: {coll, ids, codes, bbox, datetime, props, extra} */
+  function usgsQuery(opts){
+    var base=USGS_BASE+opts.coll+'/items?f=json&limit=50000'+usgsKeyQ()+(opts.datetime?'&datetime='+encodeURIComponent(opts.datetime):'')+(opts.bbox?'&bbox='+opts.bbox:'')+(opts.props?'&properties='+opts.props:'')+(opts.extra||'');
+    var ids=opts.ids||[], codes=opts.codes||[];
+    var clauses=[]; if(ids.length) clauses.push(cqlIn('monitoring_location_id', ids.map(usgsId))); if(codes.length) clauses.push(cqlIn('parameter_code', codes));
+    var urlCql=base+(clauses.length?'&filter-lang=cql2-text&filter='+encodeURIComponent(clauses.join(' AND ')):'');
+    var urlPlain=base+(ids.length?'&monitoring_location_id='+ids.map(usgsId).join(','):'')+(codes.length?'&parameter_code='+codes.join(','):'');
+    /* USGS's docs show both /ogcapi/v1 and /ogcapi/v0 - if v1 is not there (404), the same call is retried on v0 */
+    var v0=function(u){ return u.replace('/ogcapi/v1/','/ogcapi/v0/'); };
+    var tryUrl=function(u){ return usgsItems(u).catch(function(e){ if(e && e.status===404 && u.indexOf('/ogcapi/v1/')>=0){ USGS_LAST.ver='v0'; return usgsItems(v0(u)); } throw e; }); };
+    if(!clauses.length) return tryUrl(urlPlain);
+    return tryUrl(urlCql).catch(function(e){ if(e && e.status===400){ USGS_LAST.cql='rejected'; return tryUrl(urlPlain); } throw e; });
+  }
+  /* monitoring-location metadata for a set of ids or a bbox -> {siteNo:{name, lat, lng, type, alt}} */
+  function usgsLocations(opts){
+    return usgsQuery({coll:'monitoring-locations', ids:opts.ids, bbox:opts.bbox, props:'monitoring_location_id,monitoring_location_name,site_type_code,altitude'}).then(function(fs){
+      var out={}; fs.forEach(function(f){ var p=f.properties||{}, g=(f.geometry&&f.geometry.coordinates)||[]; var sn=usgsSn(p.monitoring_location_id||f.id); if(!sn) return;
+        out[sn]={name:p.monitoring_location_name||sn, lat:+g[1], lng:+g[0], type:p.site_type_code||'', alt:(p.altitude!=null&&isFinite(+p.altitude))?+p.altitude:null}; });
+      return out; });
+  }
+  /* continuous observations -> the legacy iv shape. opts: {ids | bbox, codes, period:'P1D'} ; locs = usgsLocations() result (names/types) */
+  function usgsIV(opts, locs){
+    locs=locs||{};
+    return usgsQuery({coll:'continuous', ids:opts.ids, bbox:opts.bbox, codes:opts.codes, datetime:opts.period||'P1D', props:'monitoring_location_id,parameter_code,time,value,qualifier'}).then(function(fs){
+      var by={};
+      fs.forEach(function(f){ var p=f.properties||{}; var sn=usgsSn(p.monitoring_location_id), code=String(p.parameter_code||''); if(!sn||!code) return;
+        var k=sn+'|'+code, g=(f.geometry&&f.geometry.coordinates)||null;
+        var t=by[k]||(by[k]={sn:sn, code:code, lat:g?+g[1]:null, lng:g?+g[0]:null, vals:[]});
+        if(!t.lat && g){ t.lat=+g[1]; t.lng=+g[0]; }
+        t.vals.push({dateTime:p.time, value:(p.value==null?'':String(p.value)), qualifiers:p.qualifier?String(p.qualifier).split(/[,\s]+/).filter(Boolean):[]}); });
+      var ts=Object.keys(by).map(function(k){ var t=by[k], L=locs[t.sn]||{}; t.vals.sort(function(a,b){ return Date.parse(a.dateTime)-Date.parse(b.dateTime); });
+        var lat=(L.lat!=null&&isFinite(L.lat))?L.lat:t.lat, lng=(L.lng!=null&&isFinite(L.lng))?L.lng:t.lng;
+        return {variable:{variableCode:[{value:t.code}]}, sourceInfo:{siteName:L.name||t.sn, siteCode:[{value:t.sn}], geoLocation:{geogLocation:{latitude:lat, longitude:lng}}, siteProperty:[{name:'siteTypeCd', value:L.type||''}]}, values:[{value:t.vals}]}; });
+      return {value:{timeSeries:ts}};
+    });
+  }
+  /* legacy waterservices fallback, same options, tried once if the modern API fails */
+  function legacyIV(opts){
+    var u='https://waterservices.usgs.gov/nwis/iv/?format=json'+(opts.ids?'&sites='+opts.ids.join(','):'')+(opts.bbox?'&bBox='+opts.bbox:'')+'&parameterCd='+opts.codes.join(',')+'&period='+(opts.period||'P1D')+'&siteStatus='+(opts.bbox?'active':'all');
+    return usgsFetchJson(u);
+  }
+  function waterIV(label, opts, locs){
+    return usgsIV(opts, locs).catch(function(e){ var why=(e&&e.message)||'fetch failed'; return legacyIV(opts).then(function(j){ status(label+': new USGS API '+why+', old service answered'); return j; }, function(e2){ throw new Error('new API '+why+'; old service '+((e2&&e2.message)||'failed')); }); });
+  }
   var WATER_BBOX_KM = 50;
   function waterBBox(){
     var dLat = WATER_BBOX_KM/111, dLng = WATER_BBOX_KM/(111*Math.cos(LAT*Math.PI/180));
@@ -684,25 +764,28 @@
     var num=function(v){ var x=parseFloat(v); return isNaN(x)?null:x; };
     var failed=0;
     var one=function(job){
-      var url='https://waterservices.usgs.gov/nwis/stat/?format=rdb&sites='+job.d.siteNo+'&statReportType=daily&statTypeCd=mean,max,min&parameterCd='+Object.keys(job.codes).join(',');
-      var ctl=(typeof AbortController!=='undefined')?new AbortController():null, tm=ctl?setTimeout(function(){ ctl.abort(); },20000):null;
-      return fetch(url, ctl?{signal:ctl.signal}:{}).then(function(r){
-        if(r.status===404) return '';
-        if(!r.ok) throw new Error('HTTP '+r.status);
-        return r.text();
-      }).then(function(txt){
-        var header=null, idx={}, skipFmt=false, rows=0;
-        String(txt).split('\n').forEach(function(line){
-          if(!line || line.charAt(0)==='#') return;
-          var c=line.replace(/\r$/,'').split('\t');
-          if(!header){ header=c; c.forEach(function(h,i){ idx[h.trim()]=i; }); skipFmt=true; return; }
-          if(skipFmt){ skipFmt=false; return; }
-          if(+c[idx.month_nu]!==today.m || +c[idx.day_nu]!==today.d) return;
-          var key=c[idx.site_no]+'|'+c[idx.parameter_cd];
-          if(cache[key]) return;
-          rows++;
-          cache[key]={mean:num(c[idx.mean_va]), max:num(c[idx.max_va]), maxYr:c[idx.max_va_yr]||'', min:num(c[idx.min_va]), minYr:c[idx.min_va_yr]||'', begin:c[idx.begin_yr]||'', end:c[idx.end_yr]||''};
-        });
+      /* v1010: USGS statistics API, day-of-year normals (mean / max / min for this calendar date, period of record). The
+         response schema is read defensively: any record whose month/day (or day-of-year) matches today contributes its
+         computation_type + value; year-of-record and period fields are taken from whichever property names are present. */
+      var codes=Object.keys(job.codes), tm=null;
+      var url=USGS_STATS+'observationNormals?normal_type=DOY&monitoring_location_id='+usgsId(job.d.siteNo)+'&parameter_code='+codes.join(',')+'&page_size=5000'+usgsKeyQ();
+      return usgsFetchJson(url, 20000).catch(function(e){ if(e&&e.status===404) return null; throw e; }).then(function(j){
+        var rows=0, recs=j?((j.features||j.items||j.data||j.results||(Array.isArray(j)?j:[]))):[];
+        var pick=function(o,names){ for(var i=0;i<names.length;i++){ if(o[names[i]]!=null && o[names[i]]!=='') return o[names[i]]; } return null; };
+        var doyOf=function(md){ var dt=new Date(Date.UTC(2001, md.m-1, md.d)); return Math.round((dt-Date.UTC(2001,0,1))/864e5)+1; };
+        var todayDoy=doyOf(today);
+        recs.forEach(function(f){ var p=f.properties||f; var sn=usgsSn(pick(p,['monitoring_location_id','site_no'])||job.d.siteNo), code=String(pick(p,['parameter_code','parameter_cd'])||''); if(codes.indexOf(code)<0) return;
+          var mo=pick(p,['month','month_nu']), dy=pick(p,['day','day_nu','day_of_month']), doy=pick(p,['day_of_year','doy']);
+          var hit=(mo!=null&&dy!=null)?(+mo===today.m&&+dy===today.d):(doy!=null?(+doy===todayDoy):false);
+          if(!hit) return;
+          var key=sn+'|'+code, cur=cache[key]||(cache[key]={mean:null,max:null,maxYr:'',min:null,minYr:'',begin:'',end:''});
+          var ct=String(pick(p,['computation_type','statistic','statistic_id'])||'').toLowerCase(), v=num(pick(p,['value','mean_va','max_va','min_va']));
+          var yr=String(pick(p,['year','value_year','year_of_record','max_va_yr','min_va_yr'])||'');
+          if(/mean|00003/.test(ct)){ cur.mean=v; } else if(/max|00001/.test(ct)){ cur.max=v; cur.maxYr=yr; } else if(/min|00002/.test(ct)){ cur.min=v; cur.minYr=yr; }
+          else { if(p.mean_va!=null) cur.mean=num(p.mean_va); if(p.max_va!=null){ cur.max=num(p.max_va); cur.maxYr=String(p.max_va_yr||''); } if(p.min_va!=null){ cur.min=num(p.min_va); cur.minYr=String(p.min_va_yr||''); } }
+          cur.begin=String(pick(p,['begin_year','start_year','period_of_record_start','begin_yr'])||cur.begin||'').slice(0,4); cur.end=String(pick(p,['end_year','period_of_record_end','end_yr'])||cur.end||'').slice(0,4);
+          rows++; });
+        Object.keys(cache).forEach(function(k){ var c=cache[k]; if(c && c.mean==null && c.max==null && c.min==null) delete cache[k]; });
         job.pairs.forEach(function(p){ if(cache[p.key]===undefined) miss[p.key]=true; });   /* a real answer with no row for this pair - remembered for this page load only */
         if(rows>0) lsSet(ck, cache);
         job.pairs.forEach(function(p){ p.d.stats[p.code]=cache[p.key]||null; });
@@ -729,17 +812,13 @@
     var need=codes.filter(function(c){ return cache[d.siteNo+'|'+c]===undefined; });
     codes.forEach(function(c){ if(cache[d.siteNo+'|'+c]) d.range30[c]=cache[d.siteNo+'|'+c]; });
     if(!need.length){ renderWaterCard(d); return Promise.resolve(); }
-    var url='https://waterservices.usgs.gov/nwis/iv/?format=json&sites='+d.siteNo+'&parameterCd='+need.join(',')+'&period=P30D&siteStatus=all';
-    var ctl=(typeof AbortController!=='undefined')?new AbortController():null, tm=ctl?setTimeout(function(){ ctl.abort(); },20000):null;
-    return fetch(url, ctl?{signal:ctl.signal}:{}).then(function(r){ return r.ok?r.json():Promise.reject(new Error('HTTP '+r.status)); }).then(function(j){
-      var ts=(j&&j.value&&j.value.timeSeries)||[], got={};
-      ts.forEach(function(t){
-        var code=(t.variable&&t.variable.variableCode&&t.variable.variableCode[0]&&t.variable.variableCode[0].value)||''; if(need.indexOf(code)<0 || got[code]) return;
-        var vals=((t.values&&t.values[0]&&t.values[0].value)||[]).map(function(v){ return parseFloat(v.value); }).filter(function(x){ return isFinite(x) && x>-999990; });
-        if(vals.length<24) return;
-        vals.sort(function(a,b){ return a-b; });
-        got[code]={min:vals[0], max:vals[vals.length-1], med:vals[Math.floor(vals.length/2)], n:vals.length};
-      });
+    /* v1010: the modern API returns one feature per observation, so 30 days of 15-minute readings is far too big; the
+       `daily` collection (daily mean, max, min: statistic_id 00003/00001/00002) gives the same 30-day range from ~90 rows. */
+    var tm=null;
+    return usgsQuery({coll:'daily', ids:[d.siteNo], codes:need, datetime:'P30D', props:'monitoring_location_id,parameter_code,statistic_id,time,value'}).then(function(fs){
+      var got={}, by={};
+      fs.forEach(function(f){ var p=f.properties||{}, c=String(p.parameter_code||''), v=parseFloat(p.value); if(need.indexOf(c)<0 || !isFinite(v) || v<=-999990) return; (by[c]=by[c]||[]).push(v); });
+      Object.keys(by).forEach(function(c){ var vals=by[c].sort(function(a,b){ return a-b; }); if(vals.length<10) return; got[c]={min:vals[0], max:vals[vals.length-1], med:vals[Math.floor(vals.length/2)], n:vals.length}; });
       need.forEach(function(c){ cache[d.siteNo+'|'+c]=got[c]||null; if(got[c]) d.range30[c]=got[c]; });
       lsSet(ck, cache); renderWaterCard(d);
     }).catch(function(){}).then(function(){ if(tm) clearTimeout(tm); });
@@ -765,6 +844,9 @@
     var apply=function(){ sites.forEach(function(d){ d.alt=(cache[d.siteNo]!=null)?cache[d.siteNo]:null; }); };
     var need=sites.filter(function(d){ return cache[d.siteNo]===undefined; });
     if(!need.length){ apply(); return Promise.resolve(); }
+    /* v1010: altitudes come with the monitoring-locations metadata already fetched for this page load */
+    var fromNew=0; need.forEach(function(d){ var L=_waterLocs[d.siteNo]; if(L && L.alt!=null){ cache[d.siteNo]=L.alt; fromNew++; } });
+    if(fromNew===need.length){ lsSet(ck, cache); apply(); return Promise.resolve(); }
     var url='https://waterservices.usgs.gov/nwis/site/?format=rdb&sites='+need.map(function(d){ return d.siteNo; }).join(',')+'&siteOutput=expanded&siteStatus=all';
     return fetch(url).then(function(r){ return r.ok?r.text():Promise.reject(new Error('HTTP '+r.status)); }).then(function(txt){
       var header=null, idx={}, skipFmt=false;
@@ -795,7 +877,7 @@
     byKind.lake.sort(function(a,b){ return elev(b)-elev(a) || a.km-b.km; });
     byKind.well.sort(function(a,b){ var A=a.alt!=null?a.alt:-Infinity, B=b.alt!=null?b.alt:-Infinity; return (B-A) || (a.km-b.km); });
   }
-  var _waterMap=null, _waterMarkers=[], _wm=null, _waterBounds=null;
+  var _waterMap=null, _waterMarkers=[], _wm=null, _waterBounds=null, _waterLocs={};
   function ensureWaterMap(){
     if(_waterMap || typeof maplibregl==='undefined' || !$('water-map')) return _waterMap;
     /* v963 (2026-09-28, Laurie): grey land, blue water, full-colour pins. A raster tile can't be recoloured selectively, so
@@ -1051,10 +1133,10 @@
     /* v940: two requests - the curated stream transect by site number (any distance), and the bounding-box sweep
        for lakes/reservoirs and wells. Tidal codes are only asked of the curated list. */
     var sweepCodes=Object.keys(WATER_PARAMS).filter(function(c){ return CURATED_CODES.indexOf(c)<0 || c==='00060' || c==='00065'; });
-    var urlA='https://waterservices.usgs.gov/nwis/iv/?format=json&sites='+STREAM_SITES.concat(WELL_SITES).join(',')+'&parameterCd='+CURATED_CODES.join(',')+'&siteStatus=all&period=P1D';
-    var urlB='https://waterservices.usgs.gov/nwis/iv/?format=json&bBox='+waterBBox()+'&parameterCd='+sweepCodes.join(',')+'&siteStatus=active&period=P1D';
-    var get=function(u){ return fetch(u).then(function(r){ return r.ok?r.json():Promise.reject(new Error('HTTP '+r.status)); }); };
-    Promise.all([get(urlA).catch(function(e){ status('Water levels (transect): '+(e&&e.message||'fetch failed')); return null; }), get(urlB).catch(function(e){ status('Water levels (nearby): '+(e&&e.message||'fetch failed')); return null; })]).then(function(js){
+    /* v1010: modern API — site metadata first (names, types, altitudes), then the observations; legacy fallback inside waterIV() */
+    var curated=STREAM_SITES.concat(WELL_SITES);
+    var locP=Promise.all([usgsLocations({ids:curated}).catch(function(){ return {}; }), usgsLocations({bbox:waterBBox()}).catch(function(){ return {}; })]).then(function(ls){ var m={}; [ls[0],ls[1]].forEach(function(l){ Object.keys(l).forEach(function(k){ m[k]=l[k]; }); }); _waterLocs=m; return m; });
+    locP.then(function(locs){ return Promise.all([waterIV('Water levels (transect)', {ids:curated, codes:CURATED_CODES, period:'P1D'}, locs).catch(function(e){ status('Water levels (transect): '+(e&&e.message||'fetch failed')); return null; }), waterIV('Water levels (nearby)', {bbox:waterBBox(), codes:sweepCodes, period:'P1D'}, locs).catch(function(e){ status('Water levels (nearby): '+(e&&e.message||'fetch failed')); return null; })]); }).then(function(js){
       if(!js[0] && !js[1]) throw new Error('both requests failed');
       var ts=[]; js.forEach(function(j){ ts=ts.concat((j&&j.value&&j.value.timeSeries)||[]); });
       var bySite={};
@@ -1118,9 +1200,8 @@
   var _w7=null;
   function fetchWater7d(sites){
     var live=sites.filter(function(d){ return !d.dead; }); if(!live.length) return;
-    var url='https://waterservices.usgs.gov/nwis/iv/?format=json&sites='+live.map(function(d){ return d.siteNo; }).join(',')+'&parameterCd=00065,62620,62615,72019,62611&period=P7D&siteStatus=all';
-    var ctl=(typeof AbortController!=='undefined')?new AbortController():null, tm=ctl?setTimeout(function(){ ctl.abort(); },30000):null;
-    fetch(url, ctl?{signal:ctl.signal}:{}).then(function(r){ return r.ok?r.json():Promise.reject(new Error('HTTP '+r.status)); }).then(function(j){
+    var tm=null;   /* v1010: modern API via the adapter (its own 30 s timeout) */
+    waterIV('7-day water charts', {ids:live.map(function(d){ return d.siteNo; }), codes:['00065','62620','62615','72019','62611'], period:'P7D'}, _waterLocs).then(function(j){
       var ts=(j&&j.value&&j.value.timeSeries)||[], by={};
       ts.forEach(function(t){
         var code=(t.variable&&t.variable.variableCode&&t.variable.variableCode[0]&&t.variable.variableCode[0].value)||'';

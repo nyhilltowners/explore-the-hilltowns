@@ -264,7 +264,7 @@ a.link:hover{background:rgba(252,163,21,.14);}
 /* ---- Signs + Signals (v749): the header's own vocabulary, laid out with room to read ---- */
 .sg-wrap{max-width:1080px; margin:0 auto; padding:26px 18px 60px; color:#ffffff; font-family:'Montserrat',sans-serif;}
 .sg-head{margin:0; font-weight:800; letter-spacing:.04em; font-size:clamp(26px,4vw,40px); color:var(--gold,#c9a227);}
-.sg-sub{margin:4px 0 22px; font-style:italic; opacity:1; font-family:inherit;} .sg-sub a{color:var(--gold,#c9a227) !important;} /* v1003 */
+.sg-sub{margin:4px 0 22px; font-style:italic; opacity:1; font-family:inherit;} .sg-sub a, .sg-intro a{color:var(--gold,#c9a227) !important;} /* v1003, v1009 */
 .sg-sec{margin:28px 0 8px; font-weight:700; text-transform:uppercase; letter-spacing:.16em; font-size:12px; color:var(--gold,#c9a227); display:flex; align-items:center; gap:10px;}
 .sg-sec:after{content:""; flex:1; height:1px; background:currentColor; opacity:.35;}
 .sg-grid{display:grid; grid-template-columns:repeat(auto-fill, minmax(250px,1fr)); gap:12px 24px;}
@@ -412,12 +412,14 @@ a.link:hover{background:rgba(252,163,21,.14);}
 <main class="sg-wrap">
   <!-- v1003 (2026-10-02, Laurie): iNaturalist + eBird moved here from Signs + Signals -->
   <h1 class="sg-head">Society Pages</h1>
-  <p class="sg-sub">Who's getting noticed in the Hilltowns this fortnight. Submit tips via <a href="https://www.inaturalist.org/observations/upload" target="_blank" rel="noopener">iNaturalist</a> or <a href="https://ebird.org/submit" target="_blank" rel="noopener">eBird</a>.</p>
+  <!-- v1009 (2026-10-05, Laurie): intro at body-copy size, new copy, anchor to the leaderboard -->
+  <p class="sg-det sg-intro" style="margin:4px 0 22px">Who's been getting noticed in the Hilltowns lately! Submit your hot tips via <a href="https://www.inaturalist.org/observations/upload" target="_blank" rel="noopener">iNaturalist</a> or <a href="https://ebird.org/submit" target="_blank" rel="noopener">eBird</a> to help them make the <a href="#hilltown-hotties">Hilltown Hotties</a> list!</p>
   <p id="sg-status"></p>
 
   <h2 class="sg-sec">Seen lately · iNaturalist</h2>
   <p class="sg-det" style="margin:0 0 10px">Research-grade observations within about 40 km of Berne — Helderbergs to the northern Catskills, Schoharie to the Hudson.</p>
   <div class="sg-grid" id="inat-grid"><p class="ph-empty">Loading observations…</p></div>
+  <div id="hilltown-hotties" style="scroll-margin-top:90px"></div>
   <div id="inat-list"></div>
   <p class="sg-note" id="inat-note"></p>
   <a class="sg-btn" id="inat-more" href="https://www.inaturalist.org/observations?quality_grade=research&subview=map&lat=42.6248&lng=-74.135&radius=40" target="_blank" rel="noopener" style="display:inline-block; text-decoration:none">Explore more on iNaturalist &rarr;</a>

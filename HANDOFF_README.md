@@ -1,7 +1,31 @@
-# NY Hilltowners Folk Atlas — Session Handoff (2026-10-02, v1007)
+# NY Hilltowners Folk Atlas — Session Handoff (2026-10-05, v1012)
 
-> **Where things stand (for the next chat).** Baseline is **v1007**; next version continues from **v1008**. Laurie has
-> deployed through v980; v981–v1007 ship together — the v1007 CHANGED-ONLY zip carries everything since v980.
+> **Where things stand (for the next chat).** Baseline is **v1012**; next version continues from **v1013**. Laurie has
+> deployed through v980; v981–v1012 ship together — the v1012 CHANGED-ONLY zip carries everything since v980.
+> **v1012:** heating-degree-day chart gets the snow chart's **By calendar year / By winter (July–June)** switch
+> (`#hdd-mode`, `_hddMode`). `winterFromDaily()` (Berne/ERA5) and `winterFromStation()` (co-op stations) now accumulate
+> `hdd` alongside `snow`, keyed to the July year, index 0 = Jul 1; same `shift:6` / `curYear` / `label` options as snow.
+> **v1011:** `USGS_KEY` filled in (signals.js; public in the page like the eBird key, per Laurie — regenerate at
+> api.waterdata.usgs.gov if it ever needs rotating). Nothing else changed from v1010; live verification still pending.
+> **v1010 = USGS water feed moved to the modern Water Data API.** waterservices.usgs.gov has returned 503 for days and is
+> being retired (degradation from Aug 2026, off Q1 2027). signals.js now has an adapter (`usgsQuery`/`usgsLocations`/
+> `usgsIV`/`waterIV`, above `WATER_BBOX_KM`) that calls `api.waterdata.usgs.gov/ogcapi/v1/collections/{monitoring-locations,
+> continuous,daily}/items` (CQL2 `filter=monitoring_location_id IN (...) AND parameter_code IN (...)`, comma-list retry on
+> 400, v0 retry on 404, `datetime=P1D/P7D/P30D`, `properties=` trimmed, rel=next paging) and the statistics API
+> (`statistics/v0/observationNormals?normal_type=DOY`) — and hands the page the OLD iv JSON shape, so cards/charts/map are
+> untouched. Legacy URL tried once as fallback; status line names which failed. 30-day range bars now come from the `daily`
+> collection (one feature per observation makes 30 d of 15-min data too big). `USGS_KEY` = '' — **Laurie: paste the API
+> key from the signup email** (the Account ID she sent is not the key). UNVERIFIED LIVE (sandbox cannot reach the API):
+> CORS from the browser, CQL2 acceptance, the statistics response schema (parsed defensively), v1 vs v0. Harness mocks all
+> four endpoints with legacy answering 503 — passes.
+> **v1009:** Society Pages intro now body-copy size (`.sg-det` 13px, not the italic `.sg-sub`) and reads: "Who's been
+> getting noticed in the Hilltowns lately! Submit your hot tips via iNaturalist or eBird to help them make the Hilltown
+> Hotties list!" — iNaturalist/eBird link to their upload pages; "Hilltown Hotties" anchors to `#hilltown-hotties`, an
+> empty div just above the leaderboard (`#inat-list`), scroll-margin 90px for the sticky header.
+> **v1008:** Signs + Signals winds aloft: the 100 hPa row (mislabelled "tropopause; where jets fly" — jets cruise near
+> 250 hPa) is replaced by **700 hPa · ~3 km** with relative humidity and temperature like 850 (sub-line: "saturated here
+> and at 850: rain or snow within the hour"). Rows now 850 / 700 / 500 / 10 hPa; query adds relative_humidity_700hPa,
+> temperature_700hPa (GEM, GFS fallback). Header "Stratospheric wind" (skyline.js) is a separate fetch, unchanged.
 > **v1007:** iNaturalist area is now a 40 km **circle** around Berne (`lat/lng/radius`) instead of the ±40 km square,
 > whose corners reached ~56 km (Ghent, Columbia Co. turned up). Still includes County Knolls (~41 km) and the
 > Troy/Rensselaer side of the Hudson; Laurie chose this over a Hudson/Mohawk river cut (options 2–3, not built). The
@@ -332,6 +356,11 @@ Fixed-hinge wingbeat, 4 white wing-spots. Day-only, reduced-motion safe. The
 
 ## UX state (recent)
 
+- **v1012 (2026-10-05, Laurie):** `signals.js` winter HDD series + `_hddMode`; `signals.html` `#hdd-mode` segment.
+- **v1011 (2026-10-05, Laurie):** `signals.js` USGS_KEY.
+- **v1010 (2026-10-05, Laurie):** `signals.js` USGS adapter + six call sites; `scripts/signals_harness/run.js` modern-API mocks; README.
+- **v1009 (2026-10-05, Laurie):** `society.html` intro copy/size + `#hilltown-hotties` anchor.
+- **v1008 (2026-10-05, Laurie):** `signals.html` wind rows; `signals.js` levels + 700 RH/temp.
 - **v1007 (2026-10-02, Laurie):** `signals.js` iNat query circle; `society.html` explore link.
 - **v1006 (2026-10-02, Laurie):** `data/events.xlsx` 7 rows (addresses, coords, Agenda=No); `data/agenda_quiet.txt` 3 rules.
 - **v1005 (2026-10-02, Laurie):** `data/events.xlsx` ← events_81 (+ row 2905 hidden).
@@ -682,7 +711,7 @@ Big ongoing effort to tame tag sprawl. Started at 2,332 unique tags; now ~2,178.
 7. Clean-room verify: unzip the package fresh, rebuild, confirm BUILD OK.
 8. `present_files` the zip + both xlsx.
 
-Version at handoff: **v1007**. Next chat continues from v1008. Harness in `scripts/signals_harness/` (Signals).
+Version at handoff: **v1012**. Next chat continues from v1013. Harness in `scripts/signals_harness/` (Signals).
 
 ---
 

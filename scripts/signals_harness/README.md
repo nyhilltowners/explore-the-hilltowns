@@ -18,3 +18,8 @@ Fixture site numbers match the real transect (01350000, 01350100, 01350480, 0135
 01359165, 01359525, 01362230, 01372058 …) so ordering and chain assignment are exercised for real.
 OpenFreeMap is unreachable from the sandbox, so the harness always exercises the Esri raster FALLBACK, never the
 grey/blue vector style — that must be eyeballed live.
+
+v1010 (2026-10-05): the harness now mocks the modern USGS Water Data API (monitoring-locations, continuous, daily,
+statistics/observationNormals) and answers 503 for waterservices.usgs.gov, so the adapter path in signals.js is what gets
+tested. The statistics mock uses a guessed response schema (month/day/computation_type/value/year) — confirm against the
+live API once a key is in place.

@@ -61,6 +61,36 @@ const rdb = ['# stats', 'agency_cd\tsite_no\tparameter_cd\tts_id\tloc_web_ds\tmo
     const u = route.request().url();
     if (u.includes('maplibre-gl.min.js')) return route.fulfill({ path: path.join(__dirname, 'node_modules/maplibre-gl/dist/maplibre-gl.js'), contentType: 'application/javascript' });
     if (u.includes('maplibre-gl.min.css')) return route.fulfill({ path: path.join(__dirname, 'node_modules/maplibre-gl/dist/maplibre-gl.css'), contentType: 'text/css' });
+
+    /* v1010: modern USGS API mocks — built FROM the legacy fixtures so the two stay in step */
+    if (u.includes('api.waterdata.usgs.gov/ogcapi/v1/collections/monitoring-locations/items')) {
+      const feats=[]; const seen={}; fixture.value.timeSeries.forEach(t=>{ const sn=t.sourceInfo.siteCode[0].value; if(seen[sn]) return; seen[sn]=1; const g=t.sourceInfo.geoLocation.geogLocation; let stc=''; (t.sourceInfo.siteProperty||[]).forEach(p=>{ if(p.name==='siteTypeCd') stc=p.value; });
+        feats.push({type:'Feature', id:'USGS-'+sn, geometry:{type:'Point', coordinates:[g.longitude, g.latitude]}, properties:{monitoring_location_id:'USGS-'+sn, monitoring_location_name:t.sourceInfo.siteName, site_type_code:stc||(sn.length>=15?'GW':'ST'), altitude: sn.length>=15 ? 300+Number(sn.slice(0,3))%40 : 100}}); });
+      return route.fulfill({ json:{ type:'FeatureCollection', features:feats, links:[] } });
+    }
+    if (u.includes('api.waterdata.usgs.gov/ogcapi/v1/collections/continuous/items')) {
+      const dec=decodeURIComponent(u); const period=(dec.match(/datetime=(P\d+D)/)||['','P1D'])[1]; const now=Date.now();
+      const want=(dec.match(/monitoring_location_id IN \(([^)]*)\)/)||[])[1]; const ids=want?want.replace(/'/g,'').split(',').map(x=>x.replace('USGS-','')):null;
+      const codesM=(dec.match(/parameter_code IN \(([^)]*)\)/)||[])[1]; const codes=codesM?codesM.replace(/'/g,'').split(','):null;
+      const feats=[];
+      if(period==='P7D'){ const N=7*24*4; const pts=(sn,code,fn)=>{ for(let i=0;i<N;i++) feats.push({type:'Feature', geometry:{type:'Point',coordinates:[-74,42]}, properties:{monitoring_location_id:'USGS-'+sn, parameter_code:code, time:new Date(now-(N-i)*900000).toISOString(), value:fn(i/N), qualifier:null}}); };
+        (ids||[]).forEach((sn,k)=>{ if(sn==='01372058') return; if(sn.length>=15) pts(sn,'72019',f=>9.3+0.15*Math.sin(f*6)+(k%3)*0.05); else if(sn==='01350100'||sn==='01329490'||sn==='01350199') pts(sn,'62615',f=>1128+0.5*f); else if(sn==='01359165') pts(sn,'62620',f=>1.5+2*Math.sin(f*7*2*Math.PI*1.93)); else pts(sn,'00065',f=>3.8-0.2*f+(f>0.85?(f-0.85)*7*(1+k%4):0)); });
+      } else {
+        fixture.value.timeSeries.forEach(t=>{ const sn=t.sourceInfo.siteCode[0].value, code=t.variable.variableCode[0].value; if(ids && ids.indexOf(sn)<0) return; if(!ids && !/bbox=/.test(dec)) return; if(codes && codes.indexOf(code)<0) return; const g=t.sourceInfo.geoLocation.geogLocation;
+          t.values[0].value.forEach(v=>{ feats.push({type:'Feature', geometry:{type:'Point',coordinates:[g.longitude,g.latitude]}, properties:{monitoring_location_id:'USGS-'+sn, parameter_code:code, time:v.dateTime, value:(v.value==='-999999'?null:Number(v.value)), qualifier:(v.qualifiers||[]).join(',')||null}}); }); });
+      }
+      return route.fulfill({ json:{ type:'FeatureCollection', features:feats, numberReturned:feats.length, links:[] } });
+    }
+    if (u.includes('api.waterdata.usgs.gov/ogcapi/v1/collections/daily/items')) {
+      const dec=decodeURIComponent(u); const sn=((dec.match(/monitoring_location_id IN \(([^)]*)\)/)||[])[1]||'').replace(/'/g,'').replace('USGS-',''); const codes=((dec.match(/parameter_code IN \(([^)]*)\)/)||[])[1]||'').replace(/'/g,'').split(',').filter(Boolean);
+      const feats=[]; const now=Date.now(); codes.forEach(c=>{ for(let i=0;i<30;i++) feats.push({type:'Feature', properties:{monitoring_location_id:'USGS-'+sn, parameter_code:c, statistic_id:'00003', time:new Date(now-i*86400000).toISOString().slice(0,10), value:1+Math.sin(i/9)*0.6+i/300}}); });
+      return route.fulfill({ json:{ type:'FeatureCollection', features:feats, links:[] } });
+    }
+    if (u.includes('api.waterdata.usgs.gov/statistics/v0/observationNormals')) {
+      const dec=decodeURIComponent(u); const sn=(dec.match(/monitoring_location_id=USGS-([^&]+)/)||['',''])[1]; const codes=((dec.match(/parameter_code=([^&]+)/)||['',''])[1]).split(',');
+      const d=new Date(); const items=[]; codes.forEach(c=>{ [['arithmetic_mean',10.5,''],['maximum',40.2,'2011'],['minimum',1.1,'1964']].forEach(([ct,v,yr])=>{ items.push({monitoring_location_id:'USGS-'+sn, parameter_code:c, month:d.getMonth()+1, day:d.getDate(), computation_type:ct, value:v, year:yr, begin_year:'1950', end_year:'2025'}); }); });
+      return route.fulfill({ json:{ items } });
+    }
     if (u.includes('waterservices.usgs.gov/nwis/iv') && u.includes('period=P7D')) {
       const sites=(u.match(/sites=([^&]+)/)||['',''])[1].split(','); const now=Date.now(); const N=7*24*4;
       const mk=(sn,code,fn)=>({ sourceInfo:{siteName:'X',siteCode:[{value:sn}],geoLocation:{geogLocation:{latitude:42,longitude:-74}}}, variable:{variableCode:[{value:code}]}, values:[{ value: Array.from({length:N},(_,i)=>({value:String(fn(i/N)), dateTime:new Date(now-(N-i)*900000).toISOString()})) }] });
@@ -71,7 +101,7 @@ const rdb = ['# stats', 'agency_cd\tsite_no\tparameter_cd\tts_id\tloc_web_ds\tmo
       return route.fulfill({ json:{ value:{ timeSeries: ts } } });
     }
     if (u.includes('waterservices.usgs.gov/nwis/iv') && u.includes('period=P30D')) { const m=u.match(/sites=([^&]+)/); const sn=m?m[1]:''; const codes=(u.match(/parameterCd=([^&]+)/)||['',''])[1].split(','); const now=Date.now(); return route.fulfill({ json:{ value:{ timeSeries: codes.map(c=>({ sourceInfo:{siteName:'X',siteCode:[{value:sn}],geoLocation:{geogLocation:{latitude:42,longitude:-74}}}, variable:{variableCode:[{value:c}]}, values:[{ value: Array.from({length:120},(_,i)=>({value:String(1+Math.sin(i/9)*0.6+i/300), dateTime:new Date(now-(120-i)*6*3600000).toISOString()})) }] })) } } }); }
-    if (u.includes('waterservices.usgs.gov/nwis/iv')) return route.fulfill({ json: fixture });
+    if (u.includes('waterservices.usgs.gov/')) return route.fulfill({ status:503, body:'Service Unavailable' });   /* v1010: legacy is dead; only the modern API answers */
     if (u.includes('archive-api.open-meteo.com')) { const t=[],mx=[],mn=[],pp=[],rr=[],ss=[]; const start=Date.UTC(2024,0,1), end=Date.now()-86400000; for(let d=start; d<=end; d+=86400000){ const dt=new Date(d); t.push(dt.toISOString().slice(0,10)); const doy=(d-Date.UTC(dt.getUTCFullYear(),0,1))/86400000; mx.push(50+30*Math.sin((doy-100)/58)); mn.push(35+30*Math.sin((doy-100)/58)); const p=(doy%5===0)?0.4:0; pp.push(p); rr.push(p); ss.push(0); } const daily=u.includes('precipitation_sum')?{time:t,precipitation_sum:pp,rain_sum:rr,snowfall_sum:ss}:{time:t,temperature_2m_max:mx,temperature_2m_min:mn}; return route.fulfill({ json:{ daily } }); }
     if (u.includes('api.inaturalist.org')) {
       const mk=(id,name,sci,iconic,anc,daysAgo)=>({id, taxon:{name:sci, preferred_common_name:name, iconic_taxon_name:iconic, ancestor_ids:anc}, photos:[{url:'https://x/square.jpg', license_code:null}], time_observed_at:new Date(Date.now()-daysAgo*86400000).toISOString(), user:{login:'obs'}, place_guess:'Berne, NY'});
@@ -88,6 +118,9 @@ const rdb = ['# stats', 'agency_cd\tsite_no\tparameter_cd\tts_id\tloc_web_ds\tmo
   });
   await page.goto('http://localhost:8765/signals.html');
   await page.waitForTimeout(6000);
+  console.log('usgs:', await page.evaluate(()=>performance.getEntriesByType('resource').map(e=>e.name).filter(n=>/usgs/.test(n)).map(n=>n.replace(/^https:\/\/[^/]+/,'').slice(0,70)).join('\n  ')));
+  console.log('panel-text:', await page.evaluate(()=>{ const p=[...document.querySelectorAll('.w7-panel')].find(x=>x.innerText.trim()); return p?p.innerText.replace(/\n/g,' / ').slice(0,500):'none'; }));
+
   const info = await page.evaluate(() => ({
     markers: document.querySelectorAll('.maplibregl-marker').length,
     pins: document.querySelectorAll('.wpin').length,
@@ -100,7 +133,7 @@ const rdb = ['# stats', 'agency_cd\tsite_no\tparameter_cd\tts_id\tloc_web_ds\tmo
   const pins = await page.$$('.wpin'); if (pins.length) { await pins[0].click({force:true}); await page.waitForTimeout(600); }
   const popTxt = await page.evaluate(() => { const p = document.querySelector('.maplibregl-popup-content'); if (!p) return 'NO POPUP'; const b = p.querySelector('.wpop b'); return getComputedStyle(b).color + ' | ' + p.innerText.slice(0, 80); });
   console.log('popup:', popTxt);
-  await page.click('#w7-schoharie', {position:{x:600,y:100}}); await page.waitForTimeout(300); console.log('panel:', await page.evaluate(() => { const p=document.getElementById('w7-schoharie-panel'); return p.className+' || '+p.innerText.replace(/\n/g,' / ').slice(0,160)+' || hot='+document.querySelectorAll('.wpin.hot').length; }));
+  await page.click('#w7-schoharie', {position:{x:600,y:100}}); await page.waitForTimeout(300); console.log('panel:', await page.evaluate(() => { const p=document.getElementById('w7-schoharie-panel'); return p.className+' || '+p.innerText.replace(/\n/g,' / ').slice(0,420)+' || hot='+document.querySelectorAll('.wpin.hot').length; }));
   console.log('status:', await page.evaluate(()=>(document.getElementById('sg-status')||{}).textContent||''));
   console.log('w7:', await page.evaluate(() => ['w7-schoharie','w7-mohawk','w7-hudson','w7-esopus','w7-tidal','w7-wells','w7-lakes'].map(id => id+'='+document.querySelectorAll('#'+id+' polyline').length).join(' ')));
   /* v978: step through the chain with the ‹ › buttons and report the order visited */
