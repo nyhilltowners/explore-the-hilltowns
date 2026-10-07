@@ -1574,7 +1574,31 @@ def emit_phenology_expected():
         WARNS.append("microseasons.xlsx: no 'Entries (Long Form)' sheet"); return
     rows = list(wb["Entries (Long Form)"].iter_rows(values_only=True))
     ix = {str(h).strip().lower(): i for i, h in enumerate(rows[0]) if h}
-    CATS = ["Sky & Light", "Weather & Ground", "Flora & Phenology", "Birds", "Animals", "Insects & Fungi", "Garden & Orchard", "Foodways", "Nature Health Watch"]  # renamed v890  # Ghost retired v876 (2026-09-25)
+    # v1016 (2026-10-07, Laurie): batch-12 workbook renames the categories to six — Stars & Sky, Weather & Wonders, Flora,
+    # Fauna, Garden & Orchard, Foodways — and adds a "Key Visuals" sheet (one or two Wikimedia Commons images per category
+    # per microseason) that the Phenology card shows in its left rail. Older names kept so an old workbook still sorts.
+    CATS = ["Stars & Sky", "Weather & Wonders", "Flora", "Fauna", "Garden & Orchard", "Foodways",
+            "Sky & Light", "Weather & Ground", "Flora & Phenology", "Birds", "Animals", "Insects & Fungi", "Nature Health Watch"]
+    # entries may carry <i>…</i> (Latin names) and site-internal <a href="directory.html|calendar.html"> links; everything else stays escaped
+    def _rich(t):
+        t = html_mod.escape(t)
+        t = re.sub(r"&lt;(/?)(i|em|b)&gt;", r"<\1\2>", t)
+        t = re.sub(r"&lt;a href=&quot;((?:directory|calendar|signals|society|about)\.html(?:#[\w-]+)?)&quot;&gt;", r'<a href="\1">', t)
+        t = t.replace("&lt;/a&gt;", "</a>")
+        return t
+    visuals = {}
+    if "Key Visuals" in wb.sheetnames:
+        vrows = list(wb["Key Visuals"].iter_rows(values_only=True))
+        vix = {str(h).strip().lower(): i for i, h in enumerate(vrows[0]) if h}
+        for r in vrows[1:]:
+            gv = lambda k: (str(r[vix[k]]).strip() if vix.get(k) is not None and len(r) > vix[k] and r[vix[k]] is not None else "")
+            try: vn = int(float(gv("season #")))
+            except ValueError: continue
+            url = gv("image url (1600px)"); page = gv("commons file page")
+            if not url: continue
+            visuals.setdefault(vn, []).append({"cat": gv("category"), "subject": gv("subject"), "page": page,
+                                               "thumb": url.replace("?width=1600", "?width=320"), "thumb2x": url.replace("?width=1600", "?width=640"),
+                                               "credit": gv("author / credit"), "licence": gv("licence")})
     out, byn = [], {}
     for r in rows[1:]:
         g = lambda k: (str(r[ix[k]]).strip() if ix.get(k) is not None and r[ix[k]] is not None else "")
@@ -1592,12 +1616,13 @@ def emit_phenology_expected():
         sec = next((s for s in rec["sections"] if s["cat"] == cat), None)
         if not sec:
             sec = {"cat": cat, "items": []}; rec["sections"].append(sec)
-        sec["items"].append(html_mod.escape(entry))
+        sec["items"].append(_rich(entry))
     for rec in out:
         rec["sections"].sort(key=lambda s: CATS.index(s["cat"]) if s["cat"] in CATS else 99)
+        rec["visuals"] = visuals.get(rec["n"], [])
     out.sort(key=lambda r: r["n"])
     (SITE / "phenology_expected.js").write_text("window.PHENOLOGY_EXPECTED = " + json.dumps(out, ensure_ascii=False) + ";\n", encoding="utf-8")
-    print(f"  Expected phenology: {len(out)} microseasons, {sum(len(s['items']) for r in out for s in r['sections'])} entries in sections → phenology_expected.js")
+    print(f"  Expected phenology: {len(out)} microseasons, {sum(len(s['items']) for r in out for s in r['sections'])} entries in sections, {sum(len(r['visuals']) for r in out)} key visuals → phenology_expected.js")
 
 def main() -> int:
     manifest = json.loads((ROOT / "manifest.json").read_text(encoding="utf-8"))
@@ -1699,6 +1724,9 @@ def main() -> int:
         shutil.copyfile(ROOT / "signals.js", SITE / "signals.js")
     if (ROOT / "water.js").exists():
         shutil.copyfile(ROOT / "water.js", SITE / "water.js")   # v982: waterwip.html's script
+    for _f in ("fuel-config.js", "fuel-comfort-calculator.js"):   # v1014 (2026-10-06, Laurie): fuel & comfort calculator on signals.html
+        if (ROOT / _f).exists():
+            shutil.copyfile(ROOT / _f, SITE / _f)
     emit_station_dd()
     emit_phenology_history()
     emit_phenology_expected()

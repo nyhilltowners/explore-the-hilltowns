@@ -1,7 +1,49 @@
-# NY Hilltowners Folk Atlas — Session Handoff (2026-10-05, v1012)
+# NY Hilltowners Folk Atlas — Session Handoff (2026-10-07, v1017)
 
-> **Where things stand (for the next chat).** Baseline is **v1012**; next version continues from **v1013**. Laurie has
-> deployed through v980; v981–v1012 ship together — the v1012 CHANGED-ONLY zip carries everything since v980.
+> **Where things stand (for the next chat).** Baseline is **v1017**; next version continues from **v1018**. Laurie has
+> deployed through v980; v981–v1017 ship together — the v1017 CHANGED-ONLY zip carries everything since v980.
+> **v1017:** `data/events.xlsx` replaced wholesale with Laurie's `events_82.xlsx` (Events 2,950 → 3,031 rows; Display=Yes
+> 2,917 → 2,999; Ingest Log 809 → 1,078; Sources and the 35 agenda-flagged events unchanged; same schema). Build drops 692
+> past non-recurring events → **2,309 event records** mapped. No code change.
+> **v1016:** microseasons **batch 12** — `data/microseasons.xlsx` replaced wholesale (old copy at
+> `data/archive/microseasons_2026-09-30_pre-batch12.xlsx`): 535 entries (was 612) in **six categories** — Stars & Sky,
+> Weather & Wonders, Flora, Fauna, Garden & Orchard, Foodways (the nine v890 names are kept in `CATS` only as a sort
+> fallback). Entries now carry `<i>` Latin names and a few site-internal `<a href="directory.html">` links; `_rich()` in
+> `emit_phenology_expected()` escapes everything then re-admits only i/em/b and links to our own pages. **Key Visuals**
+> sheet ingested → `visuals[]` per microseason (`cat, subject, page, thumb 320px, thumb2x 640px, credit, licence`), built
+> from the sheet's Commons `Special:FilePath…?width=1600` URL. **Phenology card layout:** each category section is now a
+> row — left rail `.ph-vis` (96 px thumbnails, 64 px on phones, one per key visual, linking to the Commons file page,
+> hidden if the image fails) beside the entries, mirroring the On-record year/glyph rail. **Gaps for Laurie:** 42 of the
+> 152 key-visual rows have a Subject but no file page/URL yet (e.g. Beehive in winter, Grange hall, Apple butter, Shagbark
+> hickory bark, Leo, Hemlock ravine, Ramps) — those sections render without a thumbnail until filled; the Licence and
+> Author/credit columns are empty throughout — the thumbnail's link to the file page is the minimum attribution for
+> CC-BY/CC-BY-SA images, but a credit line would be better once the columns are filled (the ingest already carries them
+> into the `title` tooltip). Commons is unreachable from the sandbox, so the thumbnails were verified for layout only.
+> **v1015:** the two-card phenology strip is split across pages. Signs & Signals: section renamed **"On the Record"**,
+> one full-width historical-events card per fortnight (`#ph-row`, mode `hist`). Society Pages: new **"Phenology"** section
+> at the top under the intro, the microseason/"Predicted" card full width (`#px-row`, mode `ex`; `phenology_expected.js`
+> now loaded there). `renderPhenology(opts)` in signals.js takes `{mode, prefix}` and `init()` calls it once per page;
+> `.ph-pair.ph-single{grid-template-columns:1fr}` in both pages' CSS. Headless check: 24 panes each, current card 1040 px
+> wide in a 1044 px row, no page errors.
+> **v1014:** (a) **Amtrak complete** — all 148 active Amtrak stations that were missing from the Transportation sheet were
+> added (rows 1991–2138; 537 active stations on the authoritative list, 389 already present, Albany–Rensselaer and Hudson
+> present without codes and left alone). Coordinates/address/phone from Google Places, every pin checked against its state's
+> bounding box; Name `<Name> Amtrak Station (CODE)`, Tags `Train Station; Amtrak; Transit`, 🚉, Website amtrak.com/stations/<code>.
+> Includes Vancouver Pacific Central (VAC, Cascades terminus) and two seasonal stops (NYF State Fair, WPR Winter Park Express),
+> flagged in Notes. Taylor TX (TAY) has a city-only address — Places has no street for the platform. The amtrak.com previews
+> can't be fetched from the sandbox (3,100-odd warnings); they resolve on the GitHub build. Export regenerated:
+> `train_stations_transportation.xlsx` (899 rows). (b) **Fuel & comfort calculator** on Signs & Signals, between
+> Year-by-year weather history and Water levels: Laurie's portable bundle from the Prophetstown build (v8). Files
+> `fuel-config.js` (window.FUEL_CONFIG — Berne lat/lng, NY, placeholder prices, equipment, install ballparks, EIA key **blank**)
+> and `fuel-comfort-calculator.js` (byte-identical to the Prophetstown module), both copied to site/ by build.py; CSS pasted
+> into signals.html's second `<style>` block. It fetches a 20-year Open-Meteo ERA5 daily archive for Berne itself and ranks
+> heat pump/gas/propane/oil/resistance by $ per MMBtu delivered; headless check with a mocked archive rendered cleanly
+> (7,247 HDD/yr, seasonal COP 3.06 on the mock). Unit test: `node scripts/fuel_harness/fuel_calc_math_test.js`. **Open for
+> Laurie:** set `keys.eia` in fuel-config.js for live NY electricity/gas prices (free key at eia.gov/opendata/register.php),
+> and replace the placeholder propane/oil prices; confirm the section placement.
+> **v1013:** two independent groceries added to Other Necessities (rows 3074–3075): Afghan International Market (484 Central
+> Ave Ste 2, Albany; halal market/butcher, 10am–10pm daily) and Ebisu Life Store (20 B Wolf Rd, Colonie; Japanese grocery +
+> stationery/housewares, 11am–8:30pm, Fri–Sat to 9pm). Hours/coords/phone from Google Places; no websites found; descriptions blank.
 > **v1012:** heating-degree-day chart gets the snow chart's **By calendar year / By winter (July–June)** switch
 > (`#hdd-mode`, `_hddMode`). `winterFromDaily()` (Berne/ERA5) and `winterFromStation()` (co-op stations) now accumulate
 > `hdd` alongside `snow`, keyed to the July year, index 0 = Jul 1; same `shift:6` / `curYear` / `label` options as snow.
@@ -356,6 +398,11 @@ Fixed-hinge wingbeat, 4 white wing-spots. Day-only, reduced-motion safe. The
 
 ## UX state (recent)
 
+- **v1017 (2026-10-07, Laurie):** `data/events.xlsx` ← events_82 (2,950 → 3,031 rows; wholesale replace, no code change).
+- **v1016 (2026-10-07, Laurie):** microseasons batch 12 (six categories, 535 entries, Key Visuals sheet); Phenology card shows per-category Commons thumbnails in a left rail. build.py `emit_phenology_expected()` + signals.js + CSS in signals.html/society.html.
+- **v1015 (2026-10-06, Laurie):** "Phenology" → "On the Record" on signals.html (historical card only, full width); microseason card moved to the top of society.html under "Phenology". `renderPhenology({mode,prefix})`.
+- **v1014 (2026-10-06, Laurie):** Transportation +148 Amtrak stations (now every active station, 537); Fuel & comfort calculator added to signals.html (`fuel-config.js`, `fuel-comfort-calculator.js`, `scripts/fuel_harness/`); build.py copies the two fuel files.
+- **v1013 (2026-10-05, Laurie):** `points_of_interest.xlsx` Other Necessities +2.
 - **v1012 (2026-10-05, Laurie):** `signals.js` winter HDD series + `_hddMode`; `signals.html` `#hdd-mode` segment.
 - **v1011 (2026-10-05, Laurie):** `signals.js` USGS_KEY.
 - **v1010 (2026-10-05, Laurie):** `signals.js` USGS adapter + six call sites; `scripts/signals_harness/run.js` modern-API mocks; README.
@@ -711,7 +758,7 @@ Big ongoing effort to tame tag sprawl. Started at 2,332 unique tags; now ~2,178.
 7. Clean-room verify: unzip the package fresh, rebuild, confirm BUILD OK.
 8. `present_files` the zip + both xlsx.
 
-Version at handoff: **v1012**. Next chat continues from v1013. Harness in `scripts/signals_harness/` (Signals).
+Version at handoff: **v1017**. Next chat continues from v1018. Harness in `scripts/signals_harness/` (Signals).
 
 ---
 

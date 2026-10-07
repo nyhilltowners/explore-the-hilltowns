@@ -442,8 +442,11 @@
   }
 
   /* ---------- Phenology: one PAIR per fortnight — expected (microseasons) beside on-record (register) ---------- */
-  function renderPhenology(){
-    var EV = window.PHENOLOGY_HISTORY || [], EX = window.PHENOLOGY_EXPECTED || [], row=$('ph-row'); if(!row) return;
+  /* v1015 (2026-10-06, Laurie): one renderer, two homes. mode 'hist' = "On the Record" on Signs & Signals (full-width
+     historical card per fortnight); mode 'ex' = "Phenology" microseason card at the top of Society Pages. ids: prefix+'-row/-prev/-next/-title'. */
+  function renderPhenology(opts){
+    opts = opts || {}; var mode = opts.mode || 'hist', pre = opts.prefix || 'ph';
+    var EV = window.PHENOLOGY_HISTORY || [], EX = window.PHENOLOGY_EXPECTED || [], row=$(pre+'-row'); if(!row) return;
     var MON=['January','February','March','April','May','June','July','August','September','October','November','December'];
     function dim(m){ return new Date(2001, m, 0).getDate(); }
     var esc=function(v){ return String(v||'').replace(/[&<>"]/g,function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); };
@@ -479,7 +482,12 @@
       var label = MON[w.m-1]+' '+w.lo+'–'+(w.hi===15?15:dim(w.m));
       var ex = EX[idx];
       var exCard = '<article class="ph-card'+(idx===curIdx?' cur':'')+'"><div class="ph-head"><div><p class="ph-sub">Predicted</p><div class="ph-win">'+(ex?esc(ex.name):label)+'</div></div><div class="ph-count">'+label+'</div></div>'
-        + (ex ? ex.sections.map(function(sec){ var k=({'Ghost':'ghost','Health Watch':'health','Nature Health Watch':'health','Garden':'garden','Garden & Orchard':'garden','Foodways':'foodways'})[sec.cat]||'plain'; return '<div class="ph-sec"><div class="ph-sech">'+esc(sec.cat)+'</div><ul class="ph-list">'+sec.items.map(function(h){ return '<li><div class="ph-kind '+k+'">'+h+'</div></li>'; }).join('')+'</ul></div>'; }).join('') : '<p class="ph-empty">No microseason text for this window.</p>')+'</article>';
+        + (ex ? ex.sections.map(function(sec){ var k=({'Ghost':'ghost','Health Watch':'health','Nature Health Watch':'health','Garden':'garden','Garden & Orchard':'garden','Foodways':'foodways'})[sec.cat]||'plain';
+            /* v1016 (2026-10-07, Laurie): left rail carries the category's key visual(s) from the workbook's "Key Visuals" sheet —
+               a Commons thumbnail (320/640 px) linking to the file page for attribution — in the slot the On-record card uses for year + glyph */
+            var vis=(ex.visuals||[]).filter(function(v){ return v.cat===sec.cat && v.thumb; });
+            var rail='<div class="ph-vis">'+vis.map(function(v){ return '<a href="'+esc(v.page||v.thumb)+'" target="_blank" rel="noopener" title="'+esc(v.subject)+(v.credit?' — '+esc(v.credit):'')+' (Wikimedia Commons)"><img src="'+esc(v.thumb)+'" srcset="'+esc(v.thumb)+' 1x, '+esc(v.thumb2x||v.thumb)+' 2x" alt="'+esc(v.subject)+'" loading="lazy" onerror="this.parentNode.style.display=\'none\'"></a>'; }).join('')+'</div>';
+            return '<div class="ph-sec ph-sec-vis"><div class="ph-sech">'+esc(sec.cat)+'</div><div class="ph-secrow">'+rail+'<ul class="ph-list">'+sec.items.map(function(h){ return '<li><div class="ph-kind '+k+'">'+h+'</div></li>'; }).join('')+'</ul></div></div>'; }).join('') : '<p class="ph-empty">No microseason text for this window.</p>')+'</article>';
       var items = EV.filter(function(e){ return e.m===w.m && e.d>=w.lo && e.d<=w.hi; }).sort(function(a,b){ return (a.y-b.y)||(a.d-b.d); });
       var hist = '<article class="ph-card'+(idx===curIdx?' cur':'')+'"><div class="ph-head"><div><p class="ph-sub">On record</p><div class="ph-win">'+label+'</div></div><div class="ph-count">'+items.length+' event'+(items.length===1?'':'s')+'</div></div>'
         + (items.length ? '<ol class="ph-list">'+items.map(function(e){
@@ -489,16 +497,16 @@
               + (e.impact?'<div class="ph-meta">'+esc(e.impact.length>200?e.impact.slice(0,197)+'…':e.impact)+'</div>':'')
               + '<div class="ph-src">'+(e.url?'<a href="'+esc(e.url)+'" target="_blank" rel="noopener">'+esc(e.source||'source')+'</a>':esc(e.source))+'</div></div></li>'; /* 2026-09-27 (v898, Laurie): confidence note removed from display */
           }).join('')+'</ol>' : '<p class="ph-empty">Nothing on record for this fortnight yet.</p>')+'</article>';
-      return '<div class="ph-pair" id="ph-win-'+idx+'">'+hist+exCard+'</div>';
+      return '<div class="ph-pair ph-single" id="'+pre+'-win-'+idx+'">'+(mode==='ex'?exCard:hist)+'</div>';
     }).join('');
     var ys=EV.map(function(e){ return e.y; });
     if($('ph-note')) $('ph-note').textContent = EX.length+' microseasons in '+(EX.length?EX.reduce(function(n,x){ return n+x.sections.reduce(function(m,s){ return m+s.items.length; },0); },0):0)+' entries · '+EV.length+' events on the register, '+Math.min.apply(null,ys)+'–'+Math.max.apply(null,ys)+' · multi-day and seasonal events sit at their anchor date · hill dates, not valley dates.';
-    function setTitle(idx){ var w=wins[idx]; $('ph-title').textContent=(idx===curIdx?'Now: ':'')+MON[w.m-1]+' '+w.lo+'–'+(w.hi===15?15:dim(w.m)); } /* 2026-09-27 (v898, Laurie): season name dropped from the title per Laurie */
-    function go(idx){ var el=$('ph-win-'+idx); if(el) row.scrollTo({left: el.offsetLeft - row.offsetLeft, behavior:'smooth'}); setTitle(idx); }
+    function setTitle(idx){ var w=wins[idx]; $(pre+'-title').textContent=(idx===curIdx?'Now: ':'')+MON[w.m-1]+' '+w.lo+'–'+(w.hi===15?15:dim(w.m)); } /* 2026-09-27 (v898, Laurie): season name dropped from the title per Laurie */
+    function go(idx){ var el=$(pre+'-win-'+idx); if(el) row.scrollTo({left: el.offsetLeft - row.offsetLeft, behavior:'smooth'}); setTitle(idx); }
     var cur=curIdx; setTitle(cur);
-    $('ph-prev').onclick=function(){ cur=(cur+23)%24; go(cur); };
-    $('ph-next').onclick=function(){ cur=(cur+1)%24; go(cur); };
-    setTimeout(function(){ var el=$('ph-win-'+curIdx); if(el) row.scrollLeft = el.offsetLeft - row.offsetLeft; }, 0);
+    $(pre+'-prev').onclick=function(){ cur=(cur+23)%24; go(cur); };
+    $(pre+'-next').onclick=function(){ cur=(cur+1)%24; go(cur); };
+    setTimeout(function(){ var el=$(pre+'-win-'+curIdx); if(el) row.scrollLeft = el.offsetLeft - row.offsetLeft; }, 0);
   }
 
   /* ---------- iNaturalist: research-grade observations in the Hilltowns box, newest observed first ---------- */
@@ -1557,10 +1565,12 @@ function fetchINat(){
   function init(){
     safeCall('iNaturalist', fetchINat);
     safeCall('eBird', fetchEBird);
-    /* v1003 (2026-10-02, Laurie): society.html shares this script but carries only the iNaturalist + eBird sections */
+    /* v1003 (2026-10-02, Laurie): society.html shares this script but carries only the iNaturalist + eBird sections;
+       v1015: plus the Phenology (microseason) window at the top, id prefix 'px' */
+    if($('px-row')) safeCall('Phenology', function(){ renderPhenology({mode:'ex', prefix:'px'}); });
     if(!$('ph-row')) return;   /* the header sky strip is drawn by skyline.js on every page */
     safeCall('Water levels', fetchWater);
-    safeCall('Phenology', renderPhenology);
+    safeCall('On the Record', function(){ renderPhenology({mode:'hist', prefix:'ph'}); });
     safeCall('Sun/moon', renderSunMoon);
     safeCall('Surface weather', fetchWx);
     safeCall('Degree days', fetchDD);

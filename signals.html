@@ -348,6 +348,16 @@ a.link:hover{background:rgba(252,163,21,.14);}
 .ph-row{display:flex; gap:14px; overflow-x:auto; scroll-snap-type:x mandatory; padding:4px 2px 14px; -webkit-overflow-scrolling:touch; scrollbar-width:thin;}
 .ph-pair{flex:0 0 100%; scroll-snap-align:start; display:grid; grid-template-columns:1fr 1fr; gap:14px;}
 @media (max-width:860px){ .ph-pair{grid-template-columns:1fr;} }
+.ph-pair.ph-single{grid-template-columns:1fr;} /* v1015 (2026-10-06, Laurie): one card per fortnight, full width */
+/* v1016 (2026-10-07, Laurie): Phenology card — key visual(s) in a left rail per category, mirroring the On-record year/glyph rail */
+.ph-secrow{display:flex; gap:12px; align-items:flex-start;}
+.ph-secrow .ph-list{flex:1; min-width:0;}
+.ph-vis{flex:none; width:96px; display:flex; flex-direction:column; gap:8px; padding-top:6px;}
+.ph-vis a{display:block; line-height:0;}
+.ph-vis img{width:96px; height:96px; object-fit:cover; border-radius:10px; border:1px solid rgba(255,255,255,.25); background:rgba(0,0,0,.25); display:block;}
+.ph-vis a:hover img{border-color:var(--gold,#c9a227);}
+@media (max-width:760px){ .ph-vis{width:64px;} .ph-vis img{width:64px; height:64px;} }
+
 .ph-card{scroll-snap-align:start; background:rgba(0,0,0,.22); border:1px solid rgba(255,255,255,.22); border-radius:14px; padding:14px 18px 10px; max-height:520px; overflow-y:auto;}
 .ph-card.cur{border-color:var(--gold,#c9a227); box-shadow:0 0 0 1px var(--gold,#c9a227) inset;}
 .ph-head{display:flex; align-items:baseline; justify-content:space-between; gap:10px; margin-bottom:8px; position:sticky; top:0; background:rgba(10,14,50,.92); padding:4px 0 6px;}
@@ -374,6 +384,28 @@ a.link:hover{background:rgba(252,163,21,.14);}
 #sg-status{font-size:12px; color:#f0b67f; margin:8px 0 0; min-height:1.2em;}
 .dd{display:grid; grid-template-columns:repeat(3,1fr); gap:12px 24px;}
 @media (max-width:760px){ .dd{grid-template-columns:1fr;} }
+
+/* v1014 (2026-10-06, Laurie): Fuel & comfort calculator (portable bundle from the Prophetstown Signs & Signals build, v8). Scoped under #fuel-ui. */
+#fuel-ui .fuel-grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:10px 14px; margin:4px 0 16px;}
+#fuel-ui .fuel-grid label{display:flex; flex-direction:column; font:600 11px/1.3 'Montserrat',sans-serif; letter-spacing:.04em; text-transform:uppercase; color:var(--gold,#c9a227); gap:3px;}
+#fuel-ui .fuel-grid label span{font-weight:400; text-transform:none; letter-spacing:normal; opacity:.75; font-size:10px;}
+#fuel-ui .fuel-grid input, #fuel-ui .fuel-grid select{font:400 14px 'Lato',sans-serif; padding:6px 8px; border:1px solid var(--parchment-line,#e3dcc8); border-radius:7px; background:var(--paper,#fff); color:inherit;}
+#fuel-ui .fuel-bar{margin:0 0 9px;}
+#fuel-ui .fuel-lab{font:600 13px 'Montserrat',sans-serif; margin:0 0 3px;}
+#fuel-ui .fuel-sub{font:400 11px 'Lato',sans-serif; opacity:.7; letter-spacing:normal; text-transform:none;}
+#fuel-ui .fuel-track{position:relative; background:rgba(0,0,64,.06); border-radius:6px; height:26px; overflow:hidden;}
+#fuel-ui .fuel-fill{height:100%; border-radius:6px 0 0 6px; min-width:3px; transition:width .25s ease;}
+#fuel-ui .fuel-amt{position:absolute; right:9px; top:50%; transform:translateY(-50%); font:700 13px 'Montserrat',sans-serif; color:#1a1d2e;}
+#fuel-ui .fuel-amt small{font-weight:400; font-size:10px; opacity:.7;}
+#fuel-ui .fuel-head{font-size:14px;}
+#fuel-ui .fuel-srow{display:flex; justify-content:space-between; gap:12px; padding:3px 0; border-bottom:1px dotted var(--parchment-line,#e3dcc8); font:400 13px 'Lato',sans-serif; max-width:520px;}
+#fuel-ui .fuel-pay .fuel-srow span:last-child{text-align:right;}
+#fuel-ui .fuel-install{margin:0 0 16px;}
+#fuel-ui .fuel-install summary{cursor:pointer; font:600 11px/1.3 'Montserrat',sans-serif; letter-spacing:.04em; text-transform:uppercase; color:var(--gold,#c9a227); padding:4px 0;}
+#fuel-ui .fuel-install[open] summary{margin-bottom:8px;}
+html[data-theme="night"] #fuel-ui .fuel-grid input, html[data-theme="night"] #fuel-ui .fuel-grid select{background:var(--ink2,#141a3a); color:var(--birch,#e9e2cf); border-color:#2a3157;}
+html[data-theme="night"] #fuel-ui .fuel-track{background:rgba(255,255,255,.08);}
+html[data-theme="night"] #fuel-ui .fuel-amt{color:var(--birch,#e9e2cf);}
 </style>
 </head>
 <body>
@@ -413,7 +445,7 @@ a.link:hover{background:rgba(252,163,21,.14);}
   <h1 class="sg-head">Signs + Signals</h1>
   <p id="sg-status"></p>
 
-  <h2 class="sg-sec">Phenology</h2>
+  <h2 class="sg-sec">On the Record</h2> <!-- v1015 (2026-10-06, Laurie): was "Phenology"; the microseason card moved to society.html, the historical events now run full width -->
   <div class="ph-nav"><button type="button" class="sg-btn" id="ph-prev">&larr; earlier</button><div class="ph-title" id="ph-title"></div><button type="button" class="sg-btn" id="ph-next">later &rarr;</button></div>
   <div class="ph-row" id="ph-row"></div>
 
@@ -494,6 +526,14 @@ a.link:hover{background:rgba(252,163,21,.14);}
   <p class="sg-note" id="yr-note"></p>
   <p class="sg-note" id="no-temp-note" style="display:none"></p>
 
+  <!-- v1014 (2026-10-06, Laurie): Fuel & comfort calculator — fuel-comfort-calculator.js fills #fuel-ui and #fuel-note;
+       config in fuel-config.js (window.FUEL_CONFIG). Ranks heat pump / gas / propane / oil / resistance by $ per MMBtu of
+       DELIVERED heat; the heat pump's seasonal COP is weighted over the 20-year ERA5 record for Berne (Open-Meteo archive). -->
+  <h2 class="sg-sec">Heating &amp; cooling &mdash; what's cheapest here</h2>
+  <p class="sg-det" id="fuel-intro" style="margin:0 0 10px">Every fuel compared by the cost of one million BTU of <em>delivered</em> heat &mdash; price &divide; energy content &divide; equipment efficiency. A heat pump's efficiency is its COP, computed here as a <b>seasonal average from the Hilltowns' own temperature record</b>, since a heat pump loses ground as it gets colder. Edit any price or rating; the ranking updates live.</p>
+  <div id="fuel-ui"><p class="sg-det" id="fuel-loading">Computing the local heating climate&hellip;</p></div>
+  <p class="sg-note" id="fuel-note"></p>
+
   <!-- 2026-09-27 (v923, Laurie): live USGS water levels — streams, lakes/reservoirs, groundwater wells.
        v934 (Laurie): one section, "Water levels"; streams on the top row, reservoirs in the middle, wells at the bottom (renderWater builds one grid per kind into #water-cards) -->
   <h2 class="sg-sec">Water levels</h2>
@@ -519,6 +559,8 @@ a.link:hover{background:rgba(252,163,21,.14);}
 <script src="station_dd.js"></script>
 <script src="phenology_history.js"></script>
 <script src="phenology_expected.js"></script>
+<script src="fuel-config.js"></script>
+<script src="fuel-comfort-calculator.js"></script> <!-- v1014 -->
 <script src="signals.js"></script>
 <!-- @@footer -->
 
