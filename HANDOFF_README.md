@@ -1,7 +1,26 @@
-# NY Hilltowners Folk Atlas — Session Handoff (2026-10-07, v1017)
+# NY Hilltowners Folk Atlas — Session Handoff (2026-10-07, v1018)
 
-> **Where things stand (for the next chat).** Baseline is **v1017**; next version continues from **v1018**. Laurie has
-> deployed through v980; v981–v1017 ship together — the v1017 CHANGED-ONLY zip carries everything since v980.
+> **Where things stand (for the next chat).** Baseline is **v1018**; next version continues from **v1019**. Laurie has
+> deployed through v980; v981–v1018 ship together — the v1018 CHANGED-ONLY zip carries everything since v980.
+> **v1018 (six fixes):** (1) **Fuel & comfort calculator moved off Signs & Signals** to the unlinked **waterwip.html**
+> (/waterwip.html) while Laurie tweaks it — CSS, markup and the two `fuel-*.js` tags all moved; signals.html has no fuel
+> refs left. (2) **Water-level status line:** when the legacy USGS service answers, the new-API HTTP-400 is now logged to
+> the console only, not shown on the page — `waterIV()` in signals.js. Only a true double failure is user-visible. (3)
+> **Winds subhead:** dropped the live "X.X km up" geopotential height — the altitude is already in the eyebrow (e.g.
+> "700 hPa · ~3 km"); the 850/700 rows keep RH + temp, 500/10 hPa rows now show just wind direction. (4) **Climate
+> register dedupe:** marquee wind events narrated in BOTH the Events sheet and the Wind & Tornadoes catalog doubled on the
+> On-the-Record timeline (the Oct 7 2020 derecho, and 8 others). `emit_phenology_history()` now drops a W&T row whose
+> place/path name-tokens are a subset of a wind Events row on the same date — **9 deduped**, and every distinct outbreak
+> track is kept (2003-07-21 still has all 11 tracks + 1 summary). The richer Events-sheet version is the one shown. (5)
+> **October key visuals → scientific close-ups** (Society Pages Phenology card): microseason 19 Stars&Sky = Luc Viatour
+> full moon, Flora = **Hamamelis virginiana flower** (Laurie's example), Fauna = northern saw-whet owl; microseason 20
+> Fauna = jack-o'-lantern mushroom (Omphalotus illudens). Filenames WebSearch-verified on Commons (the build/sandbox can't
+> reach Commons; they resolve live). `data/microseasons.xlsx` Key Visuals rows edited; old copy at
+> `data/archive/microseasons_2026-10-07_pre-octvisuals.xlsx`. The other Oct cells (frost flower, sweetfern, groundnut,
+> etc.) left as-is. (6) **Society Pages copy:** iNat header → "Spotted around the hilltowns", body → "<N> species seen in
+> the last 14 days — research-grade observations within about 40 km of Berne, NY, reported via iNaturalist"; eBird header
+> → "Birds around the hilltowns", matched body + kept the BirdCast note. `<N>` is filled live from the feeds
+> (`#inat-species-count` = distinct species over 14 days; `#ebird-species-count` = `uniq.length`).
 > **v1017:** `data/events.xlsx` replaced wholesale with Laurie's `events_82.xlsx` (Events 2,950 → 3,031 rows; Display=Yes
 > 2,917 → 2,999; Ingest Log 809 → 1,078; Sources and the 35 agenda-flagged events unchanged; same schema). Build drops 692
 > past non-recurring events → **2,309 event records** mapped. No code change.
@@ -398,6 +417,7 @@ Fixed-hinge wingbeat, 4 white wing-spots. Day-only, reduced-motion safe. The
 
 ## UX state (recent)
 
+- **v1018 (2026-10-07, Laurie):** fuel calc moved to waterwip.html; USGS fallback no longer shows an error; winds altitude de-duplicated; climate-register derecho/wind dedupe in emit_phenology_history (9 rows); Oct key visuals → botanical close-ups; Society Pages iNat/eBird headers+body reworded with live species counts.
 - **v1017 (2026-10-07, Laurie):** `data/events.xlsx` ← events_82 (2,950 → 3,031 rows; wholesale replace, no code change).
 - **v1016 (2026-10-07, Laurie):** microseasons batch 12 (six categories, 535 entries, Key Visuals sheet); Phenology card shows per-category Commons thumbnails in a left rail. build.py `emit_phenology_expected()` + signals.js + CSS in signals.html/society.html.
 - **v1015 (2026-10-06, Laurie):** "Phenology" → "On the Record" on signals.html (historical card only, full width); microseason card moved to the top of society.html under "Phenology". `renderPhenology({mode,prefix})`.
@@ -758,7 +778,7 @@ Big ongoing effort to tame tag sprawl. Started at 2,332 unique tags; now ~2,178.
 7. Clean-room verify: unzip the package fresh, rebuild, confirm BUILD OK.
 8. `present_files` the zip + both xlsx.
 
-Version at handoff: **v1017**. Next chat continues from v1018. Harness in `scripts/signals_harness/` (Signals).
+Version at handoff: **v1018**. Next chat continues from v1019. Harness in `scripts/signals_harness/` (Signals).
 
 ---
 

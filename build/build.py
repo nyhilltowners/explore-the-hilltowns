@@ -1526,6 +1526,17 @@ def emit_phenology_history():
         if hasattr(v, "isoformat"): return v.isoformat()[:10]
         return str(v).strip()
     out = []
+    # v1018 (2026-10-07, Laurie): a few marquee wind events are narrated in BOTH the Events sheet (rich) and the
+    # Wind & Tornadoes catalog (structured), so they doubled on the timeline (e.g. the Oct 7 2020 derecho). Collect the
+    # wind Events rows' name-tokens by date; below, drop any Wind & Tornadoes row whose place/path matches one — which
+    # removes only the same-single-event duplicates and keeps every distinct outbreak track (2003, 2013, 2014, …).
+    _WIND_RE = re.compile(r"tornado|hurricane|tropical|cyclone|wind|gale|derecho|downburst|microburst|squall|nor'?easter|thunderstorm|hail|synoptic|appalachian|freeze|blizzard", re.I)
+    _WIND_STOP = set("derecho tornado tornadoes storm event events the co county mph winds wind damaging severe synoptic windstorm family tropical thunderstorm f0 f1 f2 f3 f4 f5 ef0 ef1 ef2 ef3 ef4 ef5 area of and into brief".split())
+    def _wtok(s):
+        s = re.sub(r"[–—\-/(),.]", " ", str(s or "").lower())
+        s = re.sub(r"\b\d\d\d?\d?\b", " ", s)
+        return set(t for t in s.split() if t and t not in _WIND_STOP and not t.isdigit())
+    _ev_wind_names = {}   # "YYYY-MM-DD" -> list of name token-sets from wind Events rows
     rows, ix = sheet_rows("Events")
     for r in rows:
         if g(r, ix, "show on timeline").strip().lower() in ("no", "n"):
@@ -1534,15 +1545,26 @@ def emit_phenology_history():
         if not re.match(r"^-?\d{3,4}-\d{2}-\d{2}", iso):
             continue
         y, m, d = iso.split("-")[:3]
+        if _WIND_RE.search(g(r, ix, "category")):
+            tok = _wtok(g(r, ix, "event name"))
+            if tok: _ev_wind_names.setdefault(iso[:10], []).append(tok)
         out.append({"src": "events", "id": g(r, ix, "id"), "y": int(y), "m": int(m), "d": int(d),
                     "start": g(r, ix, "start date"), "end": g(r, ix, "end date"), "prec": g(r, ix, "date precision"),
                     "cat": g(r, ix, "category"), "t": g(r, ix, "event name"), "area": g(r, ix, "area affected"),
                     "meas": g(r, ix, "key measurement"), "station": g(r, ix, "station / gauge"), "impact": g(r, ix, "impact summary"),
                     "source": g(r, ix, "primary source"), "url": g(r, ix, "source url"), "conf": g(r, ix, "confidence"), "basis": g(r, ix, "anchor basis")})
     rows, ix = sheet_rows("Wind & Tornadoes")
+    _wt_deduped = 0
     for r in rows:
         iso = g(r, ix, "date")
         if not re.match(r"^\d{4}-\d{2}-\d{2}", iso):
+            continue
+        # v1018: skip a catalog row that is the same single event as a wind Events row on the same date (name-token
+        # subset match on the place/path), so marquee events told in both sheets appear once. Distinct outbreak tracks,
+        # whose place/path (e.g. "Greene Co.") is not a subset of the Events event name, are kept.
+        _wn = _wtok(g(r, ix, "place / path"))
+        if _wn and any(_wn <= en or en <= _wn for en in _ev_wind_names.get(iso[:10], [])):
+            _wt_deduped += 1
             continue
         y, m, d = iso.split("-")[:3]
         deaths, inj = g(r, ix, "deaths"), g(r, ix, "injuries")
@@ -1553,7 +1575,7 @@ def emit_phenology_history():
                     "source": g(r, ix, "source"), "url": "", "conf": g(r, ix, "confidence"), "basis": g(r, ix, "time (local)")})
     out.sort(key=lambda e: (e["m"], e["d"], e["y"]))
     (SITE / "phenology_history.js").write_text("window.PHENOLOGY_HISTORY = " + json.dumps(out, ensure_ascii=False) + ";\n", encoding="utf-8")
-    print(f"  Historical Phenology: {len(out)} events → phenology_history.js")
+    print(f"  Historical Phenology: {len(out)} events ({_wt_deduped} Wind & Tornadoes rows deduped vs Events sheet) → phenology_history.js")
 
 # ---------------------------------------------------------------------------
 # Expected phenology (2026-09-20, Laurie): data/microseasons.md ("The Twenty-Four Microseasons

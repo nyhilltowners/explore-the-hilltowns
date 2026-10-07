@@ -94,7 +94,9 @@
         lv.forEach(function(l){ var h = nearestHour ? nearestHour(j,'wind_speed_'+l+'hPa','wind_direction_'+l+'hPa','geopotential_height_'+l+'hPa') : null;
           var pid = (l==='10') ? 'w10hpa' : 'w'+l;
           var hv = function(k){ return (rhIdx>=0 && j.hourly && j.hourly[k]) ? j.hourly[k][rhIdx] : null; }, rhL = hv('relative_humidity_'+l+'hPa'), tL = hv('temperature_'+l+'hPa');   /* v1008: humidity + temperature for 850 and 700 */
-          var extra = h ? (h.gph/1000).toFixed(1)+' km up'+((l==='850'||l==='700')&&typeof rhL==='number'?' \u00b7 '+Math.round(rhL)+'% RH':'')+((l==='850'||l==='700')&&typeof tL==='number'?' \u00b7 '+Math.round(tL)+'\u00b0C ('+Math.round(tL*9/5+32)+'\u00b0F)':'') : null; /* 2026-09-27 (v924, Laurie): relative humidity appended to the 850 hPa row only */
+          /* v1018 (2026-10-07, Laurie): dropped the "X.X km up" from the subhead \u2014 the altitude is already in the eyebrow (e.g. "700 hPa \u00b7 ~3 km"). Keep only RH + temp, which the eyebrow doesn't carry. */
+          var xp = []; if((l==='850'||l==='700')&&typeof rhL==='number') xp.push(Math.round(rhL)+'% RH'); if((l==='850'||l==='700')&&typeof tL==='number') xp.push(Math.round(tL)+'\u00b0C ('+Math.round(tL*9/5+32)+'\u00b0F)');
+          var extra = h ? xp.join(' \u00b7 ') : null;
           if(h){ ok = true; windDial(pid, h.kt, h.dir, extra); } else windDial(pid, null); });
         if(!ok) attempt(i+1);
       }).catch(function(e){ if(i===tries.length-1) status('Winds aloft: '+(e && e.message || 'fetch failed')); attempt(i+1); });
@@ -606,7 +608,9 @@
     return usgsFetchJson(u);
   }
   function waterIV(label, opts, locs){
-    return usgsIV(opts, locs).catch(function(e){ var why=(e&&e.message)||'fetch failed'; return legacyIV(opts).then(function(j){ status(label+': new USGS API '+why+', old service answered'); return j; }, function(e2){ throw new Error('new API '+why+'; old service '+((e2&&e2.message)||'failed')); }); });
+    /* v1018 (2026-10-07, Laurie): when the legacy service answers, the data is fine — log the new-API failure to the
+       console for debugging but DON'T surface it on the page's status line. Only a true double failure is user-visible. */
+    return usgsIV(opts, locs).catch(function(e){ var why=(e&&e.message)||'fetch failed'; return legacyIV(opts).then(function(j){ if(window.console&&console.info) console.info(label+': new USGS API '+why+', old service answered'); return j; }, function(e2){ throw new Error('new API '+why+'; old service '+((e2&&e2.message)||'failed')); }); });
   }
   var WATER_BBOX_KM = 50;
   function waterBBox(){
@@ -1390,6 +1394,7 @@ function fetchINat(){
       var allSpecies=groupBySpecies(res[1].results||[]);
       var recent=Object.keys(recentSpecies).map(function(k){ return recentSpecies[k]; });
       var older=Object.keys(allSpecies).map(function(k){ return allSpecies[k]; });
+      if($('inat-species-count')) $('inat-species-count').textContent = older.length;   /* v1018 (2026-10-07, Laurie): live count in the Society Pages intro — distinct species over the full 14-day window */
       if(!recent.length && !older.length){ grid.innerHTML='<p class="ph-empty">No research-grade observations with photos came back.</p>'; $('inat-list').innerHTML=''; $('inat-note').textContent=''; return; }
       var cbadge=function(g){ return g.count>1?' <span class="c">'+g.count+'<span class="c-lbl"> sightings</span></span>':''; };
       /* v931 (2026-09-27, Laurie): the "no openly licensed photo" cards were rendering full-width and huge
@@ -1483,6 +1488,7 @@ function fetchINat(){
       var nseen={}, nuniq=notable.filter(function(o){ var k=o.speciesCode; if(nseen[k]) return false; nseen[k]=1; return true; });
       band.innerHTML = nuniq.length ? '<div class="eb-band"><div class="t">Big Deal Birdos \u00b7 '+nuniq.length+' species <span style="font-weight:400;text-transform:none;letter-spacing:0;opacity:.75">\u00b7 includes reports still awaiting eBird review</span></div><div class="sg-grid">'+nuniq.slice(0,12).map(function(o){ return card(o,false,countMeta(recent,o.speciesCode)); }).join('')+'</div></div>' : ''; /* 2026-09-27 (v902, Laurie): every individual sighting kept separate (no per-species merge); same card size as the main grid; the 'notable' tag is dropped below since the section heading already says so, and eBird gives no reason code for why a sighting is flagged */
       var seen={}, uniq=recent.filter(function(o){ var k=o.speciesCode; if(seen[k]) return false; seen[k]=1; return true; });   /* one card per species, most recent report */
+      if($('ebird-species-count')) $('ebird-species-count').textContent = uniq.length;   /* v1018 (2026-10-07, Laurie): live count in the Society Pages intro */
       grid.innerHTML = uniq.length ? uniq.map(function(o){ return card(o,false,countMeta(recent,o.speciesCode)); }).join('') : '<p class="ph-empty">No reports in the window.</p>';
       wikiPics();
       fetchObservers();
